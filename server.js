@@ -75,6 +75,10 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 app.get('/api/auth/session', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+
   const authUsername = process.env.APP_AUTH_USERNAME;
   const authPassword = process.env.APP_AUTH_PASSWORD;
 
