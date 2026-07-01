@@ -461,6 +461,74 @@ export default function App() {
   const [settingsKeyDirty, setSettingsKeyDirty] = useState<boolean>(false);
   const [settingsSection, setSettingsSection] = useState<'ai' | 'content_rules'>('ai');
 
+  // --- Authentication States & Handlers ---
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [authBypass, setAuthBypass] = useState<boolean>(false);
+  const [authUsernameInput, setAuthUsernameInput] = useState<string>('');
+  const [authPasswordInput, setAuthPasswordInput] = useState<string>('');
+  const [authError, setAuthError] = useState<string>('');
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+
+  const checkSession = async () => {
+    try {
+      const res = await fetch('/api/auth/session');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.authenticated) {
+          setIsAuthenticated(true);
+          setAuthBypass(!!data.bypass);
+          aiService.getStatus();
+        } else {
+          setIsAuthenticated(false);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
+    } catch {
+      setIsAuthenticated(false);
+    }
+  };
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authUsernameInput.trim() || !authPasswordInput.trim()) {
+      setAuthError('Username and password are required.');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: authUsernameInput, password: authPasswordInput }),
+      });
+      if (res.ok) {
+        setIsAuthenticated(true);
+        setAuthError('');
+        aiService.getStatus();
+      } else {
+        const data = await res.json();
+        setAuthError(data.error || 'Invalid credentials.');
+      }
+    } catch {
+      setAuthError('Connection error during login. Is the backend active?');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setIsAuthenticated(false);
+      setAuthUsernameInput('');
+      setAuthPasswordInput('');
+    } catch {
+      alert('Could not log out. Please refresh.');
+    }
+  };
+
   // Provider defaults map
   const providerDefaults: Record<string, {model: string; placeholder: string; displayName: string}> = {
     openai: { model: 'gpt-4.1', placeholder: 'sk-...', displayName: 'OpenAI' },
@@ -562,7 +630,7 @@ export default function App() {
 
   // Poll status on mount
   useEffect(() => {
-    aiService.getStatus();
+    checkSession();
   }, []);
 
   // --- Workspace Local Dynamic Sources ---
@@ -3628,6 +3696,73 @@ WRITING CLEANLINESS RULES (CRITICAL):
     return true;
   });
 
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-coh-cream font-sans text-coh-navy">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 border-4 border-coh-gold border-t-coh-navy rounded-full animate-spin mx-auto" />
+          <p className="font-serif text-sm italic text-coh-navy/60">Verifying secure session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-coh-cream font-sans text-coh-navy antialiased">
+        <div className="w-full max-w-md bg-white border border-coh-gold/30 p-8 rounded-lg shadow-lg space-y-6">
+          <div className="text-center space-y-2">
+            <span className="font-serif tracking-widest text-[10px] uppercase text-coh-gold block">Climate Opera Haus</span>
+            <h1 className="font-serif text-2xl font-semibold text-coh-navy">COH Content Studio</h1>
+            <p className="text-xs text-coh-navy/55 uppercase font-mono tracking-wider">Private access</p>
+          </div>
+
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <label className="block text-xs uppercase font-semibold text-coh-navy/60 mb-1" htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                value={authUsernameInput}
+                onChange={(e) => setAuthUsernameInput(e.target.value)}
+                placeholder="Enter username"
+                className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-sm font-sans"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs uppercase font-semibold text-coh-navy/60 mb-1" htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={authPasswordInput}
+                onChange={(e) => setAuthPasswordInput(e.target.value)}
+                placeholder="Enter password"
+                className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-sm font-sans"
+                required
+              />
+            </div>
+
+            {authError && (
+              <p className="text-xs text-red-600 bg-red-50 border border-red-200/50 p-3 rounded font-sans">
+                {authError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50"
+            >
+              {authLoading ? 'Signing In...' : 'Sign In'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex bg-coh-cream font-sans text-coh-navy antialiased">
       
@@ -6394,16 +6529,26 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {/* Section Nav */}
-            <div className="flex gap-2 mb-2">
-              {([['ai', 'AI Connection'], ['content_rules', 'Content Rules']] as const).map(([key, label]) => (
+            <div className="flex justify-between items-center mb-2">
+              <div className="flex gap-2">
+                {([['ai', 'AI Connection'], ['content_rules', 'Content Rules']] as const).map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => setSettingsSection(key)}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-coh-navy text-coh-cream' : 'bg-coh-cream border border-coh-gold/20 text-coh-navy hover:bg-coh-gold/10'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              {!authBypass && (
                 <button
-                  key={key}
-                  onClick={() => setSettingsSection(key)}
-                  className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-coh-navy text-coh-cream' : 'bg-coh-cream border border-coh-gold/20 text-coh-navy hover:bg-coh-gold/10'}`}
+                  onClick={handleLogout}
+                  className="bg-red-800/10 hover:bg-red-800/20 text-red-800 border border-red-800/20 px-3 py-1.5 rounded text-xs font-semibold transition"
                 >
-                  {label}
+                  Sign Out
                 </button>
-              ))}
+              )}
             </div>
 
             {/* ── AI Connection ─────────────────────────────────────── */}

@@ -4,6 +4,8 @@ import cors from 'cors';
 import * as providerManager from './server/ai/providerManager.js';
 import { buildGenerationPrompt } from './server/ai/promptBuilder.js';
 
+import crypto from 'crypto';
+
 const app = express();
 const PORT = 3001;
 
@@ -13,8 +15,97 @@ app.use(express.json({ limit: '2mb' }));
 // Load AI provider config from .env on startup
 providerManager.loadFromEnv();
 
+// ─── Authentication Middleware & Routes ──────────────────────────────────────────
+function requireAuth(req, res, next) {
+  const authUsername = process.env.APP_AUTH_USERNAME;
+  const authPassword = process.env.APP_AUTH_PASSWORD;
+  
+  if (!authUsername || !authPassword) {
+    return next();
+  }
+
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/coh_session=([^;]+)/);
+  const token = match ? match[1] : null;
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized. Please sign in.' });
+  }
+
+  const [signature, username, expiryStr] = token.split(':');
+  const expiry = parseInt(expiryStr || '0', 10);
+
+  const expectedSig = crypto.createHmac('sha256', process.env.APP_AUTH_SECRET || 'fallback_secret')
+    .update(`${username}:${expiry}`)
+    .digest('hex');
+
+  if (signature === expectedSig && expiry > Date.now() && username === authUsername) {
+    return next();
+  }
+
+  res.status(401).json({ error: 'Session expired or invalid. Please sign in.' });
+}
+
+app.post('/api/auth/login', (req, res) => {
+  const { username, password } = req.body;
+  const authUsername = process.env.APP_AUTH_USERNAME;
+  const authPassword = process.env.APP_AUTH_PASSWORD;
+
+  if (!authUsername || !authPassword) {
+    return res.status(503).json({ error: 'Authentication is not configured on the server.' });
+  }
+
+  if (username === authUsername && password === authPassword) {
+    const expiry = Date.now() + 24 * 60 * 60 * 1000;
+    const signature = crypto.createHmac('sha256', process.env.APP_AUTH_SECRET || 'fallback_secret')
+      .update(`${username}:${expiry}`)
+      .digest('hex');
+    const token = `${signature}:${username}:${expiry}`;
+
+    res.setHeader('Set-Cookie', `coh_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400${process.env.NODE_ENV === 'production' || process.env.VERCEL ? '; Secure' : ''}`);
+    return res.json({ ok: true, username });
+  }
+
+  res.status(401).json({ error: 'Invalid username or password.' });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  res.setHeader('Set-Cookie', `coh_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT${process.env.NODE_ENV === 'production' || process.env.VERCEL ? '; Secure' : ''}`);
+  res.json({ ok: true });
+});
+
+app.get('/api/auth/session', (req, res) => {
+  const authUsername = process.env.APP_AUTH_USERNAME;
+  const authPassword = process.env.APP_AUTH_PASSWORD;
+
+  if (!authUsername || !authPassword) {
+    return res.json({ authenticated: true, bypass: true });
+  }
+
+  const cookies = req.headers.cookie || '';
+  const match = cookies.match(/coh_session=([^;]+)/);
+  const token = match ? match[1] : null;
+
+  if (!token) {
+    return res.json({ authenticated: false });
+  }
+
+  const [signature, username, expiryStr] = token.split(':');
+  const expiry = parseInt(expiryStr || '0', 10);
+
+  const expectedSig = crypto.createHmac('sha256', process.env.APP_AUTH_SECRET || 'fallback_secret')
+    .update(`${username}:${expiry}`)
+    .digest('hex');
+
+  if (signature === expectedSig && expiry > Date.now() && username === authUsername) {
+    return res.json({ authenticated: true, username });
+  }
+
+  res.json({ authenticated: false });
+});
+
 // ─── Status ──────────────────────────────────────────────────────────────────
-app.get('/api/ai/status', async (req, res) => {
+app.get('/api/ai/status', requireAuth, async (req, res) => {
   try {
     const active = providerManager.getActiveConfig();
     if (active && active.apiKey && active.status !== 'connected' && active.apiKeySource === 'env') {
@@ -46,7 +137,7 @@ app.get('/api/ai/status', async (req, res) => {
 });
 
 // ─── Test Connection ──────────────────────────────────────────────────────────
-app.post('/api/ai/test', async (req, res) => {
+app.post('/api/ai/test', requireAuth, async (req, res) => {
   try {
     let { provider, model, apiKey, baseUrl } = req.body;
     if (!provider) return res.status(400).json({ error: 'Provider is required.' });
@@ -105,7 +196,7 @@ app.post('/api/ai/configure', (req, res) => {
 });
 
 // ─── Generate Content ─────────────────────────────────────────────────────────
-app.post('/api/ai/generate', async (req, res) => {
+app.post('/api/ai/generate', requireAuth, async (req, res) => {
   try {
     const input = req.body;
     if (!input || !input.rawInput) {
@@ -126,7 +217,7 @@ app.post('/api/ai/generate', async (req, res) => {
 });
 
 // ─── Ideate ───────────────────────────────────────────────────────────────────
-app.post('/api/ai/ideate', async (req, res) => {
+app.post('/api/ai/ideate', requireAuth, async (req, res) => {
   try {
     const input = { ...req.body, mode: 'ideation' };
     if (!input.rawInput) {
@@ -147,7 +238,7 @@ app.post('/api/ai/ideate', async (req, res) => {
 });
 
 // ─── Revise ───────────────────────────────────────────────────────────────────
-app.post('/api/ai/revise', async (req, res) => {
+app.post('/api/ai/revise', requireAuth, async (req, res) => {
   try {
     const input = { ...req.body, mode: 'revision' };
     if (!input.previousDraft) {
@@ -168,7 +259,7 @@ app.post('/api/ai/revise', async (req, res) => {
 });
 
 // ─── Prompt Builder ───────────────────────────────────────────────────────────
-app.post('/api/ai/prompt', (req, res) => {
+app.post('/api/ai/prompt', requireAuth, (req, res) => {
   try {
     const prompt = buildGenerationPrompt(req.body);
     const cfg = providerManager.getMaskedConfig();
