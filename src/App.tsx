@@ -182,9 +182,9 @@ interface AIModelConfig {
   label: string;
   provider: string;
   type: 'text' | 'image';
-  quality: 'Low' | 'Medium' | 'High' | 'Best';
-  speed: 'Slow' | 'Medium' | 'Fast' | 'Fastest';
-  usage: 'Low' | 'Medium' | 'High';
+  quality: string;
+  speed: string;
+  usage: string;
   bestUseCase: string;
   isRecommended?: boolean;
 }
