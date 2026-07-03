@@ -65,6 +65,17 @@ Return a JSON object matching this schema:
   }
 
   if (isRevision) {
+    const isWhatsApp = input.channel === 'Email / Direct Outreach' && input.outputFormat === 'WhatsApp Message';
+    const whatsappRules = isWhatsApp ? `
+WHATSAPP SPECIFIC RULES:
+- You are writing a WhatsApp-style direct message, not an email, post, caption, or letter.
+- Write for mobile reading. Keep it short and natural (1 to 3 short paragraphs max).
+- Avoid subject lines, "Dear..." greetings, long explanations, or heavy institutional language.
+- Avoid generic corporate sustainability language and overexplaining Climate Opera Haus.
+- Use a human, respectful, warm tone.
+- Make the purpose clear quickly and include one clear next step or question.
+- Do not make it sound like a newsletter or LinkedIn post.` : '';
+
     return `You are an expert copy editor revising a draft.
 Original Brief details:
 - Input topic: ${input.rawInput}
@@ -88,6 +99,8 @@ WRITING CLEANLINESS RULES:
 - Avoid formulaic AI phrases (e.g., "now more than ever", "at the intersection", "in a world where").
 - Output the revised copy fully in ${input.language}. Keep approved proper nouns (e.g., Climate Opera Haus, Soria Moria) intact.
 - Preserve factual constraints and voice rules.
+${whatsappRules}
+
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
@@ -102,6 +115,8 @@ Return a JSON object matching this schema:
   }
 }`;
   }
+
+  const isWhatsApp = input.channel === 'Email / Direct Outreach' && input.outputFormat === 'WhatsApp Message';
 
   // Standard Draft Generation (Quick Create or Advanced Brief)
   return `You are the COH Content Marketing Mastermind for Climate Opera Haus.
@@ -135,8 +150,17 @@ CRITICAL WRITING RULES:
 5. If Purpose is "General / Open", infer the purpose from the user's brief rather than forcing thought leadership.
 6. If Framing Mode is "Create Directly From Brief" (none), do not add extra strategic framing unless requested.
 7. Do not use em dash (—) or long dash.
-8. Keep metadata outside the final copy.
+8. Keep metadata outside the final copy. Do not include labels such as "WhatsApp Message:".
 9. Fully write in ${input.language}. No mixed English and target language sentences.
+${isWhatsApp ? `
+WHATSAPP SPECIFIC RULES:
+- You are writing a WhatsApp-style direct message, not an email, post, caption, or letter.
+- Write for mobile reading. Keep it short and natural (1 to 3 short paragraphs max).
+- Avoid subject lines, "Dear..." greetings, long explanations, or heavy institutional language.
+- Avoid generic corporate sustainability language and overexplaining Climate Opera Haus.
+- Use a human, respectful, warm tone.
+- Make the purpose clear quickly and include one clear next step or question.
+- Do not make it sound like a newsletter or LinkedIn post.` : ''}
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:

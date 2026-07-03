@@ -75,6 +75,11 @@ interface ContentBrief {
   creationIntent?: string;
 }
 
+interface SimpleBrief {
+  goal: string;
+  channel: string;
+}
+
 interface QuickBrief {
   creationScope?: 'Single Channel' | 'Multi-Channel Pack';
   targetChannels?: string[];
@@ -113,6 +118,8 @@ interface SavedContent {
   notes: string;
   version: number;
   visualIdeation?: string;
+  visualAssets?: { id: string; url: string; prompt: string; createdAt: string; provider: string; model: string; aspectRatio: string; sourceDirection: string }[];
+  source?: string;
 }
 
 interface SavedIdea {
@@ -134,6 +141,7 @@ interface SavedIdea {
   dateCreated: string;
   status: 'New' | 'Promising' | 'Ready for Content' | 'Used' | 'Archived' | 'Not Useful';
   notes?: string;
+  visualAssets?: { id: string; url: string; prompt: string; createdAt: string; provider: string; model: string; aspectRatio: string; sourceDirection: string }[];
 }
 
 interface ContentDirection {
@@ -167,6 +175,49 @@ interface ContentTemplate {
   outputFormat: string;
   visualDesignRequirement: string;
 }
+
+// --- AI Model Registry ---
+interface AIModelConfig {
+  id: string;
+  label: string;
+  provider: string;
+  type: 'text' | 'image';
+  quality: 'Low' | 'Medium' | 'High' | 'Best';
+  speed: 'Slow' | 'Medium' | 'Fast' | 'Fastest';
+  usage: 'Low' | 'Medium' | 'High';
+  bestUseCase: string;
+  isRecommended?: boolean;
+}
+
+const MODEL_REGISTRY: AIModelConfig[] = [
+  // OpenAI Text
+  { id: 'gpt-5.5', label: 'GPT-5.5', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content', isRecommended: true },
+  { id: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
+  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'faster drafts, ideation, lighter content operations' },
+  { id: 'gpt-4o', label: 'GPT-4o (Legacy)', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
+  
+  // OpenAI Image
+  { id: 'gpt-image-2', label: 'GPT Image 2', provider: 'openai', type: 'image', quality: 'Highest', speed: 'Medium', usage: 'High', bestUseCase: 'refined editorial visuals, premium campaign imagery, realistic visual concepts', isRecommended: true },
+  { id: 'gpt-image-1', label: 'GPT Image 1', provider: 'openai', type: 'image', quality: 'High', speed: 'Medium', usage: 'Medium-high', bestUseCase: 'general high-quality image generation' },
+  { id: 'dall-e-3', label: 'DALL-E 3 (Legacy)', provider: 'openai', type: 'image', quality: 'Legacy / compatible', speed: 'Medium', usage: 'Medium-high', bestUseCase: 'fallback image generation if GPT Image models are unavailable' },
+  
+  // Gemini Text
+  { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', provider: 'gemini', type: 'text', quality: 'High', speed: 'Medium', usage: 'Medium', bestUseCase: 'Deep context reasoning and drafting.', isRecommended: true },
+  { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'gemini', type: 'text', quality: 'Medium', speed: 'Fastest', usage: 'Low', bestUseCase: 'Fast, high-volume ideation.' },
+  
+  // Anthropic Text
+  { id: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet', provider: 'anthropic', type: 'text', quality: 'Best', speed: 'Fast', usage: 'Medium', bestUseCase: 'Creative writing, nuance, and logic.', isRecommended: true },
+  { id: 'claude-3-opus-20240229', label: 'Claude 3 Opus', provider: 'anthropic', type: 'text', quality: 'High', speed: 'Slow', usage: 'High', bestUseCase: 'Heavy reasoning and complex problem solving.' },
+  
+  // Mistral Text
+  { id: 'mistral-large-latest', label: 'Mistral Large', provider: 'mistral', type: 'text', quality: 'High', speed: 'Fast', usage: 'Medium', bestUseCase: 'General-purpose European-language content.', isRecommended: true },
+  { id: 'mistral-small', label: 'Mistral Small', provider: 'mistral', type: 'text', quality: 'Medium', speed: 'Fastest', usage: 'Low', bestUseCase: 'Fast completion tasks.' },
+
+  // OpenRouter Text
+  { id: 'openai/gpt-4o', label: 'OpenAI: GPT-4o', provider: 'openrouter', type: 'text', quality: 'Best', speed: 'Fast', usage: 'Low', bestUseCase: 'Final-quality writing and logic.', isRecommended: true },
+  { id: 'anthropic/claude-3.5-sonnet', label: 'Anthropic: Claude 3.5 Sonnet', provider: 'openrouter', type: 'text', quality: 'Best', speed: 'Fast', usage: 'Medium', bestUseCase: 'Creative writing and complex reasoning.' },
+  { id: 'google/gemini-1.5-pro', label: 'Google: Gemini 1.5 Pro', provider: 'openrouter', type: 'text', quality: 'High', speed: 'Medium', usage: 'Medium', bestUseCase: 'Deep context reasoning.' }
+];
 
 // --- Supported Languages List ---
 const LANGUAGES = [
@@ -213,7 +264,7 @@ const CHANNEL_FORMATS: Record<string, string[]> = {
   'Instagram': ['Caption', 'Carousel', 'Reel Caption', 'Story Sequence', 'Visual Designer Brief'],
   'Newsletter': ['Newsletter Section', 'Long-Form Article', 'Event Update', 'Partner Update'],
   'Website': ['Website Section', 'News / Media Article', 'Long-Form Article', 'Event Page Copy'],
-  'Email / Direct Outreach': ['Email / Letter', 'Sponsor Pitch Paragraph', 'Partner Note', 'Follow-Up Note', 'Invitation Note'],
+  'Email / Direct Outreach': ['WhatsApp Message', 'Email / Letter', 'Sponsor Pitch Paragraph', 'Partner Note', 'Follow-Up Note', 'Invitation Note'],
   'TikTok': ['Short Video Script', 'Caption', 'Hook Ideas'],
   'X / Twitter': ['Post', 'Thread', 'Short Announcement'],
   'Facebook': ['Post', 'Event Update', 'Caption'],
@@ -369,13 +420,11 @@ function Tooltip({ text }: { text: string }) {
 export default function App() {
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
-  const [creationMode, setCreationMode] = useState<'quick' | 'advanced'>('quick');
+  const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
 
-  // --- Onboarding Guide state ---
-  const [showOnboarding, setShowOnboarding] = useState<boolean>(() => {
-    return localStorage.getItem('coh_hide_onboarding') !== 'true';
-  });
+  // --- UI Toggles ---
+  const [showContentStarters, setShowContentStarters] = useState<boolean>(false);
 
   // --- Sources State ---
   const [sources, setSources] = useState<SourceFile[]>(() => {
@@ -394,6 +443,11 @@ export default function App() {
   const brainSources = sources.filter(s => isBrainFile(s.id));
 
   // --- Brief Forms States (CLEARED BY DEFAULT) ---
+  const [simpleBrief, setSimpleBrief] = useState<SimpleBrief>({
+    goal: '',
+    channel: 'LinkedIn'
+  });
+
   const [quickBrief, setQuickBrief] = useState<QuickBrief>({
     creationScope: 'Single Channel',
     targetChannels: ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
@@ -437,7 +491,8 @@ export default function App() {
 
   const [aiStatus, setAiStatus] = useState<AIStatus>('not_configured');
   const [aiProvider, setAiProvider] = useState<string>('');
-  const [aiModel, setAiModel] = useState<string>('');
+  const [aiTextModel, setAiTextModel] = useState<string>('');
+  const [aiImageModel, setAiImageModel] = useState<string>('');
   const [aiLastTested, setAiLastTested] = useState<string>('');
   const [aiLastError, setAiLastError] = useState<string>('');
   const [aiLatency, setAiLatency] = useState<number>(0);
@@ -449,15 +504,48 @@ export default function App() {
   const [isSavingToLibrary, setIsSavingToLibrary] = useState<boolean>(false);
   const [isSavingToIdeaLibrary, setIsSavingToIdeaLibrary] = useState<boolean>(false);
 
+  // --- Visual Studio State ---
+  const [vsSourceItem, setVsSourceItem] = useState<{ id: string; title: string; type: 'Idea' | 'Content' | 'Library' | 'Manual' } | null>(null);
+  const [vsConcept, setVsConcept] = useState<string>('');
+  const [vsFormat, setVsFormat] = useState<string>('');
+  const [vsMood, setVsMood] = useState<string>('');
+  const [vsComposition, setVsComposition] = useState<string>('');
+  const [vsPalette, setVsPalette] = useState<string>('');
+  const [vsTypography, setVsTypography] = useState<string>('');
+  const [vsElements, setVsElements] = useState<string>('');
+  const [vsAvoid, setVsAvoid] = useState<string>('');
+  const [vsAIPrompt, setVsAIPrompt] = useState<string>('');
+  const [vsNotes, setVsNotes] = useState<string>('');
+  const [vsPromptMode, setVsPromptMode] = useState<'Full' | 'AI Only' | 'Full + AI' | 'Manual Only'>('Full + AI');
+  const [vsInputMode, setVsInputMode] = useState<'Existing' | 'Manual'>('Manual');
+  const [vsManualPrompt, setVsManualPrompt] = useState<string>('');
+  const [showAdvancedBrief, setShowAdvancedBrief] = useState<boolean>(false);
+  const [vsGeneratedImages, setVsGeneratedImages] = useState<any[]>([]);
+  const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
+  const [vsAspectRatio, setVsAspectRatio] = useState<string>('1024x1024');
+  const [vsVisualStyle, setVsVisualStyle] = useState<string>('Editorial Photomontage');
+  const [vsNumImages, setVsNumImages] = useState<number>(1);
+
+
   // Settings form fields (never persisted to localStorage, sent to backend only)
   const [settingsProvider, setSettingsProvider] = useState<string>('openai');
-  const [settingsModel, setSettingsModel] = useState<string>('gpt-4.1');
+  const [settingsTextModel, setSettingsTextModel] = useState<string>('gpt-4o');
+  const [settingsImageModel, setSettingsImageModel] = useState<string>('dall-e-3');
   const [settingsApiKey, setSettingsApiKey] = useState<string>('');
   const [settingsBaseUrl, setSettingsBaseUrl] = useState<string>('');
   const [settingsTestResult, setSettingsTestResult] = useState<string>('');
   const [settingsTestPassed, setSettingsTestPassed] = useState<boolean | null>(null);
   const [settingsApplying, setSettingsApplying] = useState<boolean>(false);
   const [settingsTesting, setSettingsTesting] = useState<boolean>(false);
+  const [settingsTestCooldown, setSettingsTestCooldown] = useState<number>(0);
+  
+  // Cooldown effect
+  useEffect(() => {
+    if (settingsTestCooldown > 0) {
+      const timer = setTimeout(() => setSettingsTestCooldown(prev => prev - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [settingsTestCooldown]);
   const [settingsKeyDirty, setSettingsKeyDirty] = useState<boolean>(false);
   const [settingsSection, setSettingsSection] = useState<'ai' | 'content_rules'>('ai');
 
@@ -529,14 +617,6 @@ export default function App() {
     }
   };
 
-  // Provider defaults map
-  const providerDefaults: Record<string, {model: string; placeholder: string; displayName: string}> = {
-    openai: { model: 'gpt-4.1', placeholder: 'sk-...', displayName: 'OpenAI' },
-    gemini: { model: 'gemini-1.5-pro', placeholder: 'AI...', displayName: 'Google Gemini' },
-    anthropic: { model: 'claude-3-5-sonnet-latest', placeholder: 'sk-ant-...', displayName: 'Anthropic Claude' },
-    mistral: { model: 'mistral-large-latest', placeholder: 'MI...', displayName: 'Mistral' },
-    openrouter: { model: 'openai/gpt-4.1', placeholder: 'sk-or-...', displayName: 'OpenRouter' },
-  };
 
   // AI service - calls backend, never exposes keys
   const aiService = {
@@ -546,13 +626,16 @@ export default function App() {
         if (!res.ok) return;
         const data = await res.json();
         if (data.activeConfig) {
-          setAiProvider(data.activeConfig.provider || '');
-          setAiModel(data.activeConfig.model || '');
+          setAiProvider(data.activeConfig.provider);
+          setAiTextModel(data.activeConfig.textModel || '');
+          setAiImageModel(data.activeConfig.imageModel || '');
+          setSettingsProvider(data.activeConfig.provider);
+          setSettingsTextModel(data.activeConfig.textModel || '');
+          setSettingsImageModel(data.activeConfig.imageModel || '');
           setAiStatus(data.connected ? 'connected' : (data.activeConfig.apiKeySource === 'not_configured' ? 'not_configured' : 'not_connected'));
           
           if (!settingsKeyDirty) {
             setSettingsProvider(data.activeConfig.provider || 'openai');
-            setSettingsModel(data.activeConfig.model || '');
             setSettingsBaseUrl(data.activeConfig.baseUrl || '');
             if (data.activeConfig.apiKeySource === 'env') {
               setSettingsApiKey('••••••••');
@@ -567,21 +650,22 @@ export default function App() {
       }
     },
 
-    async testConnection(provider: string, model: string, apiKey: string, baseUrl?: string) {
+    async testConnection(provider: string, textModel: string, imageModel: string, apiKey: string, baseUrl?: string) {
       const res = await fetch('/api/ai/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, model, apiKey, baseUrl }),
+        body: JSON.stringify({ provider, textModel, imageModel, apiKey, baseUrl })
       });
       return res.json();
     },
 
-    async applyProvider(provider: string, model: string, apiKey: string, baseUrl?: string, lastTestedAt?: string) {
+    async applyProvider(provider: string, textModel: string, imageModel: string, apiKey: string, baseUrl?: string, lastTestedAt?: string) {
       const res = await fetch('/api/ai/configure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ provider, model, apiKey, baseUrl, lastTestedAt, displayName: providerDefaults[provider]?.displayName || provider }),
+        body: JSON.stringify({ provider, textModel, imageModel, apiKey, baseUrl, lastTestedAt })
       });
+      if (!res.ok) throw new Error('Failed to apply configuration');
       return res.json();
     },
 
@@ -626,6 +710,117 @@ export default function App() {
       });
       return res.json();
     },
+  };
+
+  // --- Visual Studio Logic ---
+  const handleSendToVisualStudio = (item: any, rawDirection: string, type: 'Idea' | 'Content' | 'Library') => {
+    setVsSourceItem({ id: item.id, title: item.title || item.originalInput || 'Untitled', type });
+    
+    // Attempt basic parsing
+    const conceptMatch = rawDirection.match(/Concept:\s*(.*?)(?=\n-|$)/i);
+    const formatMatch = rawDirection.match(/Recommendation:\s*(.*?)(?=\n-|$)/i) || rawDirection.match(/Format:\s*(.*?)(?=\n-|$)/i);
+    const moodMatch = rawDirection.match(/Mood.*?:\s*(.*?)(?=\n-|$)/i);
+    const compMatch = rawDirection.match(/Composition:\s*(.*?)(?=\n-|$)/i);
+    const colorMatch = rawDirection.match(/Color.*?:\s*(.*?)(?=\n-|$)/i);
+    const typoMatch = rawDirection.match(/Typography.*?:\s*(.*?)(?=\n-|$)/i);
+    const elMatch = rawDirection.match(/Key.*?Elements:\s*(.*?)(?=\n-|$)/i);
+    const avoidMatch = rawDirection.match(/Avoid:\s*(.*?)(?=\n-|$)/i);
+    const aiMatch = rawDirection.match(/AI Image Prompt:\s*(.*?)(?=\n-|$)/i);
+    const notesMatch = rawDirection.match(/Designer Notes:\s*(.*?)(?=\n-|$)/i);
+
+    setVsConcept(conceptMatch ? conceptMatch[1].trim() : rawDirection);
+    setVsFormat(formatMatch ? formatMatch[1].trim() : '');
+    setVsMood(moodMatch ? moodMatch[1].trim() : '');
+    setVsComposition(compMatch ? compMatch[1].trim() : '');
+    setVsPalette(colorMatch ? colorMatch[1].trim() : '');
+    setVsTypography(typoMatch ? typoMatch[1].trim() : '');
+    setVsElements(elMatch ? elMatch[1].trim() : '');
+    setVsAvoid(avoidMatch ? avoidMatch[1].trim() : '');
+    setVsAIPrompt(aiMatch ? aiMatch[1].trim() : '');
+    setVsNotes(notesMatch ? notesMatch[1].trim() : '');
+
+    setVsInputMode('Existing');
+    setVsPromptMode('Full + AI');
+    setActiveTab('visual-studio');
+  };
+
+  const handleGenerateImage = async () => {
+    if (!aiProvider) {
+      alert("Please configure an AI provider first.");
+      return;
+    }
+    
+    const payload = {
+      prompt: vsManualPrompt,
+      promptBuildMode: vsPromptMode,
+      aspectRatio: vsAspectRatio,
+      visualStyle: vsVisualStyle,
+      visualBrief: {
+        concept: vsConcept,
+        format: vsFormat,
+        mood: vsMood,
+        composition: vsComposition,
+        palette: vsPalette,
+        typography: vsTypography,
+        elements: vsElements,
+        avoid: vsAvoid,
+        aiPrompt: vsAIPrompt,
+        notes: vsNotes
+      },
+      inputMode: vsInputMode,
+      provider: aiProvider,
+      model: aiImageModel
+    };
+
+    setIsGeneratingImage(true);
+    setAiLastError('');
+    try {
+      const res = await fetch('/api/ai/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Image generation route returned a non-JSON response. Check local API route configuration.");
+      }
+      
+      const data = await res.json();
+      
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Failed to generate image');
+      }
+      
+      if (data.images && data.images.length > 0) {
+        const processedImages = await Promise.all(data.images.map(async (img: any) => {
+          const isPortrait = vsAspectRatio.includes('Portrait') || vsAspectRatio === '4:5' || vsAspectRatio === '9:16' || vsAspectRatio.includes('Instagram Story') || vsAspectRatio.includes('1024x1792') || vsAspectRatio.includes('1024x1536');
+          const isLandscape = vsAspectRatio.includes('Landscape') || vsAspectRatio === '16:9' || vsAspectRatio === '21:9' || vsAspectRatio.includes('Website Hero') || vsAspectRatio.includes('Newsletter Header') || vsAspectRatio.includes('Wide Banner') || vsAspectRatio.includes('1792x1024') || vsAspectRatio.includes('1536x1024');
+          
+          return {
+            id: img.id || `img-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            url: img.url,
+            prompt: img.promptUsed || payload.prompt,
+            promptUsed: img.promptUsed || payload.prompt,
+            createdAt: new Date().toISOString().split('T')[0],
+            provider: img.provider || aiProvider,
+            model: img.model || aiImageModel,
+            seed: img.seed || '',
+            aspectRatio: vsAspectRatio,
+            sourceDirection: vsConcept,
+            quality: 'high',
+            generationSize: isPortrait ? '1024x1792' : (isLandscape ? '1792x1024' : '1024x1024'),
+            deliverySize: isPortrait ? '1024x1792' : (isLandscape ? '1792x1024' : '1024x1024')
+          };
+        }));
+        
+        setVsGeneratedImages(prev => [...processedImages, ...prev]);
+      }
+    } catch (err: any) {
+      setAiLastError(err.message || 'Error generating image');
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
   // Poll status on mount
@@ -989,12 +1184,21 @@ export default function App() {
 
   // --- Active Revision Workspace ---
   const [activeDraftText, setActiveDraftText] = useState<string>('');
+  const [activeDraftSource, setActiveDraftSource] = useState<'Content Workspace' | 'Content Library' | 'External Content'>('Content Workspace');
   const [customRevisionInstruction, setCustomRevisionInstruction] = useState<string>('');
   const [activeDraftTitle, setActiveDraftTitle] = useState<string>('');
   const [activeDraftVersion, setActiveDraftVersion] = useState<number>(1);
   const [activeDraftHistory, setActiveDraftHistory] = useState<VersionHistory[]>([]);
   const [compareVersionIndex, setCompareVersionIndex] = useState<number>(-1);
   const [copySuccessMap, setCopySuccessMap] = useState<{ [key: string]: boolean }>({});
+  
+  // --- External Content Mode Inputs ---
+  const [externalContentText, setExternalContentText] = useState<string>('');
+  const [externalContentContext, setExternalContentContext] = useState<string>('');
+  const [externalContentChannel, setExternalContentChannel] = useState<string>('General / Custom');
+  const [externalContentFormat, setExternalContentFormat] = useState<string>('General / Custom');
+  const [externalContentLanguage, setExternalContentLanguage] = useState<string>('English');
+  const [externalContentTone, setExternalContentTone] = useState<string>('Balanced / COH Default');
 
   // --- Source Library Forms ---
   const [newSource, setNewSource] = useState({
@@ -1042,6 +1246,15 @@ export default function App() {
     setTimeout(() => {
       setCopySuccessMap(prev => ({ ...prev, [key]: false }));
     }, 2000);
+  };
+
+  const handleStartExternalRevision = () => {
+    if (!externalContentText.trim()) return;
+    setActiveDraftText(externalContentText);
+    setActiveDraftTitle('External Content Revision');
+    setActiveDraftVersion(1);
+    setActiveDraftHistory([{ version: 1, text: externalContentText, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Imported external content' }]);
+    setActiveDraftSource('External Content');
   };
 
   // --- Source and List Action Helpers ---
@@ -1488,9 +1701,11 @@ export default function App() {
 
   // --- Recommended Approach ---
   const getDynamicDirections = (): ContentDirection[] => {
-    const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
-    const pillar = creationMode === 'quick' ? 'Climate Tetralogy & Canon' : advancedBrief.pillar;
-    const mustAvoid = creationMode === 'quick' ? quickBrief.mustAvoid : advancedBrief.mustAvoid;
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const pillar = isSimple ? 'Climate Tetralogy & Canon' : (isQuick ? 'Climate Tetralogy & Canon' : advancedBrief.pillar);
+    const mustAvoid = isSimple ? '' : (isQuick ? quickBrief.mustAvoid : advancedBrief.mustAvoid);
 
     return [
       {
@@ -1525,10 +1740,12 @@ export default function App() {
 
   // --- Source Relevance Logic for Soria Moria / Opera Titles ---
   const checkOperaRelevance = (operaTitle: string) => {
-    const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
-    const notes = creationMode === 'quick' ? quickBrief.notes : '';
-    const mustInclude = creationMode === 'quick' ? quickBrief.mustInclude : advancedBrief.mustInclude;
-    const selectedAngle = creationMode === 'quick' ? '' : advancedBrief.angle;
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
+    const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
+    const selectedAngle = isSimple ? '' : (isQuick ? '' : advancedBrief.angle);
     
     const searchString = `${goal} ${notes} ${mustInclude} ${selectedAngle}`.toLowerCase();
     if (searchString.includes(operaTitle.toLowerCase())) {
@@ -2707,10 +2924,13 @@ export default function App() {
 
   // --- Generate Drafts Handler ---
   const handleGenerateDrafts = async () => {
-    const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
-    const notes = creationMode === 'quick' ? quickBrief.notes : '';
-    const mustInclude = creationMode === 'quick' ? quickBrief.mustInclude : advancedBrief.mustInclude;
-    const hasSources = creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0;
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+
+    const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
+    const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
+    const hasSources = (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) || (isSimple && (inlinePasteData.content || inlineLinkData.url || inlineUploadData.title));
 
     if (!goal.trim() && !notes.trim() && !mustInclude.trim() && !hasSources) {
       setValidationWarning('Add a topic, notes, source excerpt, or selected source before generating.');
@@ -2718,19 +2938,22 @@ export default function App() {
     }
     setValidationWarning('');
 
-    const scope = creationMode === 'quick' ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel');
-    const targets = creationMode === 'quick' ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']);
-    const channel = creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel;
-    const format = creationMode === 'quick' ? quickBrief.outputFormat : advancedBrief.outputFormat;
-    const lang = creationMode === 'quick' ? quickBrief.language : advancedBrief.language;
-    const dirMode = creationMode === 'quick' ? 'none' : advancedBrief.directionMode;
-    const customDir = creationMode === 'quick' ? '' : advancedBrief.customDirection;
-    const lengthOpt = creationMode === 'quick' ? 'Medium: 120-180 words' : advancedBrief.desiredLength;
-    const audience = creationMode === 'quick' ? 'General Public' : advancedBrief.audience;
-    const customAudience = creationMode === 'quick' ? '' : advancedBrief.customAudience;
-    const purpose = creationMode === 'quick' ? 'General / Open' : advancedBrief.purpose;
-    const pillar = creationMode === 'quick' ? 'General / Custom' : advancedBrief.pillar;
-    const explicitIntent = creationMode === 'quick' ? 'Infer automatically' : (advancedBrief.creationIntent || 'Infer automatically');
+    const scope = isSimple ? 'Single Channel' : (isQuick ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel'));
+    const targets = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const dirMode = isSimple ? 'auto' : (isQuick ? 'none' : advancedBrief.directionMode);
+    const customDir = isSimple ? '' : (isQuick ? '' : advancedBrief.customDirection);
+    let lengthOpt = isSimple ? 'Medium: 120-180 words' : (isQuick ? 'Medium: 120-180 words' : advancedBrief.desiredLength);
+    if (format === 'WhatsApp Message' && (!advancedBrief.desiredLength || advancedBrief.desiredLength.includes('Medium'))) {
+      lengthOpt = 'Short: 40-90 words';
+    }
+    const audience = isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience);
+    const customAudience = isSimple ? '' : (isQuick ? '' : advancedBrief.customAudience);
+    const purpose = isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose);
+    const pillar = isSimple ? 'General / Custom' : (isQuick ? 'General / Custom' : advancedBrief.pillar);
+    const explicitIntent = isSimple ? 'Infer automatically' : (isQuick ? 'Infer automatically' : (advancedBrief.creationIntent || 'Infer automatically'));
     const snap = getCurrentInputsString();
 
     // ── AI Generation Path ─────────────────────────────────────────────────────
@@ -2793,7 +3016,7 @@ export default function App() {
           languageNotice: lang !== 'English' ? `LANG_NOTICE::${lang}::Generated fully in ${lang}.` : undefined,
         });
 
-        setAiGeneratedWith({ provider: aiProvider, model: aiModel });
+        setAiGeneratedWith({ provider: aiProvider, model: aiTextModel });
         setGenerationInputsSnapshot(snap);
         setGenerationNumber(prev => prev + 1);
         setActiveDraftText(rawA);
@@ -2803,7 +3026,7 @@ export default function App() {
           version: 1,
           text: rawA,
           timestamp: new Date().toLocaleTimeString(),
-          actionUsed: `AI Generated (${aiProvider}/${aiModel})`
+          actionUsed: `AI Generated (${aiProvider}/${aiTextModel})`
         }]);
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : 'AI generation failed.';
@@ -3142,12 +3365,14 @@ export default function App() {
     if (!textToSave.trim()) return;
     
     const finalCopy = cleanWritingArtifacts(textToSave);
-    const channel = creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel;
-    const format = creationMode === 'quick' ? quickBrief.outputFormat : advancedBrief.outputFormat;
-    const lang = creationMode === 'quick' ? quickBrief.language : advancedBrief.language;
-    const audience = creationMode === 'quick' ? 'General Public' : advancedBrief.audience;
-    const purpose = creationMode === 'quick' ? 'General / Open' : advancedBrief.purpose;
-    const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? 'Post' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const audience = isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience);
+    const purpose = isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose);
+    const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
 
     const uniqueName = generateUniqueSaveName(channel, format, 1, `${goal} (${styleLabel})`);
     const title = `${channel} ${format} (${styleLabel})`;
@@ -3181,7 +3406,7 @@ export default function App() {
       displayName: uniqueName,
       savedAt: new Date().toISOString(),
       channel,
-      pillar: creationMode === 'quick' ? 'General / Custom' : advancedBrief.pillar,
+      pillar: isSimple ? 'General / Custom' : (isQuick ? 'General / Custom' : advancedBrief.pillar),
       angle: `Option ${styleLabel}`,
       audience,
       purpose,
@@ -3215,12 +3440,15 @@ export default function App() {
     const textToSave = cleanWritingArtifacts(activeDraftText);
     setActiveDraftText(textToSave);
 
-    const channel = creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel;
-    const format = creationMode === 'quick' ? quickBrief.outputFormat : advancedBrief.outputFormat;
-    const lang = creationMode === 'quick' ? quickBrief.language : advancedBrief.language;
-    const audience = creationMode === 'quick' ? 'General Public' : advancedBrief.audience;
-    const purpose = creationMode === 'quick' ? 'General / Open' : advancedBrief.purpose;
-    const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const isExternal = activeDraftSource === 'External Content';
+    const channel = isExternal ? externalContentChannel : (isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel));
+    const format = isExternal ? externalContentFormat : (isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat));
+    const lang = isExternal ? externalContentLanguage : (isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language));
+    const audience = isExternal ? 'External' : (isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience));
+    const purpose = isExternal ? externalContentContext : (isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose));
+    const goal = isExternal ? externalContentContext : (isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic));
 
     const uniqueName = generateUniqueSaveName(channel, format, activeDraftVersion, goal);
     const title = activeDraftTitle || 'Untitled Draft';
@@ -3267,8 +3495,8 @@ export default function App() {
       displayName: uniqueName,
       savedAt: new Date().toISOString(),
       channel,
-      pillar: creationMode === 'quick' ? 'General / Custom' : advancedBrief.pillar,
-      angle: creationMode === 'quick' ? 'Quick Create' : advancedBrief.angle,
+      pillar: isSimple ? 'General / Custom' : (isQuick ? 'General / Custom' : advancedBrief.pillar),
+      angle: isSimple ? 'Simple Mode' : (isQuick ? 'Quick Create' : advancedBrief.angle),
       audience,
       purpose,
       language: lang,
@@ -3285,6 +3513,7 @@ export default function App() {
       notes: `Saved version v${activeDraftVersion}`,
       version: activeDraftVersion,
       visualIdeation: draftOptions?.visualIdeation || undefined,
+      source: activeDraftSource,
       metadata: {
         creator: 'COH Content Studio',
         generatedAt: new Date().toISOString()
@@ -3409,14 +3638,16 @@ Revision History:
       }
 
       if (generationMode === 'ai' && aiStatus === 'connected') {
-        const goal = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
-        const notes = creationMode === 'quick' ? quickBrief.notes : '';
-        const channel = creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel;
-        const format = creationMode === 'quick' ? quickBrief.outputFormat : advancedBrief.outputFormat;
-        const lang = creationMode === 'quick' ? quickBrief.language : advancedBrief.language;
-        const audience = creationMode === 'quick' ? 'General Public' : advancedBrief.audience;
-        const purpose = creationMode === 'quick' ? 'General / Open' : advancedBrief.purpose;
-        const toneLevel = creationMode === 'quick' ? '3' : String(advancedBrief.toneIntensity);
+        const isSimple = creationMode === 'simple';
+        const isQuick = creationMode === 'quick';
+        const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+        const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
+        const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+        const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+        const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+        const audience = isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience);
+        const purpose = isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose);
+        const toneLevel = isSimple ? '3' : (isQuick ? '3' : String(advancedBrief.toneIntensity));
 
         const result = await aiService.revise({
           previousDraft: activeDraftText,
@@ -3564,24 +3795,27 @@ Revision History:
 
   // --- Prompt Builder Compiler ---
   const compileStructuredPrompt = () => {
-    const creationScope = creationMode === 'quick' ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel');
-    const targetChannels = creationMode === 'quick' ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']);
-    const channel = creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel;
-    const format = creationMode === 'quick' ? quickBrief.outputFormat : advancedBrief.outputFormat;
-    const topic = creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic;
-    const notes = creationMode === 'quick' ? quickBrief.notes : '';
-    const mustInclude = creationMode === 'quick' ? quickBrief.mustInclude : advancedBrief.mustInclude;
-    const mustAvoid = creationMode === 'quick' ? quickBrief.mustAvoid : advancedBrief.mustAvoid;
-    const lang = creationMode === 'quick' ? quickBrief.language : advancedBrief.language;
-    const aud = creationMode === 'advanced' ? advancedBrief.audience : 'General Public';
-    const custAud = creationMode === 'advanced' ? advancedBrief.customAudience : '';
-    const pillar = creationMode === 'advanced' ? advancedBrief.pillar : 'Climate Tetralogy & Canon';
-    const purpose = creationMode === 'advanced' ? advancedBrief.purpose : 'Thought Leadership';
-    const toneLevel = creationMode === 'advanced' ? advancedBrief.toneIntensity : 3;
-    const lengthOpt = creationMode === 'advanced' ? advancedBrief.desiredLength : 'Medium: 120-180 words';
-    const dirMode = creationMode === 'advanced' ? advancedBrief.directionMode : 'none';
-    const angle = creationMode === 'advanced' ? advancedBrief.angle : '';
-    const customDir = creationMode === 'advanced' ? advancedBrief.customDirection : '';
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+
+    const creationScope = isSimple ? 'Single Channel' : (isQuick ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel'));
+    const targetChannels = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const topic = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
+    const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
+    const mustAvoid = isSimple ? '' : (isQuick ? quickBrief.mustAvoid : advancedBrief.mustAvoid);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const aud = isSimple ? 'General Public' : (creationMode === 'advanced' ? advancedBrief.audience : 'General Public');
+    const custAud = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.customAudience : '');
+    const pillar = isSimple ? 'General / Custom' : (creationMode === 'advanced' ? advancedBrief.pillar : 'Climate Tetralogy & Canon');
+    const purpose = isSimple ? 'General / Open' : (creationMode === 'advanced' ? advancedBrief.purpose : 'Thought Leadership');
+    const toneLevel = isSimple ? 3 : (creationMode === 'advanced' ? advancedBrief.toneIntensity : 3);
+    const lengthOpt = isSimple ? 'Medium: 120-180 words' : (creationMode === 'advanced' ? advancedBrief.desiredLength : 'Medium: 120-180 words');
+    const dirMode = isSimple ? 'auto' : (creationMode === 'advanced' ? advancedBrief.directionMode : 'none');
+    const angle = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.angle : '');
+    const customDir = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.customDirection : '');
 
     let sourceContext = '';
     if (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) {
@@ -3814,6 +4048,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </button>
 
             <button
+              onClick={() => setActiveTab('visual-studio')}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'visual-studio'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <div className="w-4 h-4 flex items-center justify-center border border-current rounded-sm">
+                <div className="w-2 h-2 rounded-full bg-current" />
+              </div>
+              Visual Studio
+            </button>
+
+            <button
               onClick={() => setActiveTab('revision-studio')}
               className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded relative ${
                 activeTab === 'revision-studio'
@@ -3971,6 +4219,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         timestamp: last.lastEdited,
                         actionUsed: 'Resume recent draft'
                       }]);
+                      setActiveDraftSource(last.source === 'Content Workspace' ? 'Content Workspace' : (last.source === 'External Content' ? 'External Content' : 'Content Library'));
                       setActiveTab('revision-studio');
                     } else {
                       alert("No drafts saved yet!");
@@ -4256,9 +4505,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 <button
                   onClick={handleGenerateIdeas}
-                  disabled={isIdeating || !ideationInput.trim()}
-                  className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2.5 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 disabled:opacity-50 mt-2"
+                  disabled={isIdeating || !aiProvider}
+                  className="bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
                 >
+                  {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                   {isIdeating ? 'Generating...' : 'Generate'}
                 </button>
               </div>
@@ -4447,6 +4697,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <span>Saved: {idea.dateCreated}</span>
                       <div className="flex gap-2 items-center">
                         <button
+                          onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
+                          className="bg-coh-cream text-coh-gold hover:text-coh-gold-dark border border-coh-gold/20 px-3 py-1.5 rounded font-serif font-bold text-[10px] flex items-center gap-1"
+                        >
+                          <Lightbulb size={10} /> Open in Visual Studio
+                        </button>
+                        <button
                           onClick={() => handleCopyIdeaToWorkspace(idea)}
                           className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-3 py-1.5 rounded font-serif font-bold text-[10px]"
                         >
@@ -4475,34 +4731,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {activeTab === 'content-workspace' && (
           <div className="space-y-8 animate-fadeIn">
             
-            {/* Onboarding Strip */}
-            {showOnboarding && (
-              <div className="bg-coh-navy text-coh-cream border border-coh-gold/30 p-4 rounded text-xs flex justify-between items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-6">
-                  <span className="font-serif uppercase tracking-wider text-coh-gold font-bold">Quick Start Guide:</span>
-                  <div className="flex gap-4">
-                    <span>1. Add topic or notes</span>
-                    <span className="text-coh-gold/50">→</span>
-                    <span>2. Choose channel and format</span>
-                    <span className="text-coh-gold/50">→</span>
-                    <span>3. Generate, revise, or save</span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('coh_hide_onboarding', 'true');
-                      setShowOnboarding(false);
-                    }}
-                    className="text-[10px] text-coh-gold hover:underline font-bold"
-                  >
-                    Don&rsquo;t show again
-                  </button>
-                  <span className="text-coh-gold/40">|</span>
-                  <button onClick={() => setShowOnboarding(false)} className="text-[10px] text-coh-cream/60 hover:underline">Dismiss</button>
-                </div>
-              </div>
-            )}
 
             {/* Title and Validation Warning block */}
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
@@ -4520,6 +4748,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
               {/* Mode Toggle Button Group */}
               <div className="flex bg-coh-navy/5 p-1 rounded border border-coh-gold/15">
+                <button
+                  onClick={() => setCreationMode('simple')}
+                  className={`px-4 py-2 text-xs font-semibold rounded transition ${
+                    creationMode === 'simple'
+                      ? 'bg-coh-navy text-coh-gold shadow-sm'
+                      : 'text-coh-navy/60 hover:text-coh-navy'
+                  }`}
+                >
+                  Simple Mode
+                </button>
                 <button
                   onClick={() => setCreationMode('quick')}
                   className={`px-4 py-2 text-xs font-semibold rounded transition ${
@@ -4557,9 +4795,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <span>Inputs changed. Regenerate to apply the latest brief.</span>
                 <button
                   onClick={handleGenerateDrafts}
-                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold animate-pulse"
+                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition"
                 >
-                  Regenerate Drafts
+                  Generate Again
                 </button>
               </div>
             )}
@@ -4572,69 +4810,81 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
               <div className="flex gap-2">
                 <span className="bg-coh-navy text-coh-gold text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
-                  COH Brain Rules Active
+                  Rules Active
                 </span>
               </div>
             </div>
 
-            {/* Content Templates container */}
-            <div className="bg-white border border-coh-gold/15 p-4 rounded shadow-sm text-xs space-y-2">
-              <span className="font-semibold block text-coh-navy/60">Templates:</span>
-              <div className="flex gap-2 flex-wrap">
-                {CONTENT_TEMPLATES.map(temp => (
-                  <button
-                    key={temp.name}
-                    onClick={() => applyTemplate(temp)}
-                    className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1.5 px-3 rounded text-[11px] transition font-medium"
-                    title={temp.desc}
-                  >
-                    {temp.name}
-                  </button>
-                ))}
+            {/* Content Starters container */}
+            <div className="bg-white border border-coh-gold/15 p-4 rounded shadow-sm space-y-3">
+              <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => setShowContentStarters(!showContentStarters)}>
+                <span className="font-semibold text-coh-navy/80 text-sm">Content Starters</span>
+                <span className="text-xs text-coh-gold font-semibold bg-coh-cream px-2 py-1 rounded">
+                  {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
+                </span>
               </div>
-            </div>
+              
+              {showContentStarters && (
+                <div className="space-y-4 pt-2 border-t border-coh-gold/10">
+                  <div className="space-y-2">
+                    <span className="font-medium block text-coh-navy/60 text-xs">Templates:</span>
+                    <div className="flex gap-2 flex-wrap">
+                      {CONTENT_TEMPLATES.map(temp => (
+                        <button
+                          key={temp.name}
+                          onClick={() => applyTemplate(temp)}
+                          className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1.5 px-3 rounded text-[11px] transition font-medium"
+                          title={temp.desc}
+                        >
+                          {temp.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-            {/* Example Pre-fill chips */}
-            <div className="bg-white border border-coh-gold/15 p-4 rounded shadow-sm text-xs space-y-2">
-              <span className="font-semibold block text-coh-navy/60">Example Pre-fill Chips:</span>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => applyExampleChip('tetralogy')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Announce Tetralogy
-                </button>
-                <button
-                  onClick={() => applyExampleChip('cultural-ip')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Cultural IP & Model
-                </button>
-                <button
-                  onClick={() => applyExampleChip('event-notes')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Nordic Air (Soria Moria)
-                </button>
-                <button
-                  onClick={() => applyExampleChip('instagram-img')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Water Dragon Caption
-                </button>
-                <button
-                  onClick={() => applyExampleChip('sponsor-facing')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Patron Pitch Paragraph
-                </button>
-                <button
-                  onClick={() => applyExampleChip('newsletter-update')}
-                  className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
-                >
-                  Earth Canon Update
-                </button>
-              </div>
+                  <div className="space-y-2">
+                    <span className="font-medium block text-coh-navy/60 text-xs">Example Briefs:</span>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={() => applyExampleChip('tetralogy')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Announce Tetralogy
+                      </button>
+                      <button
+                        onClick={() => applyExampleChip('cultural-ip')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Cultural IP & Model
+                      </button>
+                      <button
+                        onClick={() => applyExampleChip('event-notes')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Nordic Air (Soria Moria)
+                      </button>
+                      <button
+                        onClick={() => applyExampleChip('instagram-img')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Water Dragon Caption
+                      </button>
+                      <button
+                        onClick={() => applyExampleChip('sponsor-facing')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Patron Pitch Paragraph
+                      </button>
+                      <button
+                        onClick={() => applyExampleChip('newsletter-update')}
+                        className="bg-coh-cream hover:bg-coh-gold/25 text-coh-navy border border-coh-gold/20 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                      >
+                        Earth Canon Update
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Three Panel Layout */}
@@ -4643,7 +4893,193 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {/* PANEL 1: BRIEF */}
               <div className="col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
                 
-                {creationMode === 'quick' ? (
+                {creationMode === 'simple' ? (
+                  <div className="space-y-4">
+                    <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">
+                      Simple Mode
+                    </h3>
+
+                    <div>
+                      <label className="block text-coh-navy/70 font-semibold mb-0.5">What do you want to create?</label>
+                      <p className="text-[10px] text-coh-navy/55 mb-1.5">Describe the message, topic, idea, announcement, question, or content you want to create.</p>
+                      <textarea
+                        rows={6}
+                        value={simpleBrief.goal}
+                        onChange={(e) => setSimpleBrief({ ...simpleBrief, goal: e.target.value })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy"
+                        placeholder="Draft a partner update about the new Climate Canon project..."
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-coh-navy/70 font-semibold mb-1">
+                        Channel
+                      </label>
+                      <select
+                        value={simpleBrief.channel}
+                        onChange={(e) => setSimpleBrief({ ...simpleBrief, channel: e.target.value })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
+                      >
+                        {CHANNELS.map(ch => (
+                          <option key={ch} value={ch}>{ch}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="bg-coh-navy/5 border border-coh-gold/20 p-3 rounded space-y-3">
+                      <label className="block text-coh-navy/80 font-bold mb-1 text-[11px] uppercase tracking-wider">
+                        Add Context (Optional)
+                      </label>
+                      <div className="flex gap-1.5 bg-coh-cream/40 p-1 rounded">
+                        {(['paste', 'upload', 'link'] as const).map(mode => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setInlineSourceType(mode)}
+                            className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
+                              inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-coh-navy/60 hover:bg-coh-cream'
+                            }`}
+                          >
+                            {mode === 'link' ? 'URL Context' : mode}
+                          </button>
+                        ))}
+                      </div>
+
+                      {inlineSourceType === 'paste' && (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Source Title"
+                            value={inlinePasteData.title}
+                            onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
+                            className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
+                          />
+                          <textarea
+                            rows={3}
+                            placeholder="Paste source text..."
+                            value={inlinePasteData.content}
+                            onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
+                            className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px] font-mono"
+                          />
+                          <div className="flex justify-between items-center text-[10px]">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                checked={inlinePasteData.saveToLibrary}
+                                onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
+                              />
+                              Save to Source Library
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleAddWorkspaceSource('paste')}
+                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px]"
+                            >
+                              {inlinePasteData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {inlineSourceType === 'link' && (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            placeholder="Source Name"
+                            value={inlineLinkData.title}
+                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
+                            className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
+                          />
+                          <input
+                            type="text"
+                            placeholder="URL Context Link (https://...)"
+                            value={inlineLinkData.url}
+                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
+                            className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
+                          />
+                          <p className="text-[9px] text-coh-navy/40">Paste the relevant excerpt or summary so the system knows what to use. The app may not read the webpage automatically yet.</p>
+                          <textarea
+                            rows={2}
+                            placeholder="Relevant excerpt or summary..."
+                            value={inlineLinkData.summary}
+                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
+                            className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
+                          />
+                          {linkWarning && (
+                            <p className="text-[9px] text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200 leading-normal font-semibold">
+                              {linkWarning}
+                            </p>
+                          )}
+                          <div className="flex justify-between items-center text-[10px]">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                checked={inlineLinkData.saveToLibrary}
+                                onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
+                              />
+                              Save to Source Library
+                            </label>
+                            <button
+                              type="button"
+                              onClick={handleAddWorkspaceLink}
+                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px]"
+                            >
+                              {inlineLinkData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {inlineSourceType === 'upload' && (
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            ref={inlineFileInputRef}
+                            onChange={handleWorkspaceFileUpload}
+                            className="hidden"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => inlineFileInputRef.current?.click()}
+                            className="w-full bg-coh-cream border border-coh-gold/10 hover:bg-coh-cream-dark p-2 rounded text-center text-[11px] font-semibold text-coh-navy"
+                          >
+                            Upload File
+                          </button>
+                          <p className="text-[9px] text-coh-navy/40 text-center">Supported: .txt files only. PDF parsing not currently supported.</p>
+                          {inlineUploadData.title && (
+                            <div className="text-[10px] text-coh-navy/60 italic truncate">
+                              Selected: {inlineUploadData.title}
+                            </div>
+                          )}
+                          <div className="flex justify-between items-center text-[10px]">
+                            <label className="flex items-center gap-1">
+                              <input
+                                type="checkbox"
+                                checked={inlineUploadData.saveToLibrary}
+                                onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
+                              />
+                              Save to Source Library
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleAddWorkspaceSource('upload')}
+                              disabled={!inlineUploadData.title}
+                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] disabled:opacity-50"
+                            >
+                              {inlineUploadData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="bg-coh-cream/30 border border-coh-gold/20 p-3 rounded">
+                      <p className="text-[10px] text-coh-navy/70 italic text-center">
+                        The system will infer format, audience, tone, and purpose from your request.
+                      </p>
+                    </div>
+                  </div>
+                ) : creationMode === 'quick' ? (
                   <div className="space-y-4">
                     <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">
                       Start With Notes Brief
@@ -5006,14 +5442,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {advancedBrief.audience === 'Custom Audience' && (
                       <div>
                         <label className="block text-coh-navy/70 font-semibold mb-1">Describe the audience</label>
-                        <input
-                          type="text"
+                        <textarea
                           value={advancedBrief.customAudience}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, customAudience: e.target.value })}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-xs"
-                          placeholder="Example: Nordic cultural funders, climate-tech executives"
+                          className="w-full min-h-[80px] resize-y bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-xs"
+                          placeholder="Example: Nordic cultural funders, climate-tech executives, opera patrons, or local community partners"
                         />
-                        <p className="text-[9px] text-coh-navy/40 mt-1">Describe the group in plain language so the system can adapt the content.</p>
+                        <p className="text-[9px] text-coh-navy/40 mt-1">Describe the group in plain language so the system can adapt tone, vocabulary, and CTA.</p>
                       </div>
                     )}
 
@@ -5181,7 +5616,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 onClick={() => handleAddWorkspaceSource('paste')}
                                 className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px]"
                               >
-                                Add Source
+                                {inlinePasteData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
                               </button>
                             </div>
                           </div>
@@ -5252,8 +5687,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               onClick={() => inlineFileInputRef.current?.click()}
                               className="w-full bg-coh-cream border border-coh-gold/10 hover:bg-coh-cream-dark p-2 rounded text-center text-[11px] font-semibold text-coh-navy"
                             >
-                              Choose Plain Text File
+                              Upload File
                             </button>
+                            <p className="text-[9px] text-coh-navy/40 text-center">Supported: .txt files only. PDF parsing not currently supported.</p>
                             {inlineUploadData.title && (
                               <div className="text-[10px] text-coh-navy/60 italic truncate">
                                 Selected: {inlineUploadData.title}
@@ -5274,7 +5710,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 disabled={!inlineUploadData.title}
                                 className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] disabled:opacity-50"
                               >
-                                Bind File
+                                {inlineUploadData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
                               </button>
                             </div>
                           </div>
@@ -5361,19 +5797,100 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 )}
 
-                <div className="pt-2 border-t border-coh-gold/10">
+                <div className="space-y-4 pt-4 border-t border-coh-gold/15 mt-4">
+                  <div className="flex items-center gap-1.5 text-coh-gold border-b border-coh-gold/15 pb-2">
+                    <Terminal size={15} />
+                    <span className="font-serif text-base font-semibold">Always-On Content Rules <Tooltip text="The always-on rule layer. It protects COH facts, tone, channel rules, and claim boundaries." /></span>
+                  </div>
+                  <p className="text-[10px] text-coh-navy/55 leading-relaxed italic">
+                    These rules guide factual boundaries, voice, channel fit, and claim discipline in the background.
+                  </p>
+
+                  <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono mb-2">
+                    <span className="px-2 py-1 rounded bg-coh-navy text-coh-gold text-center font-bold">
+                      Rules Active
+                    </span>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${approvedFactsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Facts Grounded
+                    </span>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${voiceRulesLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Voice Active
+                    </span>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${channelsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Channels Set
+                    </span>
+                  </div>
+
+                  {activeDraftText && (
+                    <div className="space-y-4 pt-2">
+                      <div className="flex justify-between items-center border-b border-coh-gold/15 pb-2">
+                        <span className="font-serif text-base font-semibold text-coh-navy font-bold">Real-time Compliance Audit</span>
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${
+                          auditResults.status === 'Ready' ? 'bg-green-100 text-green-800' :
+                          auditResults.status === 'Needs Revision' ? 'bg-amber-100 text-amber-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {auditResults.status}
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {auditResults.checks.map((chk: any, idx: number) => (
+                          <div key={idx} className="flex gap-2 items-start border-b border-coh-gold/10 pb-2 last:border-0 last:pb-0">
+                            <span className={`p-0.5 rounded mt-0.5 ${chk.pass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                              {chk.pass ? <Check size={12} /> : <AlertTriangle size={12} />}
+                            </span>
+                            <div className="space-y-1">
+                              <span className="font-semibold text-coh-navy flex items-center gap-1.5 text-[11px]">
+                                {chk.name}
+                              </span>
+                              <p className="text-[10px] text-coh-navy/55">{chk.desc}</p>
+                              {!chk.pass && (
+                                <div className="text-[9px] bg-red-50 p-2 border border-red-100 rounded text-red-800 space-y-1">
+                                  <div><strong>Issue:</strong> {chk.whyItMatters}</div>
+                                  <div><strong>Fix:</strong> {chk.suggestedFix}</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border-t border-coh-gold/15 pt-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="font-mono text-[10px] font-bold text-coh-gold uppercase">Prompt Builder Output</span>
+                      <button
+                        onClick={() => handleCopyClipboard(compileStructuredPrompt(), 'prompt')}
+                        className="text-[10px] font-bold text-coh-navy hover:text-coh-gold transition"
+                      >
+                        {copySuccessMap['prompt'] ? 'Copied!' : 'Copy AI Prompt'}
+                      </button>
+                    </div>
+                    <details className="text-[10px] text-coh-navy/40 cursor-pointer">
+                      <summary className="hover:text-coh-gold transition">Inspect Compiled Prompt</summary>
+                      <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
+                        {compileStructuredPrompt()}
+                      </pre>
+                    </details>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-coh-gold/10 mt-4">
                   <button
                     onClick={handleGenerateDrafts}
                     disabled={isGeneratingDrafts}
-                    className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20"
+                    className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2"
                   >
+                    {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
                   </button>
                 </div>
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="col-span-5 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
+              <div className="col-span-8 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
                 
                 <div className="border-b border-coh-gold/15 pb-2 flex justify-between items-center">
                   <h3 className="font-serif text-lg font-semibold text-coh-navy">
@@ -5393,9 +5910,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <span>Inputs changed. Regenerate to apply the latest brief.</span>
                         <button
                           onClick={handleGenerateDrafts}
-                          className="bg-coh-navy text-coh-gold px-2.5 py-1.5 rounded text-[10px] font-bold"
+                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition"
                         >
-                          Regenerate
+                          Generate Again
                         </button>
                       </div>
                     )}
@@ -5470,6 +5987,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option A`);
                               setActiveDraftVersion(1);
                               setActiveDraftHistory([{ version: 1, text: draftOptions.optionA, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
+                              setActiveDraftSource('Content Workspace');
                               setActiveTab('revision-studio');
                             }}
                             className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light text-[10px] font-bold px-3 py-1.5 rounded transition"
@@ -5526,6 +6044,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option B`);
                               setActiveDraftVersion(1);
                               setActiveDraftHistory([{ version: 1, text: draftOptions.optionB, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
+                              setActiveDraftSource('Content Workspace');
                               setActiveTab('revision-studio');
                             }}
                             className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light text-[10px] font-bold px-3 py-1.5 rounded transition"
@@ -5628,8 +6147,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <option value="More institutional">More institutional</option>
                           <option value="More visual">More visual</option>
                         </select>
-                        <button onClick={handleGenerateDrafts} className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition">
-                          Generate Another Version
+                        <button 
+                          onClick={handleGenerateDrafts} 
+                          disabled={isGeneratingDrafts}
+                          className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50"
+                        >
+                          {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
+                          {isGeneratingDrafts ? 'Generating...' : 'Generate'}
                         </button>
                       </div>
                     </div>
@@ -5699,96 +6223,253 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 )}
               </div>
 
-              {/* PANEL 3: SAFEGUARDS */}
-              <div className="col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-6 text-xs font-sans">
-                
-                {/* Brain Always-On Panel */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-1.5 text-coh-gold border-b border-coh-gold/15 pb-2">
-                    <Terminal size={15} />
-                    <span className="font-serif text-base font-semibold">COH Brain: Always-On Rules <Tooltip text="The always-on rule layer. It protects COH facts, tone, channel rules, and claim boundaries." /></span>
-                  </div>
-                  <p className="text-[10px] text-coh-navy/55 leading-relaxed italic">
-                    The COH Brain guides the content engine in the background. It is not a normal source file. Use Source Library or Add Source when you want to provide specific content material.
-                  </p>
 
-                  <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono mb-2">
-                    <span className="px-2 py-1 rounded bg-coh-navy text-coh-gold text-center font-bold">
-                      🧠 Brain Active
-                    </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${approvedFactsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Facts Grounded
-                    </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${voiceRulesLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Voice Active
-                    </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${channelsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Channels Set
-                    </span>
-                  </div>
-                </div>
-
-                {activeDraftText && (
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center border-b border-coh-gold/15 pb-2">
-                      <span className="font-serif text-base font-semibold text-coh-navy font-bold">Real-time Compliance Audit</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase ${
-                        auditResults.status === 'Ready' ? 'bg-green-100 text-green-800' :
-                        auditResults.status === 'Needs Revision' ? 'bg-amber-100 text-amber-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {auditResults.status}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {auditResults.checks.map((chk: any, idx: number) => (
-                        <div key={idx} className="flex gap-2 items-start border-b border-coh-gold/10 pb-2 last:border-0 last:pb-0">
-                          <span className={`p-0.5 rounded mt-0.5 ${chk.pass ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {chk.pass ? <Check size={12} /> : <AlertTriangle size={12} />}
-                          </span>
-                          <div className="space-y-1">
-                            <span className="font-semibold text-coh-navy flex items-center gap-1.5 text-[11px]">
-                              {chk.name}
-                            </span>
-                            <p className="text-[10px] text-coh-navy/55">{chk.desc}</p>
-                            {!chk.pass && (
-                              <div className="text-[9px] bg-red-50 p-2 border border-red-100 rounded text-red-800 space-y-1">
-                                <div><strong>Issue:</strong> {chk.whyItMatters}</div>
-                                <div><strong>Fix:</strong> {chk.suggestedFix}</div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="border-t border-coh-gold/15 pt-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[10px] font-bold text-coh-gold uppercase">Prompt Builder Output</span>
-                    <button
-                      onClick={() => handleCopyClipboard(compileStructuredPrompt(), 'prompt')}
-                      className="text-[10px] font-bold text-coh-navy hover:text-coh-gold transition"
-                    >
-                      {copySuccessMap['prompt'] ? 'Copied!' : 'Copy AI Prompt'}
-                    </button>
-                  </div>
-                  <details className="text-[10px] text-coh-navy/40 cursor-pointer">
-                    <summary className="hover:text-coh-gold transition">Inspect Compiled Prompt</summary>
-                    <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
-                      {compileStructuredPrompt()}
-                    </pre>
-                  </details>
-                </div>
-
-              </div>
             </div>
           </div>
         )}
 
         {/* --- TAB 3: REVISION STUDIO --- */}
+        {activeTab === 'visual-studio' && (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
+              <div>
+                <h2 className="font-serif text-3xl font-normal text-coh-navy">Visual Studio</h2>
+                <p className="text-sm text-coh-navy/60 font-sans mt-1">Create visual outputs from full visual directions or custom prompts.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              {/* Left Column: Editor & Controls */}
+              <div className="lg:col-span-5 space-y-6">
+                
+                {/* Input Mode Selector */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
+                  <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">Input Mode</h3>
+                  
+                  <div className="flex bg-coh-navy/5 p-1 rounded border border-coh-gold/15">
+                    <button
+                      onClick={() => setVsInputMode('Manual')}
+                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Manual' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
+                    >
+                      Manual Prompt
+                    </button>
+                    <button
+                      onClick={() => setVsInputMode('Existing')}
+                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Existing' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
+                    >
+                      Existing Visual Direction
+                    </button>
+                  </div>
+
+                  {vsInputMode === 'Existing' ? (
+                    <div>
+                      {vsSourceItem ? (
+                        <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy border border-coh-gold/10">
+                          <span className="block text-[10px] uppercase tracking-wider text-coh-navy/60 mb-1">From {vsSourceItem.type}</span>
+                          <strong className="block truncate font-serif" title={vsSourceItem.title}>{vsSourceItem.title}</strong>
+                        </div>
+                      ) : (
+                        <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy/60 italic border border-coh-gold/10">
+                          No visual direction selected. Send one from Content Workspace or Library.
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-coh-navy/70 font-semibold mb-1">Visual Prompt or Brief</label>
+                      <textarea
+                        value={vsManualPrompt}
+                        onChange={(e) => setVsManualPrompt(e.target.value)}
+                        placeholder="Paste a prompt, visual direction, image idea, or creative brief."
+                        rows={4}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-xs font-sans"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Generation Controls */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
+                  <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">Generation Settings</h3>
+                  
+                  <div>
+                    <label className="block text-coh-navy/70 font-semibold mb-1">Prompt Build Mode</label>
+                    <select
+                      value={vsPromptMode}
+                      onChange={(e) => setVsPromptMode(e.target.value as any)}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
+                    >
+                      {vsInputMode === 'Manual' && <option value="Manual Only">Manual Prompt Only</option>}
+                      <option value="Full + AI">Full Visual Direction + AI Image Prompt</option>
+                      <option value="Full">Full Visual Direction</option>
+                      <option value="AI Only">AI Image Prompt Only</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-coh-navy/70 font-semibold mb-1">Aspect Ratio</label>
+                    <select
+                      value={vsAspectRatio}
+                      onChange={(e) => setVsAspectRatio(e.target.value)}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
+                    >
+                      <option value="Square 1:1 (1024x1024)">Square 1:1 (1024x1024)</option>
+                      <option value="LinkedIn Post (1024x1024)">LinkedIn Post (1:1)</option>
+                      <option value="Instagram Feed (1024x1024)">Instagram Feed (1:1)</option>
+                      
+                      <option disabled>──────────</option>
+                      
+                      <option value="Landscape (1536x1024)">Landscape (1536x1024)</option>
+                      <option value="Landscape 3:2 (1536x1024)">Landscape 3:2 (1536x1024)</option>
+                      <option value="Wide Banner / Hero (landscape) (1536x1024)">Wide Banner / Hero (landscape)</option>
+                      <option value="Newsletter Header (1536x1024)">Newsletter Header (landscape)</option>
+                      <option value="Website Hero (1536x1024)">Website Hero (landscape)</option>
+                      
+                      <option disabled>──────────</option>
+
+                      <option value="Portrait (1024x1536)">Portrait (1024x1536)</option>
+                      <option value="Portrait 4:5 (1024x1536)">Portrait 4:5 (1024x1536)</option>
+                      <option value="Instagram Story (1024x1536)">Instagram Story (portrait)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-coh-navy/70 font-semibold mb-1">Visual Style</label>
+                    <select
+                      value={vsVisualStyle}
+                      onChange={(e) => setVsVisualStyle(e.target.value)}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
+                    >
+                      <option value="Editorial Photomontage">Editorial Photomontage</option>
+                      <option value="Cinematic Realism">Cinematic Realism</option>
+                      <option value="Premium Illustration">Premium Illustration</option>
+                      <option value="Minimal Graphic">Minimal Graphic</option>
+                      <option value="Social Poster">Social Poster</option>
+                    </select>
+                  </div>
+
+                  <div className="pt-2 border-t border-coh-gold/10 mt-4">
+                    <button
+                      onClick={handleGenerateImage}
+                      disabled={isGeneratingImage || !aiProvider}
+                      className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2"
+                    >
+                      {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
+                      {isGeneratingImage ? 'Generating...' : 'Generate'}
+                    </button>
+                  </div>
+                  {!aiProvider && <p className="text-xs text-red-500 text-center">No AI provider configured.</p>}
+                  {aiLastError && <p className="text-xs text-red-500 text-center">{aiLastError}</p>}
+                </div>
+
+              {/* Structured Visual Brief Editor */}
+              <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 max-h-[80vh] overflow-y-auto text-xs">
+                <div className="flex justify-between items-center mb-4 border-b border-coh-gold/15 pb-2">
+                  <h3 className="font-serif text-base font-bold text-coh-navy">Structured Visual Brief</h3>
+                  {vsInputMode === 'Manual' && (
+                    <button
+                      onClick={() => setShowAdvancedBrief(!showAdvancedBrief)}
+                      className="text-[10px] text-coh-gold uppercase font-bold tracking-wider hover:underline"
+                    >
+                      {showAdvancedBrief ? 'Hide' : 'Show'} Advanced
+                    </button>
+                  )}
+                </div>
+                
+                {(vsInputMode === 'Existing' || showAdvancedBrief) ? (
+                  <div className="space-y-4">
+                    {[
+                      { label: 'Visual Concept', value: vsConcept, setter: setVsConcept },
+                      { label: 'Format Recommendation', value: vsFormat, setter: setVsFormat },
+                      { label: 'Mood / Atmosphere', value: vsMood, setter: setVsMood },
+                      { label: 'Composition', value: vsComposition, setter: setVsComposition },
+                      { label: 'Color / Material Direction', value: vsPalette, setter: setVsPalette },
+                      { label: 'Typography / Layout', value: vsTypography, setter: setVsTypography },
+                      { label: 'Key Visual Elements', value: vsElements, setter: setVsElements },
+                      { label: 'What to Avoid', value: vsAvoid, setter: setVsAvoid },
+                      { label: 'AI Image Prompt', value: vsAIPrompt, setter: setVsAIPrompt },
+                      { label: 'Designer Notes', value: vsNotes, setter: setVsNotes }
+                    ].map(field => (
+                      <div key={field.label}>
+                        <label className="block text-coh-navy/70 font-semibold mb-1">{field.label}</label>
+                        <textarea
+                          value={field.value}
+                          onChange={(e) => field.setter(e.target.value)}
+                          rows={field.label === 'Visual Concept' || field.label === 'AI Image Prompt' ? 3 : 2}
+                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded font-sans"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                   <div className="text-center py-12 text-coh-navy/40 italic text-sm">
+                     Advanced brief fields are hidden in manual mode.
+                   </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Results Grid */}
+              <div className="lg:col-span-7 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
+                <div className="border-b border-coh-gold/15 pb-2 flex justify-between items-center">
+                  <h3 className="font-serif text-lg font-semibold text-coh-navy">
+                    Results
+                  </h3>
+                </div>
+                
+                {isGeneratingImage ? (
+                  <div className="bg-coh-cream p-12 rounded text-center border border-dashed border-coh-gold/30 flex flex-col items-center justify-center space-y-3">
+                    <div className="w-8 h-8 border-4 border-coh-gold border-t-transparent rounded-full animate-spin"></div>
+                    <p className="text-coh-navy font-semibold text-sm">Generating...</p>
+                  </div>
+                ) : vsGeneratedImages.length === 0 ? (
+                  <div className="bg-coh-cream p-8 rounded text-center text-coh-navy/50 italic border border-dashed border-coh-gold/30">
+                    No images generated yet.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {vsGeneratedImages.map(img => (
+                      <div key={img.id} className="bg-white border border-coh-gold/20 rounded p-4 shadow-sm group">
+                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-coh-gold/10" />
+                        <div className="flex gap-2 text-xs">
+                          <a
+                            href={img.url}
+                            download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
+                            className="w-full bg-coh-cream hover:bg-coh-gold hover:text-coh-navy text-coh-navy/80 border border-coh-gold/30 py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
+                          >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                            Download
+                          </a>
+                        </div>
+                        {/* Compiled Prompt Preview */}
+                        {img.promptUsed && (
+                          <details className="mt-4 border border-coh-navy/10 rounded overflow-hidden">
+                            <summary className="bg-coh-cream px-3 py-2 text-[10px] uppercase tracking-wider text-coh-navy/60 font-bold cursor-pointer select-none flex justify-between">
+                              <span>Compiled Prompt Preview (Debug)</span>
+                              <span className="opacity-50 font-mono">
+                                {img.generationSize || '1024x1024'} → {img.deliverySize || '1024x1024'}
+                              </span>
+                            </summary>
+                            <div className="p-3 bg-white text-[11px] font-mono text-coh-navy/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                              <div className="mb-2 pb-2 border-b border-coh-navy/10 text-[9px] opacity-70 grid grid-cols-2 gap-2">
+                                <div>Model: {img.model || 'unknown'}</div>
+                                <div>Quality: {img.quality || 'high'}</div>
+                                <div>Provider: {img.provider || 'unknown'}</div>
+                                <div>Delivery: {img.deliverySize || img.aspectRatio || 'unknown'}</div>
+                              </div>
+                              {img.promptUsed}
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'revision-studio' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6">
@@ -5813,6 +6494,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       />
                       <span className="bg-coh-navy text-coh-gold text-[10px] px-2 py-0.5 rounded font-mono font-bold">
                         Version v{activeDraftVersion}
+                      </span>
+                      <span className="bg-coh-gold/20 text-coh-navy border border-coh-gold/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">
+                        {activeDraftSource}
                       </span>
                     </div>
                     
@@ -5907,6 +6591,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       >
                         {isSavingToLibrary ? 'Saving...' : 'Save as New'}
                       </button>
+                      {activeDraftText.includes('Concept:') && (
+                        <button
+                          onClick={() => handleSendToVisualStudio({ id: 'draft-temp', title: activeDraftTitle || 'Unsaved Draft', type: 'Content' }, activeDraftText, 'Content')}
+                          className="flex items-center gap-1.5 bg-coh-cream text-coh-gold hover:text-coh-gold-dark py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/25 transition disabled:opacity-50"
+                        >
+                          <Lightbulb size={12} /> Open in Visual Studio
+                        </button>
+                      )}
                       <button
                         disabled={isSavingToLibrary}
                         onClick={() => handleSaveVersionToLibrary(false, true)}
@@ -6010,8 +6702,120 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-coh-gold/20 rounded bg-white">
-                <p className="text-xs text-coh-navy/40 font-mono">No active draft inside Revision Studio. Generate a draft in the Content Workspace first.</p>
+              <div className="grid grid-cols-3 gap-8">
+                <div className="col-span-2 bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+                  <h3 className="font-serif text-xl text-coh-navy font-semibold mb-1">Start a Revision</h3>
+                  <p className="text-xs text-coh-navy/60 mb-6 font-sans">
+                    Paste any draft, note, post, email, or external content to refine it.
+                  </p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Content to Revise</label>
+                      <textarea
+                        value={externalContentText}
+                        onChange={(e) => setExternalContentText(e.target.value)}
+                        placeholder="Paste your text here..."
+                        className="w-full h-40 bg-coh-cream/30 border border-coh-gold/20 p-3 rounded text-sm text-coh-navy resize-none"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Optional Context</label>
+                      <textarea
+                        value={externalContentContext}
+                        onChange={(e) => setExternalContentContext(e.target.value)}
+                        placeholder="Add audience, channel, purpose, tone, or what should change."
+                        className="w-full h-16 bg-coh-cream/30 border border-coh-gold/20 p-3 rounded text-xs text-coh-navy resize-none"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Channel</label>
+                        <select
+                          value={externalContentChannel}
+                          onChange={(e) => setExternalContentChannel(e.target.value)}
+                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
+                        >
+                          {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Output Format</label>
+                        <select
+                          value={externalContentFormat}
+                          onChange={(e) => setExternalContentFormat(e.target.value)}
+                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
+                        >
+                          {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Language</label>
+                        <select
+                          value={externalContentLanguage}
+                          onChange={(e) => setExternalContentLanguage(e.target.value)}
+                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
+                        >
+                          {['English', 'French', 'Spanish', 'German', 'Dutch'].map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Tone</label>
+                        <select
+                          value={externalContentTone}
+                          onChange={(e) => setExternalContentTone(e.target.value)}
+                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
+                        >
+                          {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2">
+                      <button
+                        onClick={handleStartExternalRevision}
+                        disabled={!externalContentText.trim()}
+                        className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50"
+                      >
+                        Start Revising
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="col-span-1 space-y-4">
+                  <div className="bg-coh-cream/30 border border-coh-gold/20 p-5 rounded">
+                    <h4 className="font-serif text-sm font-semibold text-coh-navy mb-2">How to use Revision Studio</h4>
+                    <ul className="text-xs text-coh-navy/70 space-y-3 font-sans">
+                      <li className="flex gap-2">
+                        <span className="text-coh-gold">1.</span>
+                        Paste any text from an external source or import a draft from the Content Workspace.
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-coh-gold">2.</span>
+                        Use the 1-click revision controls to apply the COH Tone of Voice or optimize for specific audiences.
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-coh-gold">3.</span>
+                        Provide custom instructions to the AI to rewrite specific sentences or adjust the framing.
+                      </li>
+                      <li className="flex gap-2">
+                        <span className="text-coh-gold">4.</span>
+                        Compare versions side-by-side using the version dropdown menu.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
             )}
           </div>
@@ -6228,6 +7032,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             setActiveDraftTitle(item.title);
                             setActiveDraftVersion(item.version || 1);
                             setActiveDraftHistory([{ version: item.version || 1, text: item.text, timestamp: item.lastEdited, actionUsed: 'Loaded from Saved Library' }]);
+                            setActiveDraftSource('Content Library');
                             setActiveTab('revision-studio');
                           }}
                           className="flex items-center gap-1 text-[11px] text-coh-navy hover:text-coh-gold font-semibold transition"
@@ -6247,6 +7052,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         >
                           Download TXT
                         </button>
+                        {item.visualDirection && (
+                          <button
+                            onClick={() => handleSendToVisualStudio(item, item.visualDirection!, 'Library')}
+                            className="flex items-center gap-1 text-[11px] text-coh-gold hover:text-coh-gold-dark font-semibold transition"
+                          >
+                            <Lightbulb size={11} /> Open in Visual Studio
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -6555,31 +7368,45 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {settingsSection === 'ai' && (
               <div className="space-y-6">
 
+
                 {/* Status Badge */}
                 <div className="flex items-center gap-3 bg-coh-cream border border-coh-gold/20 p-4 rounded">
-                  <span className={`w-3 h-3 rounded-full ${aiStatus === 'connected' ? 'bg-green-500' : aiStatus === 'error' ? 'bg-red-500' : aiStatus === 'testing' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-300'}`} />
+                  <span className={`w-3 h-3 rounded-full ${aiStatus === 'connected' ? (settingsKeyDirty ? 'bg-yellow-500' : 'bg-green-500') : aiStatus === 'error' ? 'bg-red-500' : aiStatus === 'testing' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-300'}`} />
                   <div className="flex-1">
                     <span className="text-sm font-bold text-coh-navy">
-                      {aiStatus === 'connected' ? 'AI Generation Active' :
+                      {aiStatus === 'connected' && !settingsKeyDirty ? 'AI Generation Active' :
+                       aiStatus === 'connected' && settingsKeyDirty ? 'Settings Changed' :
                        aiStatus === 'testing' ? 'Testing Connection...' :
                        aiStatus === 'error' ? 'Connection Error' :
+                       settingsTestPassed ? 'Connection Verified' :
                        aiStatus === 'needs_retest' ? 'Needs Retest' :
                        'AI Not Connected — Prototype Mode'}
                     </span>
-                    {aiProvider && <span className="text-xs text-coh-navy/50 block mt-0.5">{aiProvider} / {aiModel}</span>}
-                    {aiLastTested && <span className="text-xs text-coh-navy/40 block">Last tested: {aiLastTested}</span>}
+                    {(aiProvider || settingsProvider) && (
+                      <div className="text-xs text-coh-navy/60 mt-1 space-y-0.5">
+                        <span className="block">Provider: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? aiProvider : settingsProvider}</span></span>
+                        <span className="block">Text model: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? aiTextModel : (settingsTextModel || 'N/A')}</span></span>
+                        <span className="block">Image model: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? (aiImageModel || 'N/A') : (settingsImageModel || 'N/A')}</span></span>
+                      </div>
+                    )}
+                    {aiLastTested && <span className="text-xs text-coh-navy/40 block mt-1">Last tested: {aiLastTested}</span>}
                     {aiLastError && <span className="text-xs text-red-600 block mt-0.5">{aiLastError}</span>}
-                    {aiLatency > 0 && aiStatus === 'connected' && <span className="text-xs text-green-700 block">Latency: {aiLatency}ms</span>}
+                    {aiLatency > 0 && aiStatus === 'connected' && !settingsKeyDirty && <span className="text-xs text-green-700 block">Latency: {aiLatency}ms</span>}
+                    
+                    {/* Status Helper Message */}
+                    <span className="text-xs font-semibold text-coh-navy/70 block mt-2">
+                      {aiStatus === 'connected' && !settingsKeyDirty ? 'Text and image generation are active.' :
+                       aiStatus === 'connected' && settingsKeyDirty ? 'Test the updated configuration before saving.' :
+                       settingsTestPassed ? 'Save settings to activate this configuration.' :
+                       'Configure and test connection to activate.'}
+                    </span>
                   </div>
                 </div>
 
                 {/* Form */}
                 <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-5">
                   <h3 className="font-serif text-lg text-coh-navy font-semibold">Configure AI Provider</h3>
-                  <p className="text-xs text-coh-navy/60 font-semibold text-coh-navy/80 bg-coh-cream/40 p-3.5 border border-coh-gold/10 rounded">
-                    API keys must be configured on the backend or in deployment environment variables. Do not expose keys in the browser.
-                  </p>
-
+                  
                   {/* Provider */}
                   <div>
                     <label className="block text-sm font-semibold text-coh-navy mb-1">AI Provider</label>
@@ -6588,7 +7415,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       onChange={(e) => {
                         const p = e.target.value;
                         setSettingsProvider(p);
-                        setSettingsModel(providerDefaults[p]?.model || '');
+                        
+                        const recText = MODEL_REGISTRY.find(m => m.provider === p && m.type === 'text' && m.isRecommended) || MODEL_REGISTRY.find(m => m.provider === p && m.type === 'text');
+                        setSettingsTextModel(recText ? recText.id : '');
+                        
+                        if (p === 'openai' || p === 'openrouter') {
+                          const recImage = MODEL_REGISTRY.find(m => m.provider === p && m.type === 'image' && m.isRecommended) || MODEL_REGISTRY.find(m => m.provider === p && m.type === 'image');
+                          setSettingsImageModel(recImage ? recImage.id : '');
+                        } else {
+                          setSettingsImageModel('');
+                        }
+                        
                         setSettingsBaseUrl('');
                         setSettingsTestPassed(null);
                         setSettingsTestResult('');
@@ -6602,18 +7439,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <option value="mistral">Mistral</option>
                       <option value="openrouter">OpenRouter / OpenAI-Compatible</option>
                     </select>
-                  </div>
-
-                  {/* Model */}
-                  <div>
-                    <label className="block text-sm font-semibold text-coh-navy mb-1">Model</label>
-                    <input
-                      type="text"
-                      value={settingsModel}
-                      onChange={(e) => { setSettingsModel(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
-                      placeholder={providerDefaults[settingsProvider]?.model || 'Enter model name'}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono"
-                    />
                   </div>
 
                   {/* Base URL (OpenRouter / Custom only) */}
@@ -6637,72 +7462,156 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       type="password"
                       value={settingsApiKey}
                       onChange={(e) => { setSettingsApiKey(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); setSettingsTestResult(''); }}
-                      placeholder={providerDefaults[settingsProvider]?.placeholder || 'Enter API key'}
+                      placeholder={MODEL_REGISTRY.find(m => m.provider === settingsProvider)?.provider === 'openai' ? 'sk-proj-...' : 'Enter API key'}
                       className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono"
                       autoComplete="off"
                     />
-                    <p className="text-xs text-coh-navy/50 mt-1">
-                      API keys are configured securely via environment variables on the backend.
+                    <p className="text-xs text-coh-navy/60 font-semibold bg-coh-cream/40 p-2 mt-2 border border-coh-gold/10 rounded">
+                      API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser.
                     </p>
                   </div>
 
-                  {/* Test Connection */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      disabled={settingsTesting || !settingsApiKey.trim() || !settingsModel}
-                      onClick={async () => {
-                        setSettingsTesting(true);
-                        setAiStatus('testing');
-                        setSettingsTestResult('');
-                        setSettingsTestPassed(null);
-                        try {
-                          const result = await aiService.testConnection(settingsProvider, settingsModel, settingsApiKey, settingsBaseUrl || undefined);
-                          if (result.connected) {
-                            setSettingsTestPassed(true);
-                            setSettingsTestResult(`Connected. Latency: ${result.latency}ms`);
-                            setAiLastTested(new Date().toLocaleString());
-                            setAiLatency(result.latency);
-                            setAiStatus('not_connected'); // Connected only after apply
-                            setSettingsKeyDirty(false);
-                          } else {
-                            setSettingsTestPassed(false);
-                            setSettingsTestResult(result.error || 'Connection failed.');
-                            setAiStatus('error');
-                            setAiLastError(result.error || 'Connection failed.');
-                          }
-                        } catch {
-                          setSettingsTestPassed(false);
-                          setSettingsTestResult('Could not reach the backend server. Is it running? Start with: npm run dev:server');
-                          setAiStatus('error');
-                        } finally {
-                          setSettingsTesting(false);
-                        }
-                      }}
-                      className="bg-coh-navy text-coh-cream px-4 py-2 rounded text-sm font-semibold hover:bg-coh-navy/80 disabled:opacity-40 transition"
-                    >
-                      {settingsTesting ? 'Testing...' : 'Test Connection'}
-                    </button>
+                  <hr className="border-coh-gold/10" />
 
-                    {settingsTestResult && (
-                      <span className={`text-sm font-semibold ${settingsTestPassed ? 'text-green-700' : 'text-red-600'}`}>
-                        {settingsTestPassed ? '✓ ' : '✗ '}{settingsTestResult}
-                      </span>
+                  {/* Text Model */}
+                  <div>
+                    <label className="block text-sm font-semibold text-coh-navy mb-1">Text Generation Model</label>
+                    <select
+                      value={settingsTextModel}
+                      onChange={(e) => { setSettingsTextModel(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
+                      disabled={!settingsProvider}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono disabled:opacity-50"
+                    >
+                      {!settingsTextModel && <option value="">Select a model</option>}
+                      {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'text').map(m => (
+                        <option key={m.id} value={m.id}>{m.label}</option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-coh-navy/50 mt-1 mb-2">Controls written outputs such as drafts, ideas, revisions, and prompts.</p>
+                    
+                    {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
+                      <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-2 rounded flex flex-wrap gap-x-4 gap-y-1">
+                        <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
+                        <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
+                        <span className="w-full"><strong className="text-coh-navy">Best for:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.bestUseCase}</span>
+                      </div>
                     )}
+                  </div>
+
+                  {/* Image Model */}
+                  {(settingsProvider === 'openai' || settingsProvider === 'openrouter') && (
+                    <div>
+                      <label className="block text-sm font-semibold text-coh-navy mb-1">Image Generation Model</label>
+                      <select
+                        value={settingsImageModel}
+                        onChange={(e) => { setSettingsImageModel(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
+                        disabled={!settingsProvider}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono disabled:opacity-50"
+                      >
+                        {!settingsImageModel && <option value="">Select a model</option>}
+                        {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'image').map(m => (
+                          <option key={m.id} value={m.id}>{m.label}</option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-coh-navy/50 mt-1 mb-2">
+                        Controls Visual Studio image generation. Image quality depends heavily on the selected model.
+                        {settingsImageModel === 'gpt-image-2' && <span className="block text-green-700 font-semibold mt-0.5">Recommended for highest visual quality.</span>}
+                        {settingsImageModel === 'dall-e-3' && <span className="block text-amber-600 font-semibold mt-0.5">Legacy fallback. May produce less refined visuals than GPT Image models.</span>}
+                      </p>
+                      
+                      {settingsImageModel && MODEL_REGISTRY.find(m => m.id === settingsImageModel) && (
+                        <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-2 rounded flex flex-wrap gap-x-4 gap-y-1">
+                          <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.quality}</span>
+                          <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.speed}</span>
+                          <span className="w-full"><strong className="text-coh-navy">Best for:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.bestUseCase}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  <hr className="border-coh-gold/10" />
+
+                  {/* Test Connection */}
+                  <div className="pb-3">
+                    <p className="text-sm font-semibold text-coh-navy mb-3">
+                      Choose provider and models, then test the connection before saving.
+                    </p>
+                    <div className="flex items-center gap-3">
+                      <button
+                        disabled={settingsTestCooldown > 0 || settingsTesting || !settingsApiKey.trim() || !settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)}
+                        onClick={async () => {
+                          setSettingsTesting(true);
+                          // Only set testing status if not currently handling a rate limit warning
+                          if (aiStatus !== 'error') setAiStatus('testing');
+                          
+                          setSettingsTestResult('');
+                          setSettingsTestPassed(null);
+                          try {
+                            const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined);
+                            if (result.connected) {
+                              setSettingsTestPassed(true);
+                              setSettingsTestResult(`Connection verified. You can now save these settings. (Latency: ${result.latency}ms)`);
+                              setAiLastTested(new Date().toLocaleString());
+                              setAiLatency(result.latency);
+                              setAiStatus('not_connected');
+                            } else {
+                              setSettingsTestPassed(false);
+                              const errMsg = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              setSettingsTestResult(errMsg);
+                              
+                              if (errMsg.includes('Rate limit reached')) {
+                                setSettingsTestCooldown(30); // 30 second cooldown
+                                // Do not overwrite aiStatus if it was a temporary rate limit
+                                // This prevents disconnecting a previously working setup
+                              } else {
+                                setAiStatus('error');
+                                setAiLastError(errMsg);
+                              }
+                            }
+                          } catch {
+                            setSettingsTestPassed(false);
+                            setSettingsTestResult('Could not reach the backend server. Is it running?');
+                            setAiStatus('error');
+                          } finally {
+                            setSettingsTesting(false);
+                          }
+                        }}
+                        className="bg-coh-navy text-coh-cream px-4 py-2 rounded text-sm font-semibold hover:bg-coh-navy/80 disabled:opacity-40 transition"
+                      >
+                        {settingsTesting ? 'Testing...' : (settingsTestCooldown > 0 ? `Wait ${settingsTestCooldown}s` : 'Test Connection')}
+                      </button>
+
+                      <div className="flex flex-col justify-center">
+                        {settingsTestResult && (
+                          <span className={`text-sm font-semibold ${settingsTestPassed ? 'text-green-700' : 'text-red-600'}`}>
+                            {settingsTestPassed ? '✓ ' : '✗ '}{settingsTestResult}
+                          </span>
+                        )}
+
+                        {(!settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)) && (
+                          <span className="text-xs text-red-500 font-semibold mt-1">
+                            Select provider, text model, and image model before testing.
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Apply Provider */}
                   <button
-                    disabled={settingsTestPassed !== true || settingsApplying || settingsKeyDirty}
+                    disabled={settingsTestPassed !== true || settingsApplying || (!settingsKeyDirty && aiStatus === 'connected')}
                     onClick={async () => {
                       setSettingsApplying(true);
                       try {
-                        await aiService.applyProvider(settingsProvider, settingsModel, settingsApiKey, settingsBaseUrl || undefined, aiLastTested);
+                        await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined, aiLastTested);
                         setAiStatus('connected');
                         setAiProvider(settingsProvider);
-                        setAiModel(settingsModel);
+                        setAiTextModel(settingsTextModel);
+                        setAiImageModel(settingsImageModel);
                         setGenerationMode('ai');
                         setAiLastError('');
-                        setSettingsTestResult('Provider applied. AI Generation is now active.');
+                        setSettingsTestResult('AI settings saved. Text and image generation are active.');
+                        setSettingsKeyDirty(false);
                       } catch {
                         setAiStatus('error');
                         setSettingsTestResult('Failed to apply provider. Check server logs.');
@@ -6710,10 +7619,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setSettingsApplying(false);
                       }
                     }}
-                    className="w-full bg-green-700 text-white px-4 py-2.5 rounded text-sm font-semibold hover:bg-green-800 disabled:opacity-40 transition"
+                    className={`w-full text-white px-4 py-2.5 rounded text-sm font-semibold transition ${(!settingsKeyDirty && aiStatus === 'connected') ? 'bg-green-600 hover:bg-green-600' : 'bg-green-700 hover:bg-green-800 disabled:opacity-40'}`}
                   >
-                    {settingsApplying ? 'Applying...' : settingsKeyDirty ? 'Test connection first' : settingsTestPassed ? 'Apply Provider & Activate AI Generation' : 'Test Connection First'}
+                    {settingsApplying ? 'Saving...' 
+                    : (!settingsKeyDirty && aiStatus === 'connected') ? 'Settings Saved'
+                    : settingsKeyDirty && settingsTestPassed !== true ? 'Test Connection First' 
+                    : (!settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)) ? 'Select models before saving.'
+                    : aiStatus === 'connected' ? 'Update AI Settings'
+                    : 'Save AI Settings'}
                   </button>
+
 
                   {/* Generation Mode */}
                   <div className="pt-4 border-t border-coh-gold/15 space-y-2">

@@ -143,20 +143,27 @@ app.get('/api/ai/status', requireAuth, async (req, res) => {
 // ─── Test Connection ──────────────────────────────────────────────────────────
 app.post('/api/ai/test', requireAuth, async (req, res) => {
   try {
-    let { provider, model, apiKey, baseUrl } = req.body;
-    if (!provider) return res.status(400).json({ error: 'Provider is required.' });
-    if (!model) return res.status(400).json({ error: 'Model is required.' });
+    let { provider, textModel, imageModel, apiKey, baseUrl } = req.body;
+    
+    if (!provider) return res.status(400).json({ error: 'Please select an AI provider.' });
+    if (!textModel) return res.status(400).json({ error: 'Text generation model is required.' });
+    if ((provider === 'openai' || provider === 'openrouter') && !imageModel) {
+      return res.status(400).json({ error: 'Image generation model is required.' });
+    }
+    
+    // For testing backward compatibility or simple tests
+    const modelToTest = textModel || req.body.model || 'gpt-3.5-turbo';
 
     if (!apiKey || apiKey === '••••••••') {
       const active = providerManager.getActiveConfig();
       if (active && active.provider === provider && active.apiKey) {
         apiKey = active.apiKey;
       } else {
-        return res.status(400).json({ error: 'API key is required.' });
+        return res.status(400).json({ error: 'API key is not configured on the backend.' });
       }
     }
 
-    const result = await providerManager.testConnection({ provider, model, apiKey, baseUrl });
+    const result = await providerManager.testConnection({ provider, textModel, imageModel, model: modelToTest, apiKey, baseUrl });
     res.json(result);
   } catch (err) {
     console.error('[/api/ai/test]', err.message);
@@ -167,9 +174,13 @@ app.post('/api/ai/test', requireAuth, async (req, res) => {
 // ─── Configure / Apply Provider ───────────────────────────────────────────────
 app.post('/api/ai/configure', (req, res) => {
   try {
-    let { provider, model, apiKey, baseUrl, displayName, lastTestedAt } = req.body;
-    if (!provider || !model) {
-      return res.status(400).json({ error: 'Provider and model are required.' });
+    let { provider, textModel, imageModel, apiKey, baseUrl, displayName, lastTestedAt } = req.body;
+    
+    // Fallback for older UI calling with `model`
+    if (!textModel && req.body.model) textModel = req.body.model;
+    
+    if (!provider || !textModel) {
+      return res.status(400).json({ error: 'Provider and text model are required.' });
     }
     
     if (!apiKey || apiKey === '••••••••') {
@@ -181,21 +192,20 @@ app.post('/api/ai/configure', (req, res) => {
       }
     }
 
-    const active = providerManager.getActiveConfig();
-    providerManager.setConfig({
+    providerManager.updateConfig({
       provider,
-      displayName: displayName || provider,
+      textModel,
+      imageModel: imageModel || '',
       apiKey,
-      model,
-      baseUrl: baseUrl || null,
-      apiKeySource: (active && apiKey === active.apiKey) ? (active.apiKeySource || 'runtime') : 'runtime',
+      baseUrl,
       status: 'connected',
-      lastTestedAt: lastTestedAt || new Date().toISOString(),
+      lastTestedAt: lastTestedAt || new Date().toISOString()
     });
-    res.json({ ok: true, message: `Provider "${provider}" applied.` });
+
+    res.json({ success: true, activeConfig: providerManager.getMaskedConfig() });
   } catch (err) {
     console.error('[/api/ai/configure]', err.message);
-    res.status(500).json({ error: err.message.substring(0, 200) });
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -217,6 +227,152 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('[/api/ai/generate]', err.message);
     res.status(500).json({ error: friendlyServerError(err) });
+  }
+});
+
+app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
+  try {
+    const { prompt, promptBuildMode, aspectRatio, visualStyle, visualBrief, inputMode, provider, model } = req.body;
+    
+    // Compile prompt on the backend
+    let compiledPrompt = '';
+    
+    // 1. Base components
+    let baseConcept = '';
+    let baseFormat = '';
+    let baseMood = '';
+    let baseComposition = '';
+    let basePalette = '';
+    let baseTypography = '';
+    let baseElements = '';
+    let baseAvoid = '';
+    let baseNotes = '';
+    let baseAiPrompt = '';
+
+    if (promptBuildMode === 'Full' || promptBuildMode === 'Full + AI') {
+      if (visualBrief?.concept) baseConcept = `Visual Concept: ${visualBrief.concept}\n`;
+      if (visualBrief?.format) baseFormat = `Format/Context: ${visualBrief.format} (Translate this into composition guidance rather than creating a literal text-heavy poster design.)\n`;
+      if (visualBrief?.mood) baseMood = `Mood/Atmosphere: ${visualBrief.mood}\n`;
+      if (visualBrief?.composition) baseComposition = `Composition: ${visualBrief.composition}\n`;
+      if (visualBrief?.palette) basePalette = `Color / Material Direction: ${visualBrief.palette}\n`;
+      if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography} (Note: Typography and layout notes are for downstream graphic design. Do NOT generate large readable text, headlines, captions, or slogans inside the image unless specifically requested below.)\n`;
+      if (visualBrief?.elements) baseElements = `Key Visual Elements: ${visualBrief.elements}\n`;
+      if (visualBrief?.avoid) baseAvoid = `Negative Prompt (Avoid these completely): ${visualBrief.avoid}\n`;
+      if (visualBrief?.notes) baseNotes = `Designer Notes: ${visualBrief.notes}\n`;
+    }
+    
+    if (promptBuildMode === 'AI Only' || promptBuildMode === 'Full + AI') {
+      if (visualBrief?.aiPrompt) baseAiPrompt = `\nSpecific AI Prompt Instructions: ${visualBrief.aiPrompt}\n`;
+    }
+
+    let corePrompt = baseConcept + baseFormat + baseMood + baseComposition + basePalette + baseTypography + baseElements + baseAvoid + baseNotes + baseAiPrompt;
+
+    // 2. Handle Manual Prompts vs Structured Prompts
+    if (inputMode === 'Manual' && prompt) {
+      if (promptBuildMode === 'Manual Only' || !promptBuildMode) {
+        compiledPrompt = `Raw Visual Direction:\n${prompt}`;
+      } else {
+        compiledPrompt = `Raw Visual Direction:\n${prompt}\n\nStructured Brief:\n${corePrompt}`;
+      }
+    } else {
+      compiledPrompt = corePrompt;
+    }
+    
+    // 3. Inject Visual Style Rules
+    let styleRules = '';
+    const style = visualStyle || 'Editorial Photomontage';
+    
+    if (style === 'Editorial Photomontage') {
+      styleRules = 'Create a refined, premium editorial image with cinematic realism and subtle mixed-media layering. The image should feel like a high-end cultural publication, not a social media poster, infographic, cartoon, or flat illustration. Avoid generic "eco-symbols" (like literal green leaves or recycling icons). NO cartoon characters. NO large text inside the image.';
+    } else if (style === 'Cinematic Realism') {
+      styleRules = 'Prioritize stunning photographic cinematic realism. High-end lighting, atmospheric depth, realistic textures. NO illustrations, NO vectors, NO cartoons, NO text.';
+    } else if (style === 'Premium Illustration') {
+      styleRules = 'Create a premium, sophisticated illustration. Avoid childish vector graphics, flat corporate art, or cheap stock vectors. Aim for mature, refined, detailed, artistic rendering. NO large typography.';
+    } else if (style === 'Minimal Graphic') {
+      styleRules = 'Use restrained, highly minimal graphic design. Clean lines, negative space, bold but sparse forms. Avoid clutter, realistic photography, or cartoonish graphics.';
+    } else if (style === 'Social Poster') {
+      styleRules = 'Create a stylized social poster format. Text is allowed if requested. Keep graphics bold, eye-catching, and vibrant.';
+    } else {
+      styleRules = 'Create a refined, premium editorial image with cinematic realism.';
+    }
+
+    let systemInstructions = `SYSTEM INSTRUCTION: ${styleRules}\n\nCRITICAL QUALITY RULES:\n- Respect the System Instruction style above.\n- Typography and layout notes are for external composition context; DO NOT place unrequested big text inside the image.\n- Negative Prompt rules MUST be strictly followed.`;
+
+    let finalCompiledPrompt = compiledPrompt;
+    
+    // 4. Use LLM 2-step pipeline to rewrite the prompt
+    const isGPTImage = (model || providerManager.getMaskedConfig()?.imageModel || '').startsWith('gpt-image');
+    if (compiledPrompt && promptBuildMode !== 'Manual Only' && !isGPTImage) {
+      try {
+        const textPrompt = `You are an expert Midjourney and DALL-E prompt engineer. Rewrite the following visual direction into a single, cohesive, highly detailed image generation prompt optimized for DALL-E 3. Do not include markdown or conversational text. Return only the raw prompt string.\n\n${compiledPrompt}`;
+        
+        const optimizedPrompt = await providerManager.compileImagePrompt(systemInstructions, textPrompt);
+        
+        if (optimizedPrompt && optimizedPrompt.trim()) {
+          finalCompiledPrompt = optimizedPrompt;
+        } else {
+          // Fallback if LLM fails
+          finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
+        }
+      } catch (err) {
+        console.warn('Failed to compile image prompt with LLM, falling back to raw compiler:', err.message);
+        finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
+      }
+    } else if (compiledPrompt) {
+      finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
+    }
+    
+    if (!finalCompiledPrompt.trim()) {
+      return res.status(400).json({ success: false, error: 'Prompt is empty. Please provide visual directions or a manual prompt.' });
+    }
+
+    // Call the provider manager with the compiled prompt
+    const generateInput = {
+      ...req.body,
+      prompt: finalCompiledPrompt,
+      quality: req.body.quality || 'high'
+    };
+    
+    console.log("=== Visual Studio Prompt Compilation ===");
+    console.log("Raw Visual Brief:", visualBrief || "None");
+    console.log("Compiled Prompt Length:", finalCompiledPrompt.length);
+    console.log("First 800 chars:", finalCompiledPrompt.substring(0, 800));
+    console.log("Included AI Image Prompt?", !!visualBrief?.aiPrompt);
+    console.log("Included Negative Prompt?", !!visualBrief?.avoid);
+    console.log("Visual Style:", visualStyle);
+    console.log("Model:", model || providerManager.getMaskedConfig()?.imageModel || 'dall-e-3');
+    console.log("Quality:", generateInput.quality);
+    console.log("Size:", generateInput.aspectRatio || '1024x1024');
+    console.log("========================================");
+
+    const imagesRaw = await providerManager.generateImage(generateInput);
+    
+    // Format response to requested shape
+    const formattedImages = imagesRaw.map((imgUrl, idx) => ({
+      id: `img-${Date.now()}-${idx}`,
+      url: imgUrl,
+      mimeType: imgUrl.startsWith('data:image/png') ? 'image/png' : 'image/jpeg',
+      promptUsed: finalCompiledPrompt,
+      provider: provider || providerManager.getMaskedConfig()?.provider || 'unknown',
+      model: model || providerManager.getMaskedConfig()?.model || 'unknown'
+    }));
+
+    res.json({ success: true, images: formattedImages });
+  } catch (err) {
+    console.error('[Generate Image error]', err.message);
+    try {
+      const parsedErr = JSON.parse(err.message);
+      if (parsedErr.isProviderError) {
+        return res.status(500).json({
+          success: false,
+          error: parsedErr.message,
+          debug: parsedErr.debug
+        });
+      }
+    } catch (parseErr) {
+      // Not a JSON error string
+    }
+    res.status(500).json({ success: false, error: err.message || 'Image generation failed' });
   }
 });
 
@@ -284,11 +440,17 @@ function friendlyServerError(err) {
   if (msg.toLowerCase().includes('rate limit') || msg.includes('429')) return 'Rate limit reached. Try again in a moment.';
   if (msg.toLowerCase().includes('network') || msg.includes('fetch')) return 'Network error reaching AI provider.';
   if (msg.toLowerCase().includes('not configured')) return msg;
-  return 'AI generation error. Check server logs.';
+  
+  // Pass through safe rejection messages from our adapters
+  if (msg.includes('rejected the text generation request') || msg.includes('Text model is missing') || msg.includes('Provider is missing') || msg.includes('Compiled prompt is empty')) {
+    return msg;
+  }
+  
+  return msg || 'AI generation error. Check server logs.';
 }
 
 if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     console.log(`[COH AI Server] Running at http://localhost:${PORT}`);
     const cfg = providerManager.getMaskedConfig();
     if (cfg) {
@@ -297,6 +459,7 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
       console.log('[COH AI Server] No provider configured. Add keys to .env and restart, or configure in Settings.');
     }
   });
+  server.on('error', (e) => console.error('[Server Error]', e));
 }
 
 export default app;
