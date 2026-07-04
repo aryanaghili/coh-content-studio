@@ -948,7 +948,7 @@ export default function App() {
           audience: ideationFilterAudience,
           depth: ideationFilterDepth,
           quality: ideationFilterQuality,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation', audience: ideationFilterAudience })
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation Workspace', audience: ideationFilterAudience })
         });
         const dateStr = new Date().toISOString().split('T')[0];
         const list: SavedIdea[] = [];
@@ -3697,7 +3697,7 @@ Revision History:
           tone: toneLevel,
           selectedRevisionAction: action,
           revisionInstruction: action === 'custom-instruction' ? customRevisionInstruction : '',
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision', action })
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision Studio', action })
         });
 
         revised = result.revisedCopy || revised;
@@ -4050,9 +4050,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
 
           <nav className="space-y-1">
+            <div className="pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
+              Overview
+            </div>
             <button
               onClick={() => setActiveTab('command-center')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'command-center'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4062,21 +4065,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Command Center
             </button>
 
-            <button
-              onClick={() => setActiveTab('operating-core')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
-                activeTab === 'operating-core'
-                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
-                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
-              }`}
-            >
-              <CpuIcon size={16} />
-              Operating Core
-            </button>
-
+            <div className="pt-6 pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
+              Workspaces
+            </div>
             <button
               onClick={() => setActiveTab('ideation-workspace')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'ideation-workspace'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4085,10 +4079,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <Lightbulb size={16} />
               Ideation Workspace
             </button>
-
             <button
               onClick={() => setActiveTab('content-workspace')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'content-workspace'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4097,10 +4090,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <Cpu size={16} />
               Content Workspace
             </button>
-
             <button
               onClick={() => setActiveTab('visual-studio')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'visual-studio'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4111,10 +4103,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
               Visual Studio
             </button>
-
             <button
               onClick={() => setActiveTab('revision-studio')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded relative ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
                 activeTab === 'revision-studio'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4127,21 +4118,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
               )}
             </button>
 
-            <button
-              onClick={() => setActiveTab('content-library')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
-                activeTab === 'content-library'
-                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
-                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
-              }`}
-            >
-              <Bookmark size={16} />
-              Content Library
-            </button>
-
+            <div className="pt-6 pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
+              Libraries
+            </div>
             <button
               onClick={() => setActiveTab('idea-library')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'idea-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4150,10 +4132,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <FolderHeart size={16} />
               Idea Library
             </button>
-
+            <button
+              onClick={() => setActiveTab('content-library')}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'content-library'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <Bookmark size={16} />
+              Content Library
+            </button>
             <button
               onClick={() => setActiveTab('source-library')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'source-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4163,13 +4155,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Source Library
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-xs font-semibold tracking-wider text-coh-gold/40 uppercase">
+            <div className="pt-6 pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
               Configuration
             </div>
-
+            <button
+              onClick={() => setActiveTab('operating-core')}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'operating-core'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <CpuIcon size={16} />
+              Operating Core
+            </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'settings'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
@@ -4181,10 +4183,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </nav>
         </div>
 
-        <div className="border-t border-coh-gold/10 pt-4 text-center">
-          <p className="text-[10px] text-coh-gold/50 font-serif">COH Content Studio v2.5</p>
-          <p className="text-[9px] text-coh-gold/30 mt-1 font-mono">Audience Adaptation Layer</p>
-        </div>
       </aside>
 
       {/* --- Main Workspace Canvas --- */}
@@ -5896,10 +5894,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.coreStrategy.definition ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                       Identity Locked
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.forbidden.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.claims.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                       Boundaries Active
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.voiceAndLanguage.tone.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.voiceAndLanguage.overallTone.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                       Voice Calibrated
                     </span>
                     <span className={`px-2 py-1 rounded text-center font-bold bg-coh-gold/10 text-coh-navy`}>
