@@ -98,7 +98,10 @@ function friendlyError(err) {
 
 export async function generateImage(config, input) {
   const { apiKey, baseUrl, imageModel } = config;
-  const prompt = input.prompt;
+  let prompt = input.prompt;
+  if (input.operatingCoreInstructions) {
+    prompt = `${input.operatingCoreInstructions}\n\n${prompt}`;
+  }
   const requestedModel = input.model || imageModel || 'dall-e-3';
   const url = `${baseUrl || 'https://api.openai.com'}/v1/images/generations`;
 

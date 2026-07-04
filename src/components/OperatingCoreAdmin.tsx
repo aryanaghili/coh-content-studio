@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { OperatingCore, createDefaultOperatingCore } from '../lib/operatingCore';
+import { createDefaultOperatingCore } from '../lib/operatingCore';
+import type { OperatingCore, AudienceProfile, ChannelRule, RevisionStandard } from '../lib/operatingCore';
 import { Save, RefreshCw } from 'lucide-react';
 
 interface Props {

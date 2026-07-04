@@ -18,9 +18,13 @@ import {
   ArrowRight,
   Undo,
   Lightbulb,
-  FolderHeart
+  FolderHeart,
+  Cpu as CpuIcon
 } from 'lucide-react';
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
+import { createDefaultOperatingCore, compileOperatingCoreContext } from './lib/operatingCore';
+import type { OperatingCore } from './lib/operatingCore';
+import OperatingCoreAdmin from './components/OperatingCoreAdmin';
 
 // --- Type Definitions ---
 interface SourceFile {
@@ -420,6 +424,15 @@ function Tooltip({ text }: { text: string }) {
 export default function App() {
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
+  const [operatingCore, setOperatingCore] = useState<OperatingCore>(() => {
+    const saved = localStorage.getItem('coh_operating_core_v1');
+    return saved ? JSON.parse(saved) : createDefaultOperatingCore();
+  });
+
+  useEffect(() => {
+    localStorage.setItem('coh_operating_core_v1', JSON.stringify(operatingCore));
+  }, [operatingCore]);
+
   const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
   const [importedIdeationContext, setImportedIdeationContext] = useState<SavedIdea | null>(null);
@@ -771,7 +784,8 @@ export default function App() {
       },
       inputMode: vsInputMode,
       provider: aiProvider,
-      model: aiImageModel
+      model: aiImageModel,
+      operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Visual Studio' })
     };
 
     setIsGeneratingImage(true);
@@ -933,7 +947,8 @@ export default function App() {
           language: ideationFilterLanguage,
           audience: ideationFilterAudience,
           depth: ideationFilterDepth,
-          quality: ideationFilterQuality
+          quality: ideationFilterQuality,
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation', audience: ideationFilterAudience })
         });
         const dateStr = new Date().toISOString().split('T')[0];
         const list: SavedIdea[] = [];
@@ -1956,7 +1971,7 @@ export default function App() {
       'Risk to Avoid:': 'Risque à éviter :',
       'Next Step:': 'Étape suivante :',
       'Audience:': 'Public :',
-      'Tone:': 'Ton :',
+      'Ton:': 'Ton :',
       'Climate opera offers a unique advantage over other climate art: it is multi-sensory, somatic, and creates complete narrative worlds rather than static warnings.': 'L\'opéra climatique offre un avantage unique par rapport aux autres arts climatiques : il est multisensoriel, somatique et crée des mondes narratifs complets plutôt que des avertissements statiques.'
     },
     'German': {
@@ -2565,17 +2580,6 @@ export default function App() {
   // MAIN GENERATION FUNCTION — now routes through channel renderers
   // ─────────────────────────────────────────────────────────────────
 
-  // TEST A: LinkedIn + Post — "Message to the UN Secretary on the importance of art in climate..."
-  //         Expected: serious diplomatic post, no "Regarding the topic of"
-  // TEST B: TikTok + Caption — same input
-  //         Expected: hook-style short caption, not a LinkedIn paragraph
-  // TEST C: Facebook + Post — same input
-  //         Expected: warmer public-facing post, structurally different from LinkedIn
-  // TEST D: Direct Outreach + Email / Letter — same input
-  //         Expected: Email structure with subject/greeting/body/close
-  // TEST E: Channel change after generation
-  //         Expected: new render uses the new channel's renderer
-
   const generateStructuredDraft = (
     channel: string,
     format: string,
@@ -3006,6 +3010,12 @@ export default function App() {
           mustAvoid: creationMode === 'advanced' ? advancedBrief.mustAvoid : '',
           framingMode: dirMode,
           customFraming: customDir,
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { 
+            workspace: isSimple ? 'Simple Mode' : isQuick ? 'Quick Create' : 'Advanced Brief', 
+            channel, 
+            audience, 
+            format 
+          })
         };
 
         const result = await aiService.generate(canonicalInput);
@@ -3687,6 +3697,7 @@ Revision History:
           tone: toneLevel,
           selectedRevisionAction: action,
           revisionInstruction: action === 'custom-instruction' ? customRevisionInstruction : '',
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision', action })
         });
 
         revised = result.revisedCopy || revised;
@@ -4049,6 +4060,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
             >
               <LayoutDashboard size={16} />
               Command Center
+            </button>
+
+            <button
+              onClick={() => setActiveTab('operating-core')}
+              className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'operating-core'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <CpuIcon size={16} />
+              Operating Core
             </button>
 
             <button
@@ -5846,25 +5869,24 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 <div className="space-y-4 pt-4 border-t border-coh-gold/15 mt-4">
                   <div className="flex items-center gap-1.5 text-coh-gold border-b border-coh-gold/15 pb-2">
-                    <Terminal size={15} />
-                    <span className="font-serif text-base font-semibold">Always-On Content Rules <Tooltip text="The always-on rule layer. It protects COH facts, tone, channel rules, and claim boundaries." /></span>
+                    <span className="font-serif text-base font-semibold">Operating Core Governance <Tooltip text="The unified central intelligence of the COH Content Studio. Drives identity, facts, audience, and formatting." /></span>
                   </div>
                   <p className="text-[10px] text-coh-navy/55 leading-relaxed italic">
-                    These rules guide factual boundaries, voice, channel fit, and claim discipline in the background.
+                    The Operating Core ensures absolute brand alignment, claim discipline, and channel fit for every generation.
                   </p>
 
                   <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono mb-2">
-                    <span className="px-2 py-1 rounded bg-coh-navy text-coh-gold text-center font-bold">
-                      Rules Active
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.coreStrategy.definition ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Identity Locked
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${approvedFactsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Facts Grounded
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.forbidden.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Boundaries Active
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${voiceRulesLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Voice Active
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.voiceAndLanguage.tone.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                      Voice Calibrated
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${channelsLoaded ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                      Channels Set
+                    <span className={`px-2 py-1 rounded text-center font-bold bg-coh-gold/10 text-coh-navy`}>
+                      Operating Core v1
                     </span>
                   </div>
 
@@ -6172,10 +6194,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </pre>
                     </div>
 
-                    {/* 4. Editorial Notes */}
-                    <div className="bg-red-50/50 p-4 border border-red-200/50 rounded text-xs space-y-1">
-                      <span className="font-serif font-bold text-red-800 text-xs block">Editorial Warning</span>
-                      <p className="text-[11px] text-red-800/80">{draftOptions.editorialWarning}</p>
+                    {/* 4. Strategy Fit Check */}
+                    <div className="bg-coh-navy/5 p-4 border border-coh-gold/20 rounded text-xs space-y-2">
+                      <div className="flex items-center gap-1.5 text-coh-navy">
+                        <span className="font-serif font-bold text-sm">Strategy Fit Check</span>
+                      </div>
+                      <p className="text-[11px] text-coh-navy/80 leading-relaxed font-medium">
+                        {draftOptions.editorialWarning.includes('Quality check:') || draftOptions.editorialWarning.includes('|') ? (
+                          <span className="text-red-700">{draftOptions.editorialWarning}</span>
+                        ) : (
+                          <span className="text-green-700">✓ Aligned with Operating Core parameters. {draftOptions.editorialWarning}</span>
+                        )}
+                      </p>
                     </div>
 
                     {/* Post-generation: Generate Another Version */}
