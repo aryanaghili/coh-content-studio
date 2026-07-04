@@ -107,8 +107,7 @@ export async function generateImage(config, input) {
   let requestBody = {
     model: requestedModel,
     prompt: prompt,
-    n: 1,
-    seed: input.seed ? parseInt(input.seed, 10) : Math.floor(Math.random() * 2147483647)
+    n: 1
   };
 
   const isPortrait = size.includes('Portrait') || size === '4:5' || size === '9:16' || size.includes('Instagram Story') || size.includes('1024x1792') || size.includes('1024x1536');
