@@ -422,6 +422,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('command-center');
   const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
+  const [importedIdeationContext, setImportedIdeationContext] = useState<SavedIdea | null>(null);
 
   // --- UI Toggles ---
   const [showContentStarters, setShowContentStarters] = useState<boolean>(false);
@@ -1142,24 +1143,50 @@ export default function App() {
   };
 
   const handleCopyIdeaToWorkspace = (idea: SavedIdea) => {
-    setQuickBrief(prev => ({
-      ...prev,
+    // Check if there is existing unsaved work
+    const hasUnsavedSimple = !!simpleBrief.goal.trim();
+    const hasUnsavedQuick = !!quickBrief.goal.trim();
+    const hasUnsavedAdvanced = !!advancedBrief.topic.trim();
+    
+    if (hasUnsavedSimple || hasUnsavedQuick || hasUnsavedAdvanced) {
+      if (!window.confirm("You have unsaved input in the Content Workspace. Do you want to overwrite it with this idea?")) {
+        return;
+      }
+    }
+
+    // Default to 'simple' mode unless the idea explicitly specifies advanced structures (we will use simple by default)
+    setCreationMode('simple');
+
+    const mappedNotes = `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`;
+
+    setSimpleBrief({
       goal: idea.title,
-      notes: `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`,
-      channel: idea.suggestedChannel || prev.channel,
-      outputFormat: idea.suggestedFormat || prev.outputFormat,
-      language: idea.language || prev.language
-    }));
+      channel: idea.suggestedChannel || 'LinkedIn'
+    });
+
+    setQuickBrief({
+      creationScope: 'Single Channel',
+      targetChannels: ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
+      goal: idea.title,
+      notes: mappedNotes,
+      channel: idea.suggestedChannel || 'LinkedIn',
+      mustInclude: '',
+      mustAvoid: '',
+      language: idea.language || 'English',
+      outputFormat: idea.suggestedFormat || 'Post'
+    });
 
     setAdvancedBrief(prev => ({
       ...prev,
       topic: idea.title,
-      customDirection: `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`,
+      customDirection: mappedNotes,
       channel: idea.suggestedChannel || prev.channel,
-      outputFormat: idea.suggestedFormat || prev.outputFormat,
-      language: idea.language || prev.language
+      audience: idea.suggestedAudience || prev.audience,
+      language: idea.language || prev.language,
+      outputFormat: idea.suggestedFormat || prev.outputFormat
     }));
 
+    setImportedIdeationContext(idea);
     setActiveTab('content-workspace');
   };
 
@@ -3026,6 +3053,7 @@ export default function App() {
           timestamp: new Date().toLocaleTimeString(),
           actionUsed: `AI Generated (${aiProvider}/${aiTextModel})`
         }]);
+        setImportedIdeationContext(null);
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : 'AI generation failed.';
         setValidationWarning(`AI Error: ${errorMsg}`);
@@ -4743,6 +4771,24 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <span className="inline-block mt-2 bg-coh-gold/15 text-coh-navy text-[10px] px-2 py-0.5 rounded font-mono font-semibold">
                     {startedFromNote}
                   </span>
+                )}
+                {importedIdeationContext && (
+                  <div className="mt-4 bg-coh-cream border-l-2 border-coh-gold p-3 rounded text-xs flex justify-between items-start font-sans shadow-sm">
+                    <div>
+                      <strong className="text-coh-navy flex items-center gap-1 mb-1">
+                        <Lightbulb size={12} /> Imported from Ideation Workspace
+                      </strong>
+                      <p className="text-coh-navy/80 mb-1 line-clamp-2">{importedIdeationContext.explanation}</p>
+                      <span className="text-[10px] text-coh-navy/50 block">Original Input: "{importedIdeationContext.originalInput}"</span>
+                    </div>
+                    <button 
+                      onClick={() => setImportedIdeationContext(null)}
+                      className="text-coh-navy/40 hover:text-coh-navy ml-4 text-lg font-bold"
+                      title="Clear imported context"
+                    >
+                      &times;
+                    </button>
+                  </div>
                 )}
               </div>
 
