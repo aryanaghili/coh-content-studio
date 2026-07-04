@@ -26,8 +26,7 @@ CLASSIFICATION TASK:
 
 RULES FOR IDEAS:
 - Respond in the selected language: ${input.language || 'English'}.
-- Do not generate generic COH sponsor pathways unless the user's input explicitly asks for sponsor/partnership topics.
-- For open or non-COH topics (e.g. "What is opera?!"), generate actual, meaningful ideas about that topic rather than forcing Climate Opera Haus details.
+${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
 - Each idea card must be fully formed with: title, shortExplanation, whyItWorks, bestChannelFit, suggestedOutputFormat, suggestedAudience, suggestedTone, possibleHook, possibleFirstPost, riskToAvoid, nextStep.
 
 OUTPUT FORMAT:
@@ -95,11 +94,8 @@ ${input.previousDraft}
 """
 
 WRITING CLEANLINESS RULES:
-- Do not use em dash (—) or long dash. Use commas or hyphens instead.
-- Avoid formulaic AI phrases (e.g., "now more than ever", "at the intersection", "in a world where").
-- Output the revised copy fully in ${input.language}. Keep approved proper nouns (e.g., Climate Opera Haus, Soria Moria) intact.
-- Preserve factual constraints and voice rules.
-${whatsappRules}
+- Output the revised copy fully in ${input.language}. Keep approved proper nouns intact.
+${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
 
 
 OUTPUT FORMAT:
@@ -139,28 +135,13 @@ CANONICAL BRIEF INPUT:
 - Pasted Notes / Sources: ${input.pastedNotes || '(None)'}
 
 COH BRAIN & CONTENT RULES GUARDRAILS:
-- Approved Facts: Soria Moria (Air), The Golden Fountain (Fire), The Water Dragon (Water), Roar to the Wind (Earth). Climate as lived condition, not campaign theme.
-- Claim Boundaries: Do not invent facts, venues, dates, sponsors, or project names.
+${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
 
 CRITICAL WRITING RULES:
 1. Do not repeat the raw input topic inside generic templates (e.g., avoid "Regarding the topic of...", "In focus: [raw input]").
 2. If the input is a question, answer it directly. If it is a thesis, build the argument. If it is promotional, create action-oriented copy.
-3. If Content Pillar is "General / Custom", do not force COH-specific strategic framing or company details. Focus directly on the user's topic.
-4. If Audience is "General Public", use accessible language with low jargon (avoid "somatic", "ecological thresholds").
-5. If Purpose is "General / Open", infer the purpose from the user's brief rather than forcing thought leadership.
-6. If Framing Mode is "Create Directly From Brief" (none), do not add extra strategic framing unless requested.
-7. Do not use em dash (—) or long dash.
-8. Keep metadata outside the final copy. Do not include labels such as "WhatsApp Message:".
-9. Fully write in ${input.language}. No mixed English and target language sentences.
-${isWhatsApp ? `
-WHATSAPP SPECIFIC RULES:
-- You are writing a WhatsApp-style direct message, not an email, post, caption, or letter.
-- Write for mobile reading. Keep it short and natural (1 to 3 short paragraphs max).
-- Avoid subject lines, "Dear..." greetings, long explanations, or heavy institutional language.
-- Avoid generic corporate sustainability language and overexplaining Climate Opera Haus.
-- Use a human, respectful, warm tone.
-- Make the purpose clear quickly and include one clear next step or question.
-- Do not make it sound like a newsletter or LinkedIn post.` : ''}
+3. Keep metadata outside the final copy. Do not include labels such as "WhatsApp Message:".
+4. Fully write in ${input.language}. No mixed English and target language sentences.
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
