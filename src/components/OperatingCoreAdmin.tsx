@@ -10,7 +10,22 @@ interface Props {
 }
 
 export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
-  const [draftCore, setDraftCore] = useState<OperatingCore>(core || createDefaultOperatingCore());
+  // Ensure all nested fields exist in case of old localStorage data
+  const defaultCore = createDefaultOperatingCore();
+  const safeCore = core ? {
+    ...defaultCore,
+    ...core,
+    coreStrategy: { ...defaultCore.coreStrategy, ...(core.coreStrategy || {}) },
+    audiences: core.audiences || defaultCore.audiences,
+    channels: core.channels || defaultCore.channels,
+    claimsProofBoundaries: { ...defaultCore.claimsProofBoundaries, ...(core.claimsProofBoundaries || {}) },
+    voiceAndLanguage: { ...defaultCore.voiceAndLanguage, ...(core.voiceAndLanguage || {}) },
+    visualDNA: { ...defaultCore.visualDNA, ...(core.visualDNA || {}) },
+    revisionStandards: core.revisionStandards || defaultCore.revisionStandards,
+    learningInbox: core.learningInbox || defaultCore.learningInbox
+  } : defaultCore;
+
+  const [draftCore, setDraftCore] = useState<OperatingCore>(safeCore);
   const [activeTab, setActiveTab] = useState<'strategy' | 'audiences' | 'claims' | 'voice' | 'visual' | 'revision' | 'learning'>('strategy');
 
   const handleSave = () => {
@@ -19,12 +34,12 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
 
   const getCompleteness = () => {
     return {
-      strategy: draftCore.coreStrategy.definition ? 'Strong' : 'Incomplete',
-      claims: draftCore.claimsProofBoundaries.approvedClaims ? 'Strong' : 'Incomplete',
-      voice: draftCore.voiceAndLanguage.tone ? 'Strong' : 'Incomplete',
-      visual: draftCore.visualDNA.atmosphere ? 'Strong' : 'Incomplete',
-      audiences: draftCore.audiences.length > 0 ? 'Strong' : 'Incomplete',
-      revision: draftCore.revisionStandards.length > 0 ? 'Strong' : 'Incomplete'
+      strategy: draftCore.coreStrategy?.definition ? 'Strong' : 'Incomplete',
+      claims: draftCore.claimsProofBoundaries?.approvedClaims ? 'Strong' : 'Incomplete',
+      voice: draftCore.voiceAndLanguage?.tone ? 'Strong' : 'Incomplete',
+      visual: draftCore.visualDNA?.atmosphere ? 'Strong' : 'Incomplete',
+      audiences: draftCore.audiences?.length > 0 ? 'Strong' : 'Incomplete',
+      revision: draftCore.revisionStandards?.length > 0 ? 'Strong' : 'Incomplete'
     };
   };
   const completeness = getCompleteness();

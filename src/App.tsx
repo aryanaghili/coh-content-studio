@@ -4191,6 +4191,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
       <main className="flex-1 overflow-y-auto px-12 py-10">
         
         {/* --- TAB 1: COMMAND CENTER --- */}
+        
+        {activeTab === 'operating-core' && (
+          <div className="h-full overflow-hidden bg-[#faf9f6]">
+            <OperatingCoreAdmin 
+              core={operatingCore} 
+              onSave={(newCore) => {
+                setOperatingCore(newCore);
+                localStorage.setItem('coh_operating_core_v1', JSON.stringify(newCore));
+              }}
+              onReset={() => {
+                const defaultCore = createDefaultOperatingCore();
+                setOperatingCore(defaultCore);
+                localStorage.setItem('coh_operating_core_v1', JSON.stringify(defaultCore));
+              }}
+            />
+          </div>
+        )}
         {activeTab === 'command-center' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
