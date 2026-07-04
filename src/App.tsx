@@ -1349,7 +1349,15 @@ export default function App() {
 
   // --- Dynamic Inputs Snapshot Generator ---
   const getCurrentInputsString = () => {
-    if (creationMode === 'quick') {
+    if (creationMode === 'simple') {
+      return JSON.stringify({
+        creationMode,
+        goal: simpleBrief.goal,
+        channel: simpleBrief.channel,
+        workspaceSourcesCount: workspaceLocalSources.length,
+        workspaceSourcesContent: workspaceLocalSources.map(s => s.content).join('|')
+      });
+    } else if (creationMode === 'quick') {
       return JSON.stringify({
         creationMode,
         creationScope: quickBrief.creationScope || 'Single Channel',
@@ -4786,10 +4794,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="bg-amber-100 border border-amber-300 p-4 rounded text-xs text-coh-navy flex justify-between items-center">
                 <span>Inputs changed. Regenerate to apply the latest brief.</span>
                 <button
+                  disabled={isGeneratingDrafts || aiIsGenerating}
                   onClick={handleGenerateDrafts}
-                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition"
+                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Generate Again
+                  {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                 </button>
               </div>
             )}
@@ -5901,10 +5910,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="bg-amber-50 border border-amber-300 p-3.5 rounded text-xs text-coh-navy flex justify-between items-center animate-fadeIn">
                         <span>Inputs changed. Regenerate to apply the latest brief.</span>
                         <button
+                          disabled={isGeneratingDrafts || aiIsGenerating}
                           onClick={handleGenerateDrafts}
-                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition"
+                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Generate Again
+                          {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                         </button>
                       </div>
                     )}
