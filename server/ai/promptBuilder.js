@@ -64,17 +64,6 @@ Return a JSON object matching this schema:
   }
 
   if (isRevision) {
-    const isWhatsApp = input.channel === 'Email / Direct Outreach' && input.outputFormat === 'WhatsApp Message';
-    const whatsappRules = isWhatsApp ? `
-WHATSAPP SPECIFIC RULES:
-- You are writing a WhatsApp-style direct message, not an email, post, caption, or letter.
-- Write for mobile reading. Keep it short and natural (1 to 3 short paragraphs max).
-- Avoid subject lines, "Dear..." greetings, long explanations, or heavy institutional language.
-- Avoid generic corporate sustainability language and overexplaining Climate Opera Haus.
-- Use a human, respectful, warm tone.
-- Make the purpose clear quickly and include one clear next step or question.
-- Do not make it sound like a newsletter or LinkedIn post.` : '';
-
     return `You are an expert copy editor revising a draft.
 Original Brief details:
 - Input topic: ${input.rawInput}
@@ -93,7 +82,7 @@ Draft Copy to Revise:
 ${input.previousDraft}
 """
 
-WRITING CLEANLINESS RULES:
+OPERATIONAL RULES:
 - Output the revised copy fully in ${input.language}. Keep approved proper nouns intact.
 ${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
 
