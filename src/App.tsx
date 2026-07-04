@@ -500,6 +500,7 @@ export default function App() {
   const [aiIsGenerating, setAiIsGenerating] = useState<boolean>(false);
   const [aiGeneratedWith, setAiGeneratedWith] = useState<{provider: string; model: string} | null>(null);
   const [activeRevisionAction, setActiveRevisionAction] = useState<string | null>(null);
+  const [activeRevisionError, setActiveRevisionError] = useState<string | null>(null);
   const [revisionSuccessAction, setRevisionSuccessAction] = useState<string | null>(null);
   const [isSavingToLibrary, setIsSavingToLibrary] = useState<boolean>(false);
   const [isSavingToIdeaLibrary, setIsSavingToIdeaLibrary] = useState<boolean>(false);
@@ -517,7 +518,7 @@ export default function App() {
   const [vsAIPrompt, setVsAIPrompt] = useState<string>('');
   const [vsNotes, setVsNotes] = useState<string>('');
   const [vsPromptMode, setVsPromptMode] = useState<'Full' | 'AI Only' | 'Full + AI' | 'Manual Only'>('Full + AI');
-  const [vsInputMode, setVsInputMode] = useState<'Existing' | 'Manual'>('Manual');
+  const [vsInputMode, setVsInputMode] = useState<'Imported' | 'Manual'>('Manual');
   const [vsManualPrompt, setVsManualPrompt] = useState<string>('');
   const [showAdvancedBrief, setShowAdvancedBrief] = useState<boolean>(false);
   const [vsGeneratedImages, setVsGeneratedImages] = useState<any[]>([]);
@@ -739,7 +740,7 @@ export default function App() {
     setVsAIPrompt(aiMatch ? aiMatch[1].trim() : '');
     setVsNotes(notesMatch ? notesMatch[1].trim() : '');
 
-    setVsInputMode('Existing');
+    setVsInputMode('Imported');
     setVsPromptMode('Full + AI');
     setActiveTab('visual-studio');
   };
@@ -2704,44 +2705,33 @@ export default function App() {
       }
     });
 
-    const properNouns = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)*\b/g) || [];
-    properNouns.forEach(noun => {
-      const lowerNoun = noun.toLowerCase();
-      if ([
-        'the', 'this', 'at', 'we', 'in', 'our', 'if', 'every', 'join', 'can', 'option', 'draft', 
-        'version', 'must', 'core', 'focus', 'text', 's', 'a', 'i', 'placeholder', 'linkedin', 
-        'instagram', 'newsletter', 'carousel', 'reel', 'tiktok', 'twitter', 'facebook', 'slide', 
-        'voiceover', 'hook', 'news', 'update', 'patron', 'sponsor', 'partner', 'direction', 
-        'final', 'option', 'a', 'b', 'c', 'english', 'portuguese', 'spanish', 'french', 'german', 
-        'norwegian', 'italian', 'dutch', 'arabic', 'persian',
-        // Common verbs & sentence starters:
-        'position', 'enable', 'experience', 'develop', 'build', 'collaborate', 'partner', 
-        'backing', 'sponsorship', 'announcing', 'secures', 'secure', 'constructs', 'construct', 
-        'establish', 'establishes', 'explore', 'explores', 'adhering', 'regarding', 'dear', 
-        'sincerely', 'introduce', 'introduces', 'design', 'visual', 'format', 'mood', 'prompt',
-        'subject', 'meeting', 'deliverables', 'alignment', 'opportunity', 'opportunities', 
-        'patrons', 'sponsors', 'partners', 'institutions', 'festivals', 'leaders', 'team', 
-        'update', 'updates', 'repertoire', 'canon', 'climate', 'transition', 'opera', 'haus', 
-        'tetralogy', 'world', 'worlds', 'planet', 'earth', 'wind', 'water', 'fire', 'air', 
-        'soundscapes', 'soundscape', 'staging', 'production', 'licensing', 'filmed', 'documentary', 
-        'documentaries', 'prestige', 'durability', 'ecological', 'thresholds', 'threshold', 
-        'somatic', 'composition', 'compositional', 'musical', 'vocal', 'art', 'artist', 'artists',
-        'into', 'from', 'with', 'about', 'under', 'over', 'between', 'through', 'across', 
-        'since', 'until', 'before', 'after', 'during', 'while', 'because', 'although', 
-        'how', 'why', 'what', 'where', 'when', 'who', 'which', 'whom', 'whose',
-        'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'your', 'his', 'her', 'its', 'our', 
-        'their', 'mine', 'yours', 'hers', 'ours', 'theirs',
-        'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 
-        'did', 'shall', 'should', 'will', 'would', 'may', 'might', 'must', 'can', 'could'
-      ].includes(lowerNoun)) {
-        return;
-      }
+    const entitiesToCheck: string[] = [];
+
+    // 1. Multi-word proper nouns (higher confidence, ignores single sentence-start words)
+    const properNounPhrases = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
+    entitiesToCheck.push(...properNounPhrases);
+
+    // 2. Numbers, statistics, amounts, years
+    const numbers = text.match(/\$?\b\d+(?:,\d{3})*(?:\.\d+)?(?:k|m|b|K|M|B|%| percent)?\b/g) || [];
+    entitiesToCheck.push(...numbers);
+
+    const commonSkips = [
+      'the', 'this', 'that', 'these', 'those', 'yet', 'but', 'both', 'people', 'support', 'music'
+    ];
+
+    entitiesToCheck.forEach(entity => {
+      const lowerEntity = entity.toLowerCase();
       
-      const isApproved = approvedEntities.some(e => e.includes(lowerNoun)) || approvedEntities.some(e => lowerNoun.includes(e));
-      const inSources = contextTexts.some(ctx => ctx.includes(lowerNoun));
+      // Skip common words
+      if (commonSkips.includes(lowerEntity)) return;
+      // Skip if it's just a number like 1, 2, 3 which might be generic
+      if (/^\d$/.test(lowerEntity)) return;
+
+      const isApproved = approvedEntities.some(e => e.includes(lowerEntity)) || approvedEntities.some(e => lowerEntity.includes(e));
+      const inSources = contextTexts.some(ctx => ctx.includes(lowerEntity));
       
       if (!isApproved && !inSources) {
-        warnings.push(`Unverified Proper Noun: "${noun}". Verify that this exists in the selected sources.`);
+        warnings.push(`Check this reference: "${entity}"`);
       }
     });
 
@@ -2779,7 +2769,7 @@ export default function App() {
         name: 'Factual Grounding Check',
         desc: 'Identifies unverified entities or dates.',
         pass: getFictionalContentWarnings(text).length === 0,
-        feedback: `Unverified proper nouns detected: ${getFictionalContentWarnings(text).join(', ')}`,
+        feedback: `Source check needed: ${getFictionalContentWarnings(text).join(', ')}`,
         whyItMatters: 'Ensures strict alignment with the approved factual boundaries.',
         suggestedFix: 'Remove unverified entities or ensure they match uploaded text sources.'
       }
@@ -3120,7 +3110,7 @@ export default function App() {
       );
       if (lang !== 'English') { visualPrompt = translateText(visualPrompt, lang); }
       const editorial = getFictionalContentWarnings(rawA).length > 0
-        ? 'Warning: Unverified proper nouns detected. Review before publishing.'
+        ? 'Warning: Source check needed. Review before publishing.'
         : 'Prototype Structure. Connect AI in Settings for final-quality content.';
 
       setDraftOptions({
@@ -3610,6 +3600,7 @@ Revision History:
     if (activeRevisionAction) return; // Prevent duplicate clicks
     setActiveRevisionAction(action);
     setRevisionSuccessAction(null);
+    setActiveRevisionError(null);
 
     let revised = activeDraftText;
     let actionLabel = action;
@@ -3787,7 +3778,8 @@ Revision History:
       setRevisionSuccessAction(action);
       setTimeout(() => setRevisionSuccessAction(null), 2000);
     } catch (err: any) {
-      alert(err.message || 'Could not apply revision');
+      setActiveRevisionError(err.message || 'Could not apply revision');
+      setTimeout(() => setActiveRevisionError(null), 4000);
     } finally {
       setActiveRevisionAction(null);
     }
@@ -4700,7 +4692,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
                           className="bg-coh-cream text-coh-gold hover:text-coh-gold-dark border border-coh-gold/20 px-3 py-1.5 rounded font-serif font-bold text-[10px] flex items-center gap-1"
                         >
-                          <Lightbulb size={10} /> Open in Visual Studio
+                          <Lightbulb size={10} /> Send Visual Direction to Visual Studio
                         </button>
                         <button
                           onClick={() => handleCopyIdeaToWorkspace(idea)}
@@ -6254,23 +6246,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       Manual Prompt
                     </button>
                     <button
-                      onClick={() => setVsInputMode('Existing')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Existing' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
+                      onClick={() => setVsInputMode('Imported')}
+                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Imported' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
                     >
-                      Existing Visual Direction
+                      Imported Visual Direction
                     </button>
                   </div>
 
-                  {vsInputMode === 'Existing' ? (
+                  {vsInputMode === 'Imported' ? (
                     <div>
                       {vsSourceItem ? (
                         <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy border border-coh-gold/10">
-                          <span className="block text-[10px] uppercase tracking-wider text-coh-navy/60 mb-1">From {vsSourceItem.type}</span>
+                          <span className="block text-[10px] uppercase tracking-wider text-coh-navy/60 mb-1">Imported from {vsSourceItem.type}</span>
                           <strong className="block truncate font-serif" title={vsSourceItem.title}>{vsSourceItem.title}</strong>
                         </div>
                       ) : (
                         <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy/60 italic border border-coh-gold/10">
-                          No visual direction selected. Send one from Content Workspace or Library.
+                          No imported visual direction selected. Send one from Content Workspace or Content Library.
                         </div>
                       )}
                     </div>
@@ -6376,7 +6368,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   )}
                 </div>
                 
-                {(vsInputMode === 'Existing' || showAdvancedBrief) ? (
+                {(vsInputMode === 'Imported' || showAdvancedBrief) ? (
                   <div className="space-y-4">
                     {[
                       { label: 'Visual Concept', value: vsConcept, setter: setVsConcept },
@@ -6560,18 +6552,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   />
 
                   {getFictionalContentWarnings(activeDraftText).length > 0 && (
-                    <div className="bg-red-50 border border-red-200 p-4 rounded text-xs text-red-800 space-y-1">
-                      <span className="font-semibold flex items-center gap-1.5">
-                        <AlertTriangle size={14} className="text-red-700" /> Fact Boundary Violation Found
+                    <div className="bg-amber-50 border border-amber-200 p-4 rounded text-xs text-amber-900 space-y-2">
+                      <span className="font-bold flex items-center gap-1.5">
+                        <AlertTriangle size={14} className="text-amber-700" /> Source Check Needed
                       </span>
-                      <p className="text-[11px] text-red-800/80">
-                        The current draft contains terms not found in your sources or approved COH facts:
+                      <p className="text-[11px] text-amber-900/80 leading-relaxed">
+                        This draft may include names, claims, dates, numbers, or references that should be checked against approved sources before publishing.
                       </p>
-                      <ul className="list-disc pl-5 text-[11px] space-y-0.5 mt-2">
+                      <ul className="list-disc pl-5 text-[11px] space-y-0.5 font-mono text-amber-800">
                         {getFictionalContentWarnings(activeDraftText).map((w, idx) => (
                           <li key={idx}>{w}</li>
                         ))}
                       </ul>
+                      <p className="text-[11px] font-semibold pt-1 border-t border-amber-200/50">
+                        Verify these items against approved sources before publishing, or remove them.
+                      </p>
                     </div>
                   )}
 
@@ -6596,7 +6591,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           onClick={() => handleSendToVisualStudio({ id: 'draft-temp', title: activeDraftTitle || 'Unsaved Draft', type: 'Content' }, activeDraftText, 'Content')}
                           className="flex items-center gap-1.5 bg-coh-cream text-coh-gold hover:text-coh-gold-dark py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/25 transition disabled:opacity-50"
                         >
-                          <Lightbulb size={12} /> Open in Visual Studio
+                          <Lightbulb size={12} /> Send Visual Direction to Visual Studio
                         </button>
                       )}
                       <button
@@ -6631,7 +6626,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <p className="text-[10px] text-coh-navy/55 font-mono">Applies brand refinements and updates version index (v1, v2).</p>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-2">
+                  <div className="space-y-5">
                     {(() => {
                       const renderRevBtn = (key: string, label: string, tooltip?: string) => {
                         const isRunning = activeRevisionAction === key;
@@ -6643,7 +6638,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             disabled={isDisabled}
                             onClick={() => applyRevision(key)}
                             title={tooltip}
-                            className={`text-left py-2.5 px-3 border rounded text-xs transition font-semibold flex items-center justify-between ${
+                            className={`w-full text-left py-2 px-3 border rounded text-xs transition font-semibold flex items-center justify-between ${
                               isRunning
                                 ? 'bg-coh-gold/20 border-coh-gold text-coh-navy font-bold animate-pulse'
                                 : isSuccess
@@ -6659,26 +6654,60 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                       return (
                         <>
-                          {renderRevBtn('clean-ai-punctuation', '🧼 Clean AI-Style Characters', 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.')}
-                          {renderRevBtn('coh-specific', '🎭 Make it more COH-specific')}
-                          {renderRevBtn('sharper', '⚡ Make it sharper')}
-                          {renderRevBtn('human', '👤 Make it more human')}
-                          {renderRevBtn('institutional', '🏛️ Make it more institutional')}
-                          {renderRevBtn('less-poetic', '📐 Make it less poetic')}
-                          {renderRevBtn('less-corporate', '💼 Make it less corporate')}
-                          {renderRevBtn('less-ngo', '🌱 Make it less NGO-like')}
-                          {renderRevBtn('shorter', '✂️ Make it shorter')}
-                          {renderRevBtn('openings', '📝 Create 3 alternative openings')}
-                          {renderRevBtn('ctas', '📣 Create 3 CTA options')}
-                          {renderRevBtn('remove-unsupported', '🛡️ Remove unsupported claims')}
-                          {renderRevBtn('sponsor-facing', '💰 Make it more sponsor-facing')}
-                          {renderRevBtn('audience-friendly', '🤝 Make it more audience-friendly')}
-                          {renderRevBtn('channel-ready', '📱 Make it more channel-ready')}
-                          {renderRevBtn('stronger-proof', '📊 Expand with stronger proof')}
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">1. Style & Tone</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {renderRevBtn('clean-ai-punctuation', '🧼 Clean AI-Style Characters', 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.')}
+                              {renderRevBtn('sharper', '⚡ Make it sharper')}
+                              {renderRevBtn('human', '👤 Make it more human')}
+                              {renderRevBtn('less-poetic', '📐 Make it less poetic')}
+                              {renderRevBtn('less-corporate', '💼 Make it less corporate')}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">2. COH Positioning</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {renderRevBtn('coh-specific', '🎭 Make it more COH-specific')}
+                              {renderRevBtn('institutional', '🏛️ Make it more institutional')}
+                              {renderRevBtn('less-ngo', '🌱 Make it less NGO-like')}
+                              {renderRevBtn('sponsor-facing', '💰 Make it more sponsor-facing')}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">3. Audience & Channel</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {renderRevBtn('audience-friendly', '🤝 Make it more audience-friendly')}
+                              {renderRevBtn('channel-ready', '📱 Make it more channel-ready')}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">4. Structure & Options</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {renderRevBtn('shorter', '✂️ Make it shorter')}
+                              {renderRevBtn('openings', '📝 Create 3 alternative openings')}
+                              {renderRevBtn('ctas', '📣 Create 3 CTA options')}
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">5. Proof & Credibility</h4>
+                            <div className="grid grid-cols-1 gap-1.5">
+                              {renderRevBtn('remove-unsupported', '🛡️ Remove unsupported claims')}
+                              {renderRevBtn('stronger-proof', '📊 Expand with stronger proof')}
+                            </div>
+                          </div>
                         </>
                       );
                     })()}
 
+                    {activeRevisionError && (
+                      <div className="bg-red-50 border border-red-200 text-red-700 p-2 text-xs rounded mb-2">
+                        {activeRevisionError}
+                      </div>
+                    )}
                     <div className="border-t border-coh-gold/15 pt-2 mt-1 space-y-1">
                       <label className="block text-[10px] uppercase font-bold text-coh-navy/60">Rewrite with custom instruction</label>
                       <input
@@ -7057,7 +7086,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             onClick={() => handleSendToVisualStudio(item, item.visualDirection!, 'Library')}
                             className="flex items-center gap-1 text-[11px] text-coh-gold hover:text-coh-gold-dark font-semibold transition"
                           >
-                            <Lightbulb size={11} /> Open in Visual Studio
+                            <Lightbulb size={11} /> Send Visual Direction to Visual Studio
                           </button>
                         )}
                       </div>
