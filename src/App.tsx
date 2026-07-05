@@ -877,7 +877,7 @@ export default function App() {
   const [inlineSourceType, setInlineSourceType] = useState<'library' | 'paste' | 'upload' | 'link'>('library');
   const [inlinePasteData, setInlinePasteData] = useState({ title: '', content: '', saveToLibrary: false });
   
-  // URL Context form fields
+  // URL form fields
   const [inlineLinkData, setInlineLinkData] = useState({ title: '', url: '', summary: '', saveToLibrary: false });
   const [linkWarning, setLinkWarning] = useState<string>('');
 
@@ -4084,7 +4084,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button"
+              className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button"
             >
               {authLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -4294,7 +4294,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="flex-1 space-y-8">
                 
                 {/* Section 1: What are you working on today? */}
-                <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
                   <h3 className="font-serif text-xl text-coh-navy mb-1">What are you working on today?</h3>
                   <p className="text-xs text-coh-navy/60 mb-6">Start with a message, idea, source, campaign note, or visual direction.</p>
                   
@@ -4363,8 +4363,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Section 2: Continue where you left off */}
-                <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
-                  <h3 className="font-serif text-xl text-coh-navy mb-4">Continue where you left off</h3>
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
+                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Continue where you left off</h3>
                   
                   {(() => {
                     const unapprovedDraft = savedContent.find(c => c.status !== 'Approved');
@@ -4374,16 +4374,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     if (unapprovedDraft) {
                       return (
-                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Draft in Progress</span>
-                            <span className="text-[9px] bg-amber-50 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase border border-amber-200">Needs Review</span>
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 flex flex-col justify-between interactive-card">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Draft in Progress</span>
+                              <span className="text-[8px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded font-bold uppercase border border-amber-200">Needs Review</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{unapprovedDraft.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{unapprovedDraft.text}</p>
                           </div>
-                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{unapprovedDraft.title}</h4>
-                          <p className="text-xs text-coh-navy/60 line-clamp-2 leading-relaxed mb-4">{unapprovedDraft.text}</p>
-                          <div className="flex gap-2">
+                          <div>
                             <button
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.preventDefault();
                                 setActiveDraftText(unapprovedDraft.text);
                                 setActiveDraftTitle(unapprovedDraft.title);
                                 setActiveDraftVersion(unapprovedDraft.version);
@@ -4396,30 +4399,27 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 setActiveDraftSource(unapprovedDraft.source === 'Content Workspace' ? 'Content Workspace' : (unapprovedDraft.source === 'External Content' ? 'External Content' : 'Content Library'));
                                 setActiveTab('revision-studio');
                               }}
-                              className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1"
+                              className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 rounded transition flex items-center justify-center gap-1 w-full cursor-pointer"
                             >
-                              Continue <ArrowRight size={12} />
-                            </button>
-                            <button onClick={() => setActiveTab('content-library')} className="text-xs font-semibold text-coh-navy/60 hover:text-coh-gold transition px-2">
-                              View Library
+                              Continue <ArrowRight size={10} />
                             </button>
                           </div>
                         </div>
                       );
                     } else if (approvedItem) {
                       return (
-                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Latest Approved Content</span>
-                            <span className="text-[9px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase border border-green-200">Approved</span>
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 interactive-card flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Latest Approved</span>
+                              <span className="text-[8px] bg-green-50 text-green-700 px-1 py-0.5 rounded font-bold uppercase border border-green-200">Approved</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{approvedItem.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{approvedItem.text}</p>
                           </div>
-                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{approvedItem.title}</h4>
-                          <p className="text-xs text-coh-navy/60 line-clamp-2 leading-relaxed mb-4">{approvedItem.text}</p>
-                          <div className="flex gap-2">
-                            <button onClick={() => setActiveTab('content-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
-                              View Library <ArrowRight size={12} />
-                            </button>
-                          </div>
+                          <button onClick={(e) => { e.preventDefault(); setActiveTab('content-library'); }} className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 w-full rounded transition flex items-center justify-center gap-1 cursor-pointer">
+                            View Library <ArrowRight size={10} />
+                          </button>
                         </div>
                       );
                     } else if (promisingIdea) {
@@ -4555,35 +4555,33 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             </div>
 
-            {/* Collapsed Common Shortcuts */}
-            <details className="group opacity-80 hover:opacity-100 transition-opacity bg-transparent text-sm mt-8 cursor-pointer max-w-4xl">
-              <summary className="font-serif text-base text-coh-navy font-semibold flex items-center gap-2 outline-none">
-                <span className="text-coh-gold group-open:rotate-90 transition-transform">▶</span>
-                Common Shortcuts
-              </summary>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 pt-4 border-t border-coh-gold/15">
+            {/* Quick Actions */}
+            <div className="mt-8 max-w-4xl">
+              <h3 className="font-serif text-sm text-coh-navy/80 font-semibold mb-3 flex items-center gap-2">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                 {[
-                  { title: 'LinkedIn Post', action: 'Create Post', desc: 'Sober positioning card copy.', channel: 'LinkedIn', format: 'Post' },
-                  { title: 'Instagram Caption', action: 'Create Caption', desc: 'Visceral scene rendering caption.', channel: 'Instagram', format: 'Caption' },
-                  { title: 'Newsletter Section', action: 'Draft Section', desc: 'Campaign and canon updates.', channel: 'Newsletter', format: 'Newsletter Section' },
-                  { title: 'Email / Letter', action: 'Draft Email', desc: 'Addressed partner message.', channel: 'Email / Direct Outreach', format: 'Email / Letter' }
+                  { title: 'LinkedIn Post', channel: 'LinkedIn', format: 'Post' },
+                  { title: 'Instagram Caption', channel: 'Instagram', format: 'Caption' },
+                  { title: 'Newsletter Section', channel: 'Newsletter', format: 'Newsletter Section' },
+                  { title: 'Website / News Article', channel: 'Website', format: 'Article' },
+                  { title: 'Sponsor Pitch', channel: 'Pitch Deck', format: 'Pitch' },
+                  { title: 'Multi-Channel Pack', channel: 'Campaign', format: 'Multi-Channel' }
                 ].map(item => (
                   <div
                     key={item.title}
-                    className="p-3 border border-coh-gold/10 bg-white hover:border-coh-gold/40 rounded text-left transition flex justify-between items-center interactive-card"
+                    className="px-2 py-2 border border-coh-gold/20 bg-white hover:bg-coh-cream/50 rounded transition text-center cursor-pointer interactive-card flex items-center justify-center h-full shadow-sm"
                     onClick={(e) => {
                       e.preventDefault();
-                      triggerQuickLauncher(item.channel, item.format, 'Single Channel');
+                      triggerQuickLauncher(item.channel, item.format, item.title === 'Multi-Channel Pack' ? 'Multi-Channel Pack' : 'Single Channel');
                     }}
                   >
-                    <div>
-                      <h4 className="font-serif font-bold text-coh-navy text-[11px]">{item.title}</h4>
-                    </div>
-                    <ArrowRight size={10} className="text-coh-gold shrink-0 ml-2" />
+                    <span className="font-sans font-medium text-coh-navy text-[10px] leading-tight">{item.title}</span>
                   </div>
                 ))}
               </div>
-            </details>
+            </div>
           </div>
         )}
 
@@ -4701,7 +4699,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   onClick={handleGenerateIdeas}
                   disabled={isIdeating || !aiProvider}
-                  className="bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button"
+                  className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button"
                 >
                   {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                   {isIdeating ? 'Generating...' : 'Generate'}
@@ -5206,7 +5204,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           />
                           <input
                             type="text"
-                            placeholder="URL Context Link (https://...)"
+                            placeholder="URL (https://...)"
                             value={inlineLinkData.url}
                             onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
                             className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
@@ -5236,7 +5234,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               type="button"
                               onClick={handleAddWorkspaceLink}
-                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
+                              className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
                             >
                               {inlineLinkData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
                             </button>
@@ -5783,7 +5781,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         )}
                       </div>
 
-                      {/* INLINE SOURCE ADD PANEL - Add URL Context */}
+                      {/* INLINE SOURCE ADD PANEL - Add URL */}
                       <div className="border border-coh-gold/20 p-3 rounded bg-white space-y-2">
                         <div className="flex gap-1.5 bg-coh-cream/40 p-1 rounded">
                           {(['paste', 'upload', 'link'] as const).map(mode => (
@@ -5847,7 +5845,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             />
                             <input
                               type="text"
-                              placeholder="URL Context Link (https://...)"
+                              placeholder="URL (https://...)"
                               value={inlineLinkData.url}
                               onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
                               className="w-full bg-coh-cream border border-coh-gold/10 p-1.5 rounded text-[11px]"
@@ -5880,9 +5878,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 type="button"
                                 onClick={handleAddWorkspaceLink}
-                                className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
+                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
                               >
-                                Add URL Context
+                                Add URL
                               </button>
                             </div>
                           </div>
@@ -6094,7 +6092,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     onClick={handleGenerateDrafts}
                     disabled={isGeneratingDrafts}
-                    className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
+                    className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
                   >
                     {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6175,7 +6173,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 onClick={cleanOptionADraft}
                                 title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
+                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
                               >
                                 ⚠️ Needs cleanup
                               </button>
@@ -6232,7 +6230,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 onClick={cleanOptionBDraft}
                                 title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
+                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
                               >
                                 ⚠️ Needs cleanup
                               </button>
@@ -6372,7 +6370,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button"
+                          className="cursor-not-allowed opacity-50 bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6574,7 +6572,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       onClick={handleGenerateImage}
                       disabled={isGeneratingImage || !aiProvider}
-                      className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
+                      className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
                     >
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
@@ -6726,7 +6724,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <button
                         onClick={handleUndoRevision}
                         disabled={activeDraftHistory.length <= 1}
-                        className="px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
+                        className="cursor-not-allowed opacity-50 px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
                       >
                         <Undo size={12} /> Undo
                       </button>
@@ -7044,7 +7042,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <button
                         onClick={handleStartExternalRevision}
                         disabled={!externalContentText.trim()}
-                        className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button"
+                        className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button"
                       >
                         Start Revising
                       </button>
@@ -7542,7 +7540,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold action-button"
+                      className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold action-button"
                     >
                       {editingSourceId ? 'Save Edits' : 'Add Source'}
                     </button>
@@ -7811,7 +7809,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {!authBypass && (
                 <button
                   onClick={handleLogout}
-                  className="bg-red-800/10 hover:bg-red-800/20 text-red-800 border border-red-800/20 px-3 py-1.5 rounded text-xs font-semibold transition action-button"
+                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-red-800/10 hover:bg-red-800/20 text-red-800 border border-red-800/20 px-3 py-1.5 rounded text-xs font-semibold transition action-button"
                 >
                   Sign Out
                 </button>
