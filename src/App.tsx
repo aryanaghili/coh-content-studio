@@ -430,6 +430,8 @@ function Tooltip({ text }: { text: string }) {
 export default function App() {
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
+  const [knowledgeLibraryFilter, setKnowledgeLibraryFilter] = useState<string>("All");
+  const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   const [operatingCore, setOperatingCore] = useState<OperatingCore>(() => {
     const saved = localStorage.getItem('coh_operating_core_v1');
     return saved ? JSON.parse(saved) : createDefaultOperatingCore();
@@ -1260,6 +1262,7 @@ export default function App() {
     notes: string;
     content: string;
     url?: string;
+    selectable?: boolean;
   }>({
     title: '',
     type: 'Tone of Voice' as SourceFile['type'],
@@ -1269,7 +1272,8 @@ export default function App() {
     useFor: '',
     notes: '',
     content: '',
-    url: ''
+    url: '',
+    selectable: true
   });
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
 
@@ -4233,6 +4237,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 const defaultCore = createDefaultOperatingCore();
                 setOperatingCore(defaultCore);
                 localStorage.setItem('coh_operating_core_v1', JSON.stringify(defaultCore));
+              }}
+              onAddNewCoreSource={(section) => {
+                setActiveTab('knowledge-library');
+                setNewSource({
+                  ...newSource,
+                  role: 'Foundational Source',
+                  supportsOperatingCoreSection: section as any,
+                  selectable: true,
+                  status: 'Active',
+                  title: '', type: 'Business Memo', useFor: '', notes: '', content: '', url: ''
+                });
+              }}
+              onLinkExistingSource={() => {
+                setActiveTab('knowledge-library');
               }}
             />
           </div>
@@ -7296,9 +7314,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
                 <h2 className="font-serif text-3xl font-normal text-coh-navy">Knowledge Library</h2>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                  Manage core documents, partner decks, business model papers, and approved rules. Upload folders or file logs.
+                <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
+                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials. Some sources can be linked to Operating Core as Core Sources. Others can be selected only for specific generation tasks.
                 </p>
+                <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
+                  <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
+                  <span className="text-xs text-coh-navy/70">Always-on strategy and rules are managed in Operating Core. Foundational materials can be linked as Core Sources.</span>
+                  <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy hover:text-coh-gold transition ml-2">Open Operating Core →</button>
+                </div>
               </div>
 
               <div className="flex gap-2 text-xs">
@@ -7479,6 +7502,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     />
                   </div>
 
+                  <div className="flex items-center gap-2 pt-2 pb-2">
+                    <input
+                      type="checkbox"
+                      id="sourceSelectable"
+                      checked={newSource.selectable !== false}
+                      onChange={(e) => setNewSource({ ...newSource, selectable: e.target.checked })}
+                      className="rounded border-coh-gold/50 text-coh-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                    />
+                    <label htmlFor="sourceSelectable" className="text-coh-navy font-semibold cursor-pointer select-none">
+                      Selectable for generation context
+                    </label>
+                  </div>
+
                   <div className="flex gap-2">
                     <button
                       type="submit"
@@ -7491,7 +7527,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="button"
                         onClick={() => {
                           setEditingSourceId(null);
-                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', role: 'Task Source', supportsOperatingCoreSection: 'None', useFor: '', notes: '', content: '', url: '' });
+                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', role: 'Task Source', supportsOperatingCoreSection: 'None', useFor: '', notes: '', content: '', url: '', selectable: true });
                         }}
                         className="bg-coh-cream text-coh-navy border border-coh-gold/20 py-2 px-3 rounded hover:bg-coh-cream-dark transition text-xs"
                       >
@@ -7505,109 +7541,219 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {/* Records List Panel */}
               <div className="col-span-2 space-y-6">
                 
+                {/* Filters */}
+                <div className="flex flex-wrap gap-2 pb-2 border-b border-coh-gold/15">
+                  {['All', 'Core Sources', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
+                    <button
+                      key={filter}
+                      onClick={() => setKnowledgeLibraryFilter(filter)}
+                      className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition ${
+                        knowledgeLibraryFilter === filter 
+                          ? 'bg-coh-navy text-coh-gold' 
+                          : 'bg-coh-cream border border-coh-gold/20 text-coh-navy/60 hover:bg-coh-gold/10 hover:text-coh-navy'
+                      }`}
+                    >
+                      {filter}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Suggested Core Sources (Only visible if All or Core Sources, and items aren't uploaded yet) */}
+                {(knowledgeLibraryFilter === 'All' || knowledgeLibraryFilter === 'Core Sources') && (
+                  <div className="space-y-3 bg-coh-cream/30 p-4 border border-dashed border-coh-gold/30 rounded">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-serif text-sm font-bold text-coh-navy">Suggested Core Sources</h3>
+                      <span className="text-[9px] uppercase font-bold text-coh-gold bg-white px-1.5 py-0.5 rounded border border-coh-gold/20">Not uploaded yet</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      {[
+                        'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Master Deck',
+                        'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
+                      ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
+                        <div key={title} className="bg-white p-3 border border-coh-gold/10 rounded flex justify-between items-center shadow-sm">
+                          <span className="text-[11px] font-semibold text-coh-navy">{title}</span>
+                          <button 
+                            onClick={() => {
+                              setEditingSourceId(null);
+                              setNewSource({
+                                title: title,
+                                type: title.includes('Deck') ? 'Deck' : 'Business Memo',
+                                status: 'Active',
+                                role: 'Foundational Source',
+                                supportsOperatingCoreSection: 'None',
+                                useFor: 'Core reference material',
+                                notes: 'Suggested document',
+                                content: '',
+                                url: '',
+                                selectable: true
+                              });
+                            }}
+                            className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition whitespace-nowrap ml-2"
+                          >
+                            Upload / Link →
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* User-Added Sources list */}
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center border-b border-coh-gold/15 pb-2">
-                    <h3 className="font-serif text-lg text-coh-navy">User-Added Selectable Sources ({selectableSources.length})</h3>
-                  </div>
+                  {(() => {
+                    let filtered = selectableSources;
+                    if (knowledgeLibraryFilter === 'Core Sources') {
+                      filtered = selectableSources.filter(s => s.role === 'Foundational Source' || (s.supportsOperatingCoreSection && s.supportsOperatingCoreSection !== 'None'));
+                    } else if (knowledgeLibraryFilter === 'Task Sources') {
+                      filtered = selectableSources.filter(s => s.role === 'Task Source');
+                    } else if (knowledgeLibraryFilter === 'Approved Examples') {
+                      filtered = selectableSources.filter(s => s.role === 'Approved Example');
+                    } else if (knowledgeLibraryFilter === 'Partner Context') {
+                      filtered = selectableSources.filter(s => s.role === 'Partner Context');
+                    } else if (knowledgeLibraryFilter === 'Visual References') {
+                      filtered = selectableSources.filter(s => s.role === 'Visual Reference');
+                    } else if (knowledgeLibraryFilter === 'Archive') {
+                      filtered = selectableSources.filter(s => s.role === 'Archive' || s.status === 'Archived');
+                    }
 
-                  {selectableSources.map(src => {
-                    const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
-                    return (
-                      <div key={src.id} className={`bg-white border p-5 rounded shadow-sm flex gap-4 transition ${
-                        isSelected ? 'border-coh-gold bg-coh-cream/10' : 'border-coh-gold/20'
-                      }`}>
-                        <div className="pt-1 select-none">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleSourceSelection(src.id)}
-                            className="rounded border-coh-gold/50 text-coh-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
-                          />
-                        </div>
+                    if (filtered.length === 0) {
+                      return <p className="text-xs text-coh-navy/50 italic py-4">No sources found for this filter.</p>;
+                    }
 
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold/20 text-coh-navy-light">
-                              {src.type}
-                            </span>
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
-                              src.status === 'Active' ? 'bg-green-50 text-green-700' :
-                              src.status === 'Archived' ? 'bg-gray-100 text-gray-700' :
-                              'bg-amber-50 text-amber-700'
-                            }`}>
-                              {src.status}
-                            </span>
-                            {src.role && (
-                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
-                                {src.role}
-                              </span>
-                            )}
-                            {src.supportsOperatingCoreSection && src.supportsOperatingCoreSection !== 'None' && (
-                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
-                                Supports: {src.supportsOperatingCoreSection}
-                              </span>
-                            )}
+                    return filtered.map(src => {
+                      const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
+                      return (
+                        <div key={src.id} className={`bg-white border p-5 rounded shadow-sm flex gap-4 transition ${
+                          isSelected ? 'border-coh-gold bg-coh-cream/10' : 'border-coh-gold/20'
+                        }`}>
+                          <div className="pt-1 select-none">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleSourceSelection(src.id)}
+                              className="rounded border-coh-gold/50 text-coh-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                              title="Select for generation"
+                            />
                           </div>
 
-                          <h4 className="font-serif text-base font-semibold text-coh-navy">{src.title}</h4>
-                          <p className="text-xs text-coh-navy/60 leading-relaxed">{src.notes}</p>
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold/20 text-coh-navy-light">
+                                {src.type}
+                              </span>
+                              <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
+                                src.status === 'Active' ? 'bg-green-50 text-green-700' :
+                                src.status === 'Archived' ? 'bg-gray-100 text-gray-700' :
+                                'bg-amber-50 text-amber-700'
+                              }`}>
+                                {src.status}
+                              </span>
+                              {src.role && (
+                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
+                                  {src.role}
+                                </span>
+                              )}
+                              {src.supportsOperatingCoreSection && src.supportsOperatingCoreSection !== 'None' && (
+                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
+                                  Supports: {src.supportsOperatingCoreSection}
+                                </span>
+                              )}
+                              {src.selectable === false && (
+                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-50">
+                                  Non-Selectable
+                                </span>
+                              )}
+                            </div>
 
-                          <details className="text-[10px] text-coh-navy/40 cursor-pointer pt-1">
-                            <summary className="hover:text-coh-gold transition">Show Full Text</summary>
-                            <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
-                              {src.content}
-                            </pre>
-                            {src.url && (
-                              <div className="mt-2 text-coh-gold">
-                                <a href={src.url} target="_blank" rel="noreferrer" className="hover:underline break-all">🔗 {src.url}</a>
-                              </div>
-                            )}
-                          </details>
+                            <h4 className="font-serif text-base font-semibold text-coh-navy">{src.title}</h4>
+                            <p className="text-xs text-coh-navy/60 leading-relaxed">{src.notes}</p>
 
-                          <div className="pt-2">
+                            <details className="text-[10px] text-coh-navy/40 cursor-pointer pt-1">
+                              <summary className="hover:text-coh-gold transition">Show Full Text</summary>
+                              <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
+                                {src.content}
+                              </pre>
+                              {src.url && (
+                                <div className="mt-2 text-coh-gold">
+                                  <a href={src.url} target="_blank" rel="noreferrer" className="hover:underline break-all">🔗 {src.url}</a>
+                                </div>
+                              )}
+                            </details>
+
+                            <div className="pt-2">
+                              <button
+                                onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
+                                className="text-[9px] font-semibold text-coh-navy/50 hover:text-coh-gold transition uppercase tracking-wider"
+                              >
+                                Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
+                              </button>
+                              
+                              {extractingInsightFor === src.id && (
+                                <div className="mt-3 p-4 bg-coh-cream border border-coh-gold/20 rounded animate-fadeIn">
+                                  <h5 className="font-serif font-bold text-coh-navy mb-2 text-sm">Extract Insight for Operating Core</h5>
+                                  <p className="text-[10px] text-coh-navy/60 mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.</p>
+                                  
+                                  <div className="space-y-3">
+                                    <div>
+                                      <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Suggested Section</label>
+                                      <span className="text-xs bg-white border border-coh-gold/20 px-2 py-1 rounded inline-block">
+                                        {src.supportsOperatingCoreSection !== 'None' ? src.supportsOperatingCoreSection : 'Unassigned (Determine manually)'}
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Extract Note</label>
+                                      <textarea 
+                                        className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy" 
+                                        rows={3} 
+                                        placeholder="Draft the rule, claim, or insight here..."
+                                        id={`extract-${src.id}`}
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button 
+                                        onClick={() => {
+                                          const el = document.getElementById(`extract-${src.id}`) as HTMLTextAreaElement;
+                                          if (el && el.value) {
+                                            navigator.clipboard.writeText(el.value);
+                                            alert('Copied to clipboard');
+                                          }
+                                        }}
+                                        className="bg-white border border-coh-gold/30 hover:bg-coh-gold/10 text-coh-navy px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
+                                      >
+                                        Copy to Clipboard
+                                      </button>
+                                      <button 
+                                        onClick={() => setActiveTab('operating-core')}
+                                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
+                                      >
+                                        Open Operating Core
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 shrink-0">
                             <button
-                              onClick={() => alert("This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.")}
-                              className="text-[9px] font-semibold text-coh-navy/50 hover:text-coh-gold transition uppercase tracking-wider"
+                              onClick={() => handleEditSource(src)}
+                              className="text-coh-navy hover:text-coh-gold p-1 hover:bg-coh-cream rounded transition text-[11px] font-semibold flex items-center gap-1"
                             >
-                              Use to update Operating Core →
+                              <Edit3 size={12} /> Edit
+                            </button>
+                            <button
+                              onClick={() => handleDeleteSource(src.id)}
+                              className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-50 rounded transition text-[11px] font-semibold flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Delete
                             </button>
                           </div>
                         </div>
-
-                        <div className="flex flex-col gap-2 shrink-0">
-                          <button
-                            onClick={() => handleEditSource(src)}
-                            className="text-coh-navy hover:text-coh-gold p-1 hover:bg-coh-cream rounded transition text-[11px] font-semibold flex items-center gap-1"
-                          >
-                            <Edit3 size={12} /> Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteSource(src.id)}
-                            className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-50 rounded transition text-[11px] font-semibold flex items-center gap-1"
-                          >
-                            <Trash2 size={12} /> Delete
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Operating Core Info Card */}
-                <div className="space-y-3 bg-coh-cream/50 p-6 border border-coh-gold/20 rounded shadow-sm text-center">
-                  <div className="pb-2">
-                    <h3 className="font-serif text-lg text-coh-navy font-bold">Operating Core</h3>
-                    <p className="text-xs text-coh-navy/70 mt-2 max-w-md mx-auto leading-relaxed">
-                      Always-on strategy and content rules are now managed in Operating Core. Knowledge Library is strictly for raw materials, references, links, notes, documents, and selectable sources.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setActiveTab('operating-core')}
-                    className="mt-2 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-6 rounded transition border border-coh-gold/20 text-xs font-semibold"
-                  >
-                    Open Operating Core
-                  </button>
+                      );
+                    });
+                  })()}
                 </div>
 
               </div>

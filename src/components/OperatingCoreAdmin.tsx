@@ -11,11 +11,13 @@ interface Props {
   knowledgeSources?: any[];
   onSave: (core: OperatingCore) => void;
   onReset: () => void;
+  onAddNewCoreSource?: (section: string) => void;
+  onLinkExistingSource?: (section: string) => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave, onReset }: Props) {
+export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
   // Ensure safe fallback from local storage
   const defaultCore = createDefaultOperatingCore();
   const safeCore: OperatingCore = core ? {
@@ -175,7 +177,7 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
           <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
           <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
           <div className="h-px bg-coh-gold/15 my-2"></div>
-          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Evidence Map</button>
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Sources</button>
         </div>
 
         {/* Content Area */}
@@ -531,11 +533,15 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
             </div>
           )}
 
-          {/* EVIDENCE MAP */}
+          {/* CORE SOURCES */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Evidence Map</h3>
-              <p className="text-xs text-coh-navy/60 mb-4">Shows which Knowledge Library items support the Operating Core. This is not a document editor.</p>
+              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Sources</h3>
+              <p className="text-xs text-coh-navy/60 mb-4">
+                Core Sources are the foundational Knowledge Library items that support the Operating Core. They are stored in Knowledge Library and linked here to show what informs the strategy, claims, voice, visual DNA, and revision standards.
+                <br/><br/>
+                Add or manage the actual source material in Knowledge Library. Link it here when it supports the Operating Core.
+              </p>
               
               <div className="space-y-8">
                 {['Core Passport', 'Strategy Kernel', 'Audiences', 'Channels', 'Claims', 'Voice', 'Visual', 'Revision'].map(section => {
@@ -546,34 +552,52 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
                       <h4 className="font-serif text-lg font-bold text-coh-navy mb-3 pb-1 border-b border-coh-gold/10">{section}</h4>
                       
                       {sourcesForSection.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-3 mb-4">
                           {sourcesForSection.map(src => (
-                            <div key={src.id} className="bg-coh-cream/30 p-3 rounded border border-coh-gold/10 flex justify-between items-start">
-                              <div>
-                                <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded mr-2">{src.type}</span>
-                                <span className="font-bold text-coh-navy text-sm">{src.title}</span>
-                                {src.role && <span className="ml-2 text-[10px] text-coh-navy/60 uppercase font-semibold border border-coh-navy/20 px-1 rounded">{src.role}</span>}
-                                {src.notes && <p className="text-xs text-coh-navy/70 mt-1 italic">{src.notes}</p>}
-                                {src.url && <a href={src.url} target="_blank" rel="noreferrer" className="block text-[10px] text-blue-600 hover:underline mt-1 break-all">{src.url}</a>}
+                            <div key={src.id} className="bg-coh-cream/30 p-4 rounded border border-coh-gold/10 flex flex-col gap-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded mr-2">{src.type}</span>
+                                  {src.role && <span className="text-[9px] text-coh-navy/60 uppercase font-semibold border border-coh-navy/20 px-1.5 py-0.5 rounded mr-2">{src.role}</span>}
+                                  {src.status && <span className={`text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded ${src.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-coh-cream text-coh-navy/60'}`}>{src.status}</span>}
+                                  <h5 className="font-bold text-coh-navy text-sm mt-1">{src.title}</h5>
+                                  {src.notes && <p className="text-xs text-coh-navy/70 mt-1 italic">{src.notes}</p>}
+                                  {src.url && <a href={src.url} target="_blank" rel="noreferrer" className="block text-[10px] text-blue-600 hover:underline mt-1 break-all">{src.url}</a>}
+                                </div>
+                              </div>
+                              <div className="flex gap-3 mt-2 pt-2 border-t border-coh-gold/10">
+                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition" onClick={() => alert('Open source clicked')}>Open source</button>
+                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition" onClick={() => alert('Use to update Operating Core')}>Use to update Operating Core</button>
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center p-4 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded">
-                          <p className="text-xs text-coh-navy/50 italic mb-3">No supporting Knowledge Library items linked yet.</p>
-                          <button className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold" onClick={() => alert('Please navigate to Knowledge Library to add a source.')}>
-                            Add source in Knowledge Library
-                          </button>
+                        <div className="text-center p-4 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded mb-4">
+                          <p className="text-xs text-coh-navy/50 italic">No Core Sources linked yet.</p>
                         </div>
                       )}
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          className="text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold"
+                          onClick={() => onLinkExistingSource && onLinkExistingSource(section)}
+                        >
+                          Link existing Knowledge Library source
+                        </button>
+                        <button 
+                          className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1"
+                          onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}
+                        >
+                          <Plus size={12} /> Add new Core Source
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
               </div>
             </div>
-          )}
-
+          )}\n
         </div>
       </div>
       {/* COMPILER PREVIEW FEATURE */}
