@@ -259,6 +259,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             </ul>
           </div>
           
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Documents</button>
           <button onClick={() => setActiveTab('passport')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'passport' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Passport</button>
           <button onClick={() => setActiveTab('kernel')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'kernel' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Strategy Kernel</button>
           <button onClick={() => setActiveTab('audiences')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'audiences' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Audiences</button>
@@ -268,7 +269,6 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
           <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
           <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
           <div className="h-px bg-coh-gold/15 my-2"></div>
-          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Documents</button>
         </div>
 
         {/* Content Area */}
@@ -742,17 +742,20 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                       )}
                       
                       <div className="flex gap-2">
-                        <button 
-                          className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button"
-                          onClick={() => onLinkExistingSource && onLinkExistingSource(section)}
-                        >
-                          Link existing Source Library source
+                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button" onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}>
+                          <Plus size={12} /> Upload Core Document
                         </button>
-                        <button 
-                          className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button"
-                          onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}
-                        >
-                          <Plus size={12} /> Add new Core Document
+                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
+                          Upload Core Folder
+                        </button>
+                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
+                          Add Core Document Link
+                        </button>
+                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
+                          Paste Core Document Text
+                        </button>
+                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
+                          Add Manual Core Document
                         </button>
                       </div>
                     </div>

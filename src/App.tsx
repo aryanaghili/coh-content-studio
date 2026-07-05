@@ -7337,11 +7337,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div>
                 <h2 className="font-serif text-3xl font-normal text-coh-navy">Source Library</h2>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
-                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials. Some sources can be linked to Operating Core as Core Documents. Others can be selected only for specific generation tasks.
+                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
                   <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
-                  <span className="text-xs text-coh-navy/70">Source Library stores task-specific materials. Foundational brain documents are managed by the superuser in Operating Core as Core Documents.</span>
+                  <span className="text-xs text-coh-navy/70">Source Library stores task-specific materials. Foundational brain documents are managed separately in the Operating Core.</span>
                   <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy interactive-link transition ml-2">Open Operating Core →</button>
                 </div>
               </div>
@@ -7625,9 +7625,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="space-y-3">
                   {(() => {
                     let filtered = selectableSources;
-                    if (sourceLibraryFilter === 'Core Documents') {
-                      filtered = selectableSources.filter(s => s.role === 'Core Document' || (s.supportsOperatingCoreSection && s.supportsOperatingCoreSection !== 'None'));
-                    } else if (sourceLibraryFilter === 'Task Sources') {
+                    if (sourceLibraryFilter === 'Task Sources') {
                       filtered = selectableSources.filter(s => s.role === 'Task Source');
                     } else if (sourceLibraryFilter === 'Approved Examples') {
                       filtered = selectableSources.filter(s => s.role === 'Approved Example');

@@ -1,11 +1,9 @@
+import re
+
 with open('src/lib/operatingCore.ts', 'r') as f:
     content = f.read()
 
-# Replace PROTECTED_COH_KERNEL
-start_idx = content.find('export const PROTECTED_COH_KERNEL = `')
-if start_idx != -1:
-    end_idx = content.find('`;', start_idx) + 2
-    new_kernel = """export const PROTECTED_COH_KERNEL = `
+new_kernel = """export const PROTECTED_COH_KERNEL = `
 PROTECTED COH KERNEL (HARDCODED, ALWAYS-ON, UNEDITABLE)
 ======================================================
 COH is not a generic content engine.
@@ -26,13 +24,15 @@ Do not invent sponsors, partners, numbers, dates, funding, media deals, or insti
 Avoid generic ESG, NGO, startup, and climate-activism language.
 Visuals should feel like cultural world-building, not climate marketing.
 `;"""
-    content = content[:start_idx] + new_kernel + content[end_idx:]
 
-# Replace protectedCohFoundation
-start_idx2 = content.find('export const protectedCohFoundation = `')
-if start_idx2 != -1:
-    end_idx2 = content.find('`;', start_idx2) + 2
-    new_foundation = """export const protectedCohFoundation = `
+content = re.sub(
+    r'export const PROTECTED_COH_KERNEL = `.*?`;',
+    new_kernel,
+    content,
+    flags=re.DOTALL
+)
+
+new_foundation = """export const protectedCohFoundation = `
 PROTECTED COH FOUNDATION (NON-NEGOTIABLE IDENTITY):
 COH is not a generic content engine.
 COH is a climate-era cultural IP and opera-based content venture.
@@ -52,22 +52,31 @@ Do not invent sponsors, partners, numbers, dates, funding, media deals, or insti
 Avoid generic ESG, NGO, startup, and climate-activism language.
 Visuals should feel like cultural world-building, not climate marketing.
 `;"""
-    content = content[:start_idx2] + new_foundation + content[end_idx2:]
 
-# Replace compiler priority order
-start_idx3 = content.find('PRIORITY ORDER FOR COMPILER:')
-if start_idx3 != -1:
-    end_idx3 = content.find('`;', start_idx3)
-    new_priority = """PRIORITY ORDER FOR COMPILER:
+content = re.sub(
+    r'export const protectedCohFoundation = `.*?`;',
+    new_foundation,
+    content,
+    flags=re.DOTALL
+)
+
+# Also update compiler priorities
+new_priorities = """PRIORITY ORDER FOR COMPILER:
 1. Protected COH Kernel
 2. Operating Core
 3. Applied Core Document insights
 4. Selected Source Library items
 5. User request
 6. Creative generation"""
-    content = content[:start_idx3] + new_priority + content[end_idx3:]
+
+content = re.sub(
+    r'PRIORITY ORDER FOR COMPILER:.*?(?=\n\n|\n`)',
+    new_priorities,
+    content,
+    flags=re.DOTALL
+)
 
 with open('src/lib/operatingCore.ts', 'w') as f:
     f.write(content)
 
-print("Safely patched operatingCore.ts")
+print("Kernel updated.")
