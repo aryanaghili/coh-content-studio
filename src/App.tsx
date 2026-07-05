@@ -4216,80 +4216,103 @@ WRITING CLEANLINESS RULES (CRITICAL):
         )}
         {activeTab === 'command-center' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
-              <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy mb-2">Command Center</h2>
-                <p className="text-sm text-coh-navy/60 font-sans max-w-2xl">
-                  Choose where to start, continue work, or check what needs attention.
-                </p>
+            <div className="pb-2">
+              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-3">Command Center</h2>
+              
+              {/* Top Status Strip */}
+              <div className="flex flex-wrap gap-2 text-[10px] font-mono font-bold uppercase tracking-wider">
+                <div className="bg-white border border-coh-gold/20 px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+                  <span className="text-coh-navy/60">AI Text:</span>
+                  <span className={aiStatus === 'connected' ? 'text-green-700' : 'text-coh-gold'}>
+                    {aiStatus === 'connected' ? `${aiProvider}/${aiTextModel}` : 'Not Connected'}
+                  </span>
+                </div>
+                <div className="bg-white border border-coh-gold/20 px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+                  <span className="text-coh-navy/60">Image Model:</span>
+                  <span className={aiStatus === 'connected' ? 'text-green-700' : 'text-coh-gold'}>
+                    {aiStatus === 'connected' && aiImageModel ? aiImageModel : 'Not Connected'}
+                  </span>
+                </div>
+                <div className="bg-white border border-coh-gold/20 px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+                  <span className="text-coh-navy/60">API Status:</span>
+                  <span className={aiStatus === 'connected' ? 'text-green-700' : 'text-amber-600'}>
+                    {aiStatus === 'connected' ? 'Active' : 'Needs Setup'}
+                  </span>
+                </div>
+                <div className="bg-white border border-coh-gold/20 px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+                  <span className="text-coh-navy/60">Content Rules:</span>
+                  <span className={operatingCore.active ? 'text-green-700' : 'text-red-700'}>
+                    {operatingCore.active ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+                <div className="bg-white border border-coh-gold/20 px-3 py-1.5 rounded flex items-center gap-2 shadow-sm">
+                  <span className="text-coh-navy/60">Sources:</span>
+                  <span className="text-coh-navy">{workspaceLocalSources.length + sources.length}</span>
+                </div>
               </div>
             </div>
 
-            {/* Section 1: What do you want to do next? */}
-            <div>
-              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2 mb-4">What do you want to do next?</h3>
-              <div className="grid grid-cols-5 gap-4">
+            {/* Section: Needs Attention */}
+            <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2 mb-4">Needs Attention</h3>
+              <div className="flex flex-col gap-3">
+                {savedContent.filter(c => c.status !== 'Approved').length > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                    <div>
+                      <span className="block text-coh-navy font-bold text-sm">Drafts In Progress</span>
+                      <span className="text-xs text-coh-navy/70">You have {savedContent.filter(c => c.status !== 'Approved').length} unapproved items.</span>
+                    </div>
+                    <button onClick={() => setActiveTab('content-library')} className="text-xs bg-coh-navy text-coh-cream px-4 py-2 rounded hover:bg-coh-navy-light transition font-semibold">Review Drafts</button>
+                  </div>
+                )}
+                {selectableSources.filter(s => s.status === 'Needs Review').length > 0 && (
+                  <div className="flex items-center justify-between p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                    <div>
+                      <span className="block text-coh-navy font-bold text-sm">Source Checks</span>
+                      <span className="text-xs text-coh-navy/70">You have {selectableSources.filter(s => s.status === 'Needs Review').length} sources needing review.</span>
+                    </div>
+                    <button onClick={() => setActiveTab('source-library')} className="text-xs bg-coh-navy text-coh-cream px-4 py-2 rounded hover:bg-coh-navy-light transition font-semibold">Open Sources</button>
+                  </div>
+                )}
+                {aiStatus !== 'connected' && (
+                  <div className="flex items-center justify-between p-3 bg-red-50/50 border border-red-200/50 rounded">
+                    <div>
+                      <span className="block text-red-900 font-bold text-sm">API / Model Setup Issue</span>
+                      <span className="text-xs text-red-800/70">AI generation is not connected. Configure your provider.</span>
+                    </div>
+                    <button onClick={() => setActiveTab('settings')} className="text-xs bg-red-900 text-white px-4 py-2 rounded hover:bg-red-800 transition font-semibold">Open Settings</button>
+                  </div>
+                )}
                 
-                {/* A. Create New Content */}
-                <div className="p-5 bg-coh-navy text-coh-cream rounded border border-coh-gold/20 flex flex-col justify-between h-42 shadow-sm">
-                  <div>
-                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Create New Content</h3>
-                    <p className="text-[11px] text-coh-cream/70 leading-relaxed font-sans">Start from a message, idea, question, announcement, or quick request.</p>
+                {savedContent.filter(c => c.status !== 'Approved').length === 0 && selectableSources.filter(s => s.status === 'Needs Review').length === 0 && aiStatus === 'connected' && (
+                  <div className="p-4 bg-coh-cream/20 border border-coh-gold/10 rounded text-center">
+                    <span className="text-sm text-coh-navy/50 font-serif italic">No urgent items. System is ready.</span>
                   </div>
-                  <button
-                    onClick={() => {
-                      setCreationMode('quick');
-                      setQuickBrief({ goal: '', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
-                      setStartedFromNote('Action: Create New Content');
-                      setActiveTab('content-workspace');
-                    }}
-                    className="bg-coh-gold hover:bg-coh-gold/90 text-coh-navy text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 mt-2"
-                  >
-                    Start Creating <ArrowRight size={10} />
-                  </button>
-                </div>
+                )}
+              </div>
+            </div>
 
-                {/* B. Explore Ideas */}
-                <div className="p-5 bg-coh-gold text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between h-42 shadow-sm">
+            {/* Section: Continue Work */}
+            <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2 mb-4">Continue Work</h3>
+              <div className="grid grid-cols-3 gap-4">
+                
+                {/* Last Saved Draft */}
+                <div className="bg-coh-cream/15 p-4 rounded border border-coh-gold/10 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-serif text-xs uppercase text-coh-navy tracking-wider font-bold mb-1">Explore Ideas</h3>
-                    <p className="text-[11px] text-coh-navy/80 leading-relaxed font-sans">Generate angles, hooks, campaign ideas, and content directions before drafting.</p>
+                    <span className="block text-[10px] uppercase tracking-wider font-bold text-coh-gold mb-2">Last Saved Draft</span>
+                    {savedContent.length > 0 ? (
+                      <div>
+                        <span className="font-serif text-sm font-bold text-coh-navy line-clamp-1 mb-1">{savedContent[0].title}</span>
+                        <p className="text-[11px] text-coh-navy/60 line-clamp-2 leading-relaxed">{savedContent[0].text}</p>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-coh-navy/40 italic">No saved drafts yet.</span>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      setActiveTab('ideation-workspace');
-                    }}
-                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 mt-2 border border-coh-gold/20"
-                  >
-                    Open Ideation <ArrowRight size={10} />
-                  </button>
-                </div>
-
-                {/* C. Create From Source */}
-                <div className="p-5 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between h-42 shadow-sm">
-                  <div>
-                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Create From Source</h3>
-                    <p className="text-[11px] text-coh-navy/60 leading-relaxed font-sans">Turn a document, pasted text, article, notes, or URL into content.</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setActiveTab('source-library');
-                    }}
-                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 mt-2"
-                  >
-                    Add Source <ArrowRight size={10} />
-                  </button>
-                </div>
-
-                {/* D. Continue Work */}
-                <div className="p-5 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between h-42 shadow-sm">
-                  <div>
-                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Continue Work</h3>
-                    <p className="text-[11px] text-coh-navy/60 leading-relaxed font-sans">Return to the latest draft, revision, or saved item.</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (savedContent.length > 0) {
+                  {savedContent.length > 0 && (
+                    <button
+                      onClick={() => {
                         const last = savedContent[0];
                         setActiveDraftText(last.text);
                         setActiveDraftTitle(last.title);
@@ -4302,179 +4325,198 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         }]);
                         setActiveDraftSource(last.source === 'Content Workspace' ? 'Content Workspace' : (last.source === 'External Content' ? 'External Content' : 'Content Library'));
                         setActiveTab('revision-studio');
-                      } else {
-                        setActiveTab('content-workspace');
-                      }
-                    }}
-                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 mt-2"
-                  >
-                    Continue Draft <ArrowRight size={10} />
-                  </button>
+                      }}
+                      className="mt-4 text-xs font-semibold text-coh-navy hover:text-coh-gold transition flex items-center gap-1"
+                    >
+                      Open Draft <ArrowRight size={12} />
+                    </button>
+                  )}
                 </div>
 
-                {/* E. Create Visuals */}
-                <div className="p-5 bg-coh-cream text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between h-42 shadow-sm">
+                {/* Last Approved Item */}
+                <div className="bg-coh-cream/15 p-4 rounded border border-coh-gold/10 flex flex-col justify-between">
                   <div>
-                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h3>
-                    <p className="text-[11px] text-coh-navy/60 leading-relaxed font-sans">Generate images from visual directions or custom prompts.</p>
+                    <span className="block text-[10px] uppercase tracking-wider font-bold text-coh-gold mb-2">Last Approved Item</span>
+                    {savedContent.filter(c => c.status === 'Approved').length > 0 ? (
+                      <div>
+                        <span className="font-serif text-sm font-bold text-coh-navy line-clamp-1 mb-1">
+                          {savedContent.filter(c => c.status === 'Approved')[0].title}
+                        </span>
+                        <span className="text-[9px] bg-green-50 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase border border-green-200">Approved</span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-coh-navy/40 italic">None approved yet.</span>
+                    )}
+                  </div>
+                  {savedContent.filter(c => c.status === 'Approved').length > 0 && (
+                    <button onClick={() => setActiveTab('content-library')} className="mt-4 text-xs font-semibold text-coh-navy hover:text-coh-gold transition flex items-center gap-1">
+                      View Library <ArrowRight size={12} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Last Idea */}
+                <div className="bg-coh-cream/15 p-4 rounded border border-coh-gold/10 flex flex-col justify-between">
+                  <div>
+                    <span className="block text-[10px] uppercase tracking-wider font-bold text-coh-gold mb-2">Promising Idea</span>
+                    {savedIdeas.filter(i => i.status === 'Promising').length > 0 ? (
+                      <div>
+                        <span className="font-serif text-sm font-bold text-coh-navy line-clamp-2 mb-1">
+                          {savedIdeas.filter(i => i.status === 'Promising')[0].title || savedIdeas.filter(i => i.status === 'Promising')[0].originalInput}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-coh-navy/40 italic">No promising ideas yet.</span>
+                    )}
+                  </div>
+                  {savedIdeas.filter(i => i.status === 'Promising').length > 0 && (
+                    <button onClick={() => setActiveTab('idea-library')} className="mt-4 text-xs font-semibold text-coh-navy hover:text-coh-gold transition flex items-center gap-1">
+                      Open Ideas <ArrowRight size={12} />
+                    </button>
+                  )}
+                </div>
+
+              </div>
+            </div>
+
+            {/* Section: Library Snapshot */}
+            <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2 mb-4">Library Snapshot</h3>
+              <div className="grid grid-cols-5 gap-4 text-center">
+                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Content Library</span>
+                  <span className="block text-2xl font-serif text-coh-navy font-bold">{savedContent.length}</span>
+                  <button onClick={() => setActiveTab('content-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                </div>
+                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Approved Items</span>
+                  <span className="block text-2xl font-serif text-coh-navy font-bold text-green-700">{savedContent.filter(c => c.status === 'Approved').length}</span>
+                  <button onClick={() => setActiveTab('content-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                </div>
+                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Idea Library</span>
+                  <span className="block text-2xl font-serif text-coh-navy font-bold">{savedIdeas.length}</span>
+                  <button onClick={() => setActiveTab('idea-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                </div>
+                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Promising Ideas</span>
+                  <span className="block text-2xl font-serif text-coh-navy font-bold text-coh-gold">{savedIdeas.filter(i => i.status === 'Promising').length}</span>
+                  <button onClick={() => setActiveTab('idea-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                </div>
+                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Source Library</span>
+                  <span className="block text-2xl font-serif text-coh-navy font-bold">{workspaceLocalSources.length + sources.length}</span>
+                  <button onClick={() => setActiveTab('source-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                </div>
+              </div>
+            </div>
+
+            {/* Section: Start Something New */}
+            <div>
+              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2 mb-4">Start Something New</h3>
+              <div className="grid grid-cols-5 gap-4">
+                {/* A. Create New Content */}
+                <div className="p-4 bg-coh-navy text-coh-cream rounded border border-coh-gold/20 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Simple Mode</h3>
+                    <p className="text-[10px] text-coh-cream/70 leading-relaxed font-sans">Start from a quick message or request.</p>
                   </div>
                   <button
                     onClick={() => {
-                      setActiveTab('visual-studio');
+                      setCreationMode('quick');
+                      setQuickBrief({ goal: '', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
+                      setStartedFromNote('Action: Create New Content');
+                      setActiveTab('content-workspace');
                     }}
-                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 mt-2"
+                    className="bg-coh-gold hover:bg-coh-gold/90 text-coh-navy text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3"
                   >
-                    Open Visual Studio <ArrowRight size={10} />
+                    Start <ArrowRight size={10} />
+                  </button>
+                </div>
+
+                {/* B. Explore Ideas */}
+                <div className="p-4 bg-coh-gold text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <h3 className="font-serif text-xs uppercase text-coh-navy tracking-wider font-bold mb-1">Explore Ideas</h3>
+                    <p className="text-[10px] text-coh-navy/80 leading-relaxed font-sans">Generate angles before drafting.</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('ideation-workspace')}
+                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3 border border-coh-gold/20"
+                  >
+                    Ideate <ArrowRight size={10} />
+                  </button>
+                </div>
+
+                {/* C. Create From Source */}
+                <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Create From Source</h3>
+                    <p className="text-[10px] text-coh-navy/60 leading-relaxed font-sans">Turn a URL or doc into content.</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('source-library')}
+                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3"
+                  >
+                    Add Source <ArrowRight size={10} />
+                  </button>
+                </div>
+
+                {/* D. Create Visuals */}
+                <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h3>
+                    <p className="text-[10px] text-coh-navy/60 leading-relaxed font-sans">Generate images from custom prompts.</p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('visual-studio')}
+                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3"
+                  >
+                    Visual Studio <ArrowRight size={10} />
+                  </button>
+                </div>
+
+                {/* E. Multi-Channel Pack */}
+                <div className="p-4 bg-coh-cream text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                  <div>
+                    <h3 className="font-serif text-xs uppercase text-coh-gold tracking-wider font-bold mb-1">Multi-Channel</h3>
+                    <p className="text-[10px] text-coh-navy/60 leading-relaxed font-sans">Cross-platform adapted packs.</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      triggerQuickLauncher('LinkedIn', 'Post', 'Multi-Channel Pack');
+                    }}
+                    className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3"
+                  >
+                    Build Pack <ArrowRight size={10} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Section 2: Needs Attention / Workspace Summary */}
-            <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-4 mt-8">
-              <h3 className="font-serif text-lg text-coh-navy border-b border-coh-gold/15 pb-2">Needs Attention / Workspace Summary</h3>
-              
-              <div className="grid grid-cols-7 gap-4 text-center">
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Drafts In Progress</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1">
-                      {savedContent.filter(c => c.status !== 'Approved').length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('content-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Review Drafts →</button>
-                </div>
-                
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Approved Items</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1">
-                      {savedContent.filter(c => c.status === 'Approved').length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('content-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Manage Library →</button>
-                </div>
-
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Saved Ideas</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1">
-                      {savedIdeas.length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('idea-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open Ideas →</button>
-                </div>
-
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Promising Ideas</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1 text-coh-gold font-bold">
-                      {savedIdeas.filter(i => i.status === 'Promising').length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('idea-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open Ideas →</button>
-                </div>
-
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Sources</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1">
-                      {workspaceLocalSources.length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('source-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open Sources →</button>
-                </div>
-
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <div>
-                    <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Needs Review</span>
-                    <span className="block text-2xl font-serif text-coh-navy font-bold mt-1 text-amber-700">
-                      {selectableSources.filter(s => s.status === 'Needs Review').length}
-                    </span>
-                  </div>
-                  <button onClick={() => setActiveTab('source-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Review Sources →</button>
-                </div>
-
-                <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-center text-left px-4">
-                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Content Rules</span>
-                  
-                  <span className="block text-[10px] font-mono font-bold text-coh-navy/80 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-coh-navy"></span>
-                    Protected Foundation: Active
-                  </span>
-                  
-                  <span className={`block text-[10px] font-mono font-bold flex items-center gap-1 mt-0.5 ${operatingCore.active ? 'text-green-700' : 'text-red-700'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${operatingCore.active ? 'bg-green-500' : 'bg-red-500'}`}></span>
-                    Editable Core: {operatingCore.active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Section 3: Recent Work */}
-              <div className="pt-6 border-t border-coh-gold/15">
-                <h4 className="font-serif text-base text-coh-navy mb-3">Recent Work</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-coh-cream/15 p-4 rounded border border-coh-gold/10">
-                    <span className="block text-xs uppercase tracking-wider font-serif font-bold text-coh-gold border-b border-coh-gold/10 pb-1 mb-2">Last Saved Draft</span>
-                    {savedContent.length > 0 ? (
-                      <div>
-                        <span className="font-serif text-xs font-bold text-coh-navy truncate block">{savedContent[0].title}</span>
-                        <p className="text-[11px] text-coh-navy/70 line-clamp-2 mt-1 leading-relaxed">{savedContent[0].text}</p>
-                      </div>
-                    ) : (
-                      <span className="text-[11px] text-coh-navy/40">No saved drafts yet.</span>
-                    )}
-                  </div>
-
-                  <div className="bg-coh-cream/15 p-4 rounded border border-coh-gold/10 flex flex-col justify-between">
-                    <div>
-                      <span className="block text-xs uppercase tracking-wider font-serif font-bold text-coh-gold border-b border-coh-gold/10 pb-1 mb-2">Recent Approved Files</span>
-                      <div className="space-y-1">
-                        {savedContent.filter(c => c.status === 'Approved').slice(0, 2).map(item => (
-                          <div key={item.id} className="text-[11px] font-sans text-coh-navy flex justify-between items-center">
-                            <span className="truncate w-4/5">{item.title}</span>
-                            <span className="text-[8px] bg-green-50 text-green-700 px-1 rounded font-bold uppercase">Approved</span>
-                          </div>
-                        ))}
-                        {savedContent.filter(c => c.status === 'Approved').length === 0 && (
-                          <span className="text-[11px] text-coh-navy/40">None approved today.</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Section 4: Common Shortcuts */}
-            <details className="group border border-coh-gold/20 bg-white rounded p-4 text-sm mt-8 cursor-pointer">
-              <summary className="font-serif text-lg text-coh-navy font-bold flex items-center justify-between outline-none">
+            {/* Section: Common Shortcuts */}
+            <details className="group opacity-80 hover:opacity-100 transition-opacity bg-transparent text-sm mt-8 cursor-pointer">
+              <summary className="font-serif text-base text-coh-navy font-semibold flex items-center gap-2 outline-none">
+                <span className="text-coh-gold group-open:rotate-90 transition-transform">▶</span>
                 Common Shortcuts
-                <span className="text-coh-gold group-open:rotate-180 transition-transform">▼</span>
               </summary>
-              <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-coh-gold/15">
+              <div className="grid grid-cols-4 gap-3 mt-4 pt-4 border-t border-coh-gold/15">
                 {[
                   { title: 'LinkedIn Post', action: 'Create Post', desc: 'Sober positioning card copy.', channel: 'LinkedIn', format: 'Post' },
                   { title: 'Instagram Caption', action: 'Create Caption', desc: 'Visceral scene rendering caption.', channel: 'Instagram', format: 'Caption' },
-                  { title: 'Instagram Carousel', action: 'Create Carousel', desc: 'Slide-by-slide sequential graphic copy.', channel: 'Instagram', format: 'Carousel' },
                   { title: 'Newsletter Section', action: 'Draft Section', desc: 'Campaign and canon updates.', channel: 'Newsletter', format: 'Newsletter Section' },
-                  { title: 'Website / News Article', action: 'Draft Article', desc: 'Polish, factual editorial text.', channel: 'Website', format: 'News / Media Article' },
-                  { title: 'Sponsor Pitch Paragraph', action: 'Draft Pitch', desc: 'Low-hype patron pitch.', channel: 'Email / Direct Outreach', format: 'Sponsor Pitch Paragraph' },
-                  { title: 'Partner Note', action: 'Draft Note', desc: 'Strategic collaboration update.', channel: 'Email / Direct Outreach', format: 'Partner Note' },
-                  { title: 'Email / Letter', action: 'Draft Email', desc: 'Addressed partner message.', channel: 'Email / Direct Outreach', format: 'Email / Letter' },
-                  { title: 'Multi-Channel Pack', action: 'Build Pack', desc: 'Cross-platform adapted pack.', channel: 'LinkedIn', format: 'Post', scope: 'Multi-Channel Pack' as const }
+                  { title: 'Email / Letter', action: 'Draft Email', desc: 'Addressed partner message.', channel: 'Email / Direct Outreach', format: 'Email / Letter' }
                 ].map(item => (
                   <div
                     key={item.title}
-                    className="p-3 border border-coh-gold/10 bg-coh-cream/20 hover:border-coh-gold/40 rounded text-left transition flex justify-between items-center"
+                    className="p-3 border border-coh-gold/10 bg-white hover:border-coh-gold/40 rounded text-left transition flex justify-between items-center"
                     onClick={(e) => {
                       e.preventDefault();
-                      triggerQuickLauncher(item.channel, item.format, (item as { title: string; action: string; desc: string; channel: string; format: string; scope?: 'Single Channel' | 'Multi-Channel Pack' }).scope || 'Single Channel');
+                      triggerQuickLauncher(item.channel, item.format, 'Single Channel');
                     }}
                   >
                     <div>
                       <h4 className="font-serif font-bold text-coh-navy text-[11px]">{item.title}</h4>
-                      <p className="text-[9px] text-coh-navy/60 leading-tight mt-0.5">{item.desc}</p>
                     </div>
                     <ArrowRight size={10} className="text-coh-gold shrink-0 ml-2" />
                   </div>
