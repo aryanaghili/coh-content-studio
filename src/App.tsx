@@ -5891,7 +5891,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </p>
 
                   <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono mb-2">
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.coreStrategy.definition ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.corePassport.oneLineDefinition ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                       Identity Locked
                     </span>
                     <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.claims.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>

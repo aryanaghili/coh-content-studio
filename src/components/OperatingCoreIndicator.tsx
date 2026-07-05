@@ -13,7 +13,7 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
   let activeRules = 0;
   
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Ideation Workspace'].includes(workspaceName)) {
-    activeRules += core.coreStrategy?.internalLaw?.length || 0;
+    activeRules += core.strategyKernel?.internalLaw?.length || 0;
   }
   
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio'].includes(workspaceName)) {

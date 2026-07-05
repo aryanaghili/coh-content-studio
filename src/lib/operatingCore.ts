@@ -1,6 +1,6 @@
 export type EnforcementLevel = 'Always apply' | 'Strong guidance' | 'Warn if violated' | 'Reference only';
 
-export type AppliesTo = 'All workspaces' | 'Content generation' | 'Ideation' | 'Revision' | 'Visual Studio' | 'Sponsor-facing outputs' | 'Public-facing outputs' | 'Internal outputs';
+export type AppliesTo = 'All workspaces' | 'Content generation' | 'Ideation Workspace' | 'Revision Studio' | 'Visual Studio' | 'Sponsor-facing outputs' | 'Public-facing outputs' | 'Internal outputs';
 
 export interface RuleCard {
   id: string;
@@ -17,7 +17,7 @@ export interface ClaimCard {
   id: string;
   text: string;
   type: ClaimType;
-  proofRequirement: string;
+  proofRequirement?: string;
   enforcement: EnforcementLevel;
   notes?: string;
 }
@@ -32,6 +32,7 @@ export interface AudienceProfile {
   avoid: string;
   cta: string;
   relevantMessages: string;
+  mayMisunderstand?: string;
 }
 
 export interface ChannelRule {
@@ -56,20 +57,33 @@ export interface RevisionStandard {
   appliesTo: string;
 }
 
+export interface CorePassport {
+  organizationName: string;
+  category: string;
+  oneLineDefinition: string;
+  whatWeAreNot: string;
+  coreDistinction: string;
+  operatingLogic: string;
+  currentStrategicPhase: string;
+  primaryStrategicPriorities: string;
+  defaultCommunicationPosture: string;
+  neverCollapseInto: string;
+}
+
+export interface StrategyKernel {
+  positioning: string;
+  strategicAmbition: string;
+  valueProposition: string;
+  proofLadder: string;
+  internalLaw: RuleCard[];
+}
+
 export interface OperatingCore {
   active: boolean;
   version: string;
   lastUpdated: string;
-  coreStrategy: {
-    definition: string;
-    whatWeAreNot: string;
-    categoryPositioning: string;
-    strategicAmbition: string;
-    valueProposition: string;
-    internalLaw: RuleCard[];
-    priorities: string[];
-    currentFocus: string;
-  };
+  corePassport: CorePassport;
+  strategyKernel: StrategyKernel;
   audiences: AudienceProfile[];
   channels: ChannelRule[];
   claimsProofBoundaries: {
@@ -111,60 +125,40 @@ const generateId = () => Math.random().toString(36).substring(2, 9);
 
 export const createDefaultOperatingCore = (): OperatingCore => ({
   active: true,
-  version: "v2",
+  version: "v3",
   lastUpdated: new Date().toISOString(),
-  coreStrategy: {
-    definition: "COH is a cultural engine for climate transition. COH creates original climate-era operatic worlds.",
-    whatWeAreNot: "COH is not a generic climate campaign, event brand, NGO campaign, ESG communication project, or conventional opera production company.",
-    categoryPositioning: "A repertoire-based climate canon.",
-    strategicAmbition: "Building long-term content and IP logic, starting with live opera.",
-    valueProposition: "Live opera as the origin asset for wider cultural, institutional, sponsorship, content, and IP value.",
+  corePassport: {
+    organizationName: "Climate Opera Haus",
+    category: "Climate-era cultural IP and opera-based content venture",
+    oneLineDefinition: "COH creates original climate-era operatic worlds and turns them into cultural, institutional, sponsorship, content, and IP assets.",
+    whatWeAreNot: "COH is not a generic climate campaign, NGO communication project, ESG content brand, event brand, or conventional opera production company.",
+    coreDistinction: "COH treats climate as the structural condition of the century and uses opera to build serious cultural worlds that can repeat, travel, and accumulate meaning.",
+    operatingLogic: "Live opera creates the world. Filming captures it. Documentary and content monetize it. Sponsors finance and elevate it. Institutions license, host, and extend it.",
+    currentStrategicPhase: "Moving from proof of attention and legitimacy toward proof of delivery, capture, adoption readiness, and repeatability.",
+    primaryStrategicPriorities: "Cultural durability, institutional adoption, civic resonance, sponsorship credibility, long-term content/IP logic, London delivery, capture, and adoption readiness.",
+    defaultCommunicationPosture: "Serious, cultural, precise, human, institution-grade, artistically authoritative, commercially coherent.",
+    neverCollapseInto: "Generic climate activism, corporate ESG language, shallow event marketing, disaster clichés, decorative green aesthetics, startup hype, or charity-style fundraising language."
+  },
+  strategyKernel: {
+    positioning: "COH is a climate-era cultural IP venture using opera as the origin asset for a wider content, institutional, sponsorship, and rights ecosystem.",
+    strategicAmbition: "Build a repertoire-based climate canon designed to repeat, travel, and accumulate cultural meaning over time.",
+    valueProposition: "COH gives partners, institutions, and audiences access to rare, ownable, culturally differentiated climate-era content with artistic authority and long-term asset value.",
+    proofLadder: "COP30 = proof of attention and legitimacy.\\nLondon = proof of delivery, capture, and productization.\\nPost-London = proof of adoption and repeatability.",
     internalLaw: [
-      {
-        id: generateId(),
-        title: "Climate is not a theme",
-        rule: "Climate must be treated as the structural condition of the century, not as decoration or campaign messaging.",
-        enforcement: "Always apply",
-        appliesTo: ["All workspaces"]
-      },
-      {
-        id: generateId(),
-        title: "Nature is not passive",
-        rule: "Nature can be treated as an active subject with agency, memory, and consequence.",
-        enforcement: "Strong guidance",
-        appliesTo: ["Content generation", "Ideation", "Visual Studio"]
-      },
-      {
-        id: generateId(),
-        title: "Human is not savior",
-        rule: "Human figures should not be framed as masters or saviors of the system. They should be listeners, ethical testers, learners, or decision-makers.",
-        enforcement: "Strong guidance",
-        appliesTo: ["Content generation", "Visual Studio", "Revision"]
-      },
-      {
-        id: generateId(),
-        title: "Protect artistic authority",
-        rule: "COH communication should not collapse into generic activism, NGO language, shallow ESG wording, or campaign slogans.",
-        enforcement: "Always apply",
-        appliesTo: ["All workspaces"]
-      }
-    ],
-    priorities: [
-      "Cultural durability",
-      "Institutional adoption",
-      "Civic resonance",
-      "Sponsorship credibility",
-      "Long-term content/IP logic",
-      "London as proof of delivery and asset creation",
-      "Future adoption and repeatability"
-    ],
-    currentFocus: "Establishing cultural authority and securing institutional partners."
+      { id: generateId(), title: "Climate is not a theme", rule: "Climate must be treated as a structural condition, not a decorative theme.", enforcement: "Always apply", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Nature is not passive", rule: "Nature should not be treated as a passive backdrop.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Human is not savior", rule: "Humans are not saviors in these narratives.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Protect artistic authority", rule: "Do not dilute the artistic rigor with campaign phrasing.", enforcement: "Always apply", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Completion belongs to the cycle", rule: "Completion belongs to the cycle, not to a single work.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Do not treat live performance as the end product", rule: "Live performance is the origin asset, not the final product.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] },
+      { id: generateId(), title: "Every output should support durability", rule: "Every output should support durability, adoption, civic resonance, sponsorship credibility, or long-term asset logic.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] }
+    ]
   },
   audiences: [
     {
-      id: generateId(),
-      name: "Sponsors and partners",
+      id: generateId(), name: "Sponsors and partners",
       caresAbout: "Credibility, unique value, audience reach, cultural relevance",
+      mayMisunderstand: "Thinking we are a traditional NGO or standard opera company.",
       proofNeeded: "Institutional adoption, concrete value exchange",
       preferredTone: "Professional, premium, strategic",
       levelOfDetail: "High-level strategic impact",
@@ -173,21 +167,97 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
       relevantMessages: "Cultural durability, institutional footprint"
     },
     {
-      id: generateId(),
-      name: "General public",
-      caresAbout: "Story, emotion, accessibility",
-      proofNeeded: "Relatable themes, accessible language",
-      preferredTone: "Human, clear, engaging",
-      levelOfDetail: "Evocative and broad",
-      avoid: "Heavy jargon, corporate sustainability speak",
+      id: generateId(), name: "Cultural institutions",
+      caresAbout: "Artistic quality, civic relevance, prestige",
+      mayMisunderstand: "Thinking the project is too commercial or activist.",
+      proofNeeded: "Artistic rigor, peer institutional validation",
+      preferredTone: "Institution-grade, serious, cultural",
+      levelOfDetail: "High artistic and operational detail",
+      avoid: "Corporate ROI language, startup disruption hype",
+      cta: "Review the artistic brief, consider co-production",
+      relevantMessages: "Repertoire-based climate canon, civic resonance"
+    },
+    {
+      id: generateId(), name: "Opera houses and festivals",
+      caresAbout: "Repertoire fit, production logistics, artistic scale",
+      mayMisunderstand: "Thinking the work is an agitprop stunt rather than serious repertoire.",
+      proofNeeded: "Scores, creative team pedigree, technical viability",
+      preferredTone: "Artistically authoritative, practical",
+      levelOfDetail: "High technical and artistic detail",
+      avoid: "Marketing fluff, minimizing the complexity of live opera",
+      cta: "Request full materials, discuss staging",
+      relevantMessages: "New repertoire, touring flexibility"
+    },
+    {
+      id: generateId(), name: "Climate and sustainability leaders",
+      caresAbout: "Shifting narratives, reaching new audiences emotionally",
+      mayMisunderstand: "Expecting literal policy communication.",
+      proofNeeded: "Audience emotional engagement, scale of cultural impact",
+      preferredTone: "Grounded, precise, visionary but not naive",
+      levelOfDetail: "Medium, focusing on narrative impact",
+      avoid: "Preaching to the choir, generic urgency clichés",
+      cta: "Join the advisory circle, endorse the cultural approach",
+      relevantMessages: "Climate as structural condition, cultural IP"
+    },
+    {
+      id: generateId(), name: "Philanthropists and patrons",
+      caresAbout: "Legacy, supporting ambitious cultural shifts",
+      mayMisunderstand: "Thinking it's a standard donation rather than building an IP engine.",
+      proofNeeded: "Long-term vision, credibility of the team",
+      preferredTone: "Respectful, visionary, exclusive",
+      levelOfDetail: "Focus on legacy and long-term asset value",
+      avoid: "Transactional fundraising, desperation",
+      cta: "Become a founding patron",
+      relevantMessages: "Building a cultural engine, legacy"
+    },
+    {
+      id: generateId(), name: "Press and media",
+      caresAbout: "The 'first of its kind' angle, scale of ambition, cultural crossover",
+      mayMisunderstand: "Reducing it to 'opera about global warming'.",
+      proofNeeded: "Visuals, talent involved, confirmed dates/venues",
+      preferredTone: "Clear, factual, culturally significant",
+      levelOfDetail: "Concise facts with strong quotes",
+      avoid: "Jargon, unverified claims, overused PR buzzwords",
+      cta: "Request interview, download press kit",
+      relevantMessages: "Original climate-era operatic worlds"
+    },
+    {
+      id: generateId(), name: "Internal team",
+      caresAbout: "Clarity, alignment, next steps",
+      mayMisunderstand: "Losing the strategic thread in daily tasks.",
+      proofNeeded: "Clear connection between tasks and the Proof Ladder",
+      preferredTone: "Direct, supportive, rigorous",
+      levelOfDetail: "High operational detail",
+      avoid: "Corporate double-speak, vague directives",
+      cta: "Execute, review, align",
+      relevantMessages: "Current strategic phase focus"
+    },
+    {
+      id: generateId(), name: "General public",
+      caresAbout: "Story, emotion, accessibility, spectacle",
+      mayMisunderstand: "Thinking opera is too elite or boring.",
+      proofNeeded: "Stunning visuals, relatable human consequence",
+      preferredTone: "Human, clear, engaging, evocative",
+      levelOfDetail: "Broad strokes and emotional hooks",
+      avoid: "Heavy jargon, corporate sustainability speak, academic art theory",
       cta: "Learn more, buy tickets, join the list",
       relevantMessages: "The artistic world, emotional experience"
+    },
+    {
+      id: generateId(), name: "Education and civic partners",
+      caresAbout: "Community access, educational value, youth engagement",
+      mayMisunderstand: "Thinking it's too complex for general audiences.",
+      proofNeeded: "Accessibility plans, educational materials",
+      preferredTone: "Accessible, welcoming, civic-minded",
+      levelOfDetail: "Focus on access and understanding",
+      avoid: "Elitist tone, purely commercial framing",
+      cta: "Partner for outreach, access educational packs",
+      relevantMessages: "Civic resonance, shared cultural memory"
     }
   ],
   channels: [
     {
-      id: generateId(),
-      name: "LinkedIn",
+      id: generateId(), name: "LinkedIn",
       purpose: "Thought leadership and institutional updates",
       typicalStructure: "Hook, context, institutional implication, clear next step",
       lengthGuidance: "Medium (2-3 short paragraphs)",
@@ -197,8 +267,47 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
       avoid: "Emoji-heavy, overly casual, generic corporate hype"
     },
     {
-      id: generateId(),
-      name: "WhatsApp",
+      id: generateId(), name: "Newsletter",
+      purpose: "Deep-dive cultural updates and community building",
+      typicalStructure: "Editorial intro, behind-the-scenes, strategic update, clear CTA",
+      lengthGuidance: "Medium to Long (500-800 words)",
+      toneGuidance: "Culturally premium, insider, visionary",
+      ctaGuidance: "Read more, share, support",
+      formattingRules: "Editorial layout, strong headers, rich visuals",
+      avoid: "Salesy language, desperate tone, purely transactional feel"
+    },
+    {
+      id: generateId(), name: "Website",
+      purpose: "The definitive source of truth and primary conversion engine",
+      typicalStructure: "Strong headline, clear value prop, proof points, detailed sections",
+      lengthGuidance: "Varies by page, generally concise and scannable",
+      toneGuidance: "Authoritative, definitive, premium",
+      ctaGuidance: "Primary action (Contact, Buy, Learn)",
+      formattingRules: "Highly visual, distinct sections, clear typography",
+      avoid: "Clutter, burying the lead, generic templates"
+    },
+    {
+      id: generateId(), name: "Internal Teams",
+      purpose: "Alignment and operational clarity",
+      typicalStructure: "Context, decision/update, required actions",
+      lengthGuidance: "Short and direct",
+      toneGuidance: "Clear, collaborative, rigorous",
+      ctaGuidance: "Specific operational tasks",
+      formattingRules: "Bullet points, bold key terms",
+      avoid: "Corporate fluff, ambiguity"
+    },
+    {
+      id: generateId(), name: "Sponsor email",
+      purpose: "Initiate or advance high-value partnerships",
+      typicalStructure: "Personalized hook, core value prop, specific ask/next step",
+      lengthGuidance: "Short (1-2 paragraphs max)",
+      toneGuidance: "Respectful, peer-to-peer, strategic",
+      ctaGuidance: "A brief call or meeting",
+      formattingRules: "Standard email, highly readable",
+      avoid: "Mass-email feel, begging, over-explaining the art"
+    },
+    {
+      id: generateId(), name: "WhatsApp",
       purpose: "Direct connection with partners",
       typicalStructure: "Greeting, concise core message, single question/CTA",
       lengthGuidance: "Short (1-2 paragraphs)",
@@ -206,74 +315,65 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
       ctaGuidance: "Simple conversational reply prompt",
       formattingRules: "Mobile optimized, very short lines",
       avoid: "Generic corporate language, long introductions, email subject lines"
+    },
+    {
+      id: generateId(), name: "Event copy",
+      purpose: "Drive attendance and set expectations",
+      typicalStructure: "What/When/Where, Why it matters, Who should attend",
+      lengthGuidance: "Short, punchy",
+      toneGuidance: "Anticipatory, exclusive, clear",
+      ctaGuidance: "RSVP, Buy Tickets",
+      formattingRules: "Scannable details",
+      avoid: "Vague logistics, over-hyping without substance"
+    },
+    {
+      id: generateId(), name: "Press/media note",
+      purpose: "Provide journalists with clear, accurate narrative angles",
+      typicalStructure: "Headline, Lead paragraph (Who/What/When), Core Distinction, Quotes",
+      lengthGuidance: "Standard press release length (400-600 words)",
+      toneGuidance: "Factual, culturally significant, objective",
+      ctaGuidance: "Contact for interviews/assets",
+      formattingRules: "Standard press format, easily copy-pasteable",
+      avoid: "Marketing adjectives, unsupported claims"
+    },
+    {
+      id: generateId(), name: "Visual direction",
+      purpose: "Briefing photographers, designers, or AI generators",
+      typicalStructure: "Atmosphere, Subject, Composition, Lighting, Exclusions",
+      lengthGuidance: "Bullet points",
+      toneGuidance: "Descriptive, precise",
+      ctaGuidance: "N/A",
+      formattingRules: "Clear lists",
+      avoid: "Vague artistic terms without concrete grounding"
     }
   ],
   claimsProofBoundaries: {
     claims: [
-      {
-        id: generateId(),
-        text: "COH creates original climate-era operatic worlds.",
-        type: "Approved",
-        proofRequirement: "None",
-        enforcement: "Always apply"
-      },
-      {
-        id: generateId(),
-        text: "COH is building a repertoire-based climate canon.",
-        type: "Approved",
-        proofRequirement: "None",
-        enforcement: "Always apply"
-      },
-      {
-        id: generateId(),
-        text: "COH treats climate as a structural condition, not a decorative theme.",
-        type: "Approved",
-        proofRequirement: "None",
-        enforcement: "Always apply"
-      },
-      {
-        id: generateId(),
-        text: "Specific audience numbers",
-        type: "Requires proof",
-        proofRequirement: "Actual ticket/reach data",
-        enforcement: "Warn if violated"
-      },
-      {
-        id: generateId(),
-        text: "Confirmed institutional interest",
-        type: "Requires proof",
-        proofRequirement: "Formal LOI or agreement",
-        enforcement: "Warn if violated"
-      },
-      {
-        id: generateId(),
-        text: "Confirmed partnerships that are not confirmed",
-        type: "Forbidden",
-        proofRequirement: "N/A",
-        enforcement: "Always apply",
-        notes: "Do not invent sponsors."
-      },
-      {
-        id: generateId(),
-        text: "Overstated commercial traction",
-        type: "Forbidden",
-        proofRequirement: "N/A",
-        enforcement: "Always apply"
-      },
-      {
-        id: generateId(),
-        text: "Vague 'world-changing' claims without evidence",
-        type: "Forbidden",
-        proofRequirement: "N/A",
-        enforcement: "Always apply"
-      },
-      {
-        id: generateId(),
-        text: "Shallow ESG or activism language that weakens artistic authority",
-        type: "Forbidden",
-        proofRequirement: "N/A",
-        enforcement: "Always apply"
-      }
+      { id: generateId(), type: 'Approved', text: 'COH creates original climate-era operatic worlds.', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Approved', text: 'COH treats live opera as an origin asset for cultural, institutional, sponsorship, content, and IP value.', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Approved', text: 'COH is building toward a repertoire-based climate canon.', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Approved', text: 'COH treats climate as a structural condition, not a decorative theme.', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Requires proof', text: 'confirmed sponsors', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'confirmed institutional adoption', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'audience numbers', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'media partnerships', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'distribution deals', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'production dates if not locked', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'financial commitments', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Requires proof', text: 'commercial traction', enforcement: 'Warn if violated' },
+      { id: generateId(), type: 'Aspirational', text: 'global canon', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Aspirational', text: 'long-term institutional adoption', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Aspirational', text: 'touring', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Aspirational', text: 'documentary distribution', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Aspirational', text: 'immersive or gaming expansion', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Aspirational', text: 'recurring licensing', enforcement: 'Reference only' },
+      { id: generateId(), type: 'Forbidden', text: 'world-leading unless externally validated', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'confirmed partner unless signed', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'guaranteed impact', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'saving the planet', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'generic climate movement language', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'overstated commercial traction', enforcement: 'Always apply' },
+      { id: generateId(), type: 'Forbidden', text: 'aspiration presented as fact', enforcement: 'Always apply' }
     ],
     proofPoints: "London as proof of delivery and asset creation.",
     overstatementWarnings: "Avoid claiming we have single-handedly changed the climate discourse.",
@@ -281,93 +381,37 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
   },
   voiceAndLanguage: {
     overallTone: "Serious, precise, human, culturally intelligent, institution-grade.",
-    writingStyle: "Direct, active voice, non-ornamental.",
+    writingStyle: "precise cultural language, human consequence, structural clarity, measured ambition, institutional seriousness, emotional depth without sentimentality, commercial clarity when sponsor-facing",
     sentenceRhythm: "Varied, punchy, declarative.",
     preferredPhrases: ["structural condition", "origin asset", "repertoire-based", "cultural durability"],
-    avoidPhrases: ["unlock potential", "drive impact", "game-changer", "innovative solution", "cutting-edge", "transformative journey", "generic sustainability language", "overused climate urgency clichés", "decorative green language"],
-    aiPhrasesToAvoid: ["now more than ever", "in a world where", "it's important to remember", "a testament to"],
+    avoidPhrases: ["corporate innovation language", "NGO campaign phrasing", "generic climate urgency", "startup hype", "overexplaining", "inflated adjectives", "generic 'join the movement' language"],
+    aiPhrasesToAvoid: ["now more than ever", "in a world where", "it's important to remember", "a testament to", "AI-polished rhythm", "em dashes"],
     formalityLevel: "High-end but accessible",
     emotionalIntensity: "Restrained but charged",
     founderVoiceNotes: "Authoritative but not arrogant.",
     cleanWritingRules: "No em dashes or AI-style long dash characters unless explicitly requested."
   },
   visualDNA: {
-    visualAtmosphere: "Cinematic, atmospheric, elemental, prestigious, editorial, minimalist, serious.",
+    visualAtmosphere: "Cinematic, elemental, atmospheric, editorial, serious, culturally premium.",
     mood: "Charged, anticipatory, grave but beautiful.",
     compositionPrinciples: "Clean, intentional, not overly busy, high contrast.",
     colorMaterialDirection: "Elemental tones: deep water, earth, fire, air. Organic textures.",
-    photographyStyle: "Editorial, documentary, raw but composed.",
+    photographyStyle: "Stage worlds, elemental systems, human listening and decision moments, institutional spaces, landscapes with atmosphere, mythic realism, cultural memory, production and capture logic.",
     typographyNotes: "Serif for authority, clean sans-serif for utility.",
     visualSymbolsToUseCarefully: "Nature motifs (use only when integrated, not pasted on).",
-    visualClichesToAvoid: "Not cartoonish, not stock-photo corporate, no generic green leaves, no protest clichés, no disaster scenes, no melting earth cliché, no overdramatic apocalypse imagery, no decorative climate icons unless specifically justified.",
-    imagePromptRules: "Always specify cinematic lighting, 35mm lens equivalent, highly detailed textures.",
+    visualClichesToAvoid: "Generic green leaves, protest signs, melting planet, disaster imagery, stock-photo handshakes, childish cartoon style, decorative climate icons, empty futuristic AI aesthetics.",
+    imagePromptRules: "The image should feel like cultural world-building, not climate marketing.",
     formatAspectPreferences: "16:9 for narrative, 4:5 for social portraits.",
     negativePromptRules: "cartoon, illustration, 3d render, low quality, bad anatomy, text, watermark, generic stock photo"
   },
   revisionStandards: [
-    {
-      id: generateId(),
-      action: "Sharper",
-      does: "Remove generic language, tighten logic, make the point clearer.",
-      avoids: "Fluff, unnecessary adjectives.",
-      whenToUse: "When copy feels too loose or academic.",
-      exampleGuidance: "Change 'we are driving impact' to 'we built an engine'.",
-      appliesTo: "All workspaces"
-    },
-    {
-      id: generateId(),
-      action: "More human",
-      does: "Improve rhythm, warmth, and naturalness without becoming casual or weak.",
-      avoids: "Corporate speak, robotic transitions.",
-      whenToUse: "When copy feels too cold or institutional.",
-      exampleGuidance: "Change 'the organization executed' to 'we built'.",
-      appliesTo: "All workspaces"
-    },
-    {
-      id: generateId(),
-      action: "More institutional",
-      does: "Ground the copy in seriousness, credibility, and decision-maker relevance.",
-      avoids: "Casual slang, overdramatic claims, startup hype.",
-      whenToUse: "When writing for sponsors or formal partners.",
-      exampleGuidance: "Change 'super cool project' to 'cultural venture'.",
-      appliesTo: "Sponsor-facing outputs"
-    },
-    {
-      id: generateId(),
-      action: "More sponsor-facing",
-      does: "Clarify value exchange, credibility, and why the partner should care.",
-      avoids: "Burying the lead, purely artistic self-indulgence.",
-      whenToUse: "When the primary goal is funding or partnership.",
-      exampleGuidance: "Highlight cultural durability and reach.",
-      appliesTo: "Sponsor-facing outputs"
-    },
-    {
-      id: generateId(),
-      action: "Less corporate",
-      does: "Remove jargon, inflated phrases, and empty business language.",
-      avoids: "Synergy, impact-driven, leveraging assets.",
-      whenToUse: "When the text feels like a generic B2B press release.",
-      exampleGuidance: "Speak like a cultural leader, not a middle manager.",
-      appliesTo: "All workspaces"
-    },
-    {
-      id: generateId(),
-      action: "Less NGO-like",
-      does: "Avoid moralizing, campaign language, and generic climate advocacy.",
-      avoids: "Save the planet, urgent crisis, we must act now.",
-      whenToUse: "When the text sounds like a charity appeal.",
-      exampleGuidance: "Focus on the art and the structure, not the guilt.",
-      appliesTo: "All workspaces"
-    },
-    {
-      id: generateId(),
-      action: "Cleaner from AI-style characters",
-      does: "Remove em dashes, zero-width characters, curly quotes if needed, formulaic AI phrasing, and over-polished structure.",
-      avoids: "AI-style syntax.",
-      whenToUse: "As a final polish step.",
-      exampleGuidance: "Replace em dashes with commas or separate sentences.",
-      appliesTo: "All workspaces"
-    }
+    { id: generateId(), action: "Sharper", does: "Remove repetition, tighten logic, make the strategic point clearer.", avoids: "Fluff, unnecessary adjectives.", whenToUse: "When copy feels too loose or academic.", exampleGuidance: "", appliesTo: "All workspaces" },
+    { id: generateId(), action: "More human", does: "Improve rhythm, warmth, and naturalness without becoming casual or weak.", avoids: "Corporate speak, robotic transitions.", whenToUse: "When copy feels too cold or institutional.", exampleGuidance: "", appliesTo: "All workspaces" },
+    { id: generateId(), action: "More institutional", does: "Increase seriousness, credibility, and adoption logic. Reduce campaign language.", avoids: "Casual slang, overdramatic claims, startup hype.", whenToUse: "When writing for sponsors or formal partners.", exampleGuidance: "", appliesTo: "Sponsor-facing outputs" },
+    { id: generateId(), action: "More sponsor-facing", does: "Clarify value exchange, partner relevance, credibility, and why the partner should care.", avoids: "Burying the lead, purely artistic self-indulgence.", whenToUse: "When the primary goal is funding or partnership.", exampleGuidance: "", appliesTo: "Sponsor-facing outputs" },
+    { id: generateId(), action: "Less corporate", does: "Remove jargon, inflated phrases, and empty business language.", avoids: "Synergy, impact-driven, leveraging assets.", whenToUse: "When the text feels like a generic B2B press release.", exampleGuidance: "", appliesTo: "All workspaces" },
+    { id: generateId(), action: "Less NGO-like", does: "Remove moralizing, awareness-first language, and generic climate action framing.", avoids: "Save the planet, urgent crisis, we must act now.", whenToUse: "When the text sounds like a charity appeal.", exampleGuidance: "", appliesTo: "All workspaces" },
+    { id: generateId(), action: "Cleaner from AI-style characters", does: "Remove em dashes, zero-width characters, curly quotes if needed, overly polished transitions, and formulaic AI phrasing.", avoids: "AI-style syntax.", whenToUse: "As a final polish step.", exampleGuidance: "", appliesTo: "All workspaces" }
   ],
   learningInbox: []
 });
@@ -387,27 +431,36 @@ export function compileOperatingCoreContext(core: OperatingCore | null, context:
 
   const sections: string[] = ["--- COH OPERATING CORE INSTRUCTIONS ---"];
 
-  // Core Identity applies to most content workspaces
+  // Core Passport is injected for most workspaces
+  if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Ideation Workspace', 'Revision Studio'].includes(context.workspace)) {
+    sections.push(`
+CORE PASSPORT (IDENTITY LAYER):
+- Organization: ${core.corePassport.organizationName} (${core.corePassport.category})
+- Definition: ${core.corePassport.oneLineDefinition}
+- Distinction: ${core.corePassport.coreDistinction}
+- Phase: ${core.corePassport.currentStrategicPhase}
+- Posture: ${core.corePassport.defaultCommunicationPosture}
+- NEVER COLLAPSE INTO: ${core.corePassport.neverCollapseInto}`);
+  }
+
+  // Strategy Kernel
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Ideation Workspace'].includes(context.workspace)) {
     sections.push(`
-CORE STRATEGY & IDENTITY:
-- Definition: ${core.coreStrategy.definition}
-- What we are NOT: ${core.coreStrategy.whatWeAreNot}
-- Positioning: ${core.coreStrategy.categoryPositioning}
-- Ambition: ${core.coreStrategy.strategicAmbition}
-- Value Proposition: ${core.coreStrategy.valueProposition}`);
+STRATEGY KERNEL:
+- Positioning: ${core.strategyKernel.positioning}
+- Ambition: ${core.strategyKernel.strategicAmbition}
+- Value Prop: ${core.strategyKernel.valueProposition}
+- Proof Ladder: ${core.strategyKernel.proofLadder.replace(/\\n/g, ' -> ')}`);
 
-    if (core.coreStrategy.internalLaw.length > 0) {
-      const laws = core.coreStrategy.internalLaw
-        .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Content generation') || law.appliesTo.includes('Ideation'))
+    if (core.strategyKernel.internalLaw.length > 0) {
+      const laws = core.strategyKernel.internalLaw
+        .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Content generation') || law.appliesTo.includes('Ideation Workspace'))
         .map(law => `- [${law.enforcement.toUpperCase()}] ${law.title}: ${law.rule}`)
         .join('\\n');
       if (laws) {
         sections.push(`\\nINTERNAL LAW (NON-NEGOTIABLES):\\n${laws}`);
       }
     }
-    
-    sections.push(`\\nSTRATEGIC PRIORITIES:\\n${core.coreStrategy.priorities.map(p => `- ${p}`).join('\\n')}`);
   }
 
   // Voice & Language applies to all text generation
@@ -415,14 +468,8 @@ CORE STRATEGY & IDENTITY:
     sections.push(`
 VOICE & LANGUAGE:
 - Overall Tone: ${core.voiceAndLanguage.overallTone}
-- Writing Style: ${core.voiceAndLanguage.writingStyle}
-- Formality: ${core.voiceAndLanguage.formalityLevel}
-- Sentence Rhythm: ${core.voiceAndLanguage.sentenceRhythm}
-- Clean Writing Rules: ${core.voiceAndLanguage.cleanWritingRules}`);
+- Writing Style: ${core.voiceAndLanguage.writingStyle}`);
     
-    if (core.voiceAndLanguage.preferredPhrases.length > 0) {
-      sections.push(`- PREFERRED PHRASES: ${core.voiceAndLanguage.preferredPhrases.join(', ')}`);
-    }
     if (core.voiceAndLanguage.avoidPhrases.length > 0) {
       sections.push(`- WORDS/PHRASES TO AVOID: ${core.voiceAndLanguage.avoidPhrases.join(', ')}`);
     }
@@ -434,18 +481,15 @@ VOICE & LANGUAGE:
   // Claim boundaries
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio', 'Ideation Workspace'].includes(context.workspace)) {
     const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\\n');
-    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text} (Proof required: ${c.proofRequirement})`).join('\\n');
+    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\\n');
     const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\\n');
     
-    sections.push(`
-CLAIMS, PROOF & BOUNDARIES:
-- Proof Points to Use: ${core.claimsProofBoundaries.proofPoints}
-- Overstatement Warnings: ${core.claimsProofBoundaries.overstatementWarnings}
-- Claim Style Rules: ${core.claimsProofBoundaries.claimStyleRules}`);
-
-    if (approved) sections.push(`\\nAPPROVED CLAIMS:\\n${approved}`);
-    if (requiresProof) sections.push(`\\nREQUIRES PROOF:\\n${requiresProof}`);
-    if (forbidden) sections.push(`\\nFORBIDDEN CLAIMS (CRITICAL):\\n${forbidden}`);
+    if (approved || requiresProof || forbidden) {
+      sections.push(`\\nCLAIMS & PROOF BOUNDARIES:`);
+      if (approved) sections.push(`APPROVED CLAIMS:\\n${approved}`);
+      if (requiresProof) sections.push(`REQUIRES PROOF:\\n${requiresProof}`);
+      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\\n${forbidden}`);
+    }
   }
 
   // Audience Logic
@@ -457,9 +501,6 @@ AUDIENCE TARGET: ${audienceMatch.name}
 - Cares About: ${audienceMatch.caresAbout}
 - Proof Needed: ${audienceMatch.proofNeeded}
 - Tone preference: ${audienceMatch.preferredTone}
-- Level of Detail: ${audienceMatch.levelOfDetail}
-- Relevant Messages: ${audienceMatch.relevantMessages}
-- CTA Focus: ${audienceMatch.cta}
 - Avoid: ${audienceMatch.avoid}`);
     }
   }
@@ -470,11 +511,8 @@ AUDIENCE TARGET: ${audienceMatch.name}
     if (channelMatch) {
       sections.push(`
 CHANNEL RULES: ${channelMatch.name}
-- Purpose: ${channelMatch.purpose}
 - Typical Structure: ${channelMatch.typicalStructure}
 - Tone Guidance: ${channelMatch.toneGuidance}
-- Length Guidance: ${channelMatch.lengthGuidance}
-- CTA Guidance: ${channelMatch.ctaGuidance}
 - Formatting Rules: ${channelMatch.formattingRules}
 - Avoid: ${channelMatch.avoid}`);
     }
@@ -487,8 +525,7 @@ CHANNEL RULES: ${channelMatch.name}
       sections.push(`
 REVISION STANDARD TO APPLY: ${revMatch.action}
 - What this revision does: ${revMatch.does}
-- What it avoids: ${revMatch.avoids}
-- Example Guidance: ${revMatch.exampleGuidance}`);
+- What it avoids: ${revMatch.avoids}`);
     }
   }
 
@@ -497,26 +534,9 @@ REVISION STANDARD TO APPLY: ${revMatch.action}
     sections.push(`
 VISUAL DNA:
 - Visual Atmosphere: ${core.visualDNA.visualAtmosphere}
-- Mood: ${core.visualDNA.mood}
-- Composition Principles: ${core.visualDNA.compositionPrinciples}
-- Color/Material Direction: ${core.visualDNA.colorMaterialDirection}
 - Photography Style: ${core.visualDNA.photographyStyle}
-- Format/Aspect Preferences: ${core.visualDNA.formatAspectPreferences}
-- Typography Notes: ${core.visualDNA.typographyNotes}
-- Visual Symbols to Use Carefully: ${core.visualDNA.visualSymbolsToUseCarefully}
-- Image Prompt Rules: ${core.visualDNA.imagePromptRules}
-- CLICHES TO AVOID (CRITICAL): ${core.visualDNA.visualClichesToAvoid}
-- NEGATIVE PROMPT: ${core.visualDNA.negativePromptRules}`);
-
-    if (core.coreStrategy.internalLaw.length > 0) {
-      const laws = core.coreStrategy.internalLaw
-        .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Visual Studio'))
-        .map(law => `- [${law.enforcement.toUpperCase()}] ${law.title}: ${law.rule}`)
-        .join('\\n');
-      if (laws) {
-        sections.push(`\\nINTERNAL LAW (NON-NEGOTIABLES):\\n${laws}`);
-      }
-    }
+- Principle: ${core.visualDNA.imagePromptRules}
+- CLICHES TO AVOID (CRITICAL): ${core.visualDNA.visualClichesToAvoid}`);
   }
 
   return sections.join('\\n');
