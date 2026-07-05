@@ -33,6 +33,7 @@ interface SourceFile {
   type: 
     | 'Tone of Voice'
     | 'Business Model'
+    | 'Strategic Plan'
     | 'Business Memo'
     | 'Website Copy'
     | 'Deck'
@@ -43,7 +44,7 @@ interface SourceFile {
     | 'Image / Visual Asset'
     | 'Article / Media Coverage'
     | 'Team Notes'
-    | 'Link'
+    | 'Link / URL'
     | 'PDF'
     | 'Audio'
     | 'Text'
@@ -51,7 +52,7 @@ interface SourceFile {
     | 'Image'
     | 'Other';
   status: 'Active' | 'Archived' | 'Needs Review';
-  role: 'Foundational Source' | 'Task Source' | 'Approved Example' | 'Partner Context' | 'Visual Reference' | 'Archive';
+  role: 'Core Document' | 'Task Source' | 'Approved Example' | 'Partner Context' | 'Visual Reference' | 'Archive';
   supportsOperatingCoreSection: 'Core Passport' | 'Strategy Kernel' | 'Audiences' | 'Channels' | 'Claims' | 'Voice' | 'Visual' | 'Revision' | 'None';
   useFor: string;
   createdAt: string;
@@ -430,7 +431,7 @@ function Tooltip({ text }: { text: string }) {
 export default function App() {
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
-  const [knowledgeLibraryFilter, setKnowledgeLibraryFilter] = useState<string>("All");
+  const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   const [operatingCore, setOperatingCore] = useState<OperatingCore>(() => {
     const saved = localStorage.getItem('coh_operating_core_v1');
@@ -1251,7 +1252,7 @@ export default function App() {
   const [externalContentLanguage, setExternalContentLanguage] = useState<string>('English');
   const [externalContentTone, setExternalContentTone] = useState<string>('Balanced / COH Default');
 
-  // --- Knowledge Library Forms ---
+  // --- Source Library Forms ---
   const [newSource, setNewSource] = useState<{
     title: string;
     type: SourceFile['type'];
@@ -3052,7 +3053,11 @@ export default function App() {
             channel, 
             audience, 
             format 
-          })
+          }),
+          taskSources: (creationMode === 'advanced' ? advancedBrief.selectedSourceIds : []).map(id => {
+            const s = [...workspaceLocalSources, ...sources].find((x: any) => x.id === id);
+            return s ? { title: s.title, type: s.type, content: s.content || s.notes || s.url } : null;
+          }).filter(Boolean)
         };
 
         const result = await aiService.generate(canonicalInput);
@@ -4178,15 +4183,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Content Library
             </button>
             <button
-              onClick={() => setActiveTab('knowledge-library')}
+              onClick={() => setActiveTab('source-library')}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
-                activeTab === 'knowledge-library'
+                activeTab === 'source-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
               }`}
             >
               <FileText size={16} />
-              Knowledge Library
+              Source Library
             </button>
 
             <div className="pt-6 pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
@@ -4228,7 +4233,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="h-full overflow-hidden bg-[#faf9f6]">
             <OperatingCoreAdmin 
               core={operatingCore} 
-              knowledgeSources={[...workspaceLocalSources, ...sources]}
+              sourceLibrary={[...workspaceLocalSources, ...sources]}
               onSave={(newCore) => {
                 setOperatingCore(newCore);
                 localStorage.setItem('coh_operating_core_v1', JSON.stringify(newCore));
@@ -4239,10 +4244,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 localStorage.setItem('coh_operating_core_v1', JSON.stringify(defaultCore));
               }}
               onAddNewCoreSource={(section) => {
-                setActiveTab('knowledge-library');
+                setActiveTab('source-library');
                 setNewSource({
                   ...newSource,
-                  role: 'Foundational Source',
+                  role: 'Core Document',
                   supportsOperatingCoreSection: section as any,
                   selectable: true,
                   status: 'Active',
@@ -4250,7 +4255,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 });
               }}
               onLinkExistingSource={() => {
-                setActiveTab('knowledge-library');
+                setActiveTab('source-library');
               }}
             />
           </div>
@@ -4315,7 +4320,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
                       </div>
                       <button
-                        onClick={() => setActiveTab('knowledge-library')}
+                        onClick={() => setActiveTab('source-library')}
                         className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
                       >
                         Add Source <ArrowRight size={12} />
@@ -4421,7 +4426,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{recentSource.title}</h4>
                           <p className="text-xs text-coh-navy/60 line-clamp-2 leading-relaxed mb-4">{recentSource.notes}</p>
                           <div className="flex gap-2">
-                            <button onClick={() => setActiveTab('knowledge-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                            <button onClick={() => setActiveTab('source-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
                               Continue <ArrowRight size={12} />
                             </button>
                           </div>
@@ -4463,7 +4468,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {selectableSources.some(s => s.status === 'Needs Review') && (
                       <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200/50 rounded">
                         <span className="text-sm text-amber-900 font-bold">A source needs checking.</span>
-                        <button onClick={() => setActiveTab('knowledge-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Open Sources →</button>
+                        <button onClick={() => setActiveTab('source-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Open Sources →</button>
                       </div>
                     )}
 
@@ -4523,7 +4528,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                   <div className="flex justify-between mt-4">
                     <button onClick={() => setActiveTab('content-library')} className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition">Open Content →</button>
-                    <button onClick={() => setActiveTab('knowledge-library')} className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition">Open Sources →</button>
+                    <button onClick={() => setActiveTab('source-library')} className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition">Open Sources →</button>
                   </div>
                 </div>
 
@@ -5158,7 +5163,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlinePasteData.saveToLibrary}
                                 onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Knowledge Library
+                              Save to Source Library
                             </label>
                             <button
                               type="button"
@@ -5207,7 +5212,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlineLinkData.saveToLibrary}
                                 onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Knowledge Library
+                              Save to Source Library
                             </label>
                             <button
                               type="button"
@@ -5248,7 +5253,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlineUploadData.saveToLibrary}
                                 onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Knowledge Library
+                              Save to Source Library
                             </label>
                             <button
                               type="button"
@@ -5799,7 +5804,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlinePasteData.saveToLibrary}
                                   onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Knowledge Library
+                                Save to Source Library
                               </label>
                               <button
                                 type="button"
@@ -5851,7 +5856,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlineLinkData.saveToLibrary}
                                   onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Knowledge Library
+                                Save to Source Library
                               </label>
                               <button
                                 type="button"
@@ -5892,7 +5897,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlineUploadData.saveToLibrary}
                                   onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Knowledge Library
+                                Save to Source Library
                               </label>
                               <button
                                 type="button"
@@ -7309,17 +7314,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
         )}
 
         {/* --- TAB 5: SOURCE LIBRARY --- */}
-        {activeTab === 'knowledge-library' && (
+        {activeTab === 'source-library' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Knowledge Library</h2>
+                <h2 className="font-serif text-3xl font-normal text-coh-navy">Source Library</h2>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
-                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials. Some sources can be linked to Operating Core as Core Sources. Others can be selected only for specific generation tasks.
+                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials. Some sources can be linked to Operating Core as Core Documents. Others can be selected only for specific generation tasks.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
                   <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
-                  <span className="text-xs text-coh-navy/70">Always-on strategy and rules are managed in Operating Core. Foundational materials can be linked as Core Sources.</span>
+                  <span className="text-xs text-coh-navy/70">Always-on strategy and rules are managed in Operating Core. Foundational materials can be linked as Core Documents.</span>
                   <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy hover:text-coh-gold transition ml-2">Open Operating Core →</button>
                 </div>
               </div>
@@ -7400,7 +7405,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <option value="Image / Visual Asset">Image / Visual Asset</option>
                         <option value="Article / Media Coverage">Article / Media Coverage</option>
                         <option value="Team Notes">Team Notes</option>
-                        <option value="Link">Link</option>
+                        <option value="Link / URL">Link / URL</option>
                       </select>
                     </div>
 
@@ -7426,7 +7431,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         onChange={(e) => setNewSource({ ...newSource, role: e.target.value as SourceFile['role'] })}
                         className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
                       >
-                        <option value="Foundational Source">Foundational Source</option>
+                        <option value="Core Document">Core Document</option>
                         <option value="Task Source">Task Source</option>
                         <option value="Approved Example">Approved Example</option>
                         <option value="Partner Context">Partner Context</option>
@@ -7455,7 +7460,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  {newSource.type === 'Link' && (
+                  {newSource.type === 'Link / URL' && (
                     <div>
                       <label className="block text-coh-navy/70 mb-1 font-medium">Source URL</label>
                       <input
@@ -7543,12 +7548,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2 pb-2 border-b border-coh-gold/15">
-                  {['All', 'Core Sources', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
+                  {['All', 'Core Documents', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
                     <button
                       key={filter}
-                      onClick={() => setKnowledgeLibraryFilter(filter)}
+                      onClick={() => setSourceLibraryFilter(filter)}
                       className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition ${
-                        knowledgeLibraryFilter === filter 
+                        sourceLibraryFilter === filter 
                           ? 'bg-coh-navy text-coh-gold' 
                           : 'bg-coh-cream border border-coh-gold/20 text-coh-navy/60 hover:bg-coh-gold/10 hover:text-coh-navy'
                       }`}
@@ -7558,17 +7563,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   ))}
                 </div>
 
-                {/* Suggested Core Sources (Only visible if All or Core Sources, and items aren't uploaded yet) */}
-                {(knowledgeLibraryFilter === 'All' || knowledgeLibraryFilter === 'Core Sources') && (
+                {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
+                {(sourceLibraryFilter === 'All' || sourceLibraryFilter === 'Core Documents') && (
                   <div className="space-y-3 bg-coh-cream/30 p-4 border border-dashed border-coh-gold/30 rounded">
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-serif text-sm font-bold text-coh-navy">Suggested Core Sources</h3>
+                      <h3 className="font-serif text-sm font-bold text-coh-navy">Suggested Core Documents</h3>
                       <span className="text-[9px] uppercase font-bold text-coh-gold bg-white px-1.5 py-0.5 rounded border border-coh-gold/20">Not uploaded yet</span>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
                       {[
-                        'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Master Deck',
+                        'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Phase 1 Strategic Plan\n- COH Master Deck',
                         'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
                       ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
                         <div key={title} className="bg-white p-3 border border-coh-gold/10 rounded flex justify-between items-center shadow-sm">
@@ -7580,7 +7585,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 title: title,
                                 type: title.includes('Deck') ? 'Deck' : 'Business Memo',
                                 status: 'Active',
-                                role: 'Foundational Source',
+                                role: 'Core Document',
                                 supportsOperatingCoreSection: 'None',
                                 useFor: 'Core reference material',
                                 notes: 'Suggested document',
@@ -7603,17 +7608,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="space-y-3">
                   {(() => {
                     let filtered = selectableSources;
-                    if (knowledgeLibraryFilter === 'Core Sources') {
-                      filtered = selectableSources.filter(s => s.role === 'Foundational Source' || (s.supportsOperatingCoreSection && s.supportsOperatingCoreSection !== 'None'));
-                    } else if (knowledgeLibraryFilter === 'Task Sources') {
+                    if (sourceLibraryFilter === 'Core Documents') {
+                      filtered = selectableSources.filter(s => s.role === 'Core Document' || (s.supportsOperatingCoreSection && s.supportsOperatingCoreSection !== 'None'));
+                    } else if (sourceLibraryFilter === 'Task Sources') {
                       filtered = selectableSources.filter(s => s.role === 'Task Source');
-                    } else if (knowledgeLibraryFilter === 'Approved Examples') {
+                    } else if (sourceLibraryFilter === 'Approved Examples') {
                       filtered = selectableSources.filter(s => s.role === 'Approved Example');
-                    } else if (knowledgeLibraryFilter === 'Partner Context') {
+                    } else if (sourceLibraryFilter === 'Partner Context') {
                       filtered = selectableSources.filter(s => s.role === 'Partner Context');
-                    } else if (knowledgeLibraryFilter === 'Visual References') {
+                    } else if (sourceLibraryFilter === 'Visual References') {
                       filtered = selectableSources.filter(s => s.role === 'Visual Reference');
-                    } else if (knowledgeLibraryFilter === 'Archive') {
+                    } else if (sourceLibraryFilter === 'Archive') {
                       filtered = selectableSources.filter(s => s.role === 'Archive' || s.status === 'Archived');
                     }
 

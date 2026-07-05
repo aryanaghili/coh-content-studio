@@ -8,7 +8,7 @@ import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface Props {
   core: OperatingCore | null;
-  knowledgeSources?: any[];
+  sourceLibrary?: any[];
   onSave: (core: OperatingCore) => void;
   onReset: () => void;
   onAddNewCoreSource?: (section: string) => void;
@@ -17,7 +17,8 @@ interface Props {
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
+export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
+  const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   // Ensure safe fallback from local storage
   const defaultCore = createDefaultOperatingCore();
   const safeCore: OperatingCore = core ? {
@@ -177,7 +178,7 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
           <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
           <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
           <div className="h-px bg-coh-gold/15 my-2"></div>
-          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Sources</button>
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Documents</button>
         </div>
 
         {/* Content Area */}
@@ -536,16 +537,16 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
           {/* CORE SOURCES */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Sources</h3>
+              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Documents</h3>
               <p className="text-xs text-coh-navy/60 mb-4">
-                Core Sources are the foundational Knowledge Library items that support the Operating Core. They are stored in Knowledge Library and linked here to show what informs the strategy, claims, voice, visual DNA, and revision standards.
+                Core Documents are the foundational Source Library items that support the Operating Core. They are stored in Source Library and linked here to show what informs the strategy, claims, voice, visual DNA, and revision standards.
                 <br/><br/>
-                Add or manage the actual source material in Knowledge Library. Link it here when it supports the Operating Core.
+                Add or manage the actual source material in Source Library. Link it here when it supports the Operating Core.
               </p>
               
               <div className="space-y-8">
                 {['Core Passport', 'Strategy Kernel', 'Audiences', 'Channels', 'Claims', 'Voice', 'Visual', 'Revision'].map(section => {
-                  const sourcesForSection = knowledgeSources.filter(src => src.supportsOperatingCoreSection === section);
+                  const sourcesForSection = sourceLibrary.filter(src => src.supportsOperatingCoreSection === section);
                   
                   return (
                     <div key={section} className="border border-coh-gold/20 rounded p-4 bg-white shadow-sm">
@@ -567,14 +568,60 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
                               </div>
                               <div className="flex gap-3 mt-2 pt-2 border-t border-coh-gold/10">
                                 <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" onClick={() => alert('Open source clicked')}>Open source</button>
-                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" onClick={() => alert('Use to update Operating Core')}>Use to update Operating Core</button>
+                                
+                                <button 
+                                  className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" 
+                                  onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
+                                >
+                                  Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
+                                </button>
+                                
+                                {extractingInsightFor === src.id && (
+                                  <div className="mt-3 p-4 bg-white border border-coh-gold/20 rounded animate-fadeIn w-full">
+                                    <h5 className="font-serif font-bold text-coh-navy mb-2 text-sm">Extract Insight for Operating Core</h5>
+                                    <p className="text-[10px] text-coh-navy/60 mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section above.</p>
+                                    
+                                    <div className="space-y-3">
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Suggested Section</label>
+                                        <span className="text-xs bg-coh-cream border border-coh-gold/20 px-2 py-1 rounded inline-block">
+                                          {src.supportsOperatingCoreSection !== 'None' ? src.supportsOperatingCoreSection : 'Unassigned'}
+                                        </span>
+                                      </div>
+                                      <div>
+                                        <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Extract Note</label>
+                                        <textarea 
+                                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy" 
+                                          rows={3} 
+                                          placeholder="Draft the rule, claim, or insight here..."
+                                          id={`extract-core-${src.id}`}
+                                        />
+                                      </div>
+                                      <div className="flex gap-2">
+                                        <button 
+                                          onClick={() => {
+                                            const el = document.getElementById(`extract-core-${src.id}`) as HTMLTextAreaElement;
+                                            if (el && el.value) {
+                                              navigator.clipboard.writeText(el.value);
+                                              alert('Copied to clipboard. You can now paste this into the Operating Core fields above.');
+                                            }
+                                          }}
+                                          className="bg-white border border-coh-gold/30 hover:bg-coh-gold/10 text-coh-navy px-3 py-1.5 rounded text-[10px] font-bold uppercase transition action-button"
+                                        >
+                                          Copy to Clipboard
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+
                               </div>
                             </div>
                           ))}
                         </div>
                       ) : (
                         <div className="text-center p-4 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded mb-4">
-                          <p className="text-xs text-coh-navy/50 italic">No Core Sources linked yet.</p>
+                          <p className="text-xs text-coh-navy/50 italic">No Core Documents linked yet.</p>
                         </div>
                       )}
                       
@@ -583,13 +630,13 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
                           className="text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button"
                           onClick={() => onLinkExistingSource && onLinkExistingSource(section)}
                         >
-                          Link existing Knowledge Library source
+                          Link existing Source Library source
                         </button>
                         <button 
                           className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button"
                           onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}
                         >
-                          <Plus size={12} /> Add new Core Source
+                          <Plus size={12} /> Add new Core Document
                         </button>
                       </div>
                     </div>

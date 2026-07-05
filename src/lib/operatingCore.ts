@@ -195,7 +195,7 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
     positioning: "COH is a climate-era cultural IP venture using opera as the origin asset for a wider content, institutional, sponsorship, and rights ecosystem.",
     strategicAmbition: "Build a repertoire-based climate canon designed to repeat, travel, and accumulate cultural meaning over time.",
     valueProposition: "COH gives partners, institutions, and audiences access to rare, ownable, culturally differentiated climate-era content with artistic authority and long-term asset value.",
-    proofLadder: "COP30 = proof of attention and legitimacy.\\nLondon = proof of delivery, capture, and productization.\\nPost-London = proof of adoption and repeatability.",
+    proofLadder: "COP30 = proof of attention and legitimacy.\nLondon = proof of delivery, capture, and productization.\nPost-London = proof of adoption and repeatability.",
     internalLaw: [
       { id: generateId(), title: "Climate is not a theme", rule: "Climate is not a theme.", enforcement: "Always apply", appliesTo: ["All workspaces"] },
       { id: generateId(), title: "Nature is not passive", rule: "Nature is not passive.", enforcement: "Strong guidance", appliesTo: ["All workspaces"] },
@@ -520,15 +520,15 @@ STRATEGY KERNEL:
 - Positioning: ${core.strategyKernel.positioning}
 - Ambition: ${core.strategyKernel.strategicAmbition}
 - Value Prop: ${core.strategyKernel.valueProposition}
-- Proof Ladder: ${core.strategyKernel.proofLadder.replace(/\\n/g, ' -> ')}`);
+- Proof Ladder: ${core.strategyKernel.proofLadder.replace(/\n/g, ' -> ')}`);
 
     if (core.strategyKernel.internalLaw.length > 0) {
       const laws = core.strategyKernel.internalLaw
         .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Content generation') || law.appliesTo.includes('Ideation Workspace'))
         .map(law => `- [${law.enforcement.toUpperCase()}] ${law.title}: ${law.rule}`)
-        .join('\\n');
+        .join('\n');
       if (laws) {
-        sections.push(`\\nINTERNAL LAW (NON-NEGOTIABLES):\\n${laws}`);
+        sections.push(`\nINTERNAL LAW (NON-NEGOTIABLES):\n${laws}`);
       }
     }
   }
@@ -561,15 +561,15 @@ CHANNEL RULES: ${channelMatch.name}
 
   // Claim boundaries
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio', 'Ideation Workspace'].includes(context.workspace)) {
-    const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\\n');
-    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\\n');
-    const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\\n');
+    const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\n');
+    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\n');
+    const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\n');
     
     if (approved || requiresProof || forbidden) {
-      sections.push(`\\nCLAIMS & PROOF BOUNDARIES:`);
-      if (approved) sections.push(`APPROVED CLAIMS:\\n${approved}`);
-      if (requiresProof) sections.push(`REQUIRES PROOF:\\n${requiresProof}`);
-      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\\n${forbidden}`);
+      sections.push(`\nCLAIMS & PROOF BOUNDARIES:`);
+      if (approved) sections.push(`APPROVED CLAIMS:\n${approved}`);
+      if (requiresProof) sections.push(`REQUIRES PROOF:\n${requiresProof}`);
+      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\n${forbidden}`);
     }
   }
 
@@ -619,5 +619,5 @@ PRIORITY ORDER FOR COMPILER:
 6. Source/context material
 7. Creative generation`);
 
-  return sections.join('\\n');
+  return sections.join('\n');
 }
