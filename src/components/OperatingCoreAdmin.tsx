@@ -88,7 +88,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
     setErrorMessage('');
     
     try {
-      const response = await fetch('http://localhost:3001/api/operating-core/unlock', {
+      const response = await fetch('/api/operating-core/unlock', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: accessCode })
