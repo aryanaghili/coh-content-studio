@@ -1,0 +1,237 @@
+  const handleGenerateDrafts = async () => {
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+
+    const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
+    const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
+    const hasSources = (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) || (isSimple && (inlinePasteData.content || inlineLinkData.url || inlineUploadData.title));
+
+    if (!goal.trim() && !notes.trim() && !mustInclude.trim() && !hasSources) {
+      setValidationWarning('Add a topic, notes, source excerpt, or selected source before generating.');
+      return;
+    }
+    setValidationWarning('');
+
+    const scope = isSimple ? 'Single Channel' : (isQuick ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel'));
+    const targets = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const dirMode = isSimple ? 'auto' : (isQuick ? 'none' : advancedBrief.directionMode);
+    const customDir = isSimple ? '' : (isQuick ? '' : advancedBrief.customDirection);
+    let lengthOpt = isSimple ? 'Medium: 120-180 words' : (isQuick ? 'Medium: 120-180 words' : advancedBrief.desiredLength);
+    if (format === 'WhatsApp Message' && (!advancedBrief.desiredLength || advancedBrief.desiredLength.includes('Medium'))) {
+      lengthOpt = 'Short: 40-90 words';
+    }
+    const audience = isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience);
+    const customAudience = isSimple ? '' : (isQuick ? '' : advancedBrief.customAudience);
+    const purpose = isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose);
+    const pillar = isSimple ? 'General / Custom' : (isQuick ? 'General / Custom' : advancedBrief.pillar);
+    const explicitIntent = isSimple ? 'Infer automatically' : (isQuick ? 'Infer automatically' : (advancedBrief.creationIntent || 'Infer automatically'));
+    const snap = getCurrentInputsString();
+
+    // ── AI Generation Path ─────────────────────────────────────────────────────
+    if (generationMode === 'ai' && aiStatus === 'connected') {
+      setIsGeneratingDrafts(true);
+      setAiIsGenerating(true);
+      try {
+        const canonicalInput = {
+          mode: creationMode === 'quick' ? 'quick_create' : 'advanced_brief',
+          rawInput: goal || notes,
+          creationIntent: explicitIntent,
+          creationScope: scope,
+          channel,
+          outputFormat: format,
+          targetChannels: targets,
+          contentPillar: pillar,
+          audience,
+          customAudience,
+          purpose,
+          language: lang,
+          tone: String(creationMode === 'quick' ? 3 : advancedBrief.toneIntensity),
+          desiredLength: lengthOpt,
+          pastedNotes: notes,
+          mustInclude,
+          mustAvoid: creationMode === 'advanced' ? advancedBrief.mustAvoid : '',
+          framingMode: dirMode,
+          customFraming: customDir,
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { 
+            workspace: isSimple ? 'Simple Mode' : isQuick ? 'Quick Create' : 'Advanced Brief', 
+            channel, 
+            audience, 
+            format 
+          }),
+          taskSources: (creationMode === 'advanced' ? advancedBrief.selectedSourceIds : []).map(id => {
+            const s = [...workspaceLocalSources, ...sources].find((x: any) => x.id === id);
+            return s ? { title: s.title, type: s.type, content: s.content || s.notes || s.url } : null;
+          }).filter(Boolean)
+        };
+
+        const result = await aiService.generate(canonicalInput);
+
+        // Normalize AI JSON response into draftOptions
+        const draftA = result.drafts?.[0];
+        const draftB = result.drafts?.[1];
+        const rawA = draftA?.copy || '';
+        const rawB = draftB?.copy || rawA;
+        const shorter = result.shorterVersion || rawA.split('. ').slice(0, 2).join('. ') + '.';
+
+        const visualBrief = result.visualDesignBrief
+          ? Object.entries(result.visualDesignBrief).map(([k, v]) => `${k}: ${v}`).join('\n')
+          : generateVisualDesignBrief(channel, format, goal || notes, rawA);
+
+        const qcIssues = result.qualityCheck?.issues || [];
+        const editorial = result.editorialWarnings?.length > 0
+          ? result.editorialWarnings.join(' | ')
+          : (qcIssues.length > 0 ? `Quality check: ${qcIssues.join(' | ')}` : 'AI Generated. Review before publishing.');
+
+        const labelA = draftA ? `AI - ${draftA.label || 'Option A'} (${draftA.confidence || 'based on brief'})` : 'AI Generated';
+        const labelB = draftB ? `AI - ${draftB.label || 'Option B'} (${draftB.confidence || 'based on brief'})` : 'AI Generated';
+
+        setDraftOptions({
+          optionA: writingCleanupOn ? cleanWritingArtifacts(rawA) : rawA,
+          optionB: writingCleanupOn ? cleanWritingArtifacts(rawB) : rawB,
+          optionC: shorter,
+          visualIdeation: visualBrief,
+          editorialWarning: editorial,
+          labelA,
+          labelB,
+          contextWarning: qcIssues.length > 0 ? qcIssues.join('\n') : undefined,
+          languageNotice: lang !== 'English' ? `LANG_NOTICE::${lang}::Generated fully in ${lang}.` : undefined,
+        });
+
+        setAiGeneratedWith({ provider: aiProvider, model: aiTextModel });
+        setGenerationInputsSnapshot(snap);
+        setGenerationNumber(prev => prev + 1);
+        setActiveDraftText(rawA);
+        setActiveDraftTitle(scope === 'Multi-Channel Pack' ? 'Multi-Channel Pack Draft' : `${channel} ${format} Draft`);
+        setActiveDraftVersion(1);
+        setActiveDraftHistory([{
+          version: 1,
+          text: rawA,
+          timestamp: new Date().toLocaleTimeString(),
+          actionUsed: `AI Generated (${aiProvider}/${aiTextModel})`
+        }]);
+        setImportedIdeationContext(null);
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : 'AI generation failed.';
+        setValidationWarning(`AI Error: ${errorMsg}`);
+      } finally {
+        setIsGeneratingDrafts(false);
+        setAiIsGenerating(false);
+      }
+      return;
+    }
+
+    // ── Prototype Fallback Path ────────────────────────────────────────────────
+    // If AI is not connected, show Prompt Builder mode message instead of fake final copy.
+    if (generationMode !== 'prototype') {
+      // Show a soft message directing to prompt builder
+      setDraftOptions({
+        optionA: '',
+        optionB: '',
+        optionC: '',
+        visualIdeation: '',
+        editorialWarning: '',
+        labelA: '',
+        labelB: '',
+        contextWarning: 'AI generation is not connected. Build an AI prompt to get final-quality content, or switch to Prototype Structure mode in Settings.',
+        languageNotice: undefined,
+      });
+      setGenerationInputsSnapshot(snap);
+      setGenerationNumber(prev => prev + 1);
+      return;
+    }
+
+    // Prototype Structure generation (clearly labeled, not final copy)
+    setIsGeneratingDrafts(true);
+    const interpForWarning = interpretBrief(goal || notes, notes, audience, purpose, format);
+    const urlAddedWithoutSummary = workspaceLocalSources.some(s => s.notes.includes('URL:') && s.content.startsWith('[URL reference:')) ||
+                                    sources.some(s => s.selected && s.notes.includes('URL:') && s.content.startsWith('[URL reference:'));
+    let contextWarning = '';
+    if (urlAddedWithoutSummary) {
+      contextWarning = 'URL added, but no excerpt or summary was provided.';
+    } else if (interpForWarning.missingContextNote) {
+      contextWarning = interpForWarning.missingContextNote;
+    }
+
+    setTimeout(() => {
+      let rawA = '';
+      let rawB = '';
+
+      if (scope === 'Multi-Channel Pack') {
+        rawA = targets.map(targetCh => {
+          const defaultFmt = CHANNEL_FORMATS[targetCh]?.[0] || 'Post';
+          const outputForCh = generateStructuredDraft(
+            targetCh, defaultFmt, goal || notes, notes, dirMode, customDir, lengthOpt, '', 3,
+            audience, customAudience, purpose, pillar, false, anotherVersionStyle, explicitIntent
+          );
+          return `[${targetCh.toUpperCase()} - ${defaultFmt.toUpperCase()}]\n${outputForCh}`;
+        }).join('\n\n========================================\n\n');
+        rawB = targets.map(targetCh => {
+          const defaultFmt = CHANNEL_FORMATS[targetCh]?.[0] || 'Post';
+          const outputForCh = generateStructuredDraft(
+            targetCh, defaultFmt, goal || notes, notes, dirMode, customDir, lengthOpt, '', 3,
+            audience, customAudience, purpose, pillar, true, anotherVersionStyle, explicitIntent
+          );
+          return `[${targetCh.toUpperCase()} - ${defaultFmt.toUpperCase()} (Alternative)]\n${outputForCh}`;
+        }).join('\n\n========================================\n\n');
+      } else {
+        rawA = generateStructuredDraft(
+          channel, format, goal || notes, notes, dirMode, customDir, lengthOpt, '', 3,
+          audience, customAudience, purpose, pillar, false, anotherVersionStyle, explicitIntent
+        );
+        rawB = generateStructuredDraft(
+          channel, format, goal || notes, notes, dirMode, customDir, lengthOpt, '', 3,
+          audience, customAudience, purpose, pillar, true, anotherVersionStyle, explicitIntent
+        );
+      }
+
+      if (writingCleanupOn) {
+        rawA = cleanWritingArtifacts(rawA);
+        rawB = cleanWritingArtifacts(rawB);
+      }
+      if (lang !== 'English') {
+        rawA = translateText(rawA, lang);
+        rawB = translateText(rawB, lang);
+      }
+
+      const languageNotice = getLanguageNotice(lang);
+      const shorter = rawA.split('. ').slice(0, 2).join('. ') + '.';
+      let visualPrompt = generateVisualDesignBrief(
+        scope === 'Multi-Channel Pack' ? 'Multi-Channel' : channel,
+        scope === 'Multi-Channel Pack' ? 'Multi-Channel Pack' : format,
+        goal || notes, rawA
+      );
+      if (lang !== 'English') { visualPrompt = translateText(visualPrompt, lang); }
+      const editorial = getFictionalContentWarnings(rawA).length > 0
+        ? 'Warning: Source check needed. Review before publishing.'
+        : 'Prototype Structure. Connect AI in Settings for final-quality content.';
+
+      setDraftOptions({
+        optionA: rawA,
+        optionB: rawB,
+        optionC: shorter,
+        visualIdeation: visualPrompt,
+        editorialWarning: editorial,
+        labelA: 'Prototype Structure',
+        labelB: 'Prototype Structure',
+        contextWarning: contextWarning || undefined,
+        languageNotice: languageNotice || undefined,
+      });
+      setAiGeneratedWith(null);
+      setGenerationInputsSnapshot(snap);
+      setGenerationNumber(prev => prev + 1);
+      setIsGeneratingDrafts(false);
+      setActiveDraftText(rawA);
+      setActiveDraftTitle(scope === 'Multi-Channel Pack' ? 'Multi-Channel Pack Draft' : `${channel} ${format} Draft`);
+      setActiveDraftVersion(1);
+      setActiveDraftHistory([{
+        version: 1,
+        text: rawA,
+        timestamp: new Date().toLocaleTimeString(),
+        actionUsed: 'Prototype generation (AI not connected)'
+      }]);
+    }, 600);
+  };

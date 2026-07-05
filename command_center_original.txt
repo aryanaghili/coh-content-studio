@@ -1,0 +1,641 @@
+        {activeTab === 'command-center' && (
+          <div className="space-y-8 animate-fadeIn max-w-6xl">
+            <div className="pb-6">
+              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-1">Command Center</h2>
+              <p className="text-sm text-coh-navy/60 font-sans">
+                Choose what to create, continue your latest work, or check what needs attention.
+              </p>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-8">
+              
+              {/* Left Column: Main Commands & Continue */}
+              <div className="flex-1 space-y-8">
+                
+                {/* Section 1: What are you working on today? */}
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
+                  <h3 className="font-serif text-xl text-coh-navy mb-1">What are you working on today?</h3>
+                  <p className="text-xs text-coh-navy/60 mb-6">Start with a message, idea, source, campaign note, or visual direction.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* A. Write Content */}
+                    <div className="p-4 bg-coh-navy text-coh-cream rounded border border-coh-gold/20 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Write Content</h4>
+                        <p className="text-xs text-coh-cream/70 leading-relaxed font-sans mb-4">Draft a post, article, update, email, or campaign message.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCreationMode('quick');
+                          setQuickBrief({ goal: '', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
+                          setStartedFromNote('Action: Write Content');
+                          setActiveTab('content-workspace');
+                        }}
+                        className="bg-coh-gold hover:bg-coh-gold/90 text-coh-navy text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Start Writing <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* B. Explore Ideas */}
+                    <div className="p-4 bg-coh-gold text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-navy tracking-wider font-bold mb-1">Explore Ideas</h4>
+                        <p className="text-xs text-coh-navy/80 leading-relaxed font-sans mb-4">Generate angles, hooks, and content directions before drafting.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('ideation-workspace')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 border border-coh-gold/20"
+                      >
+                        Explore Ideas <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* C. Use a Source */}
+                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Use a Source</h4>
+                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('source-library')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Add Source <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* D. Create Visuals */}
+                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h4>
+                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Generate images from visual directions or custom prompts.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('visual-studio')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Open Visual Studio <ArrowRight size={12} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Continue where you left off */}
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
+                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Continue where you left off</h3>
+                  
+                  {(() => {
+                    const unapprovedDraft = savedContent.find(c => c.status !== 'Approved');
+                    const approvedItem = savedContent.find(c => c.status === 'Approved');
+                    const promisingIdea = savedIdeas.find(i => i.status === 'Promising');
+                    const recentSource = sources.length > 0 ? sources[0] : null;
+
+                    if (unapprovedDraft) {
+                      return (
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 flex flex-col justify-between interactive-card">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Draft in Progress</span>
+                              <span className="text-[8px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded font-bold uppercase border border-amber-200">Needs Review</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{unapprovedDraft.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{unapprovedDraft.text}</p>
+                          </div>
+                          <div>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setActiveDraftText(unapprovedDraft.text);
+                                setActiveDraftTitle(unapprovedDraft.title);
+                                setActiveDraftVersion(unapprovedDraft.version);
+                                setActiveDraftHistory([{
+                                  version: unapprovedDraft.version,
+                                  text: unapprovedDraft.text,
+                                  timestamp: unapprovedDraft.lastEdited,
+                                  actionUsed: 'Resume recent draft'
+                                }]);
+                                setActiveDraftSource(unapprovedDraft.source === 'Content Workspace' ? 'Content Workspace' : (unapprovedDraft.source === 'External Content' ? 'External Content' : 'Content Library'));
+                                setActiveTab('revision-studio');
+                              }}
+                              className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 rounded transition flex items-center justify-center gap-1 w-full cursor-pointer"
+                            >
+                              Continue <ArrowRight size={10} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else if (approvedItem) {
+                      return (
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 interactive-card flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Latest Approved</span>
+                              <span className="text-[8px] bg-green-50 text-green-700 px-1 py-0.5 rounded font-bold uppercase border border-green-200">Approved</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{approvedItem.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{approvedItem.text}</p>
+                          </div>
+                          <button onClick={(e) => { e.preventDefault(); setActiveTab('content-library'); }} className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 w-full rounded transition flex items-center justify-center gap-1 cursor-pointer">
+                            View Library <ArrowRight size={10} />
+                          </button>
+                        </div>
+                      );
+                    } else if (promisingIdea) {
+                      return (
+                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Promising Idea</span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{promisingIdea.title || promisingIdea.originalInput}</h4>
+                          <div className="flex gap-2 mt-4">
+                            <button onClick={() => setActiveTab('idea-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                              Open Ideas <ArrowRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else if (recentSource) {
+                      return (
+                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Recent Source</span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{recentSource.title}</h4>
+                          <p className="text-xs text-coh-navy/60 line-clamp-2 leading-relaxed mb-4">{recentSource.notes}</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => setActiveTab('source-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                              Continue <ArrowRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="p-6 bg-coh-cream/20 border border-coh-gold/10 rounded text-center">
+                          <span className="text-sm text-coh-navy/50 font-serif italic">Nothing in progress. Start something new above.</span>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+
+              </div>
+
+              {/* Right Column: Status & Overview */}
+              <div className="w-full lg:w-72 space-y-6">
+                
+                {/* Section 3: Needs your attention */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Needs your attention</h3>
+                  <div className="flex flex-col gap-3">
+                    {aiStatus !== 'connected' && (
+                      <div className="flex flex-col gap-2 p-3 bg-red-50/50 border border-red-200/50 rounded">
+                        <span className="text-sm text-red-900 font-bold">AI generation is not connected.</span>
+                        <button onClick={() => setActiveTab('settings')} className="text-[10px] uppercase font-bold text-red-800 hover:text-red-900 self-start">Open Settings →</button>
+                      </div>
+                    )}
+                    
+                    {savedContent.some(c => c.status !== 'Approved') && (
+                      <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                        <span className="text-sm text-amber-900 font-bold">A draft may need review.</span>
+                        <button onClick={() => setActiveTab('content-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Review Draft →</button>
+                      </div>
+                    )}
+
+                    {selectableSources.some(s => s.status === 'Needs Review') && (
+                      <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                        <span className="text-sm text-amber-900 font-bold">A source needs checking.</span>
+                        <button onClick={() => setActiveTab('source-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Open Sources →</button>
+                      </div>
+                    )}
+
+                    {aiStatus === 'connected' && !savedContent.some(c => c.status !== 'Approved') && !selectableSources.some(s => s.status === 'Needs Review') && (
+                      <p className="text-xs text-coh-navy/60 leading-relaxed">
+                        Everything looks ready. You can start creating or continue your latest work.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 4: Studio Status */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Studio Status</h3>
+                  <div className="flex flex-col gap-2 text-xs font-mono font-bold tracking-wider">
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">AI Text</span>
+                      <span className={aiStatus === 'connected' ? 'text-green-700' : 'text-amber-600'}>
+                        {aiStatus === 'connected' ? 'Connected' : 'Needs Setup'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Images</span>
+                      <span className={aiStatus === 'connected' && aiImageModel ? 'text-green-700' : 'text-amber-600'}>
+                        {aiStatus === 'connected' && aiImageModel ? 'Connected' : 'Needs Setup'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Content Rules</span>
+                      <span className={operatingCore.active ? 'text-green-700' : 'text-red-700'}>
+                        {operatingCore.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Studio Overview */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Studio Overview</h3>
+                  <div className="flex flex-col gap-2 text-xs font-mono font-bold tracking-wider">
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Content Items</span>
+                      <span className="text-coh-navy">{savedContent.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Approved</span>
+                      <span className="text-green-700">{savedContent.filter(c => c.status === 'Approved').length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Ideas</span>
+                      <span className="text-coh-navy">{savedIdeas.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Sources</span>
+                      <span className="text-coh-navy">{workspaceLocalSources.length + sources.length}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-4">
+                    <button onClick={() => setActiveTab('content-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Content →</button>
+                    <button onClick={() => setActiveTab('source-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Sources →</button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Quick Actions */}
+            <div className="mt-8 max-w-4xl">
+              <h3 className="font-serif text-sm text-coh-navy/80 font-semibold mb-3 flex items-center gap-2">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                  { title: 'LinkedIn Post', channel: 'LinkedIn', format: 'Post' },
+                  { title: 'Instagram Caption', channel: 'Instagram', format: 'Caption' },
+                  { title: 'Newsletter Section', channel: 'Newsletter', format: 'Newsletter Section' },
+                  { title: 'Website / News Article', channel: 'Website', format: 'Article' },
+                  { title: 'Sponsor Pitch', channel: 'Pitch Deck', format: 'Pitch' },
+                  { title: 'Multi-Channel Pack', channel: 'Campaign', format: 'Multi-Channel' }
+                ].map(item => (
+                  <div
+                    key={item.title}
+                    className="px-2 py-2 border border-coh-gold/20 bg-white hover:bg-coh-cream/50 rounded transition text-center cursor-pointer interactive-card flex items-center justify-center h-full shadow-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      triggerQuickLauncher(item.channel, item.format, item.title === 'Multi-Channel Pack' ? 'Multi-Channel Pack' : 'Single Channel');
+                    }}
+                  >
+                    <span className="font-sans font-medium text-coh-navy text-[10px] leading-tight">{item.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: IDEATION WORKSPACE --- */}
+        {activeTab === 'ideation-workspace' && (
+          <div className="space-y-8 animate-fadeIn max-w-6xl">
+            <div className="border-b border-coh-gold/20 pb-6">
+              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-2">Ideation Workspace</h2>
+              <p className="text-sm text-coh-navy/60 font-sans">
+                Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-12 gap-8 items-start">
+              {/* Input Form Column */}
+              <div className="col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
+                <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">
+                  New Exploration
+                </h3>
+
+                <div>
+                  <label className="block text-coh-navy/70 font-semibold mb-0.5">What do you want to explore?</label>
+                  <p className="text-[10px] text-coh-navy/55 mb-1.5">
+                    Enter a keyword, phrase, question, paragraph, theme, campaign direction, audience need, or content problem.
+                  </p>
+                  <textarea
+                    rows={4}
+                    value={ideationInput}
+                    onChange={(e) => setIdeationInput(e.target.value)}
+                    className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy font-mono text-[11px]"
+                    placeholder="e.g. Why is climate opera superior to other forms of climate art?"
+                  />
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <h4 className="font-semibold text-coh-navy/80 border-b border-coh-gold/10 pb-1">Filters (Optional)</h4>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-coh-navy/60 mb-0.5">Target Channel</label>
+                      <select
+                        value={ideationFilterChannel}
+                        onChange={(e) => setIdeationFilterChannel(e.target.value)}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
+                      >
+                        {CHANNELS.slice(0, 7).map(c => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-coh-navy/60 mb-0.5">Language</label>
+                      <select
+                        value={ideationFilterLanguage}
+                        onChange={(e) => setIdeationFilterLanguage(e.target.value)}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
+                      >
+                        {LANGUAGES.map(l => (
+                          <option key={l} value={l}>{l}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[10px] text-coh-navy/60 mb-0.5">Quality Filter</label>
+                      <select
+                        value={ideationFilterQuality}
+                        onChange={(e) => setIdeationFilterQuality(e.target.value)}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
+                      >
+                        <option value="Practical">Practical</option>
+                        <option value="Bold">Bold</option>
+                        <option value="Educational">Educational</option>
+                        <option value="Emotional">Emotional</option>
+                        <option value="Sponsor-facing">Sponsor-facing</option>
+                        <option value="Public-facing">Public-facing</option>
+                        <option value="Artistic">Artistic</option>
+                        <option value="Institutional">Institutional</option>
+                        <option value="Campaign-ready">Campaign-ready</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-[10px] text-coh-navy/60 mb-0.5">Depth Level</label>
+                      <select
+                        value={ideationFilterDepth}
+                        onChange={(e) => setIdeationFilterDepth(e.target.value)}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
+                      >
+                        <option value="Light">Light</option>
+                        <option value="Standard">Standard</option>
+                        <option value="Deep">Deep</option>
+                        <option value="Experimental">Experimental</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-coh-navy/60 mb-0.5">Target Audience</label>
+                    <select
+                      value={ideationFilterAudience}
+                      onChange={(e) => setIdeationFilterAudience(e.target.value)}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
+                    >
+                      <option value="General Public">General Public</option>
+                      <option value="Sponsors & Patrons">Sponsors & Patrons</option>
+                      <option value="Strategic Partners">Strategic Partners</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleGenerateIdeas}
+                  disabled={isIdeating || !aiProvider}
+                  className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button interactive-button"
+                >
+                  {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
+                  {isIdeating ? 'Generating...' : 'Generate'}
+                </button>
+              </div>
+
+              <div className="col-span-8 space-y-6">
+                {generatedIdeas.length > 0 ? (
+                  <div className="space-y-6">
+                    {/* Unique Categories derived from the list */}
+                    {Array.from(new Set(generatedIdeas.map(i => i.category))).map(cat => (
+                      <div key={cat} className="space-y-3">
+                        <h3 className="font-serif text-base font-bold text-coh-gold border-b border-coh-gold/15 pb-1 capitalize">
+                          {cat}
+                        </h3>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          {generatedIdeas.filter(idea => idea.category === cat).map(idea => (
+                            <div key={idea.id} className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm flex flex-col justify-between gap-4">
+                              <div className="space-y-2">
+                                <div className="flex justify-between items-start">
+                                  <h4 className="font-serif font-bold text-coh-navy text-sm leading-snug">{idea.title}</h4>
+                                  <span className={`text-[8px] px-1.5 py-0.5 rounded font-mono font-bold uppercase ${
+                                    idea.status === 'Promising' ? 'bg-coh-gold/20 text-coh-navy' : 'bg-coh-cream text-coh-navy/60'
+                                  }`}>
+                                    {idea.status}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-coh-navy/70 leading-relaxed font-sans">{idea.explanation}</p>
+                                <p className="text-[10px] text-coh-gold font-semibold leading-relaxed font-sans">Why it works: {idea.whyItWorks}</p>
+                                
+                                {idea.possibleHook && (
+                                  <div className="bg-coh-cream/40 p-2 border border-coh-gold/10 rounded font-sans text-[10px] italic text-coh-navy/80">
+                                    Hook idea: "{idea.possibleHook}"
+                                  </div>
+                                )}
+
+                                {idea.possibleFirstPost && (
+                                  <div className="bg-coh-cream/30 p-2 border border-coh-gold/10 rounded font-sans text-[10px] text-coh-navy/80">
+                                    <span className="font-semibold block text-[9px] uppercase text-coh-navy/60 mb-0.5">First Post Idea:</span>
+                                    "{idea.possibleFirstPost}"
+                                  </div>
+                                )}
+
+                                {idea.riskToAvoid && (
+                                  <p className="text-[10px] text-red-800/80 leading-relaxed font-sans">
+                                    <span className="font-semibold">Risk to Avoid:</span> {idea.riskToAvoid}
+                                  </p>
+                                )}
+
+                                <p className="text-[10px] text-coh-navy/60 leading-relaxed font-sans">
+                                  <span className="font-semibold">Next Step:</span> {idea.possibleNextStep}
+                                </p>
+
+                                <div className="flex gap-1.5 flex-wrap items-center pt-1 text-[9px] font-mono text-coh-navy/50">
+                                  <span className="bg-coh-cream px-1.5 rounded">{idea.suggestedChannel}</span>
+                                  <span className="bg-coh-cream px-1.5 rounded">{idea.suggestedFormat}</span>
+                                  {idea.suggestedAudience && <span className="bg-coh-cream px-1.5 rounded">Audience: {idea.suggestedAudience}</span>}
+                                  {idea.suggestedTone && <span className="bg-coh-cream px-1.5 rounded">Tone: {idea.suggestedTone}</span>}
+                                </div>
+                              </div>
+
+                              <div className="border-t border-coh-gold/10 pt-3 flex items-center justify-between gap-2 text-[10px] font-semibold">
+                                <div className="flex gap-2">
+                                  <button
+                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Promising')}
+                                    className="text-coh-gold interactive-link"
+                                  >
+                                    Promising
+                                  </button>
+                                  <button
+                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Not Useful')}
+                                    className="text-red-800/70 interactive-link"
+                                  >
+                                    Not Useful
+                                  </button>
+                                </div>
+
+                                <div className="flex gap-2 items-center">
+                                  <button
+                                    onClick={() => {
+                                      setIsIdeating(true);
+                                      setTimeout(() => {
+                                        setIsIdeating(false);
+                                        setGeneratedIdeas(prev => prev.map(p => p.id === idea.id ? { ...p, title: `Alternative: ${p.title}`, status: 'New' } : p));
+                                      }, 500);
+                                    }}
+                                    className="text-coh-navy/70 hover:text-coh-gold interactive-link"
+                                  >
+                                    Variations
+                                  </button>
+                                  <button
+                                    disabled={savingIdeaId === idea.id}
+                                    onClick={() => handleSaveIdeaToLibrary(idea)}
+                                    className="text-coh-navy hover:text-coh-gold interactive-link disabled:opacity-50"
+                                  >
+                                    {savingIdeaId === idea.id ? 'Saving...' : 'Save'}
+                                  </button>
+                                  <button
+                                    onClick={() => handleCopyIdeaToWorkspace(idea)}
+                                    className="bg-coh-navy text-coh-gold px-2 py-1 rounded"
+                                  >
+                                    Draft
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-24 border border-dashed border-coh-gold/20 rounded bg-white">
+                    <p className="text-xs text-coh-navy/45 max-w-sm mx-auto font-sans">
+                      No ideas generated yet. Enter a query in the panel on the left to explore creative angles.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: IDEA LIBRARY --- */}
+        {activeTab === 'idea-library' && (
+          <div className="space-y-8 animate-fadeIn max-w-6xl">
+            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
+              <div>
+                <h2 className="font-serif text-3xl font-normal text-coh-navy">Idea Library</h2>
+                <p className="text-sm text-coh-navy/60 font-sans mt-1">
+                  Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
+                </p>
+              </div>
+            </div>
+
+            {/* List of saved ideas */}
+            {savedIdeas.length > 0 ? (
+              <div className="grid grid-cols-2 gap-6">
+                {savedIdeas.map(idea => (
+                  <div key={idea.id} className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-start gap-2 flex-wrap">
+                        <div>
+                          <div className="flex gap-2 items-center flex-wrap mb-1">
+                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-coh-gold bg-coh-navy px-1.5 py-0.5 rounded">
+                              {idea.suggestedChannel}
+                            </span>
+                            <span className="text-[9px] font-mono text-coh-navy/50 uppercase font-semibold">
+                              {idea.category}
+                            </span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-coh-navy leading-snug">{idea.title}</h4>
+                        </div>
+
+                        <select
+                          value={idea.status}
+                          onChange={(e) => handleUpdateIdeaStatus(idea.id, e.target.value as SavedIdea['status'])}
+                          className={`text-[10px] font-bold p-1 rounded font-mono border border-coh-gold/20 ${
+                            idea.status === 'Ready for Content' ? 'bg-blue-50 text-blue-800' :
+                            idea.status === 'Promising' ? 'bg-coh-gold/15 text-coh-navy' :
+                            idea.status === 'Used' ? 'bg-green-50 text-green-800' :
+                            'bg-gray-50 text-gray-800'
+                          }`}
+                        >
+                          <option value="New">New</option>
+                          <option value="Promising">Promising</option>
+                          <option value="Ready for Content">Ready for Content</option>
+                          <option value="Used">Used</option>
+                          <option value="Archived">Archived</option>
+                          <option value="Not Useful">Not Useful</option>
+                        </select>
+                      </div>
+
+                      <p className="text-xs text-coh-navy/80 whitespace-pre-wrap leading-relaxed bg-coh-cream/45 p-4 border border-coh-gold/10 rounded font-sans">
+                        {idea.explanation}
+                      </p>
+
+                      <div className="text-[10px] text-coh-navy/55 space-y-1 font-sans">
+                        <div><strong>Original Input:</strong> "{idea.originalInput}"</div>
+                        <div><strong>Why it works:</strong> {idea.whyItWorks}</div>
+                        <div><strong>Hook idea:</strong> "{idea.possibleHook}"</div>
+                        {idea.possibleNextStep && <div><strong>Next action:</strong> {idea.possibleNextStep}</div>}
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center border-t border-coh-gold/15 pt-4 text-[10px] text-coh-navy/40 font-mono">
+                      <span>Saved: {idea.dateCreated}</span>
+                      <div className="flex gap-2 items-center">
+                        <button
+                          onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
+                          className="bg-coh-cream text-coh-gold hover:text-coh-gold-dark border border-coh-gold/20 px-3 py-1.5 rounded font-serif font-bold text-[10px] flex items-center gap-1"
+                        >
+                          <Lightbulb size={10} /> Send Visual Direction to Visual Studio
+                        </button>
+                        <button
+                          onClick={() => handleCopyIdeaToWorkspace(idea)}
+                          className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-3 py-1.5 rounded font-serif font-bold text-[10px]"
+                        >
+                          Draft Content
+                        </button>
+                        <button
+                          onClick={() => setSavedIdeas(prev => prev.filter(i => i.id !== idea.id))}
+                          className="text-[11px] text-red-800/70 hover:text-red-800 font-semibold"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 border border-dashed border-coh-gold/20 rounded bg-white">
+                <p className="text-xs text-coh-navy/55 max-w-sm mx-auto font-sans">No saved ideas in the Idea Library yet.</p>
+              </div>
+            )}
+          </div>
+        )}
+
