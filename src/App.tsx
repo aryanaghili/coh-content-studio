@@ -4084,7 +4084,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <button
               type="submit"
               disabled={authLoading}
-              className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button"
+              className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button interactive-button"
             >
               {authLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -4546,8 +4546,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
                   <div className="flex justify-between mt-4">
-                    <button onClick={() => setActiveTab('content-library')} className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition">Open Content →</button>
-                    <button onClick={() => setActiveTab('source-library')} className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition">Open Sources →</button>
+                    <button onClick={() => setActiveTab('content-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Content →</button>
+                    <button onClick={() => setActiveTab('source-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Sources →</button>
                   </div>
                 </div>
 
@@ -4699,7 +4699,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   onClick={handleGenerateIdeas}
                   disabled={isIdeating || !aiProvider}
-                  className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button"
+                  className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button interactive-button"
                 >
                   {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                   {isIdeating ? 'Generating...' : 'Generate'}
@@ -4766,13 +4766,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 <div className="flex gap-2">
                                   <button
                                     onClick={() => handleUpdateIdeaStatus(idea.id, 'Promising')}
-                                    className="text-coh-gold hover:underline"
+                                    className="text-coh-gold interactive-link"
                                   >
                                     Promising
                                   </button>
                                   <button
                                     onClick={() => handleUpdateIdeaStatus(idea.id, 'Not Useful')}
-                                    className="text-red-800/70 hover:underline"
+                                    className="text-red-800/70 interactive-link"
                                   >
                                     Not Useful
                                   </button>
@@ -4787,14 +4787,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         setGeneratedIdeas(prev => prev.map(p => p.id === idea.id ? { ...p, title: `Alternative: ${p.title}`, status: 'New' } : p));
                                       }, 500);
                                     }}
-                                    className="text-coh-navy/70 hover:text-coh-gold hover:underline"
+                                    className="text-coh-navy/70 hover:text-coh-gold interactive-link"
                                   >
                                     Variations
                                   </button>
                                   <button
                                     disabled={savingIdeaId === idea.id}
                                     onClick={() => handleSaveIdeaToLibrary(idea)}
-                                    className="text-coh-navy hover:text-coh-gold hover:underline disabled:opacity-50"
+                                    className="text-coh-navy hover:text-coh-gold interactive-link disabled:opacity-50"
                                   >
                                     {savingIdeaId === idea.id ? 'Saving...' : 'Save'}
                                   </button>
@@ -5007,7 +5007,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   disabled={isGeneratingDrafts || aiIsGenerating}
                   onClick={handleGenerateDrafts}
-                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button"
+                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
                 >
                   {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                 </button>
@@ -5234,7 +5234,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               type="button"
                               onClick={handleAddWorkspaceLink}
-                              className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
+                              className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button interactive-button"
                             >
                               {inlineLinkData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
                             </button>
@@ -5878,7 +5878,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 type="button"
                                 onClick={handleAddWorkspaceLink}
-                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
+                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button interactive-button"
                               >
                                 Add URL
                               </button>
@@ -6074,13 +6074,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <span className="font-mono text-[10px] font-bold text-coh-gold uppercase">Prompt Builder Output</span>
                       <button
                         onClick={() => handleCopyClipboard(compileStructuredPrompt(), 'prompt')}
-                        className="text-[10px] font-bold text-coh-navy hover:text-coh-gold transition"
+                        className="text-[10px] font-bold text-coh-navy interactive-link transition"
                       >
                         {copySuccessMap['prompt'] ? 'Copied!' : 'Copy AI Prompt'}
                       </button>
                     </div>
                     <details className="text-[10px] text-coh-navy/40 cursor-pointer">
-                      <summary className="hover:text-coh-gold transition">Inspect Compiled Prompt</summary>
+                      <summary className="interactive-link transition">Inspect Compiled Prompt</summary>
                       <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
                         {compileStructuredPrompt()}
                       </pre>
@@ -6092,7 +6092,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     onClick={handleGenerateDrafts}
                     disabled={isGeneratingDrafts}
-                    className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
+                    className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button interactive-button"
                   >
                     {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6122,7 +6122,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button
                           disabled={isGeneratingDrafts || aiIsGenerating}
                           onClick={handleGenerateDrafts}
-                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button"
+                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
                         >
                           {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                         </button>
@@ -6304,7 +6304,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               navigator.clipboard.writeText(formatted);
                               alert('Copied Visual Direction to clipboard!');
                             }}
-                            className="hover:text-coh-gold transition"
+                            className="interactive-link transition"
                           >
                             Copy Visual Direction
                           </button>
@@ -6320,7 +6320,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               navigator.clipboard.writeText(promptText);
                               alert('Copied AI Image Prompt to clipboard!');
                             }}
-                            className="hover:text-coh-gold transition"
+                            className="interactive-link transition"
                           >
                             Copy AI Image Prompt
                           </button>
@@ -6572,7 +6572,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       onClick={handleGenerateImage}
                       disabled={isGeneratingImage || !aiProvider}
-                      className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
+                      className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button interactive-button"
                     >
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
@@ -6589,7 +6589,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {vsInputMode === 'Manual' && (
                     <button
                       onClick={() => setShowAdvancedBrief(!showAdvancedBrief)}
-                      className="text-[10px] text-coh-gold uppercase font-bold tracking-wider hover:underline"
+                      className="text-[10px] text-coh-gold uppercase font-bold tracking-wider interactive-link"
                     >
                       {showAdvancedBrief ? 'Hide' : 'Show'} Advanced
                     </button>
@@ -7042,7 +7042,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <button
                         onClick={handleStartExternalRevision}
                         disabled={!externalContentText.trim()}
-                        className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button"
+                        className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button interactive-button"
                       >
                         Start Revising
                       </button>
@@ -7234,7 +7234,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   navigator.clipboard.writeText(formatted);
                                   alert('Copied Visual Direction!');
                                 }}
-                                className="hover:text-coh-gold transition"
+                                className="interactive-link transition"
                               >
                                 Copy Visual Direction
                               </button>
@@ -7250,7 +7250,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   navigator.clipboard.writeText(promptText);
                                   alert('Copied AI Image Prompt!');
                                 }}
-                                className="hover:text-coh-gold transition"
+                                className="interactive-link transition"
                               >
                                 Copy AI Image Prompt
                               </button>
@@ -7273,13 +7273,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex gap-1.5 flex-wrap items-center">
                         <button
                           onClick={() => handleCopyClipboard(item.text, item.id)}
-                          className="text-[11px] font-semibold text-coh-navy hover:text-coh-gold transition"
+                          className="text-[11px] font-semibold text-coh-navy interactive-link transition"
                         >
                           {copySuccessMap[item.id] ? 'Copied!' : 'Copy'}
                         </button>
                         <button
                           onClick={() => handleDuplicateSaved(item)}
-                          className="text-[11px] font-semibold text-coh-navy hover:text-coh-gold transition"
+                          className="text-[11px] font-semibold text-coh-navy interactive-link transition"
                         >
                           Duplicate
                         </button>
@@ -7342,7 +7342,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
                   <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
                   <span className="text-xs text-coh-navy/70">Source Library stores task-specific materials. Foundational brain documents are managed by the superuser in Operating Core as Core Documents.</span>
-                  <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy hover:text-coh-gold transition ml-2">Open Operating Core →</button>
+                  <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy interactive-link transition ml-2">Open Operating Core →</button>
                 </div>
               </div>
 
@@ -7540,7 +7540,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold action-button"
+                      className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold action-button interactive-button"
                     >
                       {editingSourceId ? 'Save Edits' : 'Add Source'}
                     </button>
@@ -7611,7 +7611,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 selectable: true
                               });
                             }}
-                            className="text-[9px] uppercase font-bold text-coh-navy hover:text-coh-gold transition whitespace-nowrap ml-2"
+                            className="text-[9px] uppercase font-bold text-coh-navy interactive-link whitespace-nowrap ml-2"
                           >
                             Upload / Link →
                           </button>
@@ -7692,13 +7692,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <p className="text-xs text-coh-navy/60 leading-relaxed">{src.notes}</p>
 
                             <details className="text-[10px] text-coh-navy/40 cursor-pointer pt-1">
-                              <summary className="hover:text-coh-gold transition">Show Full Text</summary>
+                              <summary className="interactive-link transition">Show Full Text</summary>
                               <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
                                 {src.content}
                               </pre>
                               {src.url && (
                                 <div className="mt-2 text-coh-gold">
-                                  <a href={src.url} target="_blank" rel="noreferrer" className="hover:underline break-all">🔗 {src.url}</a>
+                                  <a href={src.url} target="_blank" rel="noreferrer" className="interactive-link break-all">🔗 {src.url}</a>
                                 </div>
                               )}
                             </details>
@@ -7706,7 +7706,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <div className="pt-2">
                               <button
                                 onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
-                                className="text-[9px] font-semibold text-coh-navy/50 hover:text-coh-gold transition uppercase tracking-wider"
+                                className="text-[9px] font-semibold text-coh-navy/50 interactive-link transition uppercase tracking-wider"
                               >
                                 Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                               </button>

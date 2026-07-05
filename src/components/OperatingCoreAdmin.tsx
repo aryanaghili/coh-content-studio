@@ -683,10 +683,10 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                 </div>
                               </div>
                               <div className="flex gap-3 mt-2 pt-2 border-t border-coh-gold/10">
-                                <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" onClick={() => alert('Open source clicked')}>Open source</button>
+                                <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy interactive-link transition action-button" onClick={() => alert('Open source clicked')}>Open source</button>
                                 
                                 <button 
-                                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" 
+                                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy interactive-link transition action-button" 
                                   onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
                                 >
                                   Apply to Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
@@ -749,7 +749,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                           Link existing Source Library source
                         </button>
                         <button 
-                          className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button"
+                          className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button"
                           onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}
                         >
                           <Plus size={12} /> Add new Core Document
