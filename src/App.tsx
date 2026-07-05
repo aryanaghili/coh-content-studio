@@ -22,7 +22,7 @@ import {
   Cpu as CpuIcon
 } from 'lucide-react';
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
-import { createDefaultOperatingCore, compileOperatingCoreContext } from './lib/operatingCore';
+import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
 
@@ -435,7 +435,26 @@ export default function App() {
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   const [operatingCore, setOperatingCore] = useState<OperatingCore>(() => {
     const saved = localStorage.getItem('coh_operating_core_v1');
-    return saved ? JSON.parse(saved) : createDefaultOperatingCore();
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        const normalizeDeep = (obj: any): any => {
+          if (typeof obj === 'string') return normalizeText(obj);
+          if (Array.isArray(obj)) return obj.map(normalizeDeep);
+          if (obj !== null && typeof obj === 'object') {
+            return Object.keys(obj).reduce((acc, key) => {
+              acc[key] = normalizeDeep(obj[key]);
+              return acc;
+            }, {} as any);
+          }
+          return obj;
+        };
+        return normalizeDeep(parsed);
+      } catch (e) {
+        return createDefaultOperatingCore();
+      }
+    }
+    return createDefaultOperatingCore();
   });
 
   useEffect(() => {
@@ -7324,7 +7343,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
                   <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
-                  <span className="text-xs text-coh-navy/70">Always-on strategy and rules are managed in Operating Core. Foundational materials can be linked as Core Documents.</span>
+                  <span className="text-xs text-coh-navy/70">Source Library stores task-specific materials. Foundational brain documents are managed by the superuser in Operating Core as Core Documents.</span>
                   <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy hover:text-coh-gold transition ml-2">Open Operating Core →</button>
                 </div>
               </div>

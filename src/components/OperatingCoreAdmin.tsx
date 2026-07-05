@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { createDefaultOperatingCore, compileOperatingCoreContext } from '../lib/operatingCore';
+import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from '../lib/operatingCore';
 import type { 
   OperatingCore, AudienceProfile, ChannelRule, RevisionStandard, 
   RuleCard, ClaimCard, EnforcementLevel, AppliesTo, ClaimType, CompileContext
 } from '../lib/operatingCore';
-import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff, Lock, Unlock, KeyRound } from 'lucide-react';
+
 
 interface Props {
   core: OperatingCore | null;
@@ -68,6 +69,65 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
     format: 'Post',
     action: ''
   });
+
+  
+  // --- Superuser Access Gate ---
+  const [isUnlocked, setIsUnlocked] = useState<boolean>(() => {
+    return sessionStorage.getItem('coh_superuser_unlocked') === 'true';
+  });
+  const [accessCode, setAccessCode] = useState('');
+  const [accessError, setAccessError] = useState(false);
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const validCode = import.meta.env.VITE_OPERATING_CORE_ADMIN_CODE || 'COH-CORE-2026';
+    if (accessCode === validCode) {
+      sessionStorage.setItem('coh_superuser_unlocked', 'true');
+      setIsUnlocked(true);
+      setAccessError(false);
+    } else {
+      setAccessError(true);
+    }
+  };
+
+  const handleLock = () => {
+    sessionStorage.removeItem('coh_superuser_unlocked');
+    setIsUnlocked(false);
+    setAccessCode('');
+  };
+
+  if (!isUnlocked) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
+        <div className="bg-white rounded-lg p-8 shadow-sm border border-neutral-200 max-w-md w-full text-center">
+          <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
+            <Lock className="w-6 h-6 text-neutral-600" />
+          </div>
+          <h2 className="text-xl font-serif text-neutral-900 mb-2">Operating Core Locked</h2>
+          <p className="text-sm text-neutral-500 mb-6">
+            The Operating Core is the foundational brain of COH Content Studio. It is restricted to superuser administrators to prevent accidental overwrites of strategic guardrails.
+          </p>
+          <form onSubmit={handleUnlock} className="flex flex-col gap-3">
+            <input 
+              type="password" 
+              placeholder="Enter Access Code" 
+              value={accessCode}
+              onChange={(e) => { setAccessCode(e.target.value); setAccessError(false); }}
+              className="px-4 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            {accessError && <span className="text-xs text-red-500 text-left">Incorrect access code.</span>}
+            <button 
+              type="submit" 
+              className="bg-black text-white px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+            >
+              <KeyRound className="w-4 h-4" />
+              Unlock Operating Core
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   const handleSave = () => {
     onSave({ ...draftCore, lastUpdated: new Date().toISOString() });
@@ -539,11 +599,37 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-6">
               <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Documents</h3>
               <p className="text-xs text-coh-navy/60 mb-4">
-                Core Documents are the foundational Source Library items that support the Operating Core. They are stored in Source Library and linked here to show what informs the strategy, claims, voice, visual DNA, and revision standards.
+                Core Documents are foundational documents that shape the Operating Core and become part of the system brain. They are managed here by the superuser.
                 <br/><br/>
-                Add or manage the actual source material in Source Library. Link it here when it supports the Operating Core.
+                Add or link them directly here. They do not appear as normal user task sources unless explicitly marked as selectable.
               </p>
               
+              
+              <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm mb-8">
+                <h4 className="font-serif text-sm font-bold text-coh-navy mb-2">Suggested Core Documents, not uploaded yet:</h4>
+                <ul className="text-xs text-coh-navy/60 list-disc list-inside space-y-1">
+                  {[
+                    "COH Business Model",
+                    "COH Business Memo",
+                    "COH Phase 1 Strategic Plan",
+                    "COH Master Deck",
+                    "COH Website Copy",
+                    "COH One-Pager",
+                    "Sponsorship Deck",
+                    "Approved Output Examples"
+                  ].filter(doc => !sourceLibrary.some(s => s.title.includes(doc) || doc.includes(s.title)))
+                   .map(doc => (
+                    <li key={doc} className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 rounded-full bg-coh-gold/40"></span>
+                      <span>{doc}</span>
+                      <span className="text-[10px] uppercase font-bold text-coh-gold cursor-pointer hover:underline" onClick={() => {
+                        if (onAddNewCoreSource) onAddNewCoreSource('Strategy Kernel');
+                      }}>Add / Upload / Link</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
               <div className="space-y-8">
                 {['Core Passport', 'Strategy Kernel', 'Audiences', 'Channels', 'Claims', 'Voice', 'Visual', 'Revision'].map(section => {
                   const sourcesForSection = sourceLibrary.filter(src => src.supportsOperatingCoreSection === section);
@@ -573,7 +659,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                   className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" 
                                   onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
                                 >
-                                  Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
+                                  Apply to Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                                 </button>
                                 
                                 {extractingInsightFor === src.id && (
