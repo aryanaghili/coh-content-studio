@@ -4388,10 +4388,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-center text-left px-4">
-                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider">Content Rules</span>
-                  <span className={`block text-[11px] font-serif font-bold mt-0.5 flex items-center gap-1 ${operatingCore.active ? 'text-green-700' : 'text-red-700'}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${operatingCore.active ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
-                    {operatingCore.active ? 'Active' : 'Needs Setup'}
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Content Rules</span>
+                  
+                  <span className="block text-[10px] font-mono font-bold text-coh-navy/80 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full inline-block bg-coh-navy"></span>
+                    Protected Foundation: Active
+                  </span>
+                  
+                  <span className={`block text-[10px] font-mono font-bold flex items-center gap-1 mt-0.5 ${operatingCore.active ? 'text-green-700' : 'text-red-700'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full inline-block ${operatingCore.active ? 'bg-green-500' : 'bg-red-500'}`}></span>
+                    Editable Core: {operatingCore.active ? 'Active' : 'Inactive'}
                   </span>
                 </div>
               </div>

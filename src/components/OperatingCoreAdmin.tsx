@@ -132,6 +132,9 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
               {draftCore.active ? 'ACTIVE' : 'INACTIVE'}
             </button>
           </div>
+          <div className="flex items-center gap-1 bg-coh-navy/5 px-2 py-1 rounded border border-coh-navy/10 text-[10px] text-coh-navy/70 font-mono mt-1">
+            <span className="font-bold">Protected COH Foundation:</span> Always On
+          </div>
           <div className="flex gap-2">
             <button onClick={onReset} className="flex items-center gap-1 px-3 py-1.5 text-xs border border-coh-gold/30 text-coh-navy/60 hover:bg-coh-cream rounded transition-colors">
               <RefreshCw size={12} /> Reset to Defaults
@@ -178,6 +181,16 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
             <div className="space-y-6">
               <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Passport</h3>
               <p className="text-xs text-coh-navy/60 mb-4">The quick identity layer of the system. Tells the Operating Core who we are before applying deeper rules.</p>
+              
+              {draftCore.corePassport.organizationName.toLowerCase() !== 'climate opera haus' && (
+                <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-4 rounded mb-6 flex items-start gap-3">
+                  <div className="text-red-500 mt-0.5">⚠️</div>
+                  <div>
+                    <strong className="block mb-1">Generic Repurposing Warning</strong>
+                    This studio is configured specifically for Climate Opera Haus. For another organization, create a separate app/version instead of repurposing this Operating Core.
+                  </div>
+                </div>
+              )}
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
