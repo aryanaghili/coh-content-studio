@@ -57,6 +57,15 @@ export interface RevisionStandard {
   appliesTo: string;
 }
 
+export interface CoreEvidenceItem {
+  id: string;
+  title: string;
+  sourceType: string;
+  supportsSection: string;
+  relevanceNote: string;
+  linkOrSourceName?: string;
+}
+
 export interface CorePassport {
   organizationName: string;
   category: string;
@@ -118,6 +127,7 @@ export interface OperatingCore {
     negativePromptRules: string;
   };
   revisionStandards: RevisionStandard[];
+  coreEvidence: CoreEvidenceItem[];
   learningInbox: any[];
 }
 
@@ -459,6 +469,13 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
     { id: generateId(), action: "Less corporate", does: "Remove jargon, inflated phrases, and empty business language.", avoids: "Synergy, impact-driven, leveraging assets.", whenToUse: "When the text feels like a generic B2B press release.", exampleGuidance: "", appliesTo: "All workspaces" },
     { id: generateId(), action: "Less NGO-like", does: "Remove moralizing, awareness-first language, and generic climate action framing.", avoids: "Save the planet, urgent crisis, we must act now.", whenToUse: "When the text sounds like a charity appeal.", exampleGuidance: "", appliesTo: "All workspaces" },
     { id: generateId(), action: "Cleaner from AI-style characters", does: "Remove em dashes, zero-width characters, curly quotes if needed, overly polished transitions, and formulaic AI phrasing.", avoids: "AI-style syntax.", whenToUse: "As a final polish step.", exampleGuidance: "", appliesTo: "All workspaces" }
+  ],
+  coreEvidence: [
+    { id: generateId(), title: "COH Business Model", sourceType: "Business Model", supportsSection: "Strategy Kernel, Claims", relevanceNote: "Defines the financial and operational logic of the organization." },
+    { id: generateId(), title: "COH Phase 1 Strategic Plan", sourceType: "Business Memo", supportsSection: "Strategy Kernel, Institutional Adoption Logic", relevanceNote: "Outlines the proof ladder from COP30 to London." },
+    { id: generateId(), title: "COH Master Deck", sourceType: "Deck", supportsSection: "Voice, Visual DNA, Core Passport", relevanceNote: "The primary institutional presentation asset." },
+    { id: generateId(), title: "COH Website Copy", sourceType: "Website Copy", supportsSection: "Website Channel, Public Voice", relevanceNote: "The definitive source of truth for public-facing text." },
+    { id: generateId(), title: "Approved Output Examples", sourceType: "Approved Example", supportsSection: "Voice, Revision Standards", relevanceNote: "Benchmarks for the required tone and cleanliness." }
   ],
   learningInbox: []
 });

@@ -48,11 +48,12 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
       ...(core.visualDNA || {}) 
     },
     revisionStandards: core.revisionStandards || defaultCore.revisionStandards,
+    coreEvidence: core.coreEvidence || defaultCore.coreEvidence,
     learningInbox: core.learningInbox || defaultCore.learningInbox
   } : defaultCore;
 
   const [draftCore, setDraftCore] = useState<OperatingCore>(safeCore);
-  const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision'>('passport');
+  const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence'>('passport');
   
   // Compiler Preview State
   const [showPreview, setShowPreview] = useState(false);
@@ -172,6 +173,8 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
           <button onClick={() => setActiveTab('voice')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'voice' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Voice</button>
           <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
           <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
+          <div className="h-px bg-coh-gold/15 my-2"></div>
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Evidence</button>
         </div>
 
         {/* Content Area */}
@@ -526,9 +529,88 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
               </div>
             </div>
           )}
+
+          {/* CORE EVIDENCE */}
+          {activeTab === 'evidence' && (
+            <div className="space-y-6">
+              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Evidence</h3>
+              <p className="text-xs text-coh-navy/60 mb-4">Shows which source materials support the Operating Core. This is not a secondary source library.</p>
+              
+              <div className="space-y-4">
+                {draftCore.coreEvidence?.map((ev, index) => (
+                  <div key={ev.id} className="bg-coh-cream p-4 rounded border border-coh-gold/20 space-y-3 relative group">
+                    <button
+                      onClick={() => {
+                        const next = [...(draftCore.coreEvidence || [])];
+                        next.splice(index, 1);
+                        setDraftCore(prev => ({ ...prev, coreEvidence: next }));
+                      }}
+                      className="absolute top-2 right-2 text-red-500/50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded">{ev.sourceType}</span>
+                      <span className="font-bold text-coh-navy text-sm">{ev.title}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 text-xs">
+                      <div>
+                        <label className="block font-bold text-coh-navy/60 mb-1">Supports Core Section</label>
+                        <input 
+                          value={ev.supportsSection} 
+                          onChange={(e) => {
+                            const next = [...(draftCore.coreEvidence || [])];
+                            next[index].supportsSection = e.target.value;
+                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
+                          }}
+                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-coh-navy/60 mb-1">Relevance Note</label>
+                        <input 
+                          value={ev.relevanceNote} 
+                          onChange={(e) => {
+                            const next = [...(draftCore.coreEvidence || [])];
+                            next[index].relevanceNote = e.target.value;
+                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
+                          }}
+                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block font-bold text-coh-navy/60 mb-1">Link or Source Name (Optional)</label>
+                        <input 
+                          value={ev.linkOrSourceName || ''} 
+                          onChange={(e) => {
+                            const next = [...(draftCore.coreEvidence || [])];
+                            next[index].linkOrSourceName = e.target.value;
+                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
+                          }}
+                          placeholder="e.g. Google Drive Link or 'Source Library: Deck V3'"
+                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                <button 
+                  onClick={() => setDraftCore(prev => ({ 
+                    ...prev, 
+                    coreEvidence: [...(prev.coreEvidence || []), { id: generateId(), title: 'New Evidence', sourceType: 'Business Memo', supportsSection: 'Strategy Kernel', relevanceNote: '' }] 
+                  }))}
+                  className="flex items-center justify-center gap-1 w-full p-2 border border-dashed border-coh-gold/40 text-coh-gold text-sm font-semibold rounded hover:bg-coh-gold/5 transition"
+                >
+                  <Plus size={16} /> Add Core Evidence
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
-      
       {/* COMPILER PREVIEW FEATURE */}
       <div className="mt-8 border border-coh-gold/20 bg-white rounded p-4">
         <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-2 font-serif font-bold text-coh-navy w-full text-left focus:outline-none">

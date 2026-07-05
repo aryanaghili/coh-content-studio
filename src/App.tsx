@@ -43,6 +43,7 @@ interface SourceFile {
     | 'Image / Visual Asset'
     | 'Article / Media Coverage'
     | 'Team Notes'
+    | 'Link'
     | 'PDF'
     | 'Audio'
     | 'Text'
@@ -53,6 +54,7 @@ interface SourceFile {
   createdAt: string;
   notes: string;
   content: string;
+  url?: string;
   selected?: boolean;
 }
 
@@ -1244,13 +1246,22 @@ export default function App() {
   const [externalContentTone, setExternalContentTone] = useState<string>('Balanced / COH Default');
 
   // --- Source Library Forms ---
-  const [newSource, setNewSource] = useState({
+  const [newSource, setNewSource] = useState<{
+    title: string;
+    type: SourceFile['type'];
+    status: SourceFile['status'];
+    useFor: string;
+    notes: string;
+    content: string;
+    url?: string;
+  }>({
     title: '',
     type: 'Tone of Voice' as SourceFile['type'],
     status: 'Active' as SourceFile['status'],
     useFor: '',
     notes: '',
-    content: ''
+    content: '',
+    url: ''
   });
   const [editingSourceId, setEditingSourceId] = useState<string | null>(null);
 
@@ -3861,15 +3872,15 @@ Revision History:
       const selectedSources = [...sources, ...workspaceLocalSources].filter(s =>
         advancedBrief.selectedSourceIds.includes(s.id)
       );
-      selectedSources.forEach(s => {
-        sourceContext += `\n\n--- Source: ${s.title} ---\n${s.content}`;
-      });
+      if (selectedSources.length > 0) {
+        sourceContext += '\n\n' + Array.from(new Set(selectedSources.map(s => s.type))).map(t =>
+          `[Includes type: ${t}]`
+        ).join(' ');
+        selectedSources.forEach(s => {
+          sourceContext += `\n\n--- Source: ${s.title} ---\n${s.content}`;
+        });
+      }
     }
-
-    let brainContext = '';
-    brainSources.forEach(s => {
-      brainContext += `\n\n--- ${s.title} ---\n${s.content}`;
-    });
 
     const audienceNote = getAudienceExplanation(aud);
     const audienceDirective = aud === 'Custom Audience' && custAud
@@ -3889,9 +3900,6 @@ Revision History:
     return `You are the COH Content Marketing Mastermind for Climate Opera Haus.
 
 ROLE: Create professional, source-grounded content for Climate Opera Haus.
-
-COH BRAIN RULES (Always apply):
-${brainContext}
 
 SELECTED USER SOURCES:
 ${sourceContext || '(No user sources selected.)'}
@@ -7309,6 +7317,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <option value="Image / Visual Asset">Image / Visual Asset</option>
                         <option value="Article / Media Coverage">Article / Media Coverage</option>
                         <option value="Team Notes">Team Notes</option>
+                        <option value="Link">Link</option>
                       </select>
                     </div>
 
@@ -7325,6 +7334,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </select>
                     </div>
                   </div>
+
+                  {newSource.type === 'Link' && (
+                    <div>
+                      <label className="block text-coh-navy/70 mb-1 font-medium">Source URL</label>
+                      <input
+                        type="url"
+                        placeholder="https://..."
+                        value={newSource.url || ''}
+                        onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy font-mono text-[11px]"
+                      />
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-coh-navy/70 mb-1 font-medium">Use Case / Designation</label>
@@ -7372,7 +7394,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="button"
                         onClick={() => {
                           setEditingSourceId(null);
-                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', useFor: '', notes: '', content: '' });
+                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', useFor: '', notes: '', content: '', url: '' });
                         }}
                         className="bg-coh-cream text-coh-navy border border-coh-gold/20 py-2 px-3 rounded hover:bg-coh-cream-dark transition text-xs"
                       >
@@ -7429,7 +7451,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <pre className="mt-2 p-3 bg-coh-cream/50 rounded border border-coh-gold/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
                               {src.content}
                             </pre>
+                            {src.url && (
+                              <div className="mt-2 text-coh-gold">
+                                <a href={src.url} target="_blank" rel="noreferrer" className="hover:underline break-all">🔗 {src.url}</a>
+                              </div>
+                            )}
                           </details>
+
+                          <div className="pt-2">
+                            <button
+                              onClick={() => alert("Extract the relevant insight manually and add it to Operating Core. Automatic extraction coming soon.")}
+                              className="text-[9px] font-semibold text-coh-navy/50 hover:text-coh-gold transition uppercase tracking-wider"
+                            >
+                              Use to update Operating Core →
+                            </button>
+                          </div>
                         </div>
 
                         <div className="flex flex-col gap-2 shrink-0">
@@ -7451,28 +7487,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   })}
                 </div>
 
-                {/* Read-Only Brain Rules area */}
-                <div className="space-y-3 bg-coh-navy/5 p-5 border border-coh-gold/10 rounded">
-                  <div className="border-b border-coh-gold/15 pb-2">
-                    <h3 className="font-serif text-base text-coh-navy font-bold">COH Brain: Always-On Rules (Read-Only)</h3>
-                    <p className="text-[10px] text-coh-navy/60 mt-1">
-                      These knowledge assets guide the drafting engine in the background. They are always active and not manually selected.
+                {/* Operating Core Info Card */}
+                <div className="space-y-3 bg-coh-cream/50 p-6 border border-coh-gold/20 rounded shadow-sm text-center">
+                  <div className="pb-2">
+                    <h3 className="font-serif text-lg text-coh-navy font-bold">Operating Core</h3>
+                    <p className="text-xs text-coh-navy/70 mt-2 max-w-md mx-auto leading-relaxed">
+                      Always-on strategy and content rules are now managed in Operating Core. Source Library is strictly for raw materials, references, links, notes, documents, and selectable sources.
                     </p>
                   </div>
-                  <div className="space-y-3">
-                    {brainSources.map(src => (
-                      <div key={src.id} className="bg-white p-4 border border-coh-gold/15 rounded text-xs space-y-1">
-                        <span className="text-[9px] uppercase font-mono font-bold text-coh-gold block">{src.title}</span>
-                        <p className="text-[10px] text-coh-navy/60">{src.notes}</p>
-                        <details className="cursor-pointer text-[10px] text-coh-gold">
-                          <summary className="hover:underline">Inspect Rule Contents</summary>
-                          <pre className="mt-2 p-2 bg-coh-cream rounded overflow-x-auto text-[9px] font-mono whitespace-pre-wrap text-coh-navy leading-relaxed max-h-40">
-                            {src.content}
-                          </pre>
-                        </details>
-                      </div>
-                    ))}
-                  </div>
+                  <button
+                    onClick={() => setActiveTab('operating-core')}
+                    className="mt-2 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-6 rounded transition border border-coh-gold/20 text-xs font-semibold"
+                  >
+                    Open Operating Core
+                  </button>
                 </div>
 
               </div>
