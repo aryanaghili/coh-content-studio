@@ -42,3 +42,44 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #9D8059;
 }
+
+@layer components {
+  /* Generic Button/Action Affordance */
+  .action-button {
+    @apply cursor-pointer transition-all duration-150 outline-none;
+  }
+  .action-button:not(:disabled):hover {
+    @apply brightness-110;
+  }
+  .action-button:not(:disabled):active {
+    @apply scale-[0.97];
+  }
+  .action-button:focus-visible {
+    @apply ring-2 ring-coh-gold ring-offset-2 ring-offset-coh-cream;
+  }
+  .action-button:disabled {
+    @apply opacity-50 cursor-not-allowed scale-100;
+  }
+
+  /* Interactive Cards (Command Center, Nav Blocks) */
+  .interactive-card {
+    @apply cursor-pointer transition-all duration-200;
+  }
+  .interactive-card:not(:disabled):hover {
+    @apply border-coh-gold/30 bg-coh-gold/5 shadow-sm -translate-y-[1px];
+  }
+  .interactive-card:not(:disabled):active {
+    @apply scale-[0.99] translate-y-0;
+  }
+
+  /* Tabs */
+  .interactive-tab {
+    @apply cursor-pointer transition-all duration-150;
+  }
+  .interactive-tab:not(.active-tab):hover {
+    @apply bg-coh-gold/10 text-coh-navy;
+  }
+  .interactive-tab:active {
+    @apply scale-[0.97];
+  }
+}

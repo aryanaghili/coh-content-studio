@@ -5130,7 +5130,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-coh-navy/60 hover:bg-coh-cream'
                             }`}
                           >
-                            {mode === 'link' ? 'URL Context' : mode}
+                            {mode === 'link' ? 'URL' : mode}
                           </button>
                         ))}
                       </div>
@@ -5771,7 +5771,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-coh-navy/60 hover:bg-coh-cream'
                               }`}
                             >
-                              {mode === 'link' ? 'URL Context' : mode}
+                              {mode === 'link' ? 'URL' : mode}
                             </button>
                           ))}
                         </div>
