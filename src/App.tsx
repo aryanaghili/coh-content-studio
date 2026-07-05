@@ -48,14 +48,18 @@ interface SourceFile {
     | 'Audio'
     | 'Text'
     | 'Video'
-    | 'Image';
+    | 'Image'
+    | 'Other';
   status: 'Active' | 'Archived' | 'Needs Review';
+  role: 'Foundational Source' | 'Task Source' | 'Approved Example' | 'Partner Context' | 'Visual Reference' | 'Archive';
+  supportsOperatingCoreSection: 'Core Passport' | 'Strategy Kernel' | 'Audiences' | 'Channels' | 'Claims' | 'Voice' | 'Visual' | 'Revision' | 'None';
   useFor: string;
   createdAt: string;
   notes: string;
   content: string;
   url?: string;
   selected?: boolean;
+  selectable?: boolean;
 }
 
 interface ContentBrief {
@@ -1245,11 +1249,13 @@ export default function App() {
   const [externalContentLanguage, setExternalContentLanguage] = useState<string>('English');
   const [externalContentTone, setExternalContentTone] = useState<string>('Balanced / COH Default');
 
-  // --- Source Library Forms ---
+  // --- Knowledge Library Forms ---
   const [newSource, setNewSource] = useState<{
     title: string;
     type: SourceFile['type'];
     status: SourceFile['status'];
+    role: SourceFile['role'];
+    supportsOperatingCoreSection: SourceFile['supportsOperatingCoreSection'];
     useFor: string;
     notes: string;
     content: string;
@@ -1258,6 +1264,8 @@ export default function App() {
     title: '',
     type: 'Tone of Voice' as SourceFile['type'],
     status: 'Active' as SourceFile['status'],
+    role: 'Task Source',
+    supportsOperatingCoreSection: 'None',
     useFor: '',
     notes: '',
     content: '',
@@ -1324,6 +1332,8 @@ export default function App() {
       title: src.title,
       type: src.type,
       status: src.status,
+      role: src.role || 'Task Source',
+      supportsOperatingCoreSection: src.supportsOperatingCoreSection || 'None',
       useFor: src.useFor || '',
       notes: src.notes || '',
       content: src.content || ''
@@ -1347,6 +1357,8 @@ export default function App() {
           title: file.name,
           type: file.name.endsWith('.pdf') ? 'Deck' : 'Business Memo',
           status: 'Active',
+          role: 'Task Source',
+          supportsOperatingCoreSection: 'None',
           useFor: 'Extracted context reference',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Uploaded file size: ${(file.size / 1024).toFixed(1)} KB.`,
@@ -1371,6 +1383,8 @@ export default function App() {
           title: path,
           type: 'Event Notes',
           status: 'Active',
+          role: 'Task Source',
+          supportsOperatingCoreSection: 'None',
           useFor: 'Folder upload context',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Directory uploaded path: ${path}`,
@@ -2863,6 +2877,8 @@ export default function App() {
       title: '',
       type: 'Tone of Voice',
       status: 'Active',
+      role: 'Task Source',
+      supportsOperatingCoreSection: 'None',
       useFor: '',
       notes: '',
       content: ''
@@ -2893,6 +2909,8 @@ export default function App() {
         title: inlinePasteData.title,
         type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
         useFor: 'Pasted workspace source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'Pasted text source added from Content Workspace.',
@@ -2909,6 +2927,8 @@ export default function App() {
         title: inlineUploadData.title,
         type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
         useFor: 'Uploaded workspace file',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'File uploaded from Content Workspace.',
@@ -2925,6 +2945,8 @@ export default function App() {
         title: inlineLinkData.title,
         type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
         useFor: 'URL context source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: `URL: ${inlineLinkData.url}`,
@@ -4152,15 +4174,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Content Library
             </button>
             <button
-              onClick={() => setActiveTab('source-library')}
+              onClick={() => setActiveTab('knowledge-library')}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
-                activeTab === 'source-library'
+                activeTab === 'knowledge-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
                   : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
               }`}
             >
               <FileText size={16} />
-              Source Library
+              Knowledge Library
             </button>
 
             <div className="pt-6 pb-2 px-4 text-[10px] font-bold tracking-wider text-coh-gold/40 uppercase">
@@ -4202,6 +4224,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="h-full overflow-hidden bg-[#faf9f6]">
             <OperatingCoreAdmin 
               core={operatingCore} 
+              knowledgeSources={[...workspaceLocalSources, ...sources]}
               onSave={(newCore) => {
                 setOperatingCore(newCore);
                 localStorage.setItem('coh_operating_core_v1', JSON.stringify(newCore));
@@ -4271,7 +4294,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <span className="block text-coh-navy font-bold text-sm">Source Checks</span>
                       <span className="text-xs text-coh-navy/70">You have {selectableSources.filter(s => s.status === 'Needs Review').length} sources needing review.</span>
                     </div>
-                    <button onClick={() => setActiveTab('source-library')} className="text-xs bg-coh-navy text-coh-cream px-4 py-2 rounded hover:bg-coh-navy-light transition font-semibold">Open Sources</button>
+                    <button onClick={() => setActiveTab('knowledge-library')} className="text-xs bg-coh-navy text-coh-cream px-4 py-2 rounded hover:bg-coh-navy-light transition font-semibold">Open Sources</button>
                   </div>
                 )}
                 {aiStatus !== 'connected' && (
@@ -4404,9 +4427,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button onClick={() => setActiveTab('idea-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
                 </div>
                 <div className="p-3 bg-coh-cream/35 rounded border border-coh-gold/10 flex flex-col justify-between items-center">
-                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Source Library</span>
+                  <span className="block text-coh-navy/60 text-[10px] uppercase font-bold tracking-wider mb-1">Knowledge Library</span>
                   <span className="block text-2xl font-serif text-coh-navy font-bold">{workspaceLocalSources.length + sources.length}</span>
-                  <button onClick={() => setActiveTab('source-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
+                  <button onClick={() => setActiveTab('knowledge-library')} className="text-[9px] text-coh-navy hover:text-coh-gold mt-2 font-semibold">Open →</button>
                 </div>
               </div>
             </div>
@@ -4455,7 +4478,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <p className="text-[10px] text-coh-navy/60 leading-relaxed font-sans">Turn a URL or doc into content.</p>
                   </div>
                   <button
-                    onClick={() => setActiveTab('source-library')}
+                    onClick={() => setActiveTab('knowledge-library')}
                     className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[9px] font-bold py-1 px-2.5 rounded uppercase self-start flex items-center gap-1 mt-3"
                   >
                     Add Source <ArrowRight size={10} />
@@ -5122,7 +5145,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlinePasteData.saveToLibrary}
                                 onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Source Library
+                              Save to Knowledge Library
                             </label>
                             <button
                               type="button"
@@ -5171,7 +5194,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlineLinkData.saveToLibrary}
                                 onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Source Library
+                              Save to Knowledge Library
                             </label>
                             <button
                               type="button"
@@ -5212,7 +5235,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 checked={inlineUploadData.saveToLibrary}
                                 onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
                               />
-                              Save to Source Library
+                              Save to Knowledge Library
                             </label>
                             <button
                               type="button"
@@ -5763,7 +5786,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlinePasteData.saveToLibrary}
                                   onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Source Library
+                                Save to Knowledge Library
                               </label>
                               <button
                                 type="button"
@@ -5815,7 +5838,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlineLinkData.saveToLibrary}
                                   onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Source Library
+                                Save to Knowledge Library
                               </label>
                               <button
                                 type="button"
@@ -5856,7 +5879,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   checked={inlineUploadData.saveToLibrary}
                                   onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
                                 />
-                                Save to Source Library
+                                Save to Knowledge Library
                               </label>
                               <button
                                 type="button"
@@ -7273,11 +7296,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
         )}
 
         {/* --- TAB 5: SOURCE LIBRARY --- */}
-        {activeTab === 'source-library' && (
+        {activeTab === 'knowledge-library' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Source Library</h2>
+                <h2 className="font-serif text-3xl font-normal text-coh-navy">Knowledge Library</h2>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1">
                   Manage core documents, partner decks, business model papers, and approved rules. Upload folders or file logs.
                 </p>
@@ -7377,6 +7400,43 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-coh-navy/70 mb-1 font-medium">Role</label>
+                      <select
+                        value={newSource.role}
+                        onChange={(e) => setNewSource({ ...newSource, role: e.target.value as SourceFile['role'] })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
+                      >
+                        <option value="Foundational Source">Foundational Source</option>
+                        <option value="Task Source">Task Source</option>
+                        <option value="Approved Example">Approved Example</option>
+                        <option value="Partner Context">Partner Context</option>
+                        <option value="Visual Reference">Visual Reference</option>
+                        <option value="Archive">Archive</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-coh-navy/70 mb-1 font-medium">Supports Section</label>
+                      <select
+                        value={newSource.supportsOperatingCoreSection}
+                        onChange={(e) => setNewSource({ ...newSource, supportsOperatingCoreSection: e.target.value as SourceFile['supportsOperatingCoreSection'] })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
+                      >
+                        <option value="None">None</option>
+                        <option value="Core Passport">Core Passport</option>
+                        <option value="Strategy Kernel">Strategy Kernel</option>
+                        <option value="Audiences">Audiences</option>
+                        <option value="Channels">Channels</option>
+                        <option value="Claims">Claims</option>
+                        <option value="Voice">Voice</option>
+                        <option value="Visual">Visual</option>
+                        <option value="Revision">Revision</option>
+                      </select>
+                    </div>
+                  </div>
+
                   {newSource.type === 'Link' && (
                     <div>
                       <label className="block text-coh-navy/70 mb-1 font-medium">Source URL</label>
@@ -7436,7 +7496,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="button"
                         onClick={() => {
                           setEditingSourceId(null);
-                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', useFor: '', notes: '', content: '', url: '' });
+                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', role: 'Task Source', supportsOperatingCoreSection: 'None', useFor: '', notes: '', content: '', url: '' });
                         }}
                         className="bg-coh-cream text-coh-navy border border-coh-gold/20 py-2 px-3 rounded hover:bg-coh-cream-dark transition text-xs"
                       >
@@ -7483,6 +7543,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             }`}>
                               {src.status}
                             </span>
+                            {src.role && (
+                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
+                                {src.role}
+                              </span>
+                            )}
+                            {src.supportsOperatingCoreSection && src.supportsOperatingCoreSection !== 'None' && (
+                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
+                                Supports: {src.supportsOperatingCoreSection}
+                              </span>
+                            )}
                           </div>
 
                           <h4 className="font-serif text-base font-semibold text-coh-navy">{src.title}</h4>
@@ -7502,7 +7572,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                           <div className="pt-2">
                             <button
-                              onClick={() => alert("Extract the relevant insight manually and add it to Operating Core. Automatic extraction coming soon.")}
+                              onClick={() => alert("This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.")}
                               className="text-[9px] font-semibold text-coh-navy/50 hover:text-coh-gold transition uppercase tracking-wider"
                             >
                               Use to update Operating Core →
@@ -7534,7 +7604,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="pb-2">
                     <h3 className="font-serif text-lg text-coh-navy font-bold">Operating Core</h3>
                     <p className="text-xs text-coh-navy/70 mt-2 max-w-md mx-auto leading-relaxed">
-                      Always-on strategy and content rules are now managed in Operating Core. Source Library is strictly for raw materials, references, links, notes, documents, and selectable sources.
+                      Always-on strategy and content rules are now managed in Operating Core. Knowledge Library is strictly for raw materials, references, links, notes, documents, and selectable sources.
                     </p>
                   </div>
                   <button

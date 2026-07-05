@@ -8,13 +8,14 @@ import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff } from 'lucide-react';
 
 interface Props {
   core: OperatingCore | null;
+  knowledgeSources?: any[];
   onSave: (core: OperatingCore) => void;
   onReset: () => void;
 }
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
-export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
+export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave, onReset }: Props) {
   // Ensure safe fallback from local storage
   const defaultCore = createDefaultOperatingCore();
   const safeCore: OperatingCore = core ? {
@@ -174,7 +175,7 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
           <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
           <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
           <div className="h-px bg-coh-gold/15 my-2"></div>
-          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Evidence</button>
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Evidence Map</button>
         </div>
 
         {/* Content Area */}
@@ -530,85 +531,49 @@ export default function OperatingCoreAdmin({ core, onSave, onReset }: Props) {
             </div>
           )}
 
-          {/* CORE EVIDENCE */}
+          {/* EVIDENCE MAP */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Evidence</h3>
-              <p className="text-xs text-coh-navy/60 mb-4">Shows which source materials support the Operating Core. This is not a secondary source library.</p>
+              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Evidence Map</h3>
+              <p className="text-xs text-coh-navy/60 mb-4">Shows which Knowledge Library items support the Operating Core. This is not a document editor.</p>
               
-              <div className="space-y-4">
-                {draftCore.coreEvidence?.map((ev, index) => (
-                  <div key={ev.id} className="bg-coh-cream p-4 rounded border border-coh-gold/20 space-y-3 relative group">
-                    <button
-                      onClick={() => {
-                        const next = [...(draftCore.coreEvidence || [])];
-                        next.splice(index, 1);
-                        setDraftCore(prev => ({ ...prev, coreEvidence: next }));
-                      }}
-                      className="absolute top-2 right-2 text-red-500/50 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                      <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded">{ev.sourceType}</span>
-                      <span className="font-bold text-coh-navy text-sm">{ev.title}</span>
+              <div className="space-y-8">
+                {['Core Passport', 'Strategy Kernel', 'Audiences', 'Channels', 'Claims', 'Voice', 'Visual', 'Revision'].map(section => {
+                  const sourcesForSection = knowledgeSources.filter(src => src.supportsOperatingCoreSection === section);
+                  
+                  return (
+                    <div key={section} className="border border-coh-gold/20 rounded p-4 bg-white shadow-sm">
+                      <h4 className="font-serif text-lg font-bold text-coh-navy mb-3 pb-1 border-b border-coh-gold/10">{section}</h4>
+                      
+                      {sourcesForSection.length > 0 ? (
+                        <div className="space-y-3">
+                          {sourcesForSection.map(src => (
+                            <div key={src.id} className="bg-coh-cream/30 p-3 rounded border border-coh-gold/10 flex justify-between items-start">
+                              <div>
+                                <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded mr-2">{src.type}</span>
+                                <span className="font-bold text-coh-navy text-sm">{src.title}</span>
+                                {src.role && <span className="ml-2 text-[10px] text-coh-navy/60 uppercase font-semibold border border-coh-navy/20 px-1 rounded">{src.role}</span>}
+                                {src.notes && <p className="text-xs text-coh-navy/70 mt-1 italic">{src.notes}</p>}
+                                {src.url && <a href={src.url} target="_blank" rel="noreferrer" className="block text-[10px] text-blue-600 hover:underline mt-1 break-all">{src.url}</a>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center p-4 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded">
+                          <p className="text-xs text-coh-navy/50 italic mb-3">No supporting Knowledge Library items linked yet.</p>
+                          <button className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold" onClick={() => alert('Please navigate to Knowledge Library to add a source.')}>
+                            Add source in Knowledge Library
+                          </button>
+                        </div>
+                      )}
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-xs">
-                      <div>
-                        <label className="block font-bold text-coh-navy/60 mb-1">Supports Core Section</label>
-                        <input 
-                          value={ev.supportsSection} 
-                          onChange={(e) => {
-                            const next = [...(draftCore.coreEvidence || [])];
-                            next[index].supportsSection = e.target.value;
-                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
-                          }}
-                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
-                        />
-                      </div>
-                      <div>
-                        <label className="block font-bold text-coh-navy/60 mb-1">Relevance Note</label>
-                        <input 
-                          value={ev.relevanceNote} 
-                          onChange={(e) => {
-                            const next = [...(draftCore.coreEvidence || [])];
-                            next[index].relevanceNote = e.target.value;
-                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
-                          }}
-                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
-                        />
-                      </div>
-                      <div className="col-span-2">
-                        <label className="block font-bold text-coh-navy/60 mb-1">Link or Source Name (Optional)</label>
-                        <input 
-                          value={ev.linkOrSourceName || ''} 
-                          onChange={(e) => {
-                            const next = [...(draftCore.coreEvidence || [])];
-                            next[index].linkOrSourceName = e.target.value;
-                            setDraftCore(prev => ({ ...prev, coreEvidence: next }));
-                          }}
-                          placeholder="e.g. Google Drive Link or 'Source Library: Deck V3'"
-                          className="w-full bg-white border border-coh-gold/20 p-2 rounded"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-
-                <button 
-                  onClick={() => setDraftCore(prev => ({ 
-                    ...prev, 
-                    coreEvidence: [...(prev.coreEvidence || []), { id: generateId(), title: 'New Evidence', sourceType: 'Business Memo', supportsSection: 'Strategy Kernel', relevanceNote: '' }] 
-                  }))}
-                  className="flex items-center justify-center gap-1 w-full p-2 border border-dashed border-coh-gold/40 text-coh-gold text-sm font-semibold rounded hover:bg-coh-gold/5 transition"
-                >
-                  <Plus size={16} /> Add Core Evidence
-                </button>
+                  );
+                })}
               </div>
             </div>
           )}
+
         </div>
       </div>
       {/* COMPILER PREVIEW FEATURE */}
