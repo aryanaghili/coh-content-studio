@@ -78,15 +78,36 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
   const [accessCode, setAccessCode] = useState('');
   const [accessError, setAccessError] = useState(false);
 
-  const handleUnlock = (e: React.FormEvent) => {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
-    const validCode = import.meta.env.VITE_OPERATING_CORE_ADMIN_CODE || 'COH-CORE-2026';
-    if (accessCode === validCode) {
-      sessionStorage.setItem('coh_superuser_unlocked', 'true');
-      setIsUnlocked(true);
-      setAccessError(false);
-    } else {
+    setIsVerifying(true);
+    setAccessError(false);
+    setErrorMessage('');
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/operating-core/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: accessCode })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        sessionStorage.setItem('coh_superuser_unlocked', 'true');
+        setIsUnlocked(true);
+      } else {
+        setAccessError(true);
+        setErrorMessage(data.error || 'Invalid code');
+      }
+    } catch (err) {
       setAccessError(true);
+      setErrorMessage('Server error connecting to verification service.');
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -118,10 +139,11 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             {accessError && <span className="text-xs text-red-500 text-left">Incorrect access code.</span>}
             <button 
               type="submit" 
-              className="bg-black text-white px-4 py-2 rounded-md hover:bg-neutral-800 transition-colors flex items-center justify-center gap-2"
+              disabled={isVerifying}
+              className={`bg-black text-white px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${isVerifying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-800'}`}
             >
               <KeyRound className="w-4 h-4" />
-              Unlock Operating Core
+              {isVerifying ? 'Verifying...' : 'Unlock Operating Core'}
             </button>
           </form>
         </div>
