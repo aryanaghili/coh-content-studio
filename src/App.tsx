@@ -4060,7 +4060,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <button
               type="submit"
               disabled={authLoading}
-              className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50"
+              className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button"
             >
               {authLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -4546,7 +4546,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ].map(item => (
                   <div
                     key={item.title}
-                    className="p-3 border border-coh-gold/10 bg-white hover:border-coh-gold/40 rounded text-left transition flex justify-between items-center"
+                    className="p-3 border border-coh-gold/10 bg-white hover:border-coh-gold/40 rounded text-left transition flex justify-between items-center interactive-card"
                     onClick={(e) => {
                       e.preventDefault();
                       triggerQuickLauncher(item.channel, item.format, 'Single Channel');
@@ -4677,7 +4677,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   onClick={handleGenerateIdeas}
                   disabled={isIdeating || !aiProvider}
-                  className="bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4"
+                  className="bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button"
                 >
                   {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                   {isIdeating ? 'Generating...' : 'Generate'}
@@ -4985,7 +4985,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   disabled={isGeneratingDrafts || aiIsGenerating}
                   onClick={handleGenerateDrafts}
-                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button"
                 >
                   {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                 </button>
@@ -5007,7 +5007,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* Content Starters container */}
             <div className="bg-white border border-coh-gold/15 p-4 rounded shadow-sm space-y-3">
-              <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => setShowContentStarters(!showContentStarters)}>
+              <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
                 <span className="font-semibold text-coh-navy/80 text-sm">Content Starters</span>
                 <span className="text-xs text-coh-gold font-semibold bg-coh-cream px-2 py-1 rounded">
                   {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
@@ -5212,7 +5212,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               type="button"
                               onClick={handleAddWorkspaceLink}
-                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px]"
+                              className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
                             >
                               {inlineLinkData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
                             </button>
@@ -5856,7 +5856,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 type="button"
                                 onClick={handleAddWorkspaceLink}
-                                className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px]"
+                                className="bg-coh-navy text-coh-gold px-2.5 py-1 rounded font-serif font-bold text-[10px] action-button"
                               >
                                 Add URL Context
                               </button>
@@ -6070,7 +6070,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     onClick={handleGenerateDrafts}
                     disabled={isGeneratingDrafts}
-                    className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2"
+                    className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
                   >
                     {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6100,7 +6100,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button
                           disabled={isGeneratingDrafts || aiIsGenerating}
                           onClick={handleGenerateDrafts}
-                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-coh-navy text-coh-gold px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-coh-navy-light transition disabled:opacity-50 disabled:cursor-not-allowed action-button"
                         >
                           {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                         </button>
@@ -6151,7 +6151,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 onClick={cleanOptionADraft}
                                 title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition"
+                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
                               >
                                 ⚠️ Needs cleanup
                               </button>
@@ -6208,7 +6208,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 onClick={cleanOptionBDraft}
                                 title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition"
+                                className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
                               >
                                 ⚠️ Needs cleanup
                               </button>
@@ -6348,7 +6348,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50"
+                          className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6550,7 +6550,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       onClick={handleGenerateImage}
                       disabled={isGeneratingImage || !aiProvider}
-                      className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2"
+                      className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button"
                     >
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
@@ -6702,7 +6702,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <button
                         onClick={handleUndoRevision}
                         disabled={activeDraftHistory.length <= 1}
-                        className="px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1"
+                        className="px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
                       >
                         <Undo size={12} /> Undo
                       </button>
@@ -7020,7 +7020,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <button
                         onClick={handleStartExternalRevision}
                         disabled={!externalContentText.trim()}
-                        className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50"
+                        className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button"
                       >
                         Start Revising
                       </button>
@@ -7518,7 +7518,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold"
+                      className="flex-1 bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded font-serif transition border border-coh-gold/20 text-xs font-semibold action-button"
                     >
                       {editingSourceId ? 'Save Edits' : 'Add Source'}
                     </button>
@@ -7787,7 +7787,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {!authBypass && (
                 <button
                   onClick={handleLogout}
-                  className="bg-red-800/10 hover:bg-red-800/20 text-red-800 border border-red-800/20 px-3 py-1.5 rounded text-xs font-semibold transition"
+                  className="bg-red-800/10 hover:bg-red-800/20 text-red-800 border border-red-800/20 px-3 py-1.5 rounded text-xs font-semibold transition action-button"
                 >
                   Sign Out
                 </button>

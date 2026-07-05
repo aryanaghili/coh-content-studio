@@ -140,10 +140,10 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
             <span className="font-bold">Protected COH Foundation:</span> Always On
           </div>
           <div className="flex gap-2">
-            <button onClick={onReset} className="flex items-center gap-1 px-3 py-1.5 text-xs border border-coh-gold/30 text-coh-navy/60 hover:bg-coh-cream rounded transition-colors">
+            <button onClick={onReset} className="flex items-center gap-1 px-3 py-1.5 text-xs border border-coh-gold/30 text-coh-navy/60 hover:bg-coh-cream rounded transition-colors action-button">
               <RefreshCw size={12} /> Reset to Defaults
             </button>
-            <button onClick={handleSave} className="flex items-center gap-1 px-4 py-1.5 bg-coh-navy text-white text-sm font-semibold rounded hover:bg-coh-navy/90 transition-colors">
+            <button onClick={handleSave} className="flex items-center gap-1 px-4 py-1.5 bg-coh-navy text-white text-sm font-semibold rounded hover:bg-coh-navy/90 transition-colors action-button">
               <Save size={14} /> Save Core
             </button>
           </div>
@@ -566,8 +566,8 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
                                 </div>
                               </div>
                               <div className="flex gap-3 mt-2 pt-2 border-t border-coh-gold/10">
-                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition" onClick={() => alert('Open source clicked')}>Open source</button>
-                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition" onClick={() => alert('Use to update Operating Core')}>Use to update Operating Core</button>
+                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" onClick={() => alert('Open source clicked')}>Open source</button>
+                                <button className="text-[10px] uppercase font-bold text-coh-navy hover:text-coh-gold transition action-button" onClick={() => alert('Use to update Operating Core')}>Use to update Operating Core</button>
                               </div>
                             </div>
                           ))}
@@ -580,13 +580,13 @@ export default function OperatingCoreAdmin({ core, knowledgeSources = [], onSave
                       
                       <div className="flex gap-2">
                         <button 
-                          className="text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold"
+                          className="text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button"
                           onClick={() => onLinkExistingSource && onLinkExistingSource(section)}
                         >
                           Link existing Knowledge Library source
                         </button>
                         <button 
-                          className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1"
+                          className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button"
                           onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}
                         >
                           <Plus size={12} /> Add new Core Source
