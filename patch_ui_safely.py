@@ -1,32 +1,64 @@
 import re
 
-with open('src/components/OperatingCoreAdmin.tsx', 'r') as f:
+with open('src/App.tsx', 'r') as f:
     content = f.read()
 
-# 1. Update imports
-if 'import { normalizeText' not in content:
-    content = content.replace(
-        "import type { OperatingCore } from '../lib/operatingCore';",
-        "import { normalizeText, type OperatingCore } from '../lib/operatingCore';"
-    )
-
-# 2. Add useEffect if missing
-if 'useEffect' not in content.split('import ')[1].split('from')[0]:
-    content = re.sub(r"import\s*\{\s*useState\s*\}\s*from\s*'react';", "import { useState, useEffect } from 'react';", content)
-
-# 3. Update props to remove sourceLibrary and related dispatch functions
-content = re.sub(r"\s*sourceLibrary:\s*any\[\];", "", content)
-content = re.sub(r"\s*setSourceLibrary:\s*\(sources:\s*any\[\]\)\s*=>\s*void;", "", content)
-content = re.sub(r"sourceLibrary,\s*setSourceLibrary,", "", content)
-
-# 4. Fix activeTab type to include all tabs
+# Hide "Suggested Core Documents" section by changing its condition to false
 content = re.sub(
-    r"const \[activeTab, setActiveTab\] = useState<[^>]+>\('passport'\);",
-    "const [activeTab, setActiveTab] = useState<'passport' | 'strategy' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence' | 'core-documents' | 'preview'>('passport');\n  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => { const saved = localStorage.getItem('coh-operating-core-documents'); return saved ? JSON.parse(saved) : []; });\n  useEffect(() => { localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments)); }, [operatingCoreDocuments]);",
+    r"\{\(sourceLibraryFilter === 'All' \|\| sourceLibraryFilter === 'Core Documents'\) && \(",
+    "{false && (",
     content
 )
 
-# 5. Replace Core Documents UI block
+# Hide Core Documents filter
+content = content.replace("'All', 'Core Documents', 'Task Sources'", "'All', 'Task Sources'")
+
+# Hide "Open Operating Core" button from header
+content = re.sub(
+    r"\{!isOperatingCoreUnlocked \? \(.*?Open Operating Core\s*</button>\s*\)\}",
+    "{null}",
+    content,
+    flags=re.DOTALL
+)
+
+# Hide Role and Supports badges
+content = content.replace("{src.role && (", "{false && (")
+content = content.replace("{src.supportsOperatingCoreSection && src.supportsOperatingCoreSection !== 'None' && (", "{false && (")
+
+# Hide Extract Insight logic for Operating Core
+content = content.replace("{extractingInsightFor === src.id && (", "{false && (")
+content = content.replace("<button\\n                                onClick={() => setExtractingInsightFor", "<button className=\"hidden\" onClick={() => setExtractingInsightFor")
+
+# Update subtitle
+content = content.replace(
+    'A central repository for all source materials used to generate content. Includes standard user-facing context documents as well as foundational Operating Core business strategies.',
+    'Store task-specific materials such as event notes, partner profiles, sponsor notes, meeting notes, campaign context, media references, website references, pasted notes, links, and visual references for use in content generation.'
+)
+
+with open('src/App.tsx', 'w') as f:
+    f.write(content)
+
+
+with open('src/components/OperatingCoreAdmin.tsx', 'r') as f:
+    admin_content = f.read()
+
+# Let's cleanly inject a new local state for core documents and a useEffect to save it
+if 'useEffect' not in admin_content.split('import ')[1].split('from')[0]:
+    admin_content = admin_content.replace("import { useState } from 'react';", "import { useState, useEffect } from 'react';")
+
+state_injection = """
+  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => {
+    const saved = localStorage.getItem('coh-operating-core-documents');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments));
+  }, [operatingCoreDocuments]);
+"""
+if 'setOperatingCoreDocuments' not in admin_content:
+    admin_content = admin_content.replace("const [activeTab, setActiveTab] = useState", state_injection + "  const [activeTab, setActiveTab] = useState")
+
+# Replace Core Documents UI panel
 core_docs_ui_old = r"\{/\* TAB: CORE DOCUMENTS \*/\}.*?\{/\* TAB: PREVIEW \*/\}"
 core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
       {activeTab === 'core-documents' && (
@@ -106,19 +138,9 @@ core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
       )}
 
       {/* TAB: PREVIEW */}"""
-content = re.sub(core_docs_ui_old, core_docs_ui_new, content, flags=re.DOTALL)
-
-# 6. Apply normalizeText to textarea value rendering logic, being careful not to touch onChange
-def wrap_normalize(match):
-    full = match.group(0)
-    val = match.group(1)
-    if 'normalizeText' not in val and 'localCore' in val:
-        return f'value={{normalizeText({val})}}'
-    return full
-
-content = re.sub(r'value=\{([^}]+)\}', wrap_normalize, content)
+admin_content = re.sub(core_docs_ui_old, core_docs_ui_new, admin_content, flags=re.DOTALL)
 
 with open('src/components/OperatingCoreAdmin.tsx', 'w') as f:
-    f.write(content)
+    f.write(admin_content)
 
-print("Admin updated")
+print("UI patched safely")

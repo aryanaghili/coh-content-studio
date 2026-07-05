@@ -686,5 +686,5 @@ PRIORITY ORDER FOR COMPILER:
 
 export function normalizeText(text: string | null | undefined): string {
   if (!text) return '';
-  return text.replace(/\\n/g, '\n').replace(/\s+$/, '');
+  return text.replace(/\n/g, '\n').replace(/\s+$/, '');
 }

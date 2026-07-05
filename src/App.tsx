@@ -7565,7 +7565,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2 pb-2 border-b border-coh-gold/15">
-                  {['All', 'Core Documents', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
+                  {['All', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
                     <button
                       key={filter}
                       onClick={() => setSourceLibraryFilter(filter)}
@@ -7581,7 +7581,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
-                {(sourceLibraryFilter === 'All' || sourceLibraryFilter === 'Core Documents') && (
+                {false && (
                   <div className="space-y-3 bg-coh-cream/30 p-4 border border-dashed border-coh-gold/30 rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-serif text-sm font-bold text-coh-navy">Suggested Core Documents</h3>
@@ -7671,12 +7671,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               }`}>
                                 {src.status}
                               </span>
-                              {src.role && (
+                              {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
                                   {src.role}
                                 </span>
                               )}
-                              {src.supportsOperatingCoreSection && src.supportsOperatingCoreSection !== 'None' && (
+                              {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
                                   Supports: {src.supportsOperatingCoreSection}
                                 </span>
@@ -7711,7 +7711,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                               </button>
                               
-                              {extractingInsightFor === src.id && (
+                              {false && (
                                 <div className="mt-3 p-4 bg-coh-cream border border-coh-gold/20 rounded animate-fadeIn">
                                   <h5 className="font-serif font-bold text-coh-navy mb-2 text-sm">Extract Insight for Operating Core</h5>
                                   <p className="text-[10px] text-coh-navy/60 mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.</p>

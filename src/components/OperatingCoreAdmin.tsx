@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from '../lib/operatingCore';
 import type { 
   OperatingCore, AudienceProfile, ChannelRule, RevisionStandard, 
@@ -58,6 +58,14 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
   } : defaultCore;
 
   const [draftCore, setDraftCore] = useState<OperatingCore>(safeCore);
+  
+  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => {
+    const saved = localStorage.getItem('coh-operating-core-documents');
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments));
+  }, [operatingCoreDocuments]);
   const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence'>('passport');
   
   // Compiler Preview State

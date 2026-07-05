@@ -3,30 +3,23 @@ import re
 with open('src/components/OperatingCoreAdmin.tsx', 'r') as f:
     content = f.read()
 
-# 1. Update imports
-if 'import { normalizeText' not in content:
-    content = content.replace(
-        "import type { OperatingCore } from '../lib/operatingCore';",
-        "import { normalizeText, type OperatingCore } from '../lib/operatingCore';"
-    )
-
-# 2. Add useEffect if missing
-if 'useEffect' not in content.split('import ')[1].split('from')[0]:
-    content = re.sub(r"import\s*\{\s*useState\s*\}\s*from\s*'react';", "import { useState, useEffect } from 'react';", content)
-
-# 3. Update props to remove sourceLibrary and related dispatch functions
-content = re.sub(r"\s*sourceLibrary:\s*any\[\];", "", content)
-content = re.sub(r"\s*setSourceLibrary:\s*\(sources:\s*any\[\]\)\s*=>\s*void;", "", content)
+# 1. Update props to remove sourceLibrary and related dispatch functions
+content = re.sub(r"sourceLibrary:\s*any\[\];\s*setSourceLibrary:\s*\(sources: any\[\]\) => void;", "", content)
 content = re.sub(r"sourceLibrary,\s*setSourceLibrary,", "", content)
 
-# 4. Fix activeTab type to include all tabs
-content = re.sub(
-    r"const \[activeTab, setActiveTab\] = useState<[^>]+>\('passport'\);",
-    "const [activeTab, setActiveTab] = useState<'passport' | 'strategy' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence' | 'core-documents' | 'preview'>('passport');\n  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => { const saved = localStorage.getItem('coh-operating-core-documents'); return saved ? JSON.parse(saved) : []; });\n  useEffect(() => { localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments)); }, [operatingCoreDocuments]);",
-    content
-)
+# 2. Add local operatingCoreDocuments state
+state_injection = """  const [activeTab, setActiveTab] = useState<'passport' | 'strategy' | 'core-documents' | 'preview'>('passport');
+  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => {
+    const saved = localStorage.getItem('coh-operating-core-documents');
+    return saved ? JSON.parse(saved) : [];
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments));
+  }, [operatingCoreDocuments]);"""
+content = re.sub(r"const \[activeTab, setActiveTab\] = useState.*?;", state_injection, content)
 
-# 5. Replace Core Documents UI block
+# 3. Replace the Core Documents UI inside the component 
 core_docs_ui_old = r"\{/\* TAB: CORE DOCUMENTS \*/\}.*?\{/\* TAB: PREVIEW \*/\}"
 core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
       {activeTab === 'core-documents' && (
@@ -53,7 +46,7 @@ core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
                     };
                     setOperatingCoreDocuments([newDoc, ...operatingCoreDocuments]);
                   }}
-                  className="bg-coh-navy text-coh-cream hover:opacity-90 active:scale-[0.98] transition-all text-xs font-bold py-2 px-4 rounded cursor-pointer"
+                  className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-xs font-bold py-2 px-4 rounded transition cursor-pointer"
                 >
                   + Add Core Document
                 </button>
@@ -76,7 +69,7 @@ core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
                           const updated = operatingCoreDocuments.map(d => d.id === doc.id ? {...d, title: e.target.value} : d);
                           setOperatingCoreDocuments(updated);
                         }}
-                        className="font-serif text-lg font-bold text-coh-navy bg-transparent border-none outline-none focus:ring-1 focus:ring-coh-gold/50 rounded px-1 w-2/3"
+                        className="font-serif text-lg font-bold text-coh-navy bg-transparent border-none outline-none focus:ring-1 focus:ring-coh-gold/50 rounded px-1"
                       />
                       <button 
                         onClick={() => {
@@ -108,17 +101,6 @@ core_docs_ui_new = """{/* TAB: CORE DOCUMENTS */}
       {/* TAB: PREVIEW */}"""
 content = re.sub(core_docs_ui_old, core_docs_ui_new, content, flags=re.DOTALL)
 
-# 6. Apply normalizeText to textarea value rendering logic, being careful not to touch onChange
-def wrap_normalize(match):
-    full = match.group(0)
-    val = match.group(1)
-    if 'normalizeText' not in val and 'localCore' in val:
-        return f'value={{normalizeText({val})}}'
-    return full
-
-content = re.sub(r'value=\{([^}]+)\}', wrap_normalize, content)
-
 with open('src/components/OperatingCoreAdmin.tsx', 'w') as f:
     f.write(content)
-
 print("Admin updated")
