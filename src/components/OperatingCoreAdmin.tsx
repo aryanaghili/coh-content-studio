@@ -12,6 +12,7 @@ import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff, Lock, Unlock, KeyRound } fr
 interface Props {
   core: OperatingCore | null;
   sourceLibrary?: any[];
+  dbStatus?: string;
   onSave: (core: OperatingCore) => void;
   onReset: () => void;
   onAddNewCoreSource?: (section: string) => void;
@@ -34,7 +35,7 @@ const deepSanitize = (obj: any): any => {
   return obj;
 };
 
-export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
+export default function OperatingCoreAdmin({ core, sourceLibrary = [], dbStatus = 'local_only', onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   // Ensure safe fallback from local storage
   const defaultCore = createDefaultOperatingCore();
@@ -109,13 +110,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
       setIsLoadingDocs(true);
       const docs = await getCoreDocuments();
       
-    if (dbStatus === 'configured') {
-       fetch(`/api/operating-core/documents/${doc.id}`, {
-          method: 'PUT',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(docs[idx])
-       });
-    }
+
     setOperatingCoreDocuments(docs);
     
       setIsLoadingDocs(false);

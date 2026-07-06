@@ -613,6 +613,7 @@ function Tooltip({ text }: { text: string }) {
 }
 
 export default function App() {
+  const [authError, setAuthError] = useState('');
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
   const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
@@ -2967,9 +2968,9 @@ export default function App() {
     }
 
     // Email / Direct Outreach
-        if (ch.includes('whatsapp') || fmt === 'whatsapp message') {
+    if (ch.includes('whatsapp') || fmt === 'whatsapp message') {
       return `Write a short, conversational WhatsApp message based on the following:
-Plan: ${plan.join(' ')}
+Plan: ${plan.opening} ${plan.body} ${plan.cta}
 Goal: ${goal}
 Constraints: No subject line, no formal greetings like "Dear", no hashtags, no corporate jargon. Keep it 1-3 short paragraphs. End with a natural, conversational CTA.`;
     }
@@ -8315,7 +8316,7 @@ OPENAI_MODEL=gpt-4.1`}
 </ErrorBoundary>)}
 
       </main>
-
+      <div className="fixed bottom-2 right-2 text-[10px] text-coh-navy/40 pointer-events-none z-50">v1.1.0-stable</div>
     </div>
   );
 }
