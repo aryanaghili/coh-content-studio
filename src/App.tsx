@@ -96,6 +96,86 @@ export interface WorkItem {
 
 
 
+
+
+export type RevisionActionGroup = 
+  | 'Clean & Polish' 
+  | 'Voice & Tone' 
+  | 'COH & Strategic Fit' 
+  | 'Structure & Alternatives' 
+  | 'Evidence & Claim Discipline' 
+  | 'Translation & Localization';
+
+export interface RevisionActionDef {
+  id: string;
+  label: string;
+  group: RevisionActionGroup;
+  description?: string;
+}
+
+
+export const REVISION_ACTIONS: RevisionActionDef[] = [
+  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
+  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
+  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
+  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
+  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
+  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
+  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
+
+  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
+  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
+  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
+  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
+  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
+  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
+  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
+  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
+  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
+
+  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
+  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
+  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
+  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
+  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
+  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
+  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
+  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
+
+  { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
+  { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
+  { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
+  { id: 'shorter-version', label: 'Create a shorter version', group: 'Structure & Alternatives' },
+  { id: 'longer-version', label: 'Create a longer version', group: 'Structure & Alternatives' },
+  { id: 'bullet-points', label: 'Turn into bullet points', group: 'Structure & Alternatives' },
+  { id: 'paragraph', label: 'Turn into a paragraph', group: 'Structure & Alternatives' },
+  { id: 'email', label: 'Turn into an email', group: 'Structure & Alternatives' },
+  { id: 'social-post', label: 'Turn into a social post', group: 'Structure & Alternatives' },
+
+  { id: 'remove-unsupported', label: '🛡️ Remove unsupported claims', group: 'Evidence & Claim Discipline' },
+  { id: 'flag-claims', label: 'Flag claims that need proof', group: 'Evidence & Claim Discipline' },
+  { id: 'more-careful', label: 'Make claims more careful', group: 'Evidence & Claim Discipline' },
+  { id: 'stronger-proof', label: '📊 Expand with stronger proof', group: 'Evidence & Claim Discipline' },
+  { id: 'less-exaggerated', label: 'Make it less exaggerated', group: 'Evidence & Claim Discipline' },
+  { id: 'simplify-claims', label: 'Simplify factual claims', group: 'Evidence & Claim Discipline' },
+
+  { id: 'translate', label: 'Translate to selected language', group: 'Translation & Localization' },
+  { id: 'localize', label: 'Localize for natural tone', group: 'Translation & Localization' },
+  { id: 'preserve-meaning', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
+  { id: 'adapt-channel', label: 'Adapt translation for selected channel', group: 'Translation & Localization' },
+  { id: 'persian-natural', label: 'Make Persian more natural and spoken', group: 'Translation & Localization' },
+  { id: 'english-polished', label: 'Make English more polished', group: 'Translation & Localization' },
+];
+
+export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
+  'Clean & Polish',
+  'Voice & Tone',
+  'COH & Strategic Fit',
+  'Structure & Alternatives',
+  'Evidence & Claim Discipline',
+  'Translation & Localization'
+];
+
 export const PROTECTED_COH_KERNEL = `
 PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
 
@@ -7242,773 +7322,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
 </ErrorBoundary>)}
 
-        {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
-          <div className="space-y-8 animate-fadeIn">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
-              <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Visual Studio</h2>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1">Create visual outputs from full visual directions or custom prompts.</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Column: Editor & Controls */}
-              <div className="lg:col-span-5 space-y-6">
-                
-                {/* Input Mode Selector */}
-                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
-                  <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">Input Mode</h3>
-                  
-                  <div className="flex bg-coh-navy/5 p-1 rounded border border-coh-gold/15">
-                    <button
-                      onClick={() => setVsInputMode('Manual')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Manual' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
-                    >
-                      Manual Prompt
-                    </button>
-                    <button
-                      onClick={() => setVsInputMode('Imported')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Imported' ? 'bg-coh-navy text-coh-gold shadow-sm' : 'text-coh-navy/60 hover:text-coh-navy'}`}
-                    >
-                      Imported Visual Direction
-                    </button>
-                  </div>
-
-                  {vsInputMode === 'Imported' ? (
-                    <div>
-                      {vsSourceItem ? (
-                        <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy border border-coh-gold/10">
-                          <span className="block text-[10px] uppercase tracking-wider text-coh-navy/60 mb-1">Imported from {vsSourceItem.type}</span>
-                          <strong className="block truncate font-serif" title={vsSourceItem.title}>{vsSourceItem.title}</strong>
-                        </div>
-                      ) : (
-                        <div className="bg-coh-navy/5 p-3 rounded text-sm text-coh-navy/60 italic border border-coh-gold/10">
-                          No imported visual direction selected. Send one from Content Workspace or Content Library.
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-coh-navy/70 font-semibold mb-1">Visual Prompt or Brief</label>
-                      <textarea
-                        value={vsManualPrompt}
-                        onChange={(e) => setVsManualPrompt(e.target.value)}
-                        placeholder="Paste a prompt, visual direction, image idea, or creative brief."
-                        rows={4}
-                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-xs font-sans"
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Generation Controls */}
-                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
-                  <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">Generation Settings</h3>
-                  
-                  <div>
-                    <label className="block text-coh-navy/70 font-semibold mb-1">Prompt Build Mode</label>
-                    <select
-                      value={vsPromptMode}
-                      onChange={(e) => setVsPromptMode(e.target.value as any)}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
-                    >
-                      {vsInputMode === 'Manual' && <option value="Manual Only">Manual Prompt Only</option>}
-                      <option value="Full + AI">Full Visual Direction + AI Image Prompt</option>
-                      <option value="Full">Full Visual Direction</option>
-                      <option value="AI Only">AI Image Prompt Only</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-coh-navy/70 font-semibold mb-1">Aspect Ratio</label>
-                    <select
-                      value={vsAspectRatio}
-                      onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
-                    >
-                      {ASPECT_RATIO_GROUP_ORDER.map(group => (
-                        <optgroup key={group} label={group}>
-                          {ASPECT_RATIO_PRESETS.filter(p => p.group === group).map(preset => {
-                            const isSupported = !preset.supportedModels || preset.supportedModels.includes(aiImageModel || '');
-                            return (
-                              <option key={preset.id} value={preset.id} disabled={!isSupported}>
-                                {preset.label} {preset.ratio} ({preset.width}x{preset.height}) {!isSupported ? '(Unsupported)' : ''}
-                              </option>
-                            );
-                          })}
-                        </optgroup>
-                      ))}
-                      {aiImageModel?.startsWith('gpt-image-2') && (
-                        <option value="custom">Advanced custom size...</option>
-                      )}
-                    </select>
-
-                    {vsAspectRatio === 'custom' && (
-                      <div className="mt-2 flex gap-2">
-                        <div className="flex-1">
-                          <label className="block text-[10px] text-coh-navy/60 mb-1">Width (px)</label>
-                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-[10px] text-coh-navy/60 mb-1">Height (px)</label>
-                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-coh-navy/70 font-semibold mb-1">Visual Style</label>
-                    <select
-                      value={vsVisualStyle}
-                      onChange={(e) => setVsVisualStyle(e.target.value)}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
-                    >
-                      <option value="Editorial Photomontage">Editorial Photomontage</option>
-                      <option value="Cinematic Realism">Cinematic Realism</option>
-                      <option value="Premium Illustration">Premium Illustration</option>
-                      <option value="Minimal Graphic">Minimal Graphic</option>
-                      <option value="Social Poster">Social Poster</option>
-                    </select>
-                  </div>
-
-                  <div className="pt-2 border-t border-coh-gold/10 mt-4">
-                    <button
-                      onClick={handleGenerateImage}
-                      disabled={isGeneratingImage || !aiProvider}
-                      className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button interactive-button"
-                    >
-                      {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
-                      {isGeneratingImage ? 'Generating...' : 'Generate'}
-                    </button>
-                  </div>
-                  {!aiProvider && <p className="text-xs text-red-500 text-center">No AI provider configured.</p>}
-                  {aiLastError && <p className="text-xs text-red-500 text-center">{aiLastError}</p>}
-                </div>
-
-              {/* Structured Visual Brief Editor */}
-              <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 max-h-[80vh] overflow-y-auto text-xs">
-                <div className="flex justify-between items-center mb-4 border-b border-coh-gold/15 pb-2">
-                  <h3 className="font-serif text-base font-bold text-coh-navy">Structured Visual Brief</h3>
-                  {vsInputMode === 'Manual' && (
-                    <button
-                      onClick={() => setShowAdvancedBrief(!showAdvancedBrief)}
-                      className="text-[10px] text-coh-gold uppercase font-bold tracking-wider interactive-link"
-                    >
-                      {showAdvancedBrief ? 'Hide' : 'Show'} Advanced
-                    </button>
-                  )}
-                </div>
-                
-                {(vsInputMode === 'Imported' || showAdvancedBrief) ? (
-                  <div className="space-y-4">
-                    {[
-                      { label: 'Visual Concept', value: vsConcept, setter: setVsConcept },
-                      { label: 'Format Recommendation', value: vsFormat, setter: setVsFormat },
-                      { label: 'Mood / Atmosphere', value: vsMood, setter: setVsMood },
-                      { label: 'Composition', value: vsComposition, setter: setVsComposition },
-                      { label: 'Color / Material Direction', value: vsPalette, setter: setVsPalette },
-                      { label: 'Typography / Layout', value: vsTypography, setter: setVsTypography },
-                      { label: 'Key Visual Elements', value: vsElements, setter: setVsElements },
-                      { label: 'What to Avoid', value: vsAvoid, setter: setVsAvoid },
-                      { label: 'AI Image Prompt', value: vsAIPrompt, setter: setVsAIPrompt },
-                      { label: 'Designer Notes', value: vsNotes, setter: setVsNotes }
-                    ].map(field => (
-                      <div key={field.label}>
-                        <label className="block text-coh-navy/70 font-semibold mb-1">{field.label}</label>
-                        <textarea
-                          value={field.value}
-                          onChange={(e) => field.setter(e.target.value)}
-                          rows={field.label === 'Visual Concept' || field.label === 'AI Image Prompt' ? 3 : 2}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded font-sans"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                   <div className="text-center py-12 text-coh-navy/40 italic text-sm">
-                     Advanced brief fields are hidden in manual mode.
-                   </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
-                <div className="border-b border-coh-gold/15 pb-2 flex justify-between items-center">
-                  <h3 className="font-serif text-lg font-semibold text-coh-navy">
-                    Results
-                  </h3>
-                </div>
-                
-                {isGeneratingImage ? (
-                  <div className="bg-coh-cream p-12 rounded text-center border border-dashed border-coh-gold/30 flex flex-col items-center justify-center space-y-3">
-                    <div className="w-8 h-8 border-4 border-coh-gold border-t-transparent rounded-full animate-spin"></div>
-                    <p className="text-coh-navy font-semibold text-sm">Generating...</p>
-                  </div>
-                ) : vsGeneratedImages.length === 0 ? (
-                  <div className="bg-coh-cream p-8 rounded text-center text-coh-navy/50 italic border border-dashed border-coh-gold/30">
-                    No images generated yet.
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {vsGeneratedImages.map(img => (
-                      <div key={img.id} className="bg-white border border-coh-gold/20 rounded p-4 shadow-sm group">
-                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-coh-gold/10" />
-                        <div className="flex gap-2 text-xs">
-                          <a
-                            href={img.url}
-                            download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
-                            className="w-full bg-coh-cream hover:bg-coh-gold hover:text-coh-navy text-coh-navy/80 border border-coh-gold/30 py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
-                          >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                            Download
-                          </a>
-                        </div>
-                        {/* Compiled Prompt Preview */}
-                        {img.promptUsed && (
-                          <details className="mt-4 border border-coh-navy/10 rounded overflow-hidden">
-                            <summary className="bg-coh-cream px-3 py-2 text-[10px] uppercase tracking-wider text-coh-navy/60 font-bold cursor-pointer select-none flex justify-between">
-                              <span>Compiled Prompt Preview (Debug)</span>
-                              <span className="opacity-50 font-mono">
-                                {img.generationSize || '1024x1024'} → {img.deliverySize || '1024x1024'}
-                              </span>
-                            </summary>
-                            <div className="p-3 bg-white text-[11px] font-mono text-coh-navy/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                              <div className="mb-2 pb-2 border-b border-coh-navy/10 text-[9px] opacity-70 grid grid-cols-2 gap-2">
-                                <div>Model: {img.model || 'unknown'}</div>
-                                <div>Quality: {img.quality || 'high'}</div>
-                                <div>Provider: {img.provider || 'unknown'}</div>
-                                <div>Delivery: {img.deliverySize || img.aspectRatio || 'unknown'}</div>
-                              </div>
-                              {img.promptUsed}
-                            </div>
-                          </details>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
-          <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto">
-            <div className="border-b border-coh-gold/20 pb-4">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy">Revision Studio</h2>
-              <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                Refine drafts, translate, and apply professional tone filters.
-              </p>
-            </div>
-
-            {activeDraftText ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
-                {/* Left Column: Config, Editor, Compare, Save */}
-                <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-                  
-                  {/* Embedded Config Bar */}
-                  <div className="bg-coh-cream/30 border border-coh-gold/20 p-3 rounded flex flex-wrap gap-3 items-center text-xs">
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Channel</label>
-                      <select
-                        value={externalContentChannel}
-                        onChange={(e) => setExternalContentChannel(e.target.value)}
-                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
-                      >
-                        {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-[120px]">
-                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Format</label>
-                      <select
-                        value={externalContentFormat}
-                        onChange={(e) => setExternalContentFormat(e.target.value)}
-                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
-                      >
-                        {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-[100px]">
-                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Language</label>
-                      <select
-                        value={externalContentLanguage}
-                        onChange={(e) => setExternalContentLanguage(e.target.value)}
-                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
-                      >
-                        {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1 min-w-[100px]">
-                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Tone</label>
-                      <select
-                        value={externalContentTone}
-                        onChange={(e) => setExternalContentTone(e.target.value)}
-                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
-                      >
-                        {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
-                          <option key={opt} value={opt}>{opt}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="w-full mt-1">
-                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Optional Context / Framing</label>
-                      <input
-                        type="text"
-                        value={externalContentContext}
-                        onChange={(e) => setExternalContentContext(e.target.value)}
-                        placeholder="Add audience context or what should change..."
-                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Header */}
-                  <div className="flex justify-between items-center">
-                    <div className="flex items-baseline gap-3">
-                      <input
-                        type="text"
-                        value={activeDraftTitle}
-                        onChange={(e) => setActiveDraftTitle(e.target.value)}
-                        className="font-serif text-xl bg-transparent border-b border-coh-gold/20 focus:border-coh-gold pb-1 outline-none text-coh-navy w-64"
-                        placeholder="Draft Title"
-                      />
-                      <span className="bg-coh-navy text-coh-gold text-[10px] px-2 py-0.5 rounded font-mono font-bold">
-                        Version v{activeDraftVersion}
-                      </span>
-                      {activeDraftSource && (
-                        <span className="bg-coh-gold/20 text-coh-navy border border-coh-gold/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">
-                          {activeDraftSource}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button
-                        onClick={handleUndoRevision}
-                        disabled={activeDraftHistory.length <= 1}
-                        className="cursor-not-allowed opacity-50 px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
-                      >
-                        <Undo size={12} /> Undo
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-4 items-center bg-coh-cream/40 p-2 border border-coh-gold/15 rounded text-xs">
-                    <span className="font-semibold">Compare with previous version:</span>
-                    <select
-                      value={compareVersionIndex}
-                      onChange={(e) => setCompareVersionIndex(parseInt(e.target.value))}
-                      className="bg-white border border-coh-gold/10 p-1 rounded text-[11px]"
-                    >
-                      <option value={-1}>Don't compare</option>
-                      {activeDraftHistory.slice(0, -1).map((h, idx) => (
-                        <option key={idx} value={idx}>v{h.version} ({h.actionUsed})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {compareVersionIndex !== -1 && activeDraftHistory[compareVersionIndex] && (
-                    <div className="grid grid-cols-2 gap-4 text-xs bg-white border border-coh-gold/25 p-4 rounded shadow-inner">
-                      <div>
-                        <span className="font-mono text-[10px] text-coh-gold font-bold block mb-2">
-                          Comparing: v{activeDraftHistory[compareVersionIndex].version}
-                        </span>
-                        <div className="text-coh-navy/60 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                          {activeDraftHistory[compareVersionIndex].text}
-                        </div>
-                      </div>
-                      <div className="border-l border-coh-gold/10 pl-4">
-                        <span className="font-mono text-[10px] text-coh-gold font-bold block mb-2">
-                          Current: v{activeDraftVersion}
-                        </span>
-                        <div className="whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto font-semibold">
-                          {activeDraftText}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {cleanPunctuationNote && (
-                    <div className="bg-green-50 border border-green-200 text-green-800 p-2.5 rounded text-xs font-semibold animate-fadeIn">
-                      {cleanPunctuationNote}
-                    </div>
-                  )}
-
-                  <textarea
-                    rows={16}
-                    value={activeDraftText}
-                    onChange={(e) => setActiveDraftText(e.target.value)}
-                    className="w-full bg-white border border-coh-gold/20 p-6 rounded shadow-sm text-sm leading-relaxed text-coh-navy/90 focus:outline-none focus:ring-1 focus:ring-coh-gold"
-                  />
-
-                  {getFictionalContentWarnings(activeDraftText).length > 0 && (
-                    <div className="bg-amber-50 border border-amber-200 p-4 rounded text-xs text-amber-900 space-y-2">
-                      <span className="font-bold flex items-center gap-1.5">
-                        <AlertTriangle size={14} className="text-amber-700" /> Source Check Recommended
-                      </span>
-                      <p className="text-[11px] text-amber-900/80 leading-relaxed">
-                        Some names, claims, dates, or references may need verification against your selected sources.
-                      </p>
-                      <details className="mt-2 text-[11px]">
-                        <summary className="font-semibold cursor-pointer select-none text-amber-800">Show Details</summary>
-                        <ul className="list-disc pl-5 mt-2 space-y-0.5 font-mono text-amber-800">
-                          {getFictionalContentWarnings(activeDraftText).map((w, idx) => (
-                            <li key={idx}>{w}</li>
-                          ))}
-                        </ul>
-                      </details>
-                      <div className="flex gap-2 pt-2">
-                        <button onClick={() => applyRevision('remove-unsupported')} className="px-2 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded font-semibold text-amber-900 text-[10px] transition">Remove Unsupported Claims</button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex gap-2 flex-wrap justify-between items-center border-t border-coh-gold/15 pt-4">
-                    <div className="flex gap-2 flex-wrap">
-                       <button
-                        disabled={isSavingToLibrary}
-                        onClick={() => handleSaveVersionToLibrary(false)}
-                        className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/20 transition disabled:opacity-50"
-                      >
-                        {isSavingToLibrary ? 'Saving...' : 'Save to Library'}
-                      </button>
-                      <button
-                        disabled={isSavingToLibrary}
-                        onClick={() => handleSaveVersionToLibrary(true)}
-                        className="bg-coh-cream text-coh-navy hover:bg-coh-cream-dark py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/25 transition disabled:opacity-50"
-                      >
-                        {isSavingToLibrary ? 'Saving...' : 'Save as New'}
-                      </button>
-                      {activeDraftText.includes('Concept:') && (
-                        <button
-                          onClick={() => handleSendToVisualStudio({ id: 'draft-temp', title: activeDraftTitle || 'Unsaved Draft', type: 'Content' }, activeDraftText, 'Content')}
-                          className="flex items-center gap-1.5 bg-coh-cream text-coh-gold hover:text-coh-gold-dark py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/25 transition disabled:opacity-50"
-                        >
-                          <Lightbulb size={12} /> Send to Visual Studio
-                        </button>
-                      )}
-                      <button
-                        disabled={isSavingToLibrary}
-                        onClick={() => handleSaveVersionToLibrary(false, true)}
-                        className="bg-green-700 text-white hover:bg-green-800 py-2 px-4 rounded text-[11px] font-serif font-semibold transition disabled:opacity-50"
-                      >
-                        Mark as Approved
-                      </button>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => handleCopyClipboard(activeDraftText, 'activeDraft')}
-                        className="bg-coh-gold text-coh-navy hover:bg-coh-gold-dark py-2 px-4 rounded text-[11px] font-bold transition"
-                      >
-                        {copySuccessMap['activeDraft'] ? 'Copied!' : 'Copy'}
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('content-library')}
-                        className="bg-coh-cream text-coh-navy hover:bg-coh-cream-dark py-2 px-4 rounded text-[11px] font-semibold border border-coh-gold/20 flex items-center gap-1"
-                      >
-                        Library <ChevronRight size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column: Revision Controls */}
-                <div className="lg:col-span-5 xl:col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm h-fit max-h-[85vh] overflow-y-auto space-y-5">
-                  <div>
-                    <h3 className="font-serif text-lg mb-1 text-coh-navy font-bold flex items-center justify-between">
-                      Revision Tools
-                      {aiStatus !== 'connected' && (
-                        <span className="text-[9px] bg-red-100 text-red-800 px-2 py-0.5 rounded font-mono">AI Offline</span>
-                      )}
-                    </h3>
-                  </div>
-
-                  <div className="space-y-4">
-                    {REVISION_GROUP_ORDER.map(group => {
-                      const actionsInGroup = REVISION_ACTIONS.filter(a => a.group === group);
-                      if (actionsInGroup.length === 0) return null;
-                      
-                      const isExpandedDefault = ['Clean & Polish', 'Voice & Tone', 'COH & Strategic Fit'].includes(group);
-                      
-                      return (
-                        <details key={group} className="border border-coh-gold/20 rounded bg-coh-cream/10 overflow-hidden" open={isExpandedDefault}>
-                          <summary className="bg-coh-cream px-3 py-2 text-[10px] uppercase font-bold text-coh-navy/80 tracking-wider cursor-pointer select-none hover:bg-coh-cream-dark transition flex justify-between items-center">
-                            {group}
-                          </summary>
-                          <div className="p-3 space-y-1.5 bg-white">
-                            {actionsInGroup.map(actionDef => {
-                              const isRunning = activeRevisionAction === actionDef.id;
-                              const isSuccess = revisionSuccessAction === actionDef.id;
-                              const isDisabled = activeRevisionAction !== null && !isRunning;
-                              return (
-                                <button
-                                  key={actionDef.id}
-                                  disabled={isDisabled}
-                                  onClick={() => applyRevision(actionDef.id)}
-                                  title={actionDef.description}
-                                  className={`w-full text-left py-2 px-3 border rounded text-[11px] transition font-semibold flex items-center justify-between ${
-                                    isRunning
-                                      ? 'bg-coh-gold/20 border-coh-gold text-coh-navy font-bold animate-pulse'
-                                      : isSuccess
-                                        ? 'bg-green-50 border-green-300 text-green-800 font-bold'
-                                        : 'bg-coh-cream border-coh-gold/15 text-coh-navy hover:bg-coh-gold/20'
-                                  } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'interactive-button'}`}
-                                >
-                                  <span>{isRunning ? `Applying...` : isSuccess ? `Applied ✓` : actionDef.label}</span>
-                                  {isRunning && <span className="animate-spin text-[10px]">⚙️</span>}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </details>
-                      );
-                    })}
-
-                    {activeRevisionError && (
-                      <div className="bg-red-50 border border-red-200 text-red-700 p-2 text-xs rounded mb-2">
-                        {activeRevisionError}
-                      </div>
-                    )}
-                    
-                    <div className="border-t border-coh-gold/15 pt-4 space-y-2">
-                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60">Custom Revision Instruction</label>
-                      <textarea
-                        value={customRevisionInstruction}
-                        onChange={(e) => setCustomRevisionInstruction(e.target.value)}
-                        placeholder="e.g. Make this more direct, keep it warm, and shorten the second paragraph."
-                        rows={3}
-                        className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-xs mb-1.5 resize-none"
-                      />
-                      <button
-                        onClick={() => applyRevision('custom-instruction')}
-                        disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null}
-                        className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 rounded text-[11px] font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                      >
-                        {activeRevisionAction === 'custom-instruction' ? 'Applying...' : 'Apply Custom Revision'}
-                        {activeRevisionAction === 'custom-instruction' && <span className="animate-spin text-[10px]">⚙️</span>}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
-                  <h3 className="font-serif text-xl text-coh-navy font-semibold mb-1">Start a Revision</h3>
-                  <p className="text-xs text-coh-navy/60 mb-6 font-sans">
-                    Paste any draft, note, post, email, article, or external content to refine it.
-                  </p>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Content to Revise</label>
-                      <textarea
-                        value={externalContentText}
-                        onChange={(e) => setExternalContentText(e.target.value)}
-                        placeholder="Paste your text here..."
-                        className="w-full h-40 bg-coh-cream/30 border border-coh-gold/20 p-3 rounded text-sm text-coh-navy resize-none"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Optional Context</label>
-                      <textarea
-                        value={externalContentContext}
-                        onChange={(e) => setExternalContentContext(e.target.value)}
-                        placeholder="Add audience, channel, purpose, tone, or what should change."
-                        className="w-full h-16 bg-coh-cream/30 border border-coh-gold/20 p-3 rounded text-xs text-coh-navy resize-none"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Channel</label>
-                        <select
-                          value={externalContentChannel}
-                          onChange={(e) => setExternalContentChannel(e.target.value)}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
-                        >
-                          {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Output Format</label>
-                        <select
-                          value={externalContentFormat}
-                          onChange={(e) => setExternalContentFormat(e.target.value)}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
-                        >
-                          {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Language</label>
-                        <select
-                          value={externalContentLanguage}
-                          onChange={(e) => setExternalContentLanguage(e.target.value)}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
-                        >
-                          {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Tone</label>
-                        <select
-                          value={externalContentTone}
-                          onChange={(e) => setExternalContentTone(e.target.value)}
-                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
-                        >
-                          {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                    
-                    <div className="pt-2">
-                      <button
-                        onClick={handleStartExternalRevision}
-                        disabled={!externalContentText.trim()}
-                        className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button interactive-button"
-                      >
-                        Start Revising
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-1 space-y-4">
-                  <div className="bg-coh-cream/30 border border-coh-gold/20 p-5 rounded">
-                    <h4 className="font-serif text-sm font-semibold text-coh-navy mb-2">How to use Revision Studio</h4>
-                    <ul className="text-xs text-coh-navy/70 space-y-3 font-sans">
-                      <li className="flex gap-2">
-                        <span className="text-coh-gold">1.</span>
-                        Paste any text from an external source or import a draft from the Content Workspace.
-
-type RevisionActionGroup = 
-  | 'Clean & Polish'
-  | 'Voice & Tone'
-  | 'COH & Strategic Fit'
-  | 'Structure & Alternatives'
-  | 'Evidence & Claim Discipline'
-  | 'Translation & Localization';
-
-interface RevisionActionDef {
-  id: string;
-  label: string;
-  group: RevisionActionGroup;
-  description?: string;
-}
-
-export const REVISION_ACTIONS: RevisionActionDef[] = [
-  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
-  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
-  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
-  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
-  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
-  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
-  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
-
-  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
-  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
-  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
-  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
-  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
-  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
-  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
-  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
-  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
-
-  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
-  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
-  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
-  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
-  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
-  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
-  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
-  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
-
-  { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
-  { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
-  { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
-  { id: 'shorter-version', label: 'Create a shorter version', group: 'Structure & Alternatives' },
-  { id: 'longer-version', label: 'Create a longer version', group: 'Structure & Alternatives' },
-  { id: 'bullet-points', label: 'Turn into bullet points', group: 'Structure & Alternatives' },
-  { id: 'paragraph', label: 'Turn into a paragraph', group: 'Structure & Alternatives' },
-  { id: 'email', label: 'Turn into an email', group: 'Structure & Alternatives' },
-  { id: 'social-post', label: 'Turn into a social post', group: 'Structure & Alternatives' },
-
-  { id: 'remove-unsupported', label: '🛡️ Remove unsupported claims', group: 'Evidence & Claim Discipline' },
-  { id: 'flag-claims', label: 'Flag claims that need proof', group: 'Evidence & Claim Discipline' },
-  { id: 'more-careful', label: 'Make claims more careful', group: 'Evidence & Claim Discipline' },
-  { id: 'stronger-proof', label: '📊 Expand with stronger proof', group: 'Evidence & Claim Discipline' },
-  { id: 'less-exaggerated', label: 'Make it less exaggerated', group: 'Evidence & Claim Discipline' },
-  { id: 'simplify-claims', label: 'Simplify factual claims', group: 'Evidence & Claim Discipline' },
-
-  { id: 'translate', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize', label: 'Localize for natural tone', group: 'Translation & Localization' },
-  { id: 'preserve-meaning', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
-  { id: 'adapt-channel', label: 'Adapt translation for selected channel', group: 'Translation & Localization' },
-  { id: 'persian-natural', label: 'Make Persian more natural and spoken', group: 'Translation & Localization' },
-  { id: 'english-polished', label: 'Make English more polished', group: 'Translation & Localization' },
-];
-
-export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
-  'Clean & Polish',
-  'Voice & Tone',
-  'COH & Strategic Fit',
-  'Structure & Alternatives',
-  'Evidence & Claim Discipline',
-  'Translation & Localization'
-];
-
-
-
-export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
-  'Clean & Polish',
-  'Voice & Tone',
-  'COH & Strategic Fit',
-  'Structure & Alternatives',
-  'Evidence & Claim Discipline',
-  'Translation & Localization'
-];
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="text-coh-gold">2.</span>
-                        Use the 1-click revision controls to apply the COH Tone of Voice, translate, or optimize.
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="text-coh-gold">3.</span>
-                        Provide custom instructions to the AI to rewrite specific sentences or adjust the framing.
-                      </li>
-                      <li className="flex gap-2">
-                        <span className="text-coh-gold">4.</span>
-                        Compare versions side-by-side using the version dropdown menu.
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
         {/* --- TAB 4: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
@@ -9006,4 +8319,4 @@ OPENAI_MODEL=gpt-4.1`}
     </div>
   );
 }
-export default App;
+

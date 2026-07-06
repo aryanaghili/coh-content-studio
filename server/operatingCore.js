@@ -114,9 +114,9 @@ router.post('/documents', async (req, res) => {
     const doc = req.body;
     
     // In a real app, you might upload a file here. We'll handle file uploads via a separate blob endpoint if needed,
-    // or expect the frontend to pass the blob URL in \`fileReference\`.
+    // or expect the frontend to pass the blob URL in `fileReference`.
 
-    const id = doc.id || \`doc_\${Date.now()}\`;
+    const id = doc.id || `doc_${Date.now()}`;
     
     await sql`
       INSERT INTO core_documents (
