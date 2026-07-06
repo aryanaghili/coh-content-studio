@@ -4335,7 +4335,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <button
               type="submit"
               disabled={authLoading}
-              className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button interactive-button"
+              className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold tracking-wider uppercase transition border border-coh-gold/20 disabled:opacity-50 action-button interactive-button"
             >
               {authLoading ? 'Signing In...' : 'Sign In'}
             </button>
@@ -4530,9 +4530,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
 </ErrorBoundary>)}
         {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-6">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-2">Ideation Workspace</h2>
+              <div className="page-header"><h2 className="page-title">Ideation Workspace</h2></div>
               <p className="text-sm text-coh-navy/60 font-sans">
                 Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
               </p>
@@ -4642,7 +4642,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <button
                   onClick={handleGenerateIdeas}
                   disabled={isIdeating || !aiProvider}
-                  className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button interactive-button"
+                  className="bg-coh-navy text-coh-gold font-medium px-4 py-3 rounded hover:bg-coh-navy/90 transition w-full disabled:opacity-50 flex items-center justify-center gap-2 mt-4 action-button interactive-button"
                 >
                   {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                   {isIdeating ? 'Generating...' : 'Generate'}
@@ -4756,10 +4756,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-24 border border-dashed border-coh-gold/20 rounded bg-white">
-                    <p className="text-xs text-coh-navy/45 max-w-sm mx-auto font-sans">
-                      No ideas generated yet. Enter a query in the panel on the left to explore creative angles.
-                    </p>
+                  <div className="empty-state">
+                    <div className="empty-state-icon">💡</div>
+                    <h3 className="empty-state-title">No Ideas Yet</h3>
+                    <p className="empty-state-text">Head over to the Ideation Workspace to explore and save concepts.</p>
+                    <Button onClick={() => setActiveTab('ideation-workspace')} className="mt-4" variant="outline">Go to Ideation Workspace</Button>
                   </div>
                 )}
               </div>
@@ -4767,10 +4768,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Idea Library</h2>
+                <div className="page-header"><h2 className="page-title">Idea Library</h2></div>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1">
                   Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
                 </p>
@@ -4854,17 +4855,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-coh-gold/20 rounded bg-white">
-                <p className="text-xs text-coh-navy/55 max-w-sm mx-auto font-sans">No saved ideas in the Idea Library yet.</p>
+              <div className="empty-state">
+                <div className="empty-state-icon">💡</div>
+                <h3 className="empty-state-title">No Saved Ideas</h3>
+                <p className="empty-state-text">Your generated ideas will appear here once you save them.</p>
+                <Button onClick={() => setActiveTab('ideation-workspace')} className="mt-4" variant="outline">Explore Ideas</Button>
               </div>
             )}
           </div>
         
 </ErrorBoundary>)}
         {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
+          <div className="page-shell">
             <div className="pb-6">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-1">Command Center</h2>
+              <div className="page-header"><h2 className="page-title">Command Center</h2></div>
               <p className="text-sm text-coh-navy/60 font-sans">
                 Choose what to create, continue your active work item, or check what needs attention.
               </p>
@@ -5159,7 +5163,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
         {activeTab === 'content-workspace' && (<ErrorBoundary fallbackTitle="Content Workspace Error">
-          <div className="space-y-8 animate-fadeIn">
+          <div className="page-shell">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
               <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -5194,7 +5198,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <h2 className="font-serif text-2xl font-bold text-coh-navy">Content Workspace</h2>
+                <h2 className="page-title">Content Workspace</h2>
                 <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-cream border border-coh-gold/20 text-coh-navy px-2 py-0.5 rounded">
                   Standalone Draft
                 </span>
@@ -6338,14 +6342,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 <div className="pt-2 border-t border-coh-gold/10 mt-4">
-                  <button
-                    onClick={handleGenerateDrafts}
-                    disabled={isGeneratingDrafts}
-                    className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button interactive-button"
-                  >
+                  <Button onClick={handleGenerateDrafts} disabled={isGeneratingDrafts} variant="primary" size="lg" className="w-full">
                     {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -6619,7 +6619,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="cursor-not-allowed opacity-50 bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
+                          className="bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6701,10 +6701,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
         {/* --- TAB 3: REVISION STUDIO --- */}
         {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
-          <div className="space-y-8 animate-fadeIn">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Visual Studio</h2>
+                <div className="page-header"><h2 className="page-title">Visual Studio</h2></div>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1">Create visual outputs from full visual directions or custom prompts.</p>
               </div>
             </div>
@@ -6831,14 +6831,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div className="pt-2 border-t border-coh-gold/10 mt-4">
-                    <button
-                      onClick={handleGenerateImage}
-                      disabled={isGeneratingImage || !aiProvider}
-                      className="cursor-not-allowed opacity-50 w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-3 rounded font-serif text-xs font-semibold transition border border-coh-gold/20 flex items-center justify-center gap-2 action-button interactive-button"
-                    >
+                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage || !aiProvider} variant="primary" size="lg" className="w-full">
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
-                    </button>
+                    </Button>
                   </div>
                   {!aiProvider && <p className="text-xs text-red-500 text-center">No AI provider configured.</p>}
                   {aiLastError && <p className="text-xs text-red-500 text-center">{aiLastError}</p>}
@@ -6954,9 +6950,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
 
         {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
-          <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-4">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy">Revision Studio</h2>
+              <div className="page-header"><h2 className="page-title">Revision Studio</h2></div>
               <p className="text-sm text-coh-navy/60 font-sans mt-1">
                 Refine drafts, translate, and apply professional tone filters.
               </p>
@@ -7055,7 +7051,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button
                           onClick={handleUndoRevision}
                           disabled={activeDraftHistory.length <= 1}
-                          className="cursor-not-allowed opacity-50 px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
+                          className="px-2.5 py-1 text-[11px] border border-coh-gold/20 bg-white rounded hover:bg-coh-cream disabled:opacity-50 text-coh-navy font-semibold transition flex items-center gap-1 action-button"
                         >
                           <Undo size={12} /> Undo
                         </button>
@@ -7349,10 +7345,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
         {/* --- TAB 4: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Content Library</h2>
+                <div className="page-header"><h2 className="page-title">Content Library</h2></div>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1">
                   Access, duplicate, and filter approved COH content assets.
                 </p>
@@ -7602,10 +7598,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
+          <div className="page-shell">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <h2 className="font-serif text-3xl font-normal text-coh-navy">Source Library</h2>
+                <div className="page-header"><h2 className="page-title">Source Library</h2></div>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
                   Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
                 </p>
@@ -7997,9 +7993,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
-          <div className="space-y-8 animate-fadeIn max-w-4xl">
+          <div className="page-shell-narrow">
             <div className="border-b border-coh-gold/20 pb-6">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy">Settings</h2>
+              <div className="page-header"><h2 className="page-title">Settings</h2></div>
               <p className="text-sm text-coh-navy/60 font-sans mt-1">
                 Configure AI provider and generation mode.
               </p>
