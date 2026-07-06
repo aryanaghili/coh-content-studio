@@ -29,6 +29,8 @@ import {
 , AlertCircle, Camera, Globe, Mail, MessageSquare, Briefcase, Layers} from 'lucide-react';
 import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from './lib/aspectRatios';
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { safeMergeOperatingCore } from './lib/operatingCore';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
@@ -557,7 +559,7 @@ export default function App() {
           const saved = localStorage.getItem('coh_operating_core_v1');
           if (saved) {
             try {
-              setOperatingCore(JSON.parse(saved));
+              setOperatingCore(safeMergeOperatingCore(JSON.parse(saved)));
             } catch (e) { console.error('Failed to parse local core'); }
           }
         } else if (res.ok) {
@@ -582,7 +584,7 @@ export default function App() {
         const saved = localStorage.getItem('coh_operating_core_v1');
         if (saved) {
           try {
-            setOperatingCore(JSON.parse(saved));
+            setOperatingCore(safeMergeOperatingCore(JSON.parse(saved)));
           } catch (e) { console.error('Failed to parse local core'); }
         }
       }
@@ -822,7 +824,7 @@ export default function App() {
       setAuthUsernameInput('');
       setAuthPasswordInput('');
     } catch {
-      alert('Could not log out. Please refresh.');
+      console.error('Could not log out. Please refresh.');
     }
   };
 
@@ -885,8 +887,10 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'AI generation failed.');
-      return data;
+      if (!res.ok) {
+          throw new Error(data.error || data.userMessage || 'AI generation failed.');
+      }
+      return data; 
     },
 
     async ideate(input: Record<string, unknown>) {
@@ -896,7 +900,7 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'AI ideation failed.');
+      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI ideation failed.');
       return data;
     },
 
@@ -907,7 +911,7 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'AI revision failed.');
+      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI revision failed.');
       return data;
     },
 
@@ -955,7 +959,7 @@ export default function App() {
 
   const handleGenerateImage = async () => {
     if (!aiProvider) {
-      alert("Please configure an AI provider first.");
+      setAiLastError('Please configure an AI provider first.');
       return;
     }
     
@@ -1217,7 +1221,7 @@ export default function App() {
         });
         setGeneratedIdeas(list);
       } catch (err: any) {
-        alert(err.message || 'AI Ideation failed.');
+        setAiLastError(err.message || 'AI Ideation failed.');
       } finally {
         setIsIdeating(false);
       }
@@ -1377,7 +1381,7 @@ export default function App() {
 
   const handleSaveIdeaToLibrary = async (idea: SavedIdea) => {
     if (savedIdeas.some(i => i.title === idea.title)) {
-      alert('This idea is already saved in your library.');
+      console.warn('This idea is already saved in your library.');
       return;
     }
     setSavingIdeaId(idea.id);
@@ -3715,7 +3719,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         };
         return next;
       });
-      alert(`Updated existing item in Content Library as:\n${uniqueName}`);
+      console.log(`Updated existing item in Content Library as:\n${uniqueName}`);
       return;
     }
 
@@ -3747,7 +3751,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     };
 
     setSavedContent(prev => [item, ...prev]);
-    alert(`Saved to Content Library as:\n${uniqueName}`);
+    console.log(`Saved to Content Library as:\n${uniqueName}`);
   };
 
   const handleSaveVersionToLibrary = async (asNew: boolean, approvedStatus?: boolean) => {
@@ -3798,7 +3802,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         };
         return next;
       });
-      alert(`Updated existing item "${title}" in Content Library as:\n${uniqueName}`);
+      console.log(`Updated existing item "${title}" in Content Library as:\n${uniqueName}`);
       setIsSavingToLibrary(false);
       return;
     }
@@ -3840,7 +3844,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     };
     
     setSavedContent(prev => [item, ...prev]);
-    alert(`Saved to Content Library as:\n${uniqueName}`);
+    console.log(`Saved to Content Library as:\n${uniqueName}`);
     setIsSavingToLibrary(false);
   };
 
@@ -4376,7 +4380,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
         {/* --- TAB 1: COMMAND CENTER --- */}
         
-        {activeTab === 'operating-core' && (
+        {activeTab === 'operating-core' && (<ErrorBoundary fallbackTitle="Operating Core Error">
           <div className="h-full overflow-hidden bg-[#faf9f6]">
             <OperatingCoreAdmin 
               dbStatus={dbStatus}
@@ -4404,7 +4408,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
               }}
             />
           </div>
-        )}
+        
+</ErrorBoundary>)}
         {activeTab === 'ideation-workspace' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6">
@@ -4642,7 +4647,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
           </div>
         )}
-        {activeTab === 'idea-library' && (
+        {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
@@ -4735,7 +4740,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             )}
           </div>
-        )}
+        
+</ErrorBoundary>)}
         {activeTab === 'command-center' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="pb-6">
@@ -4836,7 +4842,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             </span>
                             <span className="text-xs text-coh-navy/60 font-semibold">{activeWorkItem.channel || activeWorkItem.type || 'Draft'}</span>
                           </div>
-                          <h4 className="font-serif text-lg font-bold text-coh-navy">{activeWorkItem.title}</h4>
+                          <h4 className="font-serif text-lg font-bold text-coh-navy">{(activeWorkItem?.title || 'Standalone Draft')}</h4>
                         </div>
                         <span className="text-[10px] text-coh-navy/50">{activeWorkItem.updatedAt.split('T')[0]}</span>
                       </div>
@@ -4858,7 +4864,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <button onClick={() => {
                             const newSaved: SavedContent = {
                               id: `saved-${Date.now()}`,
-                              title: activeWorkItem.title,
+                              title: (activeWorkItem?.title || 'Standalone Draft'),
                               pillar: "General",
                               angle: "",
                               audience: activeWorkItem.audience || "General Public",
@@ -4876,7 +4882,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             };
                             setSavedContent(prev => [newSaved, ...prev]);
                             setActiveWorkItem(prev => prev ? { ...prev, saved: true, status: 'Saved' } : null);
-                            alert("Saved to library.");
+                            console.log('Saved to library');
                           }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Save to Library</button>
                         )}
                         {activeWorkItem.saved && (
@@ -5033,7 +5039,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         )}
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
-        {activeTab === 'content-workspace' && (
+        {activeTab === 'content-workspace' && (<ErrorBoundary fallbackTitle="Content Workspace Error">
           <div className="space-y-8 animate-fadeIn">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
@@ -5041,7 +5047,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="font-serif text-2xl font-bold text-coh-navy">
-                      {activeWorkItem.title}
+                      {(activeWorkItem?.title || 'Standalone Draft')}
                     </h2>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
                       {activeWorkItem.status}
@@ -5056,7 +5062,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="flex flex-col gap-2 items-end">
                   <button
                     onClick={() => {
-                      const title = prompt("Rename Work Item:", activeWorkItem.title);
+                      const title = prompt("Rename Work Item:", (activeWorkItem?.title || 'Standalone Draft'));
                       if (title && title.trim()) {
                         setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
                       }
@@ -6426,7 +6432,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 draftOptions.optionA
                               );
                               navigator.clipboard.writeText(formatted);
-                              alert('Copied Visual Direction to clipboard!');
+                              /* Copied handled by state */
                             }}
                             className="interactive-link transition"
                           >
@@ -6442,7 +6448,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 draftOptions.optionA
                               );
                               navigator.clipboard.writeText(promptText);
-                              alert('Copied AI Image Prompt to clipboard!');
+                              /* Copied handled by state */
                             }}
                             className="interactive-link transition"
                           >
@@ -6571,10 +6577,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
         {/* --- TAB 3: REVISION STUDIO --- */}
-        {activeTab === 'visual-studio' && (
+        {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="space-y-8 animate-fadeIn">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
@@ -6824,9 +6831,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
-        {activeTab === 'revision-studio' && (
+        {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
           <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto">
             <div className="border-b border-coh-gold/20 pb-4">
               <h2 className="font-serif text-3xl font-normal text-coh-navy">Revision Studio</h2>
@@ -7230,9 +7238,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             </div>
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
-        {activeTab === 'visual-studio' && (
+        {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="space-y-8 animate-fadeIn">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
@@ -7484,7 +7493,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         )}
 
-        {activeTab === 'revision-studio' && (
+        {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
           <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto">
             <div className="border-b border-coh-gold/20 pb-4">
               <h2 className="font-serif text-3xl font-normal text-coh-navy">Revision Studio</h2>
@@ -8000,7 +8009,7 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
           </div>
         )}
         {/* --- TAB 4: CONTENT LIBRARY --- */}
-        {activeTab === 'content-library' && (
+        {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
@@ -8153,7 +8162,7 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
                                     item.text
                                   );
                                   navigator.clipboard.writeText(formatted);
-                                  alert('Copied Visual Direction!');
+                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -8169,7 +8178,7 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
                                     item.text
                                   );
                                   navigator.clipboard.writeText(promptText);
-                                  alert('Copied AI Image Prompt!');
+                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -8249,10 +8258,11 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
               </div>
             )}
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
         {/* --- TAB 5: SOURCE LIBRARY --- */}
-        {activeTab === 'source-library' && (
+        {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
@@ -8600,7 +8610,7 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
                                           const el = document.getElementById(`extract-${src.id}`) as HTMLTextAreaElement;
                                           if (el && el.value) {
                                             navigator.clipboard.writeText(el.value);
-                                            alert('Copied to clipboard');
+                                            /* Copied handled by state */
                                           }
                                         }}
                                         className="bg-white border border-coh-gold/30 hover:bg-coh-gold/10 text-coh-navy px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
@@ -8643,10 +8653,11 @@ export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
               </div>
             </div>
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
-        {activeTab === 'settings' && (
+        {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="space-y-8 animate-fadeIn max-w-4xl">
             <div className="border-b border-coh-gold/20 pb-6">
               <h2 className="font-serif text-3xl font-normal text-coh-navy">Settings</h2>
@@ -8986,7 +8997,8 @@ OPENAI_MODEL=gpt-4.1`}
 
 
           </div>
-        )}
+        
+</ErrorBoundary>)}
 
       </main>
 

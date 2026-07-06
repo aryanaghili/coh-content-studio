@@ -2,7 +2,7 @@
  * JSON Repair & Cleanup Utility
  */
 export function repairJson(str) {
-  if (!str) return null;
+  if (!str) return { success: false, errorType: 'AI_PARSE_ERROR', fallbackText: '' };
   let cleaned = str.trim();
 
   // Remove markdown codeblock wrapper
@@ -16,16 +16,34 @@ export function repairJson(str) {
   } catch (e) {
     // Attempt basic repairs
     try {
-      // Find the first '{' and last '}'
+      // Find the first '{' or '[' and last '}' or ']'
       const firstBrace = cleaned.indexOf('{');
       const lastBrace = cleaned.lastIndexOf('}');
-      if (firstBrace !== -1 && lastBrace !== -1) {
-        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
-        return JSON.parse(cleaned);
+      const firstBracket = cleaned.indexOf('[');
+      const lastBracket = cleaned.lastIndexOf(']');
+      
+      let startIdx = firstBrace;
+      let endIdx = lastBrace;
+      
+      if (firstBracket !== -1 && (firstBrace === -1 || firstBracket < firstBrace)) {
+          startIdx = firstBracket;
+          endIdx = lastBracket;
+      }
+
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        const potentialJson = cleaned.substring(startIdx, endIdx + 1);
+        return JSON.parse(potentialJson);
       }
     } catch (innerErr) {
-      // Let it fail and return null
+      // Let it fail
     }
   }
-  return null;
+  
+  // Return a safe fallback object instead of null to prevent upstream crashes
+  return {
+      success: false,
+      errorType: 'AI_PARSE_ERROR',
+      userMessage: 'The AI response could not be converted into the expected structured format.',
+      fallbackText: str
+  };
 }

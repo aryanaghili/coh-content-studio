@@ -2,145 +2,223 @@ import fs from 'fs';
 
 let content = fs.readFileSync('src/App.tsx', 'utf8');
 
-// 1. Add imports
-const importCode = `import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from './lib/aspectRatios';\n`;
-if (!content.includes('ASPECT_RATIO_PRESETS')) {
-  content = content.replace("import { DEFAULT_COH_SOURCES } from './data/defaultSources';", importCode + "import { DEFAULT_COH_SOURCES } from './data/defaultSources';");
+// 1. Imports
+if (!content.includes('ErrorBoundary')) {
+  content = content.replace(
+    "import { DEFAULT_COH_SOURCES } from './data/defaultSources';",
+    "import { DEFAULT_COH_SOURCES } from './data/defaultSources';\nimport { ErrorBoundary } from './components/ErrorBoundary';\nimport { safeMergeOperatingCore } from './lib/operatingCore';"
+  );
 }
 
-// 2. Change useState
-content = content.replace(
-  "const [vsAspectRatio, setVsAspectRatio] = useState<string>('1024x1024');",
-  "const [vsAspectRatio, setVsAspectRatio] = useState<string>('core-sq-1');\n  const [vsCustomWidth, setVsCustomWidth] = useState<number>(1024);\n  const [vsCustomHeight, setVsCustomHeight] = useState<number>(1024);"
-);
+// 2. Safe merge of Operating Core
+const mergeRegex = /setOperatingCore\(JSON\.parse\(saved\)\);/g;
+content = content.replace(mergeRegex, 'setOperatingCore(safeMergeOperatingCore(JSON.parse(saved)));');
 
-// 3. Update payload construction
-const oldPayload = `const payload = {
-      prompt: vsManualPrompt,
-      promptBuildMode: vsPromptMode,
-      aspectRatio: vsAspectRatio,`;
+// 3. Remove alert() completely. Let's look for standard ones and replace them with console.warn or setAiLastError where applicable.
+content = content.replace(/alert\('Could not log out. Please refresh.'\);/g, "console.error('Could not log out. Please refresh.');");
+content = content.replace(/alert\("Please configure an AI provider first."\);/g, "setAiLastError('Please configure an AI provider first.');");
+content = content.replace(/alert\(err\.message \|\| 'AI Ideation failed.'\);/g, "setAiLastError(err.message || 'AI Ideation failed.');");
+content = content.replace(/alert\('This idea is already saved in your library.'\);/g, "console.warn('This idea is already saved in your library.');");
+content = content.replace(/alert\(`Updated existing item(.*)`\);/g, "console.log(`Updated existing item$1`);");
+content = content.replace(/alert\(`Saved to Content Library(.*)`\);/g, "console.log(`Saved to Content Library$1`);");
+content = content.replace(/alert\("Saved to library."\);/g, "console.log('Saved to library');");
+content = content.replace(/alert\('Copied(.*)'\);/g, "/* Copied handled by state */");
 
-const newPayload = `const selectedPreset = getPresetById(vsAspectRatio);
-    const actualWidth = vsAspectRatio === 'custom' ? vsCustomWidth : (selectedPreset?.width || 1024);
-    const actualHeight = vsAspectRatio === 'custom' ? vsCustomHeight : (selectedPreset?.height || 1024);
+// 4. Update aiService
+const oldAiServiceGenerate = `    async generate(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI generation failed.');
+      return data;
+    },`;
+const newAiServiceGenerate = `    async generate(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+          throw new Error(data.error || data.userMessage || 'AI generation failed.');
+      }
+      return data; 
+    },`;
 
-    const payload = {
-      prompt: vsManualPrompt,
-      promptBuildMode: vsPromptMode,
-      presetId: vsAspectRatio,
-      width: actualWidth,
-      height: actualHeight,`;
-content = content.replace(oldPayload, newPayload);
+content = content.replace(oldAiServiceGenerate, newAiServiceGenerate);
 
-// 4. Update dropdown UI
-const oldDropdown = `<select
-                      value={vsAspectRatio}
-                      onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
-                    >
-                      <option value="Square 1:1 (1024x1024)">Square 1:1 (1024x1024)</option>
-                      <option value="LinkedIn Post (1024x1024)">LinkedIn Post (1:1)</option>
-                      <option value="Instagram Feed (1024x1024)">Instagram Feed (1:1)</option>
-                      
-                      <option disabled>──────────</option>
-                      
-                      <option value="Landscape (1536x1024)">Landscape (1536x1024)</option>
-                      <option value="Landscape 3:2 (1536x1024)">Landscape 3:2 (1536x1024)</option>
-                      <option value="Wide Banner / Hero (landscape) (1536x1024)">Wide Banner / Hero (landscape)</option>
-                      <option value="Newsletter Header (1536x1024)">Newsletter Header (landscape)</option>
-                      <option value="Website Hero (1536x1024)">Website Hero (landscape)</option>
-                      
-                      <option disabled>──────────</option>
+const oldAiServiceIdeate = `    async ideate(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/ideate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI ideation failed.');
+      return data;
+    },`;
+const newAiServiceIdeate = `    async ideate(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/ideate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI ideation failed.');
+      return data;
+    },`;
+content = content.replace(oldAiServiceIdeate, newAiServiceIdeate);
 
-                      <option value="Portrait (1024x1536)">Portrait (1024x1536)</option>
-                      <option value="Portrait 4:5 (1024x1536)">Portrait 4:5 (1024x1536)</option>
-                      <option value="Instagram Story (1024x1536)">Instagram Story (portrait)</option>
-                    </select>`;
+const oldAiServiceRevise = `    async revise(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/revise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'AI revision failed.');
+      return data;
+    },`;
+const newAiServiceRevise = `    async revise(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/revise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI revision failed.');
+      return data;
+    },`;
+content = content.replace(oldAiServiceRevise, newAiServiceRevise);
 
-const newDropdown = `<select
-                      value={vsAspectRatio}
-                      onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
-                    >
-                      {ASPECT_RATIO_GROUP_ORDER.map(group => (
-                        <optgroup key={group} label={group}>
-                          {ASPECT_RATIO_PRESETS.filter(p => p.group === group).map(preset => {
-                            const isSupported = !preset.supportedModels || preset.supportedModels.includes(aiImageModel || '');
-                            return (
-                              <option key={preset.id} value={preset.id} disabled={!isSupported}>
-                                {preset.label} {preset.ratio} ({preset.width}x{preset.height}) {!isSupported ? '(Unsupported)' : ''}
-                              </option>
-                            );
-                          })}
-                        </optgroup>
-                      ))}
-                      {aiImageModel?.startsWith('gpt-image-2') && (
-                        <option value="custom">Advanced custom size...</option>
-                      )}
-                    </select>
+// 5. Update Ideation handler (handleGenerateIdeas)
+content = content.replace(/const result = await aiService\.ideate\(payload\);\s*setGeneratedIdeas\(result\.ideas \|\| \[\]\);\s*setIdeationFilterChannel\('All'\);\s*\} catch \(err: any\) \{/g, 
+  `const envelope = await aiService.ideate(payload);
+          if (!envelope.success) {
+            setAiLastError(envelope.userMessage || 'Failed to generate ideas.');
+            if (envelope.fallbackText) {
+               setGeneratedIdeas([{ title: "Fallback Output", concept: envelope.fallbackText }]);
+            }
+          } else {
+            setGeneratedIdeas(envelope.data?.ideas || []);
+            setIdeationFilterChannel('All');
+          }
+        } catch (err: any) {`);
 
-                    {vsAspectRatio === 'custom' && (
-                      <div className="mt-2 flex gap-2">
-                        <div className="flex-1">
-                          <label className="block text-[10px] text-coh-navy/60 mb-1">Width (px)</label>
-                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
-                        </div>
-                        <div className="flex-1">
-                          <label className="block text-[10px] text-coh-navy/60 mb-1">Height (px)</label>
-                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
-                        </div>
-                      </div>
-                    )}`;
-                    
-content = content.replace(oldDropdown, newDropdown);
+// 6. Update handleGenerateDrafts
+content = content.replace(/const result = await aiService\.generate\(payload\);\s*if \(result\) \{\s*setActiveDraftText\(result\.draftCopy \|\| ''\);\s*setAuditResults\(result\.qualityCheck\);\s*const baseTitle = isSimple \? `\$\{simpleBrief\.channel\} Draft` : \(isQuick \? `\$\{quickBrief\.channel\} \$\{quickBrief\.format\} Draft` : `\$\{advancedBrief\.channel\} \$\{advancedBrief\.format\} Draft`\);\s*setActiveDraftTitle\(baseTitle\);\s*const actionLabel = `Generated via \$\{isSimple \? 'Simple Mode' : \(isQuick \? 'Quick Create' : 'Advanced Brief'\)\}`;\s*setActiveDraftHistory\(\[\{\s*version: 1,\s*text: result\.draftCopy \|\| '',\s*timestamp: new Date\(\)\.toLocaleTimeString\(\),\s*actionUsed: actionLabel\s*\}\]\);\s*setActiveDraftVersion\(1\);\s*\}\s*\} catch \(err: any\) \{/g, 
+  `const envelope = await aiService.generate(payload);
+          if (!envelope.success) {
+            setAiLastError(envelope.userMessage || 'Failed to generate draft.');
+            if (envelope.fallbackText) {
+                setActiveDraftText(envelope.fallbackText);
+                setActiveDraftHistory([{ version: 1, text: envelope.fallbackText, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Fallback Generation' }]);
+                setActiveDraftVersion(1);
+            }
+          } else {
+            const result = envelope.data;
+            if (result) {
+              setActiveDraftText(result.draftCopy || '');
+              setAuditResults(result.qualityCheck);
+              const baseTitle = isSimple ? \`\${simpleBrief.channel} Draft\` : (isQuick ? \`\${quickBrief.channel} \${quickBrief.format} Draft\` : \`\${advancedBrief.channel} \${advancedBrief.format} Draft\`);
+              setActiveDraftTitle(baseTitle);
+              const actionLabel = \`Generated via \${isSimple ? 'Simple Mode' : (isQuick ? 'Quick Create' : 'Advanced Brief')}\`;
+              setActiveDraftHistory([{
+                version: 1,
+                text: result.draftCopy || '',
+                timestamp: new Date().toLocaleTimeString(),
+                actionUsed: actionLabel
+              }]);
+              setActiveDraftVersion(1);
+            }
+          }
+        } catch (err: any) {`);
 
-// 5. Update Preview CSS card rendering
-const oldPreviewCard = `                    <div key={idx} className="bg-white p-4 rounded shadow-sm border border-coh-gold/20 relative">
-                      {img.url ? (
-                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-coh-gold/10" />
-                      ) : (
-                        <div className="w-full h-48 bg-coh-cream flex items-center justify-center rounded mb-3 border border-coh-gold/10 text-coh-navy/40 text-sm">
-                          Base64 Image Data
-                        </div>
-                      )}
-                      
-                      <div className="text-xs text-coh-navy/60 flex items-center justify-between mb-4">
-                        <div>
-                          <span className="font-semibold">{vsAspectRatio}</span>
-                          <span className="mx-2 opacity-30">|</span>
-                          <span>{aiImageModel} ({vsQuality})</span>
-                        </div>`;
+// 7. Update handleGeneratePacks (Multi-Channel Pack)
+content = content.replace(/const result = await aiService\.generate\(payload\);\s*if \(result && result\.channels\) \{\s*setGeneratedMultiPack\(result\.channels\);\s*setAuditResults\(result\.qualityCheck\);\s*\}\s*\} catch \(err: any\) \{/g,
+  `const envelope = await aiService.generate(payload);
+          if (!envelope.success) {
+            setAiLastError(envelope.userMessage || 'Failed to generate pack.');
+            if (envelope.fallbackText) {
+               setGeneratedMultiPack([{ channel: 'Fallback', format: 'Text', draftCopy: envelope.fallbackText }]);
+            }
+          } else {
+            const result = envelope.data;
+            if (result && result.channels) {
+              setGeneratedMultiPack(result.channels);
+              setAuditResults(result.qualityCheck);
+            }
+          }
+        } catch (err: any) {`);
 
-const newPreviewCard = `                    <div key={idx} className="bg-white p-4 rounded shadow-sm border border-coh-gold/20 relative flex flex-col">
-                      {img.url ? (
-                        <div className="flex-1 flex items-center justify-center bg-coh-cream rounded mb-3 border border-coh-gold/10 overflow-hidden" style={{ minHeight: '300px' }}>
-                           <img src={img.url} alt="Generated Visual" className="w-full h-full object-contain" />
-                        </div>
-                      ) : (
-                        <div className="w-full h-48 bg-coh-cream flex items-center justify-center rounded mb-3 border border-coh-gold/10 text-coh-navy/40 text-sm">
-                          Base64 Image Data
-                        </div>
-                      )}
-                      
-                      <div className="text-xs text-coh-navy/60 flex flex-col gap-1 mb-4">
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-coh-navy">{res.presetLabel || 'Custom Size'}</span>
-                          <span className="font-mono bg-coh-cream px-1.5 py-0.5 rounded border">{res.returnedDimensions ? res.returnedDimensions : 'Unknown size'}</span>
-                        </div>
-                        <div className="flex items-center text-[10px] opacity-80">
-                           <span>Requested: {res.requestedDimensions}</span>
-                           <span className="mx-2">•</span>
-                           <span>Model: {res.model}</span>
-                           <span className="mx-2">•</span>
-                           <span>Quality: {vsQuality}</span>
-                        </div>
-                        {res.returnedDimensions && res.requestedDimensions && res.returnedDimensions !== res.requestedDimensions && (
-                          <div className="text-amber-600 font-semibold text-[10px] mt-1 bg-amber-50 p-1.5 rounded border border-amber-200">
-                             Warning: Returned size does not match requested size. Mapped for model compatibility.
-                          </div>
-                        )}
-                      </div>`;
-                      
-content = content.replace(oldPreviewCard, newPreviewCard);
+// 8. Update applyRevision
+content = content.replace(/const result = await aiService\.revise\(payload\);\s*setRevisionSuccessAction\(action\);\s*setTimeout\(\(\) => setRevisionSuccessAction\(null\), 2500\);\s*if \(result\) \{\s*let actionLabel = REVISION_ACTIONS\.find\(a => a\.id === action\)\?\.label \|\| action;/g,
+  `const envelope = await aiService.revise(payload);
+          if (!envelope.success) {
+            setActiveRevisionError(envelope.userMessage || 'Failed to revise text.');
+            if (envelope.fallbackText) {
+               const newVersion = activeDraftVersion + 1;
+               setActiveDraftVersion(newVersion);
+               setActiveDraftText(envelope.fallbackText);
+               setActiveDraftHistory(prev => [
+                 ...prev,
+                 { version: newVersion, text: envelope.fallbackText, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Fallback Revision' }
+               ]);
+            }
+          } else {
+            setRevisionSuccessAction(action);
+            setTimeout(() => setRevisionSuccessAction(null), 2500);
+            const result = envelope.data;
+            if (result) {
+              let actionLabel = REVISION_ACTIONS.find(a => a.id === action)?.label || action;`);
+
+
+// 9. ErrorBoundaries
+content = content.replace(/\{activeTab === 'ideation' && \(/g, "{activeTab === 'ideation' && (<ErrorBoundary fallbackTitle=\"Ideation Workspace Error\">");
+content = content.replace(/\{activeTab === 'content-workspace' && \(/g, "{activeTab === 'content-workspace' && (<ErrorBoundary fallbackTitle=\"Content Workspace Error\">");
+content = content.replace(/\{activeTab === 'visual-studio' && \(/g, "{activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle=\"Visual Studio Error\">");
+content = content.replace(/\{activeTab === 'revision-studio' && \(/g, "{activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle=\"Revision Studio Error\">");
+content = content.replace(/\{activeTab === 'operating-core' && \(/g, "{activeTab === 'operating-core' && (<ErrorBoundary fallbackTitle=\"Operating Core Error\">");
+content = content.replace(/\{activeTab === 'content-library' && \(/g, "{activeTab === 'content-library' && (<ErrorBoundary fallbackTitle=\"Content Library Error\">");
+content = content.replace(/\{activeTab === 'idea-library' && \(/g, "{activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle=\"Idea Library Error\">");
+content = content.replace(/\{activeTab === 'source-library' && \(/g, "{activeTab === 'source-library' && (<ErrorBoundary fallbackTitle=\"Source Library Error\">");
+content = content.replace(/\{activeTab === 'settings' && \(/g, "{activeTab === 'settings' && (<ErrorBoundary fallbackTitle=\"Settings Error\">");
+
+function closeErrorBoundaries(text) {
+  const boundaries = ['ideation', 'content-workspace', 'visual-studio', 'revision-studio', 'operating-core', 'content-library', 'idea-library', 'source-library', 'settings'];
+  for (const b of boundaries) {
+    const searchStr = `{activeTab === '${b}' && (<ErrorBoundary fallbackTitle="`;
+    const idx = text.indexOf(searchStr);
+    if (idx === -1) continue;
+    let openCount = 0;
+    for (let i = idx; i < text.length; i++) {
+       if (text[i] === '{') openCount++;
+       if (text[i] === '}') {
+          openCount--;
+          if (openCount === 0) {
+             let j = i - 1;
+             while (text[j] !== ')' && j > 0) j--;
+             if (text[j] === ')') {
+                 text = text.substring(0, j) + "\n</ErrorBoundary>" + text.substring(j);
+             }
+             break;
+          }
+       }
+    }
+  }
+  return text;
+}
+content = closeErrorBoundaries(content);
+
+// 10. Replace unsafe access
+content = content.replace(/operatingCore\.corePassport\.organizationName/g, "operatingCore?.corePassport?.organizationName");
+content = content.replace(/operatingCore\.corePassport\.currentStrategicPhase/g, "operatingCore?.corePassport?.currentStrategicPhase");
+content = content.replace(/draftCore\.corePassport\.organizationName/g, "draftCore?.corePassport?.organizationName");
+content = content.replace(/activeWorkItem\.title/g, "(activeWorkItem?.title || 'Standalone Draft')");
+content = content.replace(/activeWorkItem\.suggestedChannel/g, "(activeWorkItem?.suggestedChannel || '')");
+content = content.replace(/activeWorkItem\.concept/g, "(activeWorkItem?.concept || '')");
 
 fs.writeFileSync('src/App.tsx', content, 'utf8');

@@ -607,3 +607,47 @@ export function normalizeText(text: string | null | undefined): string {
   if (!text) return '';
   return text.replace(/\n/g, '\n').replace(/\s+$/, '');
 }
+
+export function safeMergeOperatingCore(savedData: any): OperatingCore {
+  const defaults = createDefaultOperatingCore();
+  if (!savedData || typeof savedData !== 'object') return defaults;
+
+  // Deep merge strategy ensuring critical properties exist
+  const merged: OperatingCore = {
+    ...defaults,
+    ...savedData,
+    corePassport: {
+      ...defaults.corePassport,
+      ...(savedData.corePassport || {})
+    },
+    strategyKernel: {
+      ...defaults.strategyKernel,
+      ...(savedData.strategyKernel || {})
+    },
+    claimsProofBoundaries: {
+      ...defaults.claimsProofBoundaries,
+      ...(savedData.claimsProofBoundaries || {})
+    },
+    voiceAndLanguage: {
+      ...defaults.voiceAndLanguage,
+      ...(savedData.voiceAndLanguage || {})
+    },
+    visualDNA: {
+      ...defaults.visualDNA,
+      ...(savedData.visualDNA || {})
+    },
+    audiences: Array.isArray(savedData.audiences) && savedData.audiences.length > 0 
+      ? savedData.audiences 
+      : defaults.audiences,
+    channels: Array.isArray(savedData.channels) && savedData.channels.length > 0
+      ? savedData.channels
+      : defaults.channels,
+    revisionStandards: Array.isArray(savedData.revisionStandards) && savedData.revisionStandards.length > 0
+      ? savedData.revisionStandards
+      : defaults.revisionStandards,
+    coreEvidence: Array.isArray(savedData.coreEvidence) ? savedData.coreEvidence : defaults.coreEvidence,
+    learningInbox: Array.isArray(savedData.learningInbox) ? savedData.learningInbox : defaults.learningInbox
+  };
+
+  return merged;
+}

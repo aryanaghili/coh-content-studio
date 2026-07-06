@@ -241,19 +241,16 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
   try {
     const input = req.body;
     if (!input || !input.rawInput) {
-      return res.status(400).json({ error: 'rawInput is required.' });
+      return res.json({ success: false, errorType: 'VALIDATION_ERROR', userMessage: 'rawInput is required.' });
     }
     if (!providerManager.isConnected()) {
-      return res.status(503).json({
-        error: 'AI provider is not connected. Configure a provider in Settings first.',
-        fallback: true,
-      });
+      return res.json({ success: false, errorType: 'CONFIGURATION_ERROR', userMessage: 'AI provider is not connected. Configure a provider in Settings first.' });
     }
     const result = await providerManager.generate(input);
     res.json(result);
   } catch (err) {
     console.error('[/api/ai/generate]', err.message);
-    res.status(500).json({ error: friendlyServerError(err) });
+    res.json({ success: false, errorType: 'SERVER_ERROR', userMessage: friendlyServerError(err), debug: { message: err.message } });
   }
 });
 
@@ -409,19 +406,16 @@ app.post('/api/ai/ideate', requireAuth, async (req, res) => {
   try {
     const input = { ...req.body, mode: 'ideation' };
     if (!input.rawInput) {
-      return res.status(400).json({ error: 'rawInput is required.' });
+      return res.json({ success: false, errorType: 'VALIDATION_ERROR', userMessage: 'rawInput is required.' });
     }
     if (!providerManager.isConnected()) {
-      return res.status(503).json({
-        error: 'AI provider is not connected. Configure a provider in Settings first.',
-        fallback: true,
-      });
+      return res.json({ success: false, errorType: 'CONFIGURATION_ERROR', userMessage: 'AI provider is not connected. Configure a provider in Settings first.' });
     }
     const result = await providerManager.generate(input);
     res.json(result);
   } catch (err) {
     console.error('[/api/ai/ideate]', err.message);
-    res.status(500).json({ error: friendlyServerError(err) });
+    res.json({ success: false, errorType: 'SERVER_ERROR', userMessage: friendlyServerError(err), debug: { message: err.message } });
   }
 });
 
@@ -430,19 +424,16 @@ app.post('/api/ai/revise', requireAuth, async (req, res) => {
   try {
     const input = { ...req.body, mode: 'revision' };
     if (!input.previousDraft) {
-      return res.status(400).json({ error: 'previousDraft is required.' });
+      return res.json({ success: false, errorType: 'VALIDATION_ERROR', userMessage: 'previousDraft is required.' });
     }
     if (!providerManager.isConnected()) {
-      return res.status(503).json({
-        error: 'AI provider is not connected. Configure a provider in Settings first.',
-        fallback: true,
-      });
+      return res.json({ success: false, errorType: 'CONFIGURATION_ERROR', userMessage: 'AI provider is not connected. Configure a provider in Settings first.' });
     }
     const result = await providerManager.generate(input);
     res.json(result);
   } catch (err) {
     console.error('[/api/ai/revise]', err.message);
-    res.status(500).json({ error: friendlyServerError(err) });
+    res.json({ success: false, errorType: 'SERVER_ERROR', userMessage: friendlyServerError(err), debug: { message: err.message } });
   }
 });
 
