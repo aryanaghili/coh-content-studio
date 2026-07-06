@@ -83,39 +83,35 @@ export interface WorkItem {
   origin?: string;
 }
 
-interface SourceFile {
-
+interface CoreDocument {
   id: string;
   title: string;
-  type: 
-    | 'Tone of Voice'
-    | 'Business Model'
-    | 'Strategic Plan'
-    | 'Business Memo'
-    | 'Website Copy'
-    | 'Deck'
-    | 'Event Notes'
-    | 'Partnership Notes'
-    | 'Sponsorship Notes'
-    | 'Approved Example'
-    | 'Image / Visual Asset'
-    | 'Article / Media Coverage'
-    | 'Team Notes'
-    | 'Link / URL'
-    | 'PDF'
-    | 'Audio'
-    | 'Text'
-    | 'Video'
-    | 'Image'
-    | 'Other';
-  status: 'Active' | 'Archived' | 'Needs Review';
-  role: 'Core Document' | 'Task Source' | 'Approved Example' | 'Partner Context' | 'Visual Reference' | 'Archive';
-  supportsOperatingCoreSection: 'Core Passport' | 'Strategy Kernel' | 'Audiences' | 'Channels' | 'Claims' | 'Voice' | 'Visual' | 'Revision' | 'None';
-  useFor: string;
-  createdAt: string;
+  type: string;
+  status: 'Draft' | 'Active' | 'Archived' | 'Needs Review';
+  brainArea: string;
+  brainRole: string;
   notes: string;
   content: string;
+  distilledKernelNotes: string;
+  extractedClaimEvidence: string;
+  extractedVoiceGuidance: string;
+  extractedVisualGuidance: string;
+  extractedRevisionGuidance: string;
+  url: string;
+  createdAt: string;
+  updatedAt: string;
+  appliedToCore: boolean;
+}
+
+interface SourceFile {
+  id: string;
+  title: string;
+  type: 'Event Notes' | 'Partner Profile' | 'Sponsor Notes' | 'Meeting Notes' | 'Campaign Notes' | 'Article / Media Coverage' | 'Website Reference' | 'Visual Reference' | 'Approved Example' | 'Pasted Notes' | 'Link / URL' | 'Other';
+  status: 'Active' | 'Archived' | 'Needs Review';
+  content: string;
+  notes: string;
   url?: string;
+  createdAt: string;
   selected?: boolean;
   selectable?: boolean;
 }
@@ -1373,20 +1369,17 @@ export default function App() {
     title: string;
     type: SourceFile['type'];
     status: SourceFile['status'];
-    role: SourceFile['role'];
-    supportsOperatingCoreSection: SourceFile['supportsOperatingCoreSection'];
-    useFor: string;
     notes: string;
     content: string;
     url?: string;
     selectable?: boolean;
   }>({
     title: '',
-    type: 'Tone of Voice' as SourceFile['type'],
+    type: 'Other' as SourceFile['type'],
     status: 'Active' as SourceFile['status'],
-    role: 'Task Source',
-    supportsOperatingCoreSection: 'None',
-    useFor: '',
+    
+    
+    
     notes: '',
     content: '',
     url: '',
@@ -1453,9 +1446,6 @@ export default function App() {
       title: src.title,
       type: src.type,
       status: src.status,
-      role: src.role || 'Task Source',
-      supportsOperatingCoreSection: src.supportsOperatingCoreSection || 'None',
-      useFor: src.useFor || '',
       notes: src.notes || '',
       content: src.content || ''
     });
@@ -1476,11 +1466,8 @@ export default function App() {
         const added: SourceFile = {
           id: `src-upload-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
           title: file.name,
-          type: file.name.endsWith('.pdf') ? 'Deck' : 'Business Memo',
+          type: 'Other',
           status: 'Active',
-          role: 'Task Source',
-          supportsOperatingCoreSection: 'None',
-          useFor: 'Extracted context reference',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Uploaded file size: ${(file.size / 1024).toFixed(1)} KB.`,
           content: text || 'PDF contents placeholder summary'
@@ -1504,9 +1491,6 @@ export default function App() {
           title: path,
           type: 'Event Notes',
           status: 'Active',
-          role: 'Task Source',
-          supportsOperatingCoreSection: 'None',
-          useFor: 'Folder upload context',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Directory uploaded path: ${path}`,
           content: text || 'Directory content placeholder'
@@ -2996,11 +2980,11 @@ export default function App() {
 
     setNewSource({
       title: '',
-      type: 'Tone of Voice',
+      type: 'Other',
       status: 'Active',
-      role: 'Task Source',
-      supportsOperatingCoreSection: 'None',
-      useFor: '',
+      
+      
+      
       notes: '',
       content: ''
     });
@@ -3028,11 +3012,8 @@ export default function App() {
       newSrc = {
         id: `ws-paste-${ts}`,
         title: inlinePasteData.title,
-        type: 'Text',
+        type: 'Pasted Notes',
         status: 'Active',
-        role: 'Task Source',
-        supportsOperatingCoreSection: 'None',
-        useFor: 'Pasted workspace source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'Pasted text source added from Content Workspace.',
         content: inlinePasteData.content
@@ -3046,11 +3027,8 @@ export default function App() {
       newSrc = {
         id: `ws-upload-${ts}`,
         title: inlineUploadData.title,
-        type: 'Text',
+        type: 'Pasted Notes',
         status: 'Active',
-        role: 'Task Source',
-        supportsOperatingCoreSection: 'None',
-        useFor: 'Uploaded workspace file',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'File uploaded from Content Workspace.',
         content: inlineUploadData.content || 'File content extracted.'
@@ -3064,11 +3042,8 @@ export default function App() {
       newSrc = {
         id: `ws-link-${ts}`,
         title: inlineLinkData.title,
-        type: 'Text',
+        type: 'Pasted Notes',
         status: 'Active',
-        role: 'Task Source',
-        supportsOperatingCoreSection: 'None',
-        useFor: 'URL context source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: `URL: ${inlineLinkData.url}`,
         content: inlineLinkData.summary || `[URL reference: ${inlineLinkData.url}]`
@@ -4387,11 +4362,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 setActiveTab('source-library');
                 setNewSource({
                   ...newSource,
-                  role: 'Core Document',
-                  supportsOperatingCoreSection: section as any,
+                  
                   selectable: true,
                   status: 'Active',
-                  title: '', type: 'Business Memo', useFor: '', notes: '', content: '', url: ''
+                  title: '', type: 'Other',  notes: '', content: '', url: ''
                 });
               }}
               onLinkExistingSource={() => {
@@ -7218,40 +7192,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-coh-navy/70 mb-1 font-medium">Role</label>
-                      <select
-                        value={newSource.role}
-                        onChange={(e) => setNewSource({ ...newSource, role: e.target.value as SourceFile['role'] })}
-                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
-                      >
-                        <option value="Core Document">Core Document</option>
-                        <option value="Task Source">Task Source</option>
-                        <option value="Approved Example">Approved Example</option>
-                        <option value="Partner Context">Partner Context</option>
-                        <option value="Visual Reference">Visual Reference</option>
-                        <option value="Archive">Archive</option>
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-coh-navy/70 mb-1 font-medium">Supports Section</label>
-                      <select
-                        value={newSource.supportsOperatingCoreSection}
-                        onChange={(e) => setNewSource({ ...newSource, supportsOperatingCoreSection: e.target.value as SourceFile['supportsOperatingCoreSection'] })}
-                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
-                      >
-                        <option value="None">None</option>
-                        <option value="Core Passport">Core Passport</option>
-                        <option value="Strategy Kernel">Strategy Kernel</option>
-                        <option value="Audiences">Audiences</option>
-                        <option value="Channels">Channels</option>
-                        <option value="Claims">Claims</option>
-                        <option value="Voice">Voice</option>
-                        <option value="Visual">Visual</option>
-                        <option value="Revision">Revision</option>
-                      </select>
-                    </div>
                   </div>
 
                   {newSource.type === 'Link / URL' && (
@@ -7267,16 +7207,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   )}
 
-                  <div>
-                    <label className="block text-coh-navy/70 mb-1 font-medium">Use Case / Designation</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Strategic Partner Pitch Context"
-                      value={newSource.useFor}
-                      onChange={(e) => setNewSource({ ...newSource, useFor: e.target.value })}
-                      className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy"
-                    />
-                  </div>
+
 
                   <div>
                     <label className="block text-coh-navy/70 mb-1 font-medium">Short Context / Notes</label>
@@ -7326,7 +7257,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="button"
                         onClick={() => {
                           setEditingSourceId(null);
-                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', role: 'Task Source', supportsOperatingCoreSection: 'None', useFor: '', notes: '', content: '', url: '', selectable: true });
+                          setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
                         }}
                         className="bg-coh-cream text-coh-navy border border-coh-gold/20 py-2 px-3 rounded hover:bg-coh-cream-dark transition text-xs"
                       >
@@ -7377,11 +7308,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setEditingSourceId(null);
                               setNewSource({
                                 title: title,
-                                type: title.includes('Deck') ? 'Deck' : 'Business Memo',
+                                type: 'Other',
                                 status: 'Active',
-                                role: 'Core Document',
-                                supportsOperatingCoreSection: 'None',
-                                useFor: 'Core reference material',
                                 notes: 'Suggested document',
                                 content: '',
                                 url: '',
@@ -7402,16 +7330,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="space-y-3">
                   {(() => {
                     let filtered = selectableSources;
-                    if (sourceLibraryFilter === 'Task Sources') {
-                      filtered = selectableSources.filter(s => s.role === 'Task Source');
-                    } else if (sourceLibraryFilter === 'Approved Examples') {
-                      filtered = selectableSources.filter(s => s.role === 'Approved Example');
-                    } else if (sourceLibraryFilter === 'Partner Context') {
-                      filtered = selectableSources.filter(s => s.role === 'Partner Context');
-                    } else if (sourceLibraryFilter === 'Visual References') {
-                      filtered = selectableSources.filter(s => s.role === 'Visual Reference');
+                    if (sourceLibraryFilter === 'Approved Examples') {
+                      filtered = selectableSources.filter(s => s.type === 'Approved Example');
                     } else if (sourceLibraryFilter === 'Archive') {
-                      filtered = selectableSources.filter(s => s.role === 'Archive' || s.status === 'Archived');
+                      filtered = selectableSources.filter(s => s.status === 'Archived');
                     }
 
                     if (filtered.length === 0) {
@@ -7448,12 +7370,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </span>
                               {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
-                                  {src.role}
+                                  {''}
                                 </span>
                               )}
                               {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
-                                  Supports: {src.supportsOperatingCoreSection}
+                                  Supports: {''}
                                 </span>
                               )}
                               {src.selectable === false && (
@@ -7495,7 +7417,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Suggested Section</label>
                                       <span className="text-xs bg-white border border-coh-gold/20 px-2 py-1 rounded inline-block">
-                                        {src.supportsOperatingCoreSection !== 'None' ? src.supportsOperatingCoreSection : 'Unassigned (Determine manually)'}
+                                        {false ? '' : 'Unassigned (Determine manually)'}
                                       </span>
                                     </div>
                                     <div>
