@@ -629,7 +629,7 @@ export default function App() {
     creationIntent: 'Infer automatically'
   });
 
-  const [writingCleanupOn, setWritingCleanupOn] = useState<boolean>(true);
+  const [writingCleanupOn, setWritingCleanupOn] = useState<boolean>(false);
 
   // --- AI Provider State ---
   type AIStatus = 'connected' | 'not_connected' | 'not_configured' | 'error' | 'testing' | 'needs_retest';
@@ -697,11 +697,10 @@ export default function App() {
   const [settingsSection, setSettingsSection] = useState<'ai'>('ai');
 
   // --- Authentication States & Handlers ---
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(true);
   const [authBypass, setAuthBypass] = useState<boolean>(false);
   const [authUsernameInput, setAuthUsernameInput] = useState<string>('');
   const [authPasswordInput, setAuthPasswordInput] = useState<string>('');
-  const [authError, setAuthError] = useState<string>('');
   const [authLoading, setAuthLoading] = useState<boolean>(false);
 
   const checkSession = async () => {
@@ -989,7 +988,7 @@ export default function App() {
 
   // Poll status on mount
   useEffect(() => {
-    checkSession();
+    // checkSession();
   }, []);
 
   // --- Workspace Local Dynamic Sources ---
