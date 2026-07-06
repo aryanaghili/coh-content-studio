@@ -960,10 +960,10 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) {
+      if (!res.ok || data.success === false) {
           throw new Error(data.error || data.userMessage || 'AI generation failed.');
       }
-      return data; 
+      return data.data || data; 
     },
 
     async ideate(input: Record<string, unknown>) {
@@ -973,8 +973,10 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI ideation failed.');
-      return data;
+      if (!res.ok || data.success === false) {
+          throw new Error(data.error || data.userMessage || 'AI ideation failed.');
+      }
+      return data.data || data;
     },
 
     async revise(input: Record<string, unknown>) {
@@ -984,8 +986,10 @@ export default function App() {
         body: JSON.stringify(input),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || data.userMessage || 'AI revision failed.');
-      return data;
+      if (!res.ok || data.success === false) {
+          throw new Error(data.error || data.userMessage || 'AI revision failed.');
+      }
+      return data.data || data;
     },
 
     async getPrompt(input: Record<string, unknown>) {
