@@ -456,7 +456,7 @@ app.post('/api/ai/prompt', requireAuth, (req, res) => {
 function friendlyServerError(err) {
   const msg = err.message || '';
   if (msg.toLowerCase().includes('api key')) return 'Invalid or missing API key.';
-  if (msg.toLowerCase().includes('rate limit') || msg.includes('429')) return 'Rate limit reached. Try again in a moment.';
+  if (msg.toLowerCase().includes('rate limit') || msg.includes('429') || msg.toLowerCase().includes('quota')) return 'AI quota or rate limit reached. Translation could not be completed.';
   if (msg.toLowerCase().includes('network') || msg.includes('fetch')) return 'Network error reaching AI provider.';
   if (msg.toLowerCase().includes('not configured')) return msg;
   

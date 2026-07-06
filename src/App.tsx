@@ -1,3 +1,4 @@
+import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { safeLocalStorageGet, safeLocalStorageSet } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
@@ -420,29 +421,7 @@ const MODEL_REGISTRY: AIModelConfig[] = [
 ];
 
 // --- Supported Languages List ---
-const LANGUAGES = [
-  'English',
-  'Italian',
-  'Spanish',
-  'French',
-  'German',
-  'Portuguese',
-  'Dutch',
-  'Swedish',
-  'Norwegian',
-  'Danish',
-  'Finnish',
-  'Polish',
-  'Russian',
-  'Persian',
-  'Arabic',
-  'Turkish',
-  'Chinese',
-  'Japanese',
-  'Korean',
-  'Hindi',
-  'Vietnamese'
-];
+
 
 // --- Channel & Format Compatibility Matrix ---
 const CHANNELS = [
@@ -4054,8 +4033,11 @@ Revision History:
           let instruction = action === 'custom-instruction' ? customRevisionInstruction : (actionDef ? actionDef.label : action);
           
           if (actionDef?.group === 'Translation & Localization') {
+            if (generationMode !== 'ai' || aiStatus !== 'connected') {
+              throw new Error('Translation requires AI generation. Please configure AI Connection in Settings.');
+            }
             instruction += `. Target Language: ${externalContentLanguage}. Preserve meaning but adapt tone naturally for this language. Avoid literal machine translation. `;
-            if (externalContentLanguage === 'Persian') {
+            if (externalContentLanguage.includes('Persian')) {
               instruction += `CRITICAL: Output must be natural, readable, and spoken-friendly. Avoid formal mechanical Persian. Avoid stiff translation patterns. Keep the COH voice.`;
             } else if (externalContentLanguage === 'English') {
               instruction += `CRITICAL: Output should be polished, professional, and clear. Keep the COH voice.`;
@@ -4108,6 +4090,10 @@ Revision History:
             revised = `[Revised based on: "${customRevisionInstruction}"]\n\n${revised}\n\n(Adjusted alignment and framing to adhere to your instruction.)`;
             setCustomRevisionInstruction('');
           } else {
+            const actionDef = REVISION_ACTIONS.find(a => a.id === action);
+            if (actionDef?.group === 'Translation & Localization') {
+              throw new Error('Translation requires AI generation. Please configure AI Connection in Settings.');
+            }
             revised = `[${actionLabel} applied via fallback]\n\n${revised}`;
           }
         }
@@ -4584,7 +4570,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         className="w-full bg-coh-cream border border-coh-gold/20 p-1 rounded text-coh-navy text-[11px]"
                       >
                         {LANGUAGES.map(l => (
-                          <option key={l} value={l}>{l}</option>
+                          <option key={l.id} value={l.label}>{l.label}</option>
                         ))}
                       </select>
                     </div>
@@ -5663,8 +5649,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
                         >
                           {LANGUAGES.map(l => (
-                            <option key={l} value={l}>{l}</option>
-                          ))}
+                          <option key={l.id} value={l.label}>{l.label}</option>
+                        ))}
                         </select>
                       </div>
                     </div>
@@ -5869,8 +5855,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
                           {LANGUAGES.map(l => (
-                            <option key={l} value={l}>{l}</option>
-                          ))}
+                          <option key={l.id} value={l.label}>{l.label}</option>
+                        ))}
                         </select>
                       </div>
                     </div>
@@ -6997,8 +6983,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           onChange={(e) => setExternalContentLanguage(e.target.value)}
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
-                          {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
-                            <option key={opt} value={opt}>{opt}</option>
+                          {LANGUAGES.map(l => (
+                            <option key={l.id} value={l.label}>{l.label}</option>
                           ))}
                         </select>
                         <p className="text-[9px] text-coh-navy/50 mt-1 italic leading-tight">Select the target language for translation or localized revision.</p>
@@ -7231,9 +7217,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             onChange={(e) => setExternalContentLanguage(e.target.value)}
                             className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                           >
-                            {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
-                              <option key={opt} value={opt}>{opt}</option>
-                            ))}
+                            {LANGUAGES.map(l => (
+                            <option key={l.id} value={l.label}>{l.label}</option>
+                          ))}
                           </select>
                         </div>
                         <div>
