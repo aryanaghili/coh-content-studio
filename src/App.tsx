@@ -143,6 +143,11 @@ export const REVISION_ACTIONS: RevisionActionDef[] = [
   { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
   { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
 
+  { id: 'translate-selected', label: 'Translate to selected language', group: 'Translation & Localization' },
+  { id: 'localize-selected', label: 'Localize for selected language', group: 'Translation & Localization' },
+  { id: 'preserve-meaning-flow', label: 'Preserve meaning, improve flow', group: 'Translation & Localization' },
+  { id: 'adapt-channel-lang', label: 'Adapt for selected channel', group: 'Translation & Localization' },
+
   { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
   { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
   { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
@@ -4027,6 +4032,17 @@ Revision History:
           
           let instruction = action === 'custom-instruction' ? customRevisionInstruction : (actionDef ? actionDef.label : action);
           
+          if (actionDef?.group === 'Translation & Localization') {
+            instruction += `. Target Language: ${externalContentLanguage}. Preserve meaning but adapt tone naturally for this language. Avoid literal machine translation. `;
+            if (externalContentLanguage === 'Persian') {
+              instruction += `CRITICAL: Output must be natural, readable, and spoken-friendly. Avoid formal mechanical Persian. Avoid stiff translation patterns. Keep the COH voice.`;
+            } else if (externalContentLanguage === 'English') {
+              instruction += `CRITICAL: Output should be polished, professional, and clear. Keep the COH voice.`;
+            } else {
+              instruction += `CRITICAL: Adapt to natural usage in ${externalContentLanguage}. Keep the COH voice.`;
+            }
+          }
+          
           const result = await aiService.revise({
             previousDraft: activeDraftText,
             rawInput: externalContentContext,
@@ -4043,6 +4059,10 @@ Revision History:
 
           revised = result.revisedCopy || revised;
           actionLabel = action === 'custom-instruction' ? `Custom: ${customRevisionInstruction || 'Rewrite'}` : actionLabel;
+          
+          if (actionDef?.group === 'Translation & Localization') {
+            actionLabel = `${actionLabel} | Language: ${externalContentLanguage}`;
+          }
           
           const newVersion = activeDraftVersion + 1;
           setActiveDraftVersion(newVersion);
@@ -6964,6 +6984,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
+                        <p className="text-[9px] text-coh-navy/50 mt-1 italic leading-tight">Select the target language for translation or localized revision.</p>
                       </div>
                       <div className="flex-1 min-w-[100px]">
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Tone</label>
@@ -7092,13 +7113,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     <div className="flex gap-2 flex-wrap justify-between items-center border-t border-coh-gold/15 pt-4">
                       <div className="flex gap-2 flex-wrap">
-                         <button
-                          disabled={isSavingToLibrary}
-                          onClick={() => handleSaveVersionToLibrary(false)}
-                          className="bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/20 transition disabled:opacity-50"
-                        >
-                          {isSavingToLibrary ? 'Saving...' : 'Save to Library'}
-                        </button>
+                         <Button disabled={isSavingToLibrary} onClick={() => handleSaveVersionToLibrary(false)} variant="secondary" size="sm">{isSavingToLibrary ? 'Saving...' : 'Save to Library'}</Button>
                         <button
                           disabled={isSavingToLibrary}
                           onClick={() => handleSaveVersionToLibrary(true)}
@@ -7219,13 +7234,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
                       
                       <div className="pt-2">
-                        <button
-                          onClick={handleStartExternalRevision}
-                          disabled={!externalContentText.trim()}
-                          className="cursor-not-allowed opacity-50 bg-coh-navy text-coh-gold hover:bg-coh-navy-light px-6 py-2.5 rounded font-serif text-sm font-semibold transition disabled:opacity-50 action-button interactive-button"
-                        >
+                        <Button onClick={handleStartExternalRevision} disabled={!externalContentText.trim()} variant="secondary" className="px-6 py-2.5">
                           Start Revising
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -7251,7 +7262,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     const actionsInGroup = REVISION_ACTIONS.filter(a => a.group === group);
                     if (actionsInGroup.length === 0) return null;
                     
-                    const isExpandedDefault = ['Clean & Polish', 'Voice & Tone', 'COH & Strategic Fit'].includes(group);
+                    const isExpandedDefault = ['Clean & Polish', 'Voice & Tone', 'COH & Strategic Fit', 'Translation & Localization'].includes(group);
                     
                     return (
                       <details key={group} className="border border-coh-gold/20 rounded bg-coh-cream/10 overflow-hidden" open={isExpandedDefault}>
@@ -7302,14 +7313,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       rows={3}
                       className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-xs mb-1.5 resize-none"
                     />
-                    <button
-                      onClick={() => applyRevision('custom-instruction')}
-                      disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null}
-                      className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 rounded text-[11px] font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
-                    >
+                    <Button onClick={() => applyRevision('custom-instruction')} disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null} variant="secondary" className="w-full py-2">
                       {activeRevisionAction === 'custom-instruction' ? 'Applying...' : 'Apply Custom Revision'}
                       {activeRevisionAction === 'custom-instruction' && <span className="animate-spin text-[10px]">⚙️</span>}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </div>
