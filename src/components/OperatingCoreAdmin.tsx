@@ -76,13 +76,48 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
   const [draftCore, setDraftCore] = useState<OperatingCore>(deepSanitize(safeCore));
   
   const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<CoreDocument[]>([]);
+
+  useEffect(() => {
+    const fetchDocs = async () => {
+      if (dbStatus === 'configured') {
+        try {
+          const res = await fetch('/api/operating-core/documents');
+          if (res.ok) {
+            setOperatingCoreDocuments(await res.json());
+          }
+        } catch(e) { console.error('Failed to fetch docs', e); }
+      } else if (dbStatus === 'local_only') {
+        const saved = localStorage.getItem('coh_core_docs_v1');
+        if (saved) {
+           try { setOperatingCoreDocuments(JSON.parse(saved)); } catch(e){}
+        }
+      }
+    };
+    fetchDocs();
+  }, [dbStatus]);
+
+  useEffect(() => {
+     if (dbStatus === 'local_only') {
+        localStorage.setItem('coh_core_docs_v1', JSON.stringify(operatingCoreDocuments));
+     }
+  }, [operatingCoreDocuments, dbStatus]);
+
   const [isLoadingDocs, setIsLoadingDocs] = useState(true);
   
   useEffect(() => {
     const loadDocs = async () => {
       setIsLoadingDocs(true);
       const docs = await getCoreDocuments();
-      setOperatingCoreDocuments(docs);
+      
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
       setIsLoadingDocs(false);
     };
     loadDocs();
@@ -650,12 +685,44 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-6">
               <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
                 <h3 className="font-serif text-xl font-bold text-coh-navy">Core Documents</h3>
-<div className="bg-red-50 border border-red-200 text-red-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
+{dbStatus === 'local_only' ? (
+              <div className="bg-red-50 border border-red-200 text-red-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
                 <span className="text-red-500">⚠️</span> 
                 <strong>Storage Warning:</strong> Local/browser storage only. Not safe for shared use. Connect a production database for team persistence.
               </div>
+              ) : dbStatus === 'configured' ? (
+              <div className="bg-green-50 border border-green-200 text-green-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
+                <span className="text-green-500">✓</span> 
+                <strong>Persistent storage configured.</strong> Team knowledge base is active.
+              </div>
+              ) : null}
                 <button onClick={async () => {
-                  const newDoc = await addCoreDocument({
+                  
+                  const baseDoc = {
+                    title: 'New Core Document',
+                    documentType: 'Strategic Plan',
+                    status: 'Draft',
+                    brainArea: 'Passport',
+                    brainRole: 'Rule',
+                    shortContext: '',
+                    rawText: '',
+                    createdBy: 'Superadmin'
+                  };
+                  if (dbStatus === 'configured') {
+                     const res = await fetch('/api/operating-core/documents', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(baseDoc)
+                     });
+                     if (res.ok) {
+                        const {id} = await res.json();
+                        setOperatingCoreDocuments([{...baseDoc, id, createdAt: new Date().toISOString()} as CoreDocument, ...operatingCoreDocuments]);
+                     }
+                  } else {
+                     const newDoc = await addCoreDocument(baseDoc);
+                     setOperatingCoreDocuments([newDoc, ...operatingCoreDocuments]);
+                  }
+                  /* 
                     title: 'New Core Document',
                     documentType: 'Strategic Plan',
                     status: 'Draft',
@@ -665,7 +732,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                     rawText: '',
                     createdBy: 'Superadmin'
                   });
-                  setOperatingCoreDocuments([newDoc, ...operatingCoreDocuments]);
+                  */
                 }} className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button">
                   <Plus size={12}/> Add Core Document
                 </button>
@@ -685,12 +752,26 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                           const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].title = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { title: val });
                         }} className="font-serif text-lg font-bold bg-transparent focus:outline-none w-1/2 border-b border-coh-gold/40" placeholder="Document Title"/>
                         <button onClick={async () => {
                           await deleteCoreDocument(doc.id);
-                          setOperatingCoreDocuments(operatingCoreDocuments.filter(d => d.id !== doc.id));
+                          
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, { method: 'DELETE' });
+    }
+    setOperatingCoreDocuments(operatingCoreDocuments.filter(d => d.id !== doc.id));
+    
                         }} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
                       </div>
                       
@@ -701,7 +782,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].documentType = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { documentType: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Strategic Plan</option>
@@ -718,7 +808,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].status = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { status: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Draft</option>
@@ -732,7 +831,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].brainArea = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { brainArea: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Passport</option>
@@ -750,7 +858,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].brainRole = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { brainRole: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Definition</option>
@@ -767,7 +884,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].shortContext = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { shortContext: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" placeholder="Why is this document in the core?"/>
                         </div>
@@ -778,7 +904,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].rawText = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             updateCoreDocument(doc.id, { rawText: val });
                           }} className="w-full bg-coh-cream/30 border border-coh-gold/20 p-2 rounded text-xs font-mono h-24 whitespace-pre-wrap" placeholder="Paste actual source text here..."/>
                         </div>
@@ -792,7 +927,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
                             docs[idx].extractedText = val;
-                            setOperatingCoreDocuments(docs);
+                            
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                             await updateCoreDocument(doc.id, { extractedText: val });
                           }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-16 mb-2" placeholder="The system distills rules from the content here..."/>
                           
@@ -803,7 +947,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
                                 docs[idx].distilledKernelNotes = val;
-                                setOperatingCoreDocuments(docs);
+                                
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                                 await updateCoreDocument(doc.id, { distilledKernelNotes: val });
                               }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
                             </div>
@@ -813,7 +966,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
                                 docs[idx].extractedClaimEvidence = val;
-                                setOperatingCoreDocuments(docs);
+                                
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                                 await updateCoreDocument(doc.id, { extractedClaimEvidence: val });
                               }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
                             </div>
@@ -823,7 +985,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
                                 docs[idx].extractedVoiceGuidance = val;
-                                setOperatingCoreDocuments(docs);
+                                
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                                 await updateCoreDocument(doc.id, { extractedVoiceGuidance: val });
                               }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
                             </div>
@@ -833,7 +1004,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
                                 docs[idx].extractedVisualGuidance = val;
-                                setOperatingCoreDocuments(docs);
+                                
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                                 await updateCoreDocument(doc.id, { extractedVisualGuidance: val });
                               }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
                             </div>
@@ -844,7 +1024,16 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                               const updated = await applyCoreDocumentToOperatingCore(doc.id);
                               const docs = [...operatingCoreDocuments];
                               docs[idx] = updated;
-                              setOperatingCoreDocuments(docs);
+                              
+    if (dbStatus === 'configured') {
+       fetch(`/api/operating-core/documents/${doc.id}`, {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(docs[idx])
+       });
+    }
+    setOperatingCoreDocuments(docs);
+    
                               alert('Insights saved and queued for compiler injection!');
                             }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
                               Review & Apply to Operating Core

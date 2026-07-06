@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import operatingCoreRouter from './server/operatingCore.js';
 import cors from 'cors';
 import * as providerManager from './server/ai/providerManager.js';
 import { buildGenerationPrompt } from './server/ai/promptBuilder.js';
@@ -489,3 +490,5 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 }
 
 export default app;
+
+app.use('/api/operating-core', operatingCoreRouter);

@@ -1,4 +1,6 @@
-export interface CoreDocument {
+import fs from 'fs';
+
+const content = `export interface CoreDocument {
   id: string;
   title: string;
   documentType: string;
@@ -56,7 +58,7 @@ export async function getCoreDocuments(): Promise<CoreDocument[]> {
 export async function addCoreDocument(doc: Omit<CoreDocument, 'id' | 'createdAt' | 'updatedAt' | 'appliedToOperatingCore'>): Promise<CoreDocument> {
   const newDoc: CoreDocument = {
     ...doc,
-    id: `cdoc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    id: \`cdoc-\${Date.now()}-\${Math.random().toString(36).substr(2, 9)}\`,
     appliedToOperatingCore: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -85,7 +87,7 @@ export async function addCoreDocument(doc: Omit<CoreDocument, 'id' | 'createdAt'
 export async function updateCoreDocument(id: string, updates: Partial<CoreDocument>): Promise<CoreDocument> {
   let fallbackNeeded = false;
   try {
-     const res = await fetch(`/api/operating-core/documents/${id}`, {
+     const res = await fetch(\`/api/operating-core/documents/\${id}\`, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify(updates)
@@ -114,7 +116,7 @@ export async function updateCoreDocument(id: string, updates: Partial<CoreDocume
 export async function deleteCoreDocument(id: string): Promise<void> {
   let fallbackNeeded = false;
   try {
-     const res = await fetch(`/api/operating-core/documents/${id}`, { method: 'DELETE' });
+     const res = await fetch(\`/api/operating-core/documents/\${id}\`, { method: 'DELETE' });
      if (!res.ok) fallbackNeeded = true;
   } catch(e) { fallbackNeeded = true; }
 
@@ -140,3 +142,6 @@ export async function unapplyCoreDocumentFromOperatingCore(id: string): Promise<
     appliedAt: undefined
   });
 }
+`;
+
+fs.writeFileSync('src/lib/coreDocumentsStorage.ts', content, 'utf8');
