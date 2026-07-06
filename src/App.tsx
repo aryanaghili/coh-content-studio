@@ -1566,11 +1566,15 @@ export default function App() {
   
   // --- External Content Mode Inputs ---
   const [externalContentText, setExternalContentText] = useState<string>('');
-  const [externalContentContext, setExternalContentContext] = useState<string>('');
-  const [externalContentChannel, setExternalContentChannel] = useState<string>('General / Custom');
-  const [externalContentFormat, setExternalContentFormat] = useState<string>('General / Custom');
-  const [externalContentLanguage, setExternalContentLanguage] = useState<string>('English');
-  const [externalContentTone, setExternalContentTone] = useState<string>('Balanced / COH Default');
+  const [revisionSettings, setRevisionSettings] = useState({
+    channel: 'General / Custom',
+    format: 'General / Custom',
+    targetLanguage: 'English',
+    tone: 'Balanced / COH Default',
+    optionalContext: '',
+    revisionMode: 'Standard'
+  });
+  const [settingsChangedSinceRevision, setSettingsChangedSinceRevision] = useState<boolean>(false);
 
   // --- Source Library Forms ---
   const [newSource, setNewSource] = useState<{
@@ -3851,12 +3855,12 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const isSimple = creationMode === 'simple';
     const isQuick = creationMode === 'quick';
     const isExternal = activeDraftSource === 'External Content';
-    const channel = isExternal ? externalContentChannel : (isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel));
-    const format = isExternal ? externalContentFormat : (isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat));
-    const lang = isExternal ? externalContentLanguage : (isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language));
+    const channel = isExternal ? revisionSettings.channel : (isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel));
+    const format = isExternal ? revisionSettings.format : (isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat));
+    const lang = isExternal ? revisionSettings.targetLanguage : (isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language));
     const audience = isExternal ? 'External' : (isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience));
-    const purpose = isExternal ? externalContentContext : (isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose));
-    const goal = isExternal ? externalContentContext : (isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic));
+    const purpose = isExternal ? revisionSettings.optionalContext : (isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose));
+    const goal = isExternal ? revisionSettings.optionalContext : (isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic));
 
     const uniqueName = generateUniqueSaveName(channel, format, activeDraftVersion, goal);
     const title = activeDraftTitle || 'Untitled Draft';
@@ -4014,7 +4018,7 @@ Revision History:
   };
 
   // --- Apply Revision ---
-    const applyRevision = async (action: string) => {
+    const runRevision = async (action: string) => {
     if (activeRevisionAction) return;
     setActiveRevisionAction(action);
     setRevisionSuccessAction(null);
@@ -4035,28 +4039,25 @@ Revision History:
           let instruction = action === 'custom-instruction' ? customRevisionInstruction : (actionDef ? actionDef.label : action);
           
           if (actionDef?.group === 'Translation & Localization') {
-            if (generationMode !== 'ai' || aiStatus !== 'connected') {
-              throw new Error('Translation requires AI generation. Please configure AI Connection in Settings.');
-            }
-            instruction += `. Target Language: ${externalContentLanguage}. Preserve meaning but adapt tone naturally for this language. Avoid literal machine translation. `;
-            if (externalContentLanguage.includes('Persian')) {
+            instruction += `. Target Language: ${revisionSettings.targetLanguage}. Preserve meaning but adapt tone naturally for this language. Avoid literal machine translation. `;
+            if (revisionSettings.targetLanguage.includes('Persian')) {
               instruction += `CRITICAL: Output must be natural, readable, and spoken-friendly. Avoid formal mechanical Persian. Avoid stiff translation patterns. Keep the COH voice.`;
-            } else if (externalContentLanguage === 'English') {
+            } else if (revisionSettings.targetLanguage === 'English') {
               instruction += `CRITICAL: Output should be polished, professional, and clear. Keep the COH voice.`;
             } else {
-              instruction += `CRITICAL: Adapt to natural usage in ${externalContentLanguage}. Keep the COH voice.`;
+              instruction += `CRITICAL: Adapt to natural usage in ${revisionSettings.targetLanguage}. Keep the COH voice.`;
             }
           }
           
           const result = await aiService.revise({
             previousDraft: activeDraftText,
-            rawInput: externalContentContext,
-            channel: externalContentChannel,
-            outputFormat: externalContentFormat,
+            rawInput: revisionSettings.optionalContext,
+            channel: revisionSettings.channel,
+            outputFormat: revisionSettings.format,
             audience: 'General Public',
-            purpose: externalContentContext || 'General Revision',
-            language: externalContentLanguage,
-            tone: externalContentTone,
+            purpose: revisionSettings.optionalContext || 'General Revision',
+            language: revisionSettings.targetLanguage,
+            tone: revisionSettings.tone,
             selectedRevisionAction: action,
             revisionInstruction: instruction,
             operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision Studio', action })
@@ -4066,20 +4067,8 @@ Revision History:
           actionLabel = action === 'custom-instruction' ? `Custom: ${customRevisionInstruction || 'Rewrite'}` : actionLabel;
           
           if (actionDef?.group === 'Translation & Localization') {
-            actionLabel = `${actionLabel} | Language: ${externalContentLanguage}`;
+            actionLabel = `${actionLabel} | Language: ${revisionSettings.targetLanguage}`;
           }
-          
-          const newVersion = activeDraftVersion + 1;
-          setActiveDraftVersion(newVersion);
-          setActiveDraftHistory(prev => [
-            ...prev,
-            {
-              version: newVersion,
-              text: revised,
-              timestamp: new Date().toLocaleTimeString(),
-              actionUsed: actionLabel
-            }
-          ]);
           
           if (action === 'custom-instruction') {
             setCustomRevisionInstruction('');
@@ -4101,6 +4090,7 @@ Revision History:
         }
       }
 
+      setSettingsChangedSinceRevision(false);
       const newVersion = activeDraftVersion + 1;
       setActiveDraftText(revised);
       setActiveDraftVersion(newVersion);
@@ -4108,10 +4098,7 @@ Revision History:
         version: newVersion,
         text: revised,
         timestamp: new Date().toLocaleTimeString(),
-        actionUsed: actionLabel,
-        language: externalContentLanguage,
-        channel: externalContentChannel,
-        format: externalContentFormat
+        actionUsed: `${actionLabel} | Channel: ${revisionSettings.channel} | Language: ${revisionSettings.targetLanguage}`
       }]);
       setRevisionSuccessAction(action);
       setTimeout(() => setRevisionSuccessAction(null), 2000);
@@ -6968,8 +6955,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex-1 min-w-[120px]">
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Channel</label>
                         <select
-                          value={externalContentChannel}
-                          onChange={(e) => setExternalContentChannel(e.target.value)}
+                          value={revisionSettings.channel}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, channel: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
                           {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
@@ -6980,8 +6967,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex-1 min-w-[120px]">
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Format</label>
                         <select
-                          value={externalContentFormat}
-                          onChange={(e) => setExternalContentFormat(e.target.value)}
+                          value={revisionSettings.format}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, format: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
                           {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
@@ -6992,8 +6979,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex-1 min-w-[100px]">
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Language</label>
                         <select
-                          value={externalContentLanguage}
-                          onChange={(e) => setExternalContentLanguage(e.target.value)}
+                          value={revisionSettings.targetLanguage}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, targetLanguage: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
                           {LANGUAGES.map(l => (
@@ -7005,8 +6992,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex-1 min-w-[100px]">
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Tone</label>
                         <select
-                          value={externalContentTone}
-                          onChange={(e) => setExternalContentTone(e.target.value)}
+                          value={revisionSettings.tone}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, tone: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         >
                           {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
@@ -7018,8 +7005,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Optional Context / Framing</label>
                         <input
                           type="text"
-                          value={externalContentContext}
-                          onChange={(e) => setExternalContentContext(e.target.value)}
+                          value={revisionSettings.optionalContext}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, optionalContext: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           placeholder="Add audience context or what should change..."
                           className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
                         />
@@ -7122,7 +7109,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           </ul>
                         </details>
                         <div className="flex gap-2 pt-2">
-                          <button onClick={() => applyRevision('remove-unsupported')} className="px-2 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded font-semibold text-amber-900 text-[10px] transition">Remove Unsupported Claims</button>
+                          <button onClick={() => runRevision('remove-unsupported')} className="px-2 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded font-semibold text-amber-900 text-[10px] transition">Remove Unsupported Claims</button>
                         </div>
                       </div>
                     )}
@@ -7191,8 +7178,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div>
                         <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Optional Context</label>
                         <textarea
-                          value={externalContentContext}
-                          onChange={(e) => setExternalContentContext(e.target.value)}
+                          value={revisionSettings.optionalContext}
+                          onChange={(e) => { setRevisionSettings(prev => ({...prev, optionalContext: e.target.value})); setSettingsChangedSinceRevision(true); }}
                           placeholder="Add audience, channel, purpose, tone, or what should change."
                           className="w-full h-16 bg-coh-cream/30 border border-coh-gold/20 p-3 rounded text-xs text-coh-navy resize-none"
                         />
@@ -7202,8 +7189,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Channel</label>
                           <select
-                            value={externalContentChannel}
-                            onChange={(e) => setExternalContentChannel(e.target.value)}
+                            value={revisionSettings.channel}
+                            onChange={(e) => { setRevisionSettings(prev => ({...prev, channel: e.target.value})); setSettingsChangedSinceRevision(true); }}
                             className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                           >
                             {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
@@ -7214,8 +7201,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Output Format</label>
                           <select
-                            value={externalContentFormat}
-                            onChange={(e) => setExternalContentFormat(e.target.value)}
+                            value={revisionSettings.format}
+                            onChange={(e) => { setRevisionSettings(prev => ({...prev, format: e.target.value})); setSettingsChangedSinceRevision(true); }}
                             className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                           >
                             {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
@@ -7226,8 +7213,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Language</label>
                           <select
-                            value={externalContentLanguage}
-                            onChange={(e) => setExternalContentLanguage(e.target.value)}
+                            value={revisionSettings.targetLanguage}
+                            onChange={(e) => { setRevisionSettings(prev => ({...prev, targetLanguage: e.target.value})); setSettingsChangedSinceRevision(true); }}
                             className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                           >
                             {LANGUAGES.map(l => (
@@ -7238,8 +7225,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Tone</label>
                           <select
-                            value={externalContentTone}
-                            onChange={(e) => setExternalContentTone(e.target.value)}
+                            value={revisionSettings.tone}
+                            onChange={(e) => { setRevisionSettings(prev => ({...prev, tone: e.target.value})); setSettingsChangedSinceRevision(true); }}
                             className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                           >
                             {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
@@ -7294,7 +7281,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               <button
                                 key={actionDef.id}
                                 disabled={isDisabled}
-                                onClick={() => applyRevision(actionDef.id)}
+                                onClick={() => runRevision(actionDef.id)}
                                 title={actionDef.description}
                                 className={`w-full text-left py-2 px-3 border rounded text-[11px] transition font-semibold flex items-center justify-between ${
                                   isRunning
@@ -7329,7 +7316,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       rows={3}
                       className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-xs mb-1.5 resize-none"
                     />
-                    <Button onClick={() => applyRevision('custom-instruction')} disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null} variant="secondary" className="w-full py-2">
+                    <Button onClick={() => runRevision('custom-instruction')} disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null} variant="secondary" className="w-full py-2">
                       {activeRevisionAction === 'custom-instruction' ? 'Applying...' : 'Apply Custom Revision'}
                       {activeRevisionAction === 'custom-instruction' && <span className="animate-spin text-[10px]">⚙️</span>}
                     </Button>
