@@ -5147,6 +5147,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
           </div>
         </ErrorBoundary>)}
+        {/* --- EDITORIAL CALENDAR STUDIO --- */}
+        {activeTab === 'editorial-calendar' && (
+          <ErrorBoundary fallbackTitle="Editorial Calendar Error">
+            <EditorialCalendarStudio 
+              onHandoff={(workItem) => {
+                setActiveWorkItem(workItem);
+                setActiveTab('content-workspace');
+              }}
+            />
+          </ErrorBoundary>
+        )}
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
         {activeTab === 'content-workspace' && (<ErrorBoundary fallbackTitle="Content Workspace Error">
           <div className="page-shell">
