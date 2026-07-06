@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en">
-  <head>
+  <head><script>window.addEventListener("error", (e) => fetch("http://localhost:9999", {method: "POST", body: e.message + "\n" + e.error?.stack})); window.addEventListener("unhandledrejection", (e) => fetch("http://localhost:9999", {method: "POST", body: e.reason?.stack || e.reason}));</script>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
