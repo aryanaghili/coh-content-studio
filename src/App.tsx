@@ -2,6 +2,85 @@ import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
 import { useState, useEffect, useRef } from 'react';
 import {
+
+
+type RevisionActionGroup = 
+  | 'Clean & Polish'
+  | 'Voice & Tone'
+  | 'COH & Strategic Fit'
+  | 'Structure & Alternatives'
+  | 'Evidence & Claim Discipline'
+  | 'Translation & Localization';
+
+interface RevisionActionDef {
+  id: string;
+  label: string;
+  group: RevisionActionGroup;
+  description?: string;
+}
+
+export const REVISION_ACTIONS: RevisionActionDef[] = [
+  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
+  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
+  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
+  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
+  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
+  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
+  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
+
+  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
+  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
+  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
+  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
+  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
+  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
+  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
+  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
+  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
+
+  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
+  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
+  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
+  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
+  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
+  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
+  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
+  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
+
+  { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
+  { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
+  { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
+  { id: 'shorter-version', label: 'Create a shorter version', group: 'Structure & Alternatives' },
+  { id: 'longer-version', label: 'Create a longer version', group: 'Structure & Alternatives' },
+  { id: 'bullet-points', label: 'Turn into bullet points', group: 'Structure & Alternatives' },
+  { id: 'paragraph', label: 'Turn into a paragraph', group: 'Structure & Alternatives' },
+  { id: 'email', label: 'Turn into an email', group: 'Structure & Alternatives' },
+  { id: 'social-post', label: 'Turn into a social post', group: 'Structure & Alternatives' },
+
+  { id: 'remove-unsupported', label: '🛡️ Remove unsupported claims', group: 'Evidence & Claim Discipline' },
+  { id: 'flag-claims', label: 'Flag claims that need proof', group: 'Evidence & Claim Discipline' },
+  { id: 'more-careful', label: 'Make claims more careful', group: 'Evidence & Claim Discipline' },
+  { id: 'stronger-proof', label: '📊 Expand with stronger proof', group: 'Evidence & Claim Discipline' },
+  { id: 'less-exaggerated', label: 'Make it less exaggerated', group: 'Evidence & Claim Discipline' },
+  { id: 'simplify-claims', label: 'Simplify factual claims', group: 'Evidence & Claim Discipline' },
+
+  { id: 'translate', label: 'Translate to selected language', group: 'Translation & Localization' },
+  { id: 'localize', label: 'Localize for natural tone', group: 'Translation & Localization' },
+  { id: 'preserve-meaning', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
+  { id: 'adapt-channel', label: 'Adapt translation for selected channel', group: 'Translation & Localization' },
+  { id: 'persian-natural', label: 'Make Persian more natural and spoken', group: 'Translation & Localization' },
+  { id: 'english-polished', label: 'Make English more polished', group: 'Translation & Localization' },
+];
+
+export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
+  'Clean & Polish',
+  'Voice & Tone',
+  'COH & Strategic Fit',
+  'Structure & Alternatives',
+  'Evidence & Claim Discipline',
+  'Translation & Localization'
+];
+
   LayoutDashboard,
   FileText,
   Cpu,
@@ -3849,174 +3928,55 @@ Revision History:
   };
 
   // --- Apply Revision ---
-  const applyRevision = async (action: string) => {
-    if (activeRevisionAction) return; // Prevent duplicate clicks
+    const applyRevision = async (action: string) => {
+    if (activeRevisionAction) return;
     setActiveRevisionAction(action);
     setRevisionSuccessAction(null);
     setActiveRevisionError(null);
 
     let revised = activeDraftText;
-    let actionLabel = action;
+    let actionLabel = REVISION_ACTIONS.find(a => a.id === action)?.label || action;
 
     try {
-      // Local deterministic cleanup action
       if (action === 'clean-ai-punctuation') {
-        actionLabel = 'Clean AI-Style Characters';
         revised = cleanWritingArtifacts(revised);
         setCleanPunctuationNote('Cleaned punctuation and hidden characters. Meaning preserved.');
         setTimeout(() => setCleanPunctuationNote(''), 4000);
-        
-        const newVersion = activeDraftVersion + 1;
-        setActiveDraftText(revised);
-        setActiveDraftVersion(newVersion);
-        setActiveDraftHistory(prev => [...prev, {
-          version: newVersion,
-          text: revised,
-          timestamp: new Date().toLocaleTimeString(),
-          actionUsed: actionLabel
-        }]);
-        setRevisionSuccessAction(action);
-        setTimeout(() => setRevisionSuccessAction(null), 2000);
-        setActiveRevisionAction(null);
-        return;
-      }
-
-      if (generationMode === 'ai' && aiStatus === 'connected') {
-        const isSimple = creationMode === 'simple';
-        const isQuick = creationMode === 'quick';
-        const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
-        const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
-        const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
-        const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
-        const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
-        const audience = isSimple ? 'General Public' : (isQuick ? 'General Public' : advancedBrief.audience);
-        const purpose = isSimple ? 'General / Open' : (isQuick ? 'General / Open' : advancedBrief.purpose);
-        const toneLevel = isSimple ? '3' : (isQuick ? '3' : String(advancedBrief.toneIntensity));
-
-        const result = await aiService.revise({
-          previousDraft: activeDraftText,
-          rawInput: goal || notes,
-          channel,
-          outputFormat: format,
-          audience,
-          purpose,
-          language: lang,
-          tone: toneLevel,
-          selectedRevisionAction: action,
-          revisionInstruction: action === 'custom-instruction' ? customRevisionInstruction : '',
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision Studio', action })
-        });
-
-        revised = result.revisedCopy || revised;
-        actionLabel = action === 'custom-instruction' ? `Custom: ${customRevisionInstruction || 'Rewrite'}` : action;
-        if (action === 'custom-instruction') {
-          setCustomRevisionInstruction('');
-        }
       } else {
-        // Prototype Fallback Actions
-        await new Promise(resolve => setTimeout(resolve, 800));
-        switch (action) {
-          case 'coh-specific':
-            actionLabel = 'Make more COH-specific';
-            revised = `Climate Opera Haus builds a durable repertoire-based climate canon. By treating climate as a lived condition rather than a campaign theme, our live opera productions serve as origin assets that scale into filmed media and global licensing.\n\n${revised}`;
-            break;
-          case 'sharper':
-            actionLabel = 'Make sharper';
-            revised = revised
-              .replace(/\b(basically|essentially|simply|just|actually|very|extremely|really|virtually)\b/gi, '')
-              .replace(/\bis able to\b/gi, 'can')
-              .replace(/\bis designed to\b/gi, 'aims to')
-              .replace(/\bwe are developing\b/gi, 'we develop')
-              .replace(/\bwe are building\b/gi, 'we build')
-              .replace(/\s+/g, ' ')
-              .trim();
-            break;
-          case 'human':
-            actionLabel = 'Make more human';
-            revised = `We believe that climate change isn't just something to read about in news briefs—it's a reality we experience every day. That's why we compose and stage these musical worlds. We invite you to join our community and explore these planetary stories with us.\n\n${revised
-              .replace(/secure strategic value/gi, 'connect with us')
-              .replace(/monetization parameters/gi, 'creative reach')
-              .replace(/institutional adoption/gi, 'theatres sharing our work')}`;
-            break;
-          case 'institutional':
-            actionLabel = 'Make more institutional';
-            revised = `Climate Opera Haus operates as a structured cultural infrastructure venture. We formalize environmental indices into durable staged assets to deliver reliable partnership alignment and permanent IP durability.\n\n${revised
-              .replace(/shared stories/gi, 'institutional framework')
-              .replace(/feel/gi, 'evaluate')
-              .replace(/cool/gi, 'prestigious')}`;
-            break;
-          case 'less-poetic':
-            actionLabel = 'Make less poetic';
-            revised = revised
-              .replace(/visceral soundscapes/gi, 'staged compositions')
-              .replace(/somatic staging/gi, 'production design')
-              .replace(/planetary thresholds/gi, 'environmental conditions')
-              .replace(/compositional wind and tides/gi, 'musical themes');
-            break;
-          case 'less-corporate':
-            actionLabel = 'Make less corporate';
-            revised = revised
-              .replace(/\b(monetize|monetization|leverage|KPIs|deliverables|value-add|IP durability)\b/gi, 'extend')
-              .replace(/cultural-IP framework/gi, 'artistic cycle')
-              .replace(/origin assets/gi, 'creative works');
-            break;
-          case 'less-ngo':
-            actionLabel = 'Make less NGO-like';
-            revised = revised
-              .replace(/\b(awareness|advocacy|save the planet|fight climate change|climate action)\b/gi, 'durability')
-              .replace(/campaign theme/gi, 'lived condition')
-              .replace(/environmental threshold/gi, 'geographical indicator');
-            break;
-          case 'shorter':
-            actionLabel = 'Make shorter (compressed 30%)';
-            const sentences = revised.split('. ').filter(s => s.trim().length > 0);
-            revised = sentences.slice(0, Math.ceil(sentences.length * 0.65)).join('. ');
-            if (revised && !revised.endsWith('.')) revised += '.';
-            break;
-          case 'openings':
-            actionLabel = 'Create 3 alternative openings';
-            revised = `[ALTERNATIVE OPENINGS]\n1. "How do we build cultural infrastructure that outlasts fleeting news cycles?"\n2. "Climate Opera Haus translates planetary data into live stage productions."\n3. "At the intersection of composition and climate science lies the repeatable canon."\n\n---\n\n${revised}`;
-            break;
-          case 'ctas':
-            actionLabel = 'Create 3 CTA options';
-            revised = revised + '\n\n[SUGGESTED CALLS TO ACTION]\n- Partner: Contact our development team to discuss prestige sponsorship packages.\n- License: Inquire about staging rights and filmed asset distribution options.\n- Follow: Subscribe to the COH circular for operational and repertoire updates.';
-            break;
-          case 'remove-unsupported':
-            actionLabel = 'Remove unsupported claims';
-            const warnings = getFictionalContentWarnings(revised);
-            warnings.forEach(w => {
-              const match = w.match(/"([^"]+)"/);
-              if (match) {
-                const term = match[1];
-                revised = revised.replace(new RegExp(`\\b${term}\\b`, 'gi'), '[REMOVED]');
-              }
-            });
-            revised = revised.replace(/\[REMOVED\]/g, '').replace(/\s{2,}/g, ' ').trim();
-            break;
-          case 'sponsor-facing':
-            actionLabel = 'Make more sponsor-facing';
-            revised = `Sponsorship Alignment Value:\nClimate Opera Haus guarantees high-prestige patron association, intellectual property durability, and long-term brand equity. By backing our live productions, corporate partners gain access to filmed licensing, documentaries, and direct branding rights.\n\n${revised}`;
-            break;
-          case 'audience-friendly':
-            actionLabel = 'Make more audience-friendly';
-            revised = revised
-              .replace(/repertoire-based climate canon/gi, 'collection of environmental operas')
-              .replace(/somatic stage indicators/gi, 'live physical effects')
-              .replace(/origin asset licensing/gi, 'sharing the performances globally');
-            break;
-          case 'channel-ready':
-            actionLabel = 'Make more channel-ready';
-            revised = `[Formatted for Distribution]\n\n${revised}\n\nTags: #ClimateOperaHaus #EcoOpera #SustainableArt #OperaCanon`;
-            break;
-          case 'stronger-proof':
-            actionLabel = 'Expand with stronger proof';
-            revised = `${revised}\n\nProven Repertoire Infrastructure: The Climate Tetralogy spans four distinct operas: Soria Moria (representing Air), The Golden Fountain (Fire), The Water Dragon (Water), and Roar to the Wind (Earth). Each libretto anchors its artistic score in verified geographical indices, providing unparalleled credibility.`;
-            break;
-          case 'custom-instruction':
+        if (generationMode === 'ai' && aiStatus === 'connected') {
+          const actionDef = REVISION_ACTIONS.find(a => a.id === action);
+          
+          let instruction = action === 'custom-instruction' ? customRevisionInstruction : (actionDef ? actionDef.label : action);
+          
+          const result = await aiService.revise({
+            previousDraft: activeDraftText,
+            rawInput: externalContentContext,
+            channel: externalContentChannel,
+            outputFormat: externalContentFormat,
+            audience: 'General Public',
+            purpose: externalContentContext || 'General Revision',
+            language: externalContentLanguage,
+            tone: externalContentTone,
+            selectedRevisionAction: action,
+            revisionInstruction: instruction,
+            operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Revision Studio', action })
+          });
+
+          revised = result.revisedCopy || revised;
+          actionLabel = action === 'custom-instruction' ? `Custom: ${customRevisionInstruction || 'Rewrite'}` : actionLabel;
+          if (action === 'custom-instruction') {
+            setCustomRevisionInstruction('');
+          }
+        } else {
+          // Prototype Fallback Actions
+          await new Promise(resolve => setTimeout(resolve, 800));
+          if (action === 'custom-instruction') {
             actionLabel = `Custom: ${customRevisionInstruction || 'Rewrite'}`;
             revised = `[Revised based on: "${customRevisionInstruction}"]\n\n${revised}\n\n(Adjusted alignment and framing to adhere to your instruction.)`;
             setCustomRevisionInstruction('');
-            break;
+          } else {
+            revised = `[${actionLabel} applied via fallback]\n\n${revised}`;
+          }
         }
       }
 
@@ -4027,7 +3987,10 @@ Revision History:
         version: newVersion,
         text: revised,
         timestamp: new Date().toLocaleTimeString(),
-        actionUsed: actionLabel
+        actionUsed: actionLabel,
+        language: externalContentLanguage,
+        channel: externalContentChannel,
+        format: externalContentFormat
       }]);
       setRevisionSuccessAction(action);
       setTimeout(() => setRevisionSuccessAction(null), 2000);
@@ -6844,18 +6807,83 @@ WRITING CLEANLINESS RULES (CRITICAL):
         )}
 
         {activeTab === 'revision-studio' && (
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
-            <div className="border-b border-coh-gold/20 pb-6">
+          <div className="space-y-6 animate-fadeIn max-w-7xl mx-auto">
+            <div className="border-b border-coh-gold/20 pb-4">
               <h2 className="font-serif text-3xl font-normal text-coh-navy">Revision Studio</h2>
               <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                Refine drafts using localized brand filters. Create new versions (v1, v2, v3) and compare differences.
+                Refine drafts, translate, and apply professional tone filters.
               </p>
             </div>
 
             {activeDraftText ? (
-              <div className="grid grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
-                <div className="col-span-2 space-y-4">
+                {/* Left Column: Config, Editor, Compare, Save */}
+                <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+                  
+                  {/* Embedded Config Bar */}
+                  <div className="bg-coh-cream/30 border border-coh-gold/20 p-3 rounded flex flex-wrap gap-3 items-center text-xs">
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Channel</label>
+                      <select
+                        value={externalContentChannel}
+                        onChange={(e) => setExternalContentChannel(e.target.value)}
+                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
+                      >
+                        {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1 min-w-[120px]">
+                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Format</label>
+                      <select
+                        value={externalContentFormat}
+                        onChange={(e) => setExternalContentFormat(e.target.value)}
+                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
+                      >
+                        {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1 min-w-[100px]">
+                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Language</label>
+                      <select
+                        value={externalContentLanguage}
+                        onChange={(e) => setExternalContentLanguage(e.target.value)}
+                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
+                      >
+                        {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1 min-w-[100px]">
+                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Tone</label>
+                      <select
+                        value={externalContentTone}
+                        onChange={(e) => setExternalContentTone(e.target.value)}
+                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
+                      >
+                        {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="w-full mt-1">
+                      <label className="block text-[9px] uppercase font-bold text-coh-navy/60 mb-0.5">Optional Context / Framing</label>
+                      <input
+                        type="text"
+                        value={externalContentContext}
+                        onChange={(e) => setExternalContentContext(e.target.value)}
+                        placeholder="Add audience context or what should change..."
+                        className="w-full bg-white border border-coh-gold/20 p-1.5 rounded text-coh-navy"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Header */}
                   <div className="flex justify-between items-center">
                     <div className="flex items-baseline gap-3">
                       <input
@@ -6868,9 +6896,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <span className="bg-coh-navy text-coh-gold text-[10px] px-2 py-0.5 rounded font-mono font-bold">
                         Version v{activeDraftVersion}
                       </span>
-                      <span className="bg-coh-gold/20 text-coh-navy border border-coh-gold/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">
-                        {activeDraftSource}
-                      </span>
+                      {activeDraftSource && (
+                        <span className="bg-coh-gold/20 text-coh-navy border border-coh-gold/40 text-[10px] px-2 py-0.5 rounded font-mono font-bold">
+                          {activeDraftSource}
+                        </span>
+                      )}
                     </div>
                     
                     <div className="flex gap-2">
@@ -6884,7 +6914,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  <div className="flex gap-4 items-center bg-coh-cream/40 p-2.5 border border-coh-gold/15 rounded text-xs">
+                  <div className="flex gap-4 items-center bg-coh-cream/40 p-2 border border-coh-gold/15 rounded text-xs">
                     <span className="font-semibold">Compare with previous version:</span>
                     <select
                       value={compareVersionIndex}
@@ -6926,28 +6956,31 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   )}
 
                   <textarea
-                    rows={12}
+                    rows={16}
                     value={activeDraftText}
                     onChange={(e) => setActiveDraftText(e.target.value)}
-                    className="w-full bg-white border border-coh-gold/20 p-6 rounded shadow-sm text-xs leading-relaxed text-coh-navy/90 focus:outline-none focus:ring-1 focus:ring-coh-gold"
+                    className="w-full bg-white border border-coh-gold/20 p-6 rounded shadow-sm text-sm leading-relaxed text-coh-navy/90 focus:outline-none focus:ring-1 focus:ring-coh-gold"
                   />
 
                   {getFictionalContentWarnings(activeDraftText).length > 0 && (
                     <div className="bg-amber-50 border border-amber-200 p-4 rounded text-xs text-amber-900 space-y-2">
                       <span className="font-bold flex items-center gap-1.5">
-                        <AlertTriangle size={14} className="text-amber-700" /> Source Check Needed
+                        <AlertTriangle size={14} className="text-amber-700" /> Source Check Recommended
                       </span>
                       <p className="text-[11px] text-amber-900/80 leading-relaxed">
-                        This draft may include names, claims, dates, numbers, or references that should be checked against approved sources before publishing.
+                        Some names, claims, dates, or references may need verification against your selected sources.
                       </p>
-                      <ul className="list-disc pl-5 text-[11px] space-y-0.5 font-mono text-amber-800">
-                        {getFictionalContentWarnings(activeDraftText).map((w, idx) => (
-                          <li key={idx}>{w}</li>
-                        ))}
-                      </ul>
-                      <p className="text-[11px] font-semibold pt-1 border-t border-amber-200/50">
-                        Verify these items against approved sources before publishing, or remove them.
-                      </p>
+                      <details className="mt-2 text-[11px]">
+                        <summary className="font-semibold cursor-pointer select-none text-amber-800">Show Details</summary>
+                        <ul className="list-disc pl-5 mt-2 space-y-0.5 font-mono text-amber-800">
+                          {getFictionalContentWarnings(activeDraftText).map((w, idx) => (
+                            <li key={idx}>{w}</li>
+                          ))}
+                        </ul>
+                      </details>
+                      <div className="flex gap-2 pt-2">
+                        <button onClick={() => applyRevision('remove-unsupported')} className="px-2 py-1 bg-amber-100 hover:bg-amber-200 border border-amber-300 rounded font-semibold text-amber-900 text-[10px] transition">Remove Unsupported Claims</button>
+                      </div>
                     </div>
                   )}
 
@@ -6972,7 +7005,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           onClick={() => handleSendToVisualStudio({ id: 'draft-temp', title: activeDraftTitle || 'Unsaved Draft', type: 'Content' }, activeDraftText, 'Content')}
                           className="flex items-center gap-1.5 bg-coh-cream text-coh-gold hover:text-coh-gold-dark py-2 px-4 rounded text-[11px] font-serif font-semibold border border-coh-gold/25 transition disabled:opacity-50"
                         >
-                          <Lightbulb size={12} /> Send Visual Direction to Visual Studio
+                          <Lightbulb size={12} /> Send to Visual Studio
                         </button>
                       )}
                       <button
@@ -7001,109 +7034,79 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 </div>
 
-                <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm h-fit space-y-6">
+                {/* Right Column: Revision Controls */}
+                <div className="lg:col-span-5 xl:col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm h-fit max-h-[85vh] overflow-y-auto space-y-5">
                   <div>
-                    <h3 className="font-serif text-lg mb-1 text-coh-navy-light font-bold">Revision Controls</h3>
-                    <p className="text-[10px] text-coh-navy/55 font-mono">Applies brand refinements and updates version index (v1, v2).</p>
+                    <h3 className="font-serif text-lg mb-1 text-coh-navy font-bold flex items-center justify-between">
+                      Revision Tools
+                      {aiStatus !== 'connected' && (
+                        <span className="text-[9px] bg-red-100 text-red-800 px-2 py-0.5 rounded font-mono">AI Offline</span>
+                      )}
+                    </h3>
                   </div>
 
-                  <div className="space-y-5">
-                    {(() => {
-                      const renderRevBtn = (key: string, label: string, tooltip?: string) => {
-                        const isRunning = activeRevisionAction === key;
-                        const isSuccess = revisionSuccessAction === key;
-                        const isDisabled = activeRevisionAction !== null && !isRunning;
-                        return (
-                          <button
-                            key={key}
-                            disabled={isDisabled}
-                            onClick={() => applyRevision(key)}
-                            title={tooltip}
-                            className={`w-full text-left py-2 px-3 border rounded text-xs transition font-semibold flex items-center justify-between ${
-                              isRunning
-                                ? 'bg-coh-gold/20 border-coh-gold text-coh-navy font-bold animate-pulse'
-                                : isSuccess
-                                  ? 'bg-green-50 border-green-300 text-green-800 font-bold'
-                                  : 'bg-coh-cream border-coh-gold/15 text-coh-navy hover:bg-coh-gold/20'
-                            } ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
-                          >
-                            <span>{isRunning ? `${label.split(' ')[0]} Applying...` : isSuccess ? `${label.split(' ')[0]} Applied ✓` : label}</span>
-                            {isRunning && <span className="animate-spin text-[10px]">⚙️</span>}
-                          </button>
-                        );
-                      };
-
+                  <div className="space-y-4">
+                    {REVISION_GROUP_ORDER.map(group => {
+                      const actionsInGroup = REVISION_ACTIONS.filter(a => a.group === group);
+                      if (actionsInGroup.length === 0) return null;
+                      
+                      const isExpandedDefault = ['Clean & Polish', 'Voice & Tone', 'COH & Strategic Fit'].includes(group);
+                      
                       return (
-                        <>
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">1. Style & Tone</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {renderRevBtn('clean-ai-punctuation', '🧼 Clean AI-Style Characters', 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.')}
-                              {renderRevBtn('sharper', '⚡ Make it sharper')}
-                              {renderRevBtn('human', '👤 Make it more human')}
-                              {renderRevBtn('less-poetic', '📐 Make it less poetic')}
-                              {renderRevBtn('less-corporate', '💼 Make it less corporate')}
-                            </div>
+                        <details key={group} className="border border-coh-gold/20 rounded bg-coh-cream/10 overflow-hidden" open={isExpandedDefault}>
+                          <summary className="bg-coh-cream px-3 py-2 text-[10px] uppercase font-bold text-coh-navy/80 tracking-wider cursor-pointer select-none hover:bg-coh-cream-dark transition flex justify-between items-center">
+                            {group}
+                          </summary>
+                          <div className="p-3 space-y-1.5 bg-white">
+                            {actionsInGroup.map(actionDef => {
+                              const isRunning = activeRevisionAction === actionDef.id;
+                              const isSuccess = revisionSuccessAction === actionDef.id;
+                              const isDisabled = activeRevisionAction !== null && !isRunning;
+                              return (
+                                <button
+                                  key={actionDef.id}
+                                  disabled={isDisabled}
+                                  onClick={() => applyRevision(actionDef.id)}
+                                  title={actionDef.description}
+                                  className={`w-full text-left py-2 px-3 border rounded text-[11px] transition font-semibold flex items-center justify-between ${
+                                    isRunning
+                                      ? 'bg-coh-gold/20 border-coh-gold text-coh-navy font-bold animate-pulse'
+                                      : isSuccess
+                                        ? 'bg-green-50 border-green-300 text-green-800 font-bold'
+                                        : 'bg-coh-cream border-coh-gold/15 text-coh-navy hover:bg-coh-gold/20'
+                                  } ${isDisabled ? 'opacity-40 cursor-not-allowed' : 'interactive-button'}`}
+                                >
+                                  <span>{isRunning ? `Applying...` : isSuccess ? `Applied ✓` : actionDef.label}</span>
+                                  {isRunning && <span className="animate-spin text-[10px]">⚙️</span>}
+                                </button>
+                              );
+                            })}
                           </div>
-
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">2. COH Positioning</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {renderRevBtn('coh-specific', '🎭 Make it more COH-specific')}
-                              {renderRevBtn('institutional', '🏛️ Make it more institutional')}
-                              {renderRevBtn('less-ngo', '🌱 Make it less NGO-like')}
-                              {renderRevBtn('sponsor-facing', '💰 Make it more sponsor-facing')}
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">3. Audience & Channel</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {renderRevBtn('audience-friendly', '🤝 Make it more audience-friendly')}
-                              {renderRevBtn('channel-ready', '📱 Make it more channel-ready')}
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">4. Structure & Options</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {renderRevBtn('shorter', '✂️ Make it shorter')}
-                              {renderRevBtn('openings', '📝 Create 3 alternative openings')}
-                              {renderRevBtn('ctas', '📣 Create 3 CTA options')}
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <h4 className="text-[10px] uppercase font-bold text-coh-navy/50 tracking-wider mb-2">5. Proof & Credibility</h4>
-                            <div className="grid grid-cols-1 gap-1.5">
-                              {renderRevBtn('remove-unsupported', '🛡️ Remove unsupported claims')}
-                              {renderRevBtn('stronger-proof', '📊 Expand with stronger proof')}
-                            </div>
-                          </div>
-                        </>
+                        </details>
                       );
-                    })()}
+                    })}
 
                     {activeRevisionError && (
                       <div className="bg-red-50 border border-red-200 text-red-700 p-2 text-xs rounded mb-2">
                         {activeRevisionError}
                       </div>
                     )}
-                    <div className="border-t border-coh-gold/15 pt-2 mt-1 space-y-1">
-                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60">Rewrite with custom instruction</label>
-                      <input
-                        type="text"
+                    
+                    <div className="border-t border-coh-gold/15 pt-4 space-y-2">
+                      <label className="block text-[10px] uppercase font-bold text-coh-navy/60">Custom Revision Instruction</label>
+                      <textarea
                         value={customRevisionInstruction}
                         onChange={(e) => setCustomRevisionInstruction(e.target.value)}
-                        placeholder="What should change?"
-                        className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-xs mb-1.5"
+                        placeholder="e.g. Make this more direct, keep it warm, and shorten the second paragraph."
+                        rows={3}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy text-xs mb-1.5 resize-none"
                       />
                       <button
                         onClick={() => applyRevision('custom-instruction')}
                         disabled={!customRevisionInstruction.trim() || activeRevisionAction !== null}
-                        className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 rounded text-xs font-semibold disabled:opacity-50 flex items-center justify-center gap-1.5"
+                        className="w-full bg-coh-navy text-coh-gold hover:bg-coh-navy-light py-2 rounded text-[11px] font-semibold transition disabled:opacity-50 flex items-center justify-center gap-1.5"
                       >
-                        {activeRevisionAction === 'custom-instruction' ? 'Applying...' : 'Apply'}
+                        {activeRevisionAction === 'custom-instruction' ? 'Applying...' : 'Apply Custom Revision'}
                         {activeRevisionAction === 'custom-instruction' && <span className="animate-spin text-[10px]">⚙️</span>}
                       </button>
                     </div>
@@ -7112,11 +7115,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
               </div>
             ) : (
-              <div className="grid grid-cols-3 gap-8">
-                <div className="col-span-2 bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 bg-white border border-coh-gold/20 p-6 rounded shadow-sm">
                   <h3 className="font-serif text-xl text-coh-navy font-semibold mb-1">Start a Revision</h3>
                   <p className="text-xs text-coh-navy/60 mb-6 font-sans">
-                    Paste any draft, note, post, email, or external content to refine it.
+                    Paste any draft, note, post, email, article, or external content to refine it.
                   </p>
                   
                   <div className="space-y-4">
@@ -7140,7 +7143,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-[10px] uppercase font-bold text-coh-navy/60 mb-1">Channel</label>
                         <select
@@ -7172,7 +7175,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           onChange={(e) => setExternalContentLanguage(e.target.value)}
                           className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy"
                         >
-                          {['English', 'French', 'Spanish', 'German', 'Dutch'].map(opt => (
+                          {['English', 'French', 'Spanish', 'German', 'Dutch', 'Persian'].map(opt => (
                             <option key={opt} value={opt}>{opt}</option>
                           ))}
                         </select>
@@ -7203,7 +7206,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 </div>
 
-                <div className="col-span-1 space-y-4">
+                <div className="lg:col-span-1 space-y-4">
                   <div className="bg-coh-cream/30 border border-coh-gold/20 p-5 rounded">
                     <h4 className="font-serif text-sm font-semibold text-coh-navy mb-2">How to use Revision Studio</h4>
                     <ul className="text-xs text-coh-navy/70 space-y-3 font-sans">
@@ -7213,7 +7216,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </li>
                       <li className="flex gap-2">
                         <span className="text-coh-gold">2.</span>
-                        Use the 1-click revision controls to apply the COH Tone of Voice or optimize for specific audiences.
+                        Use the 1-click revision controls to apply the COH Tone of Voice, translate, or optimize.
                       </li>
                       <li className="flex gap-2">
                         <span className="text-coh-gold">3.</span>
@@ -7230,7 +7233,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
             )}
           </div>
         )}
-
         {/* --- TAB 4: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
