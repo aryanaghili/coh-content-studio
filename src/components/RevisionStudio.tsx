@@ -183,10 +183,6 @@ export function RevisionStudio({
         setCleanNote('Cleaned punctuation and hidden characters.');
         setTimeout(() => setCleanNote(''), 4000);
       } else {
-        if (generationMode !== 'ai' || aiStatus !== 'connected') {
-          throw new Error('AI Generation is disabled or disconnected. Please check AI Connection in Settings.');
-        }
-
         const actionDef = REVISION_ACTIONS.find(a => a.id === action);
         let instruction = action === 'custom-instruction' ? customInstruction : (actionDef ? actionDef.label : action);
         

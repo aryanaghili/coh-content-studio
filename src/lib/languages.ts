@@ -22,7 +22,6 @@ export const LANGUAGES: LanguageOption[] = [
   { id: 'pl', label: 'Polish', nativeLabel: 'Polski', code: 'pl', direction: 'ltr' },
   { id: 'ru', label: 'Russian', nativeLabel: 'Русский', code: 'ru', direction: 'ltr' },
   { id: 'fa', label: 'Persian', nativeLabel: 'فارسی', code: 'fa', direction: 'rtl', supportsColloquialVariant: true },
-  { id: 'fa-colloquial', label: 'Persian, colloquial / narration-ready', nativeLabel: 'فارسی (محاوره)', code: 'fa', direction: 'rtl', supportsColloquialVariant: true },
   { id: 'ar', label: 'Arabic', nativeLabel: 'العربية', code: 'ar', direction: 'rtl' },
   { id: 'tr', label: 'Turkish', nativeLabel: 'Türkçe', code: 'tr', direction: 'ltr' },
   { id: 'zh', label: 'Chinese', nativeLabel: '中文', code: 'zh', direction: 'ltr' },
