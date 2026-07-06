@@ -1,6 +1,7 @@
 import { safeLocalStorageGet, safeLocalStorageSet } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
+import { Button } from './components/ui/Button';
 import { useState, useEffect, useRef } from 'react';
 import {
 
