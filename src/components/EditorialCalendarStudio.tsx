@@ -187,9 +187,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff }) => {
       audience: item.audience,
       purpose: item.pillar, // Maps pillar to purpose conceptually
       status: 'Idea',
-      sourceContext: `Source Basis: ${item.sourceBasis}\\nAdoption Track: ${item.adoptionTrack}\\nRisk Notes: ${item.riskLevel}\\nReason: ${item.reason}`,
+      sourceContext: `Source Basis: ${item.sourceBasis}\nAdoption Track: ${item.adoptionTrack}\nRisk Notes: ${item.riskLevel}\nReason: ${item.reason}`,
       draftVersions: [],
-      imageResults: []
+      imageResults: [],
+      revisionHistory: [],
+      approved: false,
+      saved: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     onHandoff(workItem);
   };
