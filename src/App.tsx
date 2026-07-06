@@ -5064,61 +5064,46 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
         {activeTab === 'content-workspace' && (
           <div className="space-y-8 animate-fadeIn">
-            {!activeWorkItem ? (
-              <div className="bg-white border border-coh-gold/20 p-12 rounded shadow-sm flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 bg-coh-navy/5 rounded-full flex items-center justify-center mb-2">
-                  <span className="text-2xl">📝</span>
+            {/* Active Work Item Header (Optional) */}
+            {activeWorkItem ? (
+              <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h2 className="font-serif text-2xl font-bold text-coh-navy">
+                      {activeWorkItem.title}
+                    </h2>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
+                      {activeWorkItem.status}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 text-xs text-coh-navy/60 font-sans">
+                    <span>Channel: <strong className="text-coh-navy">{activeWorkItem.channel || quickBrief.channel || "Not selected"}</strong></span>
+                    <span>Type: <strong className="text-coh-navy">{activeWorkItem.type || "Content"}</strong></span>
+                  </div>
                 </div>
-                <h2 className="font-serif text-2xl font-bold text-coh-navy">Content Workspace</h2>
-                <p className="text-coh-navy/60 font-sans max-w-md">
-                  No draft yet. Add a message, choose a channel, and generate your first version.
-                </p>
-                <button 
-                  onClick={() => {
-                    const id = `work-${Date.now()}`;
-                    setActiveWorkItem({
-                      id, title: 'New Work Item', type: 'Content', status: 'Brief', draftVersions: [], imageResults: [], revisionHistory: [], approved: false, saved: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-                    });
-                  }} 
-                  className="bg-coh-navy hover:bg-coh-navy-light text-coh-cream font-bold py-2.5 px-6 rounded transition interactive-button mt-4"
-                >
-                  Start New Draft
-                </button>
+
+                <div className="flex flex-col gap-2 items-end">
+                  <button
+                    onClick={() => {
+                      const title = prompt("Rename Work Item:", activeWorkItem.title);
+                      if (title && title.trim()) {
+                        setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
+                      }
+                    }}
+                    className="text-[10px] text-coh-navy underline font-bold interactive-button"
+                  >
+                    Rename Work Item
+                  </button>
+                </div>
               </div>
             ) : (
-              <>
-            {/* Active Work Item Header */}
-            <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-              <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="font-serif text-2xl font-bold text-coh-navy">
-                    {activeWorkItem?.title || "New Work Item"}
-                  </h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
-                    {activeWorkItem?.status || "Brief"}
-                  </span>
-                </div>
-                <div className="flex gap-4 text-xs text-coh-navy/60 font-sans">
-                  <span>Channel: <strong className="text-coh-navy">{activeWorkItem?.channel || quickBrief.channel || "Not selected"}</strong></span>
-                  <span>Type: <strong className="text-coh-navy">{activeWorkItem?.type || "Content"}</strong></span>
-                </div>
+              <div className="flex items-center gap-2">
+                <h2 className="font-serif text-2xl font-bold text-coh-navy">Content Workspace</h2>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-cream border border-coh-gold/20 text-coh-navy px-2 py-0.5 rounded">
+                  Standalone Draft
+                </span>
               </div>
-
-              {/* Mode Toggle Button Group */}
-              <div className="flex flex-col gap-2 items-end">
-                <button
-                  onClick={() => {
-                    const title = prompt("Rename Work Item:", activeWorkItem?.title || "New Work Item");
-                    if (title && title.trim()) {
-                      setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
-                    }
-                  }}
-                  className="text-[10px] text-coh-navy underline font-bold interactive-button"
-                >
-                  Rename Work Item
-                </button>
-              </div>
-            </div>
+            )}
             
             <div className="flex justify-between items-end border-b border-coh-gold/20 pb-4">
               <div>
@@ -6613,8 +6598,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
 
             </div>
-              </>
-            )}
+
           </div>
         )}
 
