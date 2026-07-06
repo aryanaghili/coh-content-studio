@@ -1,51 +1,10 @@
 import os
 
-filepath = "server/ai/promptBuilder.js"
-with open(filepath, "r") as f:
+pb_file = "server/ai/promptBuilder.js"
+with open(pb_file, "r") as f:
     content = f.read()
 
-target_is_revision = """  if (isRevision) {
-    return `You are an expert copy editor revising a draft.
-Original Brief details:
-- Input topic: ${input.rawInput}
-- Channel: ${input.channel}
-- Format: ${input.outputFormat}
-- Audience: ${input.audience}
-- Purpose: ${input.purpose}
-- Language: ${input.language}
-- Tone: ${input.tone}
-
-Selected Revision Action: ${input.selectedRevisionAction || 'custom'}
-Instruction: ${input.revisionInstruction || 'None'}
-
-Draft Copy to Revise:
-\"\"\"
-${input.previousDraft}
-\"\"\"
-
-OPERATIONAL RULES:
-- Output the revised copy fully in ${input.language}. Keep approved proper nouns intact.
-${input.operatingCoreInstructions ? `\\n${input.operatingCoreInstructions}\\n` : ''}
-
-
-OUTPUT FORMAT:
-Return a JSON object matching this schema:
-{
-  "revisedCopy": "The fully revised, clean copy here",
-  "revisionSummary": "Short explanation of changes made",
-  "claimsChanged": [],
-  "warnings": [],
-  "qualityCheck": {
-    "passed": true,
-    "issues": []
-  }
-}`;
-  }"""
-
-replacement_is_revision = """  if (isRevision) {
-    let languageInstruction = `- Output the revised copy fully in ${input.language}. Keep approved proper nouns intact.`;
-    
-    // Strict Translation Boundaries
+old_block = """    // Strict Translation Boundaries
     if (input.revisionInstruction && input.revisionInstruction.includes('Target Language')) {
       languageInstruction = `- Translate the draft into the selected target language: ${input.language}.
 - Output only the revised translated draft.
@@ -60,48 +19,27 @@ replacement_is_revision = """  if (isRevision) {
       if (input.language && input.language.includes('Persian, colloquial')) {
         languageInstruction += `\\n- CRITICAL FOR PERSIAN: The output must be natural spoken Persian, not formal written Persian, not mechanical translation, and not mixed English/Persian unless unavoidable.`;
       }
-    }
+    }"""
 
-    return `You are an expert copy editor revising a draft.
-Original Brief details:
-- Input topic: ${input.rawInput}
-- Channel: ${input.channel}
-- Format: ${input.outputFormat}
-- Audience: ${input.audience}
-- Purpose: ${input.purpose}
-- Language: ${input.language}
-- Tone: ${input.tone}
+new_block = """    // Strict Translation Boundaries
+    if (input.revisionInstruction && input.revisionInstruction.includes('Target Language')) {
+      languageInstruction = `- Translate the draft into the selected target language: ${input.language}.
+- Output only the translated/revised text.
+- Do not include explanations.
+- Do not include fallback labels.
+- Preserve meaning.
+- Preserve claim safety.
+- Preserve COH voice.
+- Do not invent facts, partners, sponsors, dates, numbers, funding, or commitments.`;
 
-Selected Revision Action: ${input.selectedRevisionAction || 'custom'}
-Instruction: ${input.revisionInstruction || 'None'}
+      if (input.language && input.language.includes('Persian, colloquial')) {
+        languageInstruction += `\\n- If target language is Persian, colloquial / narration-ready, output natural spoken Persian, not formal mechanical Persian.`;
+      } else if (input.language === 'Persian') {
+        languageInstruction += `\\n- If target language is Persian, output Persian.`;
+      }
+    }"""
 
-Draft Copy to Revise:
-\"\"\"
-${input.previousDraft}
-\"\"\"
+content = content.replace(old_block, new_block)
 
-OPERATIONAL RULES:
-${languageInstruction}
-${input.operatingCoreInstructions ? `\\n${input.operatingCoreInstructions}\\n` : ''}
-
-
-OUTPUT FORMAT:
-Return a JSON object matching this schema:
-{
-  "revisedCopy": "The fully revised, clean copy here",
-  "revisionSummary": "Short explanation of changes made",
-  "claimsChanged": [],
-  "warnings": [],
-  "qualityCheck": {
-    "passed": true,
-    "issues": []
-  }
-}`;
-  }"""
-
-content = content.replace(target_is_revision, replacement_is_revision)
-
-with open(filepath, "w") as f:
+with open(pb_file, "w") as f:
     f.write(content)
-
-print("Done patching promptBuilder.js")
