@@ -20,155 +20,45 @@ import {
   Lightbulb,
   FolderHeart,
   Cpu as CpuIcon
-, AlertCircle, Camera, Globe, Mail, MessageSquare, Briefcase, Layers} from 'lucide-react';
+} from 'lucide-react';
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
 
 // --- Type Definitions ---
-
-// --- WORK ITEM EXPERIENCE LAYER ---
-export type WorkItemStatus = 'Idea' | 'Brief' | 'Draft' | 'Needs Revision' | 'Needs Source Check' | 'Visual Direction Ready' | 'Image Generated' | 'Approved' | 'Saved';
-
-export interface WorkItemDraft {
-  id: string;
-  text: string;
-  createdAt: string;
-}
-
-export interface WorkItemRevision {
-  id: string;
-  originalDraftId: string;
-  revisedText: string;
-  createdAt: string;
-  notes?: string;
-}
-
-export interface WorkItemImage {
-  id: string;
-  url: string;
-  createdAt: string;
-  prompt: string;
-}
-
-export interface WorkItem {
-  id: string;
-  title: string;
-  type?: string;
-  channel?: string;
-  outputFormat?: string;
-  audience?: string;
-  purpose?: string;
-  language?: string;
-  status: WorkItemStatus;
-  
-  sourceContext?: string;
-  sourceTitle?: string;
-  sourceType?: string;
-  
-  draftVersions: WorkItemDraft[];
-  selectedDraftId?: string;
-  
-  visualDirection?: string;
-  imageResults: WorkItemImage[];
-  
-  revisionHistory: WorkItemRevision[];
-  
-  approved: boolean;
-  saved: boolean;
-  
-  createdAt: string;
-  updatedAt: string;
-  origin?: string;
-}
-
-interface CoreDocument {
-  id: string;
-  title: string;
-  type: string;
-  status: 'Draft' | 'Active' | 'Archived' | 'Needs Review';
-  brainArea: string;
-  brainRole: string;
-  notes: string;
-  content: string;
-  distilledKernelNotes: string;
-  extractedClaimEvidence: string;
-  extractedVoiceGuidance: string;
-  extractedVisualGuidance: string;
-  extractedRevisionGuidance: string;
-  url: string;
-  createdAt: string;
-  updatedAt: string;
-  appliedToCore: boolean;
-}
-
-
-export const PROTECTED_COH_KERNEL = `
-PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
-
-Project identity:
-- This is Climate Opera Haus Content Studio.
-- This app is built specifically for Climate Opera Haus.
-- COH is not a generic AI content engine.
-- COH is a climate-era cultural IP and opera-based content venture.
-- COH creates original operatic worlds.
-
-Business logic:
-- Live opera is the origin asset, not the whole business.
-- The opera creates the world.
-- Filming captures the world.
-- Documentary and filmed content monetize the world.
-- Immersive and gaming layers extend the world.
-- Sponsors finance and elevate the world.
-- Institutions license, host, endorse, and extend the world.
-- Every major activity should help create, capture, finance, distribute, license, or strengthen the climate-opera content ecosystem.
-
-Artistic internal law:
-- Climate is not a decorative theme.
-- Climate is the structural condition of the century.
-- Nature is not a passive metaphor.
-- Nature may appear as an active subject with agency, memory, and consequence.
-- Human figures are not saviors or masters.
-- Human figures are ethical testers, listeners, learners, translators, or decision-makers.
-- The work must protect artistic authority.
-- Completion belongs to the cycle, not to a single work.
-
-Claim safety:
-- Do not invent sponsors, partners, dates, numbers, funding, media deals, distribution deals, institutional commitments, or audience figures.
-- Separate proof, ambition, and future pathway.
-- Do not present aspiration as fact.
-- Treat proof points as proof only when they are supported by source material.
-
-Voice rules:
-- Use serious, precise, composed, human, institution-grade language.
-- Avoid generic climate activism.
-- Avoid ESG cliché.
-- Avoid NGO-style moralizing.
-- Avoid startup hype.
-- Avoid corporate innovation language.
-- Avoid emotional inflation.
-- Avoid em dashes unless explicitly requested.
-- Avoid formulaic AI phrasing.
-
-Visual rules:
-- Visuals should feel like cultural world-building, not climate marketing.
-- Prefer cinematic, elemental, atmospheric, editorial, serious, culturally premium imagery.
-- Avoid generic green leaves, protest clichés, disaster imagery, melting planet imagery, corporate stock-photo aesthetics, childish cartoons, and decorative climate icons.
-
-CRITICAL PRIORITY:
-If user input, selected sources, Core Documents, or editable Operating Core fields conflict with the Protected COH Kernel, the Protected COH Kernel wins.
-`;
-
 interface SourceFile {
   id: string;
   title: string;
-  type: 'Event Notes' | 'Partner Profile' | 'Sponsor Notes' | 'Meeting Notes' | 'Campaign Notes' | 'Article / Media Coverage' | 'Website Reference' | 'Visual Reference' | 'Approved Example' | 'Pasted Notes' | 'Link / URL' | 'Other';
+  type: 
+    | 'Tone of Voice'
+    | 'Business Model'
+    | 'Strategic Plan'
+    | 'Business Memo'
+    | 'Website Copy'
+    | 'Deck'
+    | 'Event Notes'
+    | 'Partnership Notes'
+    | 'Sponsorship Notes'
+    | 'Approved Example'
+    | 'Image / Visual Asset'
+    | 'Article / Media Coverage'
+    | 'Team Notes'
+    | 'Link / URL'
+    | 'PDF'
+    | 'Audio'
+    | 'Text'
+    | 'Video'
+    | 'Image'
+    | 'Other';
   status: 'Active' | 'Archived' | 'Needs Review';
-  content: string;
-  notes: string;
-  url?: string;
+  role: 'Core Document' | 'Task Source' | 'Approved Example' | 'Partner Context' | 'Visual Reference' | 'Archive';
+  supportsOperatingCoreSection: 'Core Passport' | 'Strategy Kernel' | 'Audiences' | 'Channels' | 'Claims' | 'Voice' | 'Visual' | 'Revision' | 'None';
+  useFor: string;
   createdAt: string;
+  notes: string;
+  content: string;
+  url?: string;
   selected?: boolean;
   selectable?: boolean;
 }
@@ -969,22 +859,6 @@ export default function App() {
         }));
         
         setVsGeneratedImages(prev => [...processedImages, ...prev]);
-        
-        // Attach to Active Work Item
-        setActiveWorkItem(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            status: 'Image Generated',
-            imageResults: [...processedImages.map(img => ({
-              id: img.id,
-              url: img.url,
-              prompt: img.prompt,
-              createdAt: img.createdAt
-            })), ...prev.imageResults],
-            updatedAt: new Date().toISOString()
-          };
-        });
       }
     } catch (err: any) {
       setAiLastError(err.message || 'Error generating image');
@@ -1047,31 +921,7 @@ export default function App() {
   });
 
   // --- Ideation Workspace States ---
-
-  // --- WORK ITEM STATE ---
-  const [activeWorkItem, setActiveWorkItem] = useState<WorkItem | null>(() => {
-    const local = localStorage.getItem('coh_active_work_item_v1');
-    if (local) {
-      try {
-        return JSON.parse(local) as WorkItem;
-      } catch (e) {
-        console.error("Failed to parse active work item", e);
-        return null;
-      }
-    }
-    return null;
-  });
-
-  useEffect(() => {
-    if (activeWorkItem) {
-      localStorage.setItem('coh_active_work_item_v1', JSON.stringify(activeWorkItem));
-    } else {
-      localStorage.removeItem('coh_active_work_item_v1');
-    }
-  }, [activeWorkItem]);
-
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>(() => {
-
     const local = localStorage.getItem('coh_saved_ideas_v1');
     if (local) return JSON.parse(local);
     return [
@@ -1426,17 +1276,20 @@ export default function App() {
     title: string;
     type: SourceFile['type'];
     status: SourceFile['status'];
+    role: SourceFile['role'];
+    supportsOperatingCoreSection: SourceFile['supportsOperatingCoreSection'];
+    useFor: string;
     notes: string;
     content: string;
     url?: string;
     selectable?: boolean;
   }>({
     title: '',
-    type: 'Other' as SourceFile['type'],
+    type: 'Tone of Voice' as SourceFile['type'],
     status: 'Active' as SourceFile['status'],
-    
-    
-    
+    role: 'Task Source',
+    supportsOperatingCoreSection: 'None',
+    useFor: '',
     notes: '',
     content: '',
     url: '',
@@ -1503,6 +1356,9 @@ export default function App() {
       title: src.title,
       type: src.type,
       status: src.status,
+      role: src.role || 'Task Source',
+      supportsOperatingCoreSection: src.supportsOperatingCoreSection || 'None',
+      useFor: src.useFor || '',
       notes: src.notes || '',
       content: src.content || ''
     });
@@ -1523,8 +1379,11 @@ export default function App() {
         const added: SourceFile = {
           id: `src-upload-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
           title: file.name,
-          type: 'Other',
+          type: file.name.endsWith('.pdf') ? 'Deck' : 'Business Memo',
           status: 'Active',
+          role: 'Task Source',
+          supportsOperatingCoreSection: 'None',
+          useFor: 'Extracted context reference',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Uploaded file size: ${(file.size / 1024).toFixed(1)} KB.`,
           content: text || 'PDF contents placeholder summary'
@@ -1548,6 +1407,9 @@ export default function App() {
           title: path,
           type: 'Event Notes',
           status: 'Active',
+          role: 'Task Source',
+          supportsOperatingCoreSection: 'None',
+          useFor: 'Folder upload context',
           createdAt: new Date().toISOString().split('T')[0],
           notes: `Directory uploaded path: ${path}`,
           content: text || 'Directory content placeholder'
@@ -3037,11 +2899,11 @@ export default function App() {
 
     setNewSource({
       title: '',
-      type: 'Other',
+      type: 'Tone of Voice',
       status: 'Active',
-      
-      
-      
+      role: 'Task Source',
+      supportsOperatingCoreSection: 'None',
+      useFor: '',
       notes: '',
       content: ''
     });
@@ -3069,8 +2931,11 @@ export default function App() {
       newSrc = {
         id: `ws-paste-${ts}`,
         title: inlinePasteData.title,
-        type: 'Pasted Notes',
+        type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
+        useFor: 'Pasted workspace source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'Pasted text source added from Content Workspace.',
         content: inlinePasteData.content
@@ -3084,8 +2949,11 @@ export default function App() {
       newSrc = {
         id: `ws-upload-${ts}`,
         title: inlineUploadData.title,
-        type: 'Pasted Notes',
+        type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
+        useFor: 'Uploaded workspace file',
         createdAt: new Date().toISOString().split('T')[0],
         notes: 'File uploaded from Content Workspace.',
         content: inlineUploadData.content || 'File content extracted.'
@@ -3099,8 +2967,11 @@ export default function App() {
       newSrc = {
         id: `ws-link-${ts}`,
         title: inlineLinkData.title,
-        type: 'Pasted Notes',
+        type: 'Text',
         status: 'Active',
+        role: 'Task Source',
+        supportsOperatingCoreSection: 'None',
+        useFor: 'URL context source',
         createdAt: new Date().toISOString().split('T')[0],
         notes: `URL: ${inlineLinkData.url}`,
         content: inlineLinkData.summary || `[URL reference: ${inlineLinkData.url}]`
@@ -3254,18 +3125,6 @@ export default function App() {
           actionUsed: `AI Generated (${aiProvider}/${aiTextModel})`
         }]);
         setImportedIdeationContext(null);
-
-        // Attach to Active Work Item
-        setActiveWorkItem(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            status: qcIssues.length > 0 ? 'Needs Source Check' : 'Draft',
-            draftVersions: [{ id: `draft-${Date.now()}`, text: rawA, createdAt: new Date().toISOString() }, ...prev.draftVersions],
-            visualDirection: visualBrief,
-            updatedAt: new Date().toISOString()
-          };
-        });
       } catch (err: unknown) {
         const errorMsg = err instanceof Error ? err.message : 'AI generation failed.';
         setValidationWarning(`AI Error: ${errorMsg}`);
@@ -3385,18 +3244,6 @@ export default function App() {
         timestamp: new Date().toLocaleTimeString(),
         actionUsed: 'Prototype generation (AI not connected)'
       }]);
-
-      // Attach to Active Work Item
-      setActiveWorkItem(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          status: getFictionalContentWarnings(rawA).length > 0 ? 'Needs Source Check' : 'Draft',
-          draftVersions: [{ id: `draft-${Date.now()}`, text: rawA, createdAt: new Date().toISOString() }, ...prev.draftVersions],
-          visualDirection: visualPrompt,
-          updatedAt: new Date().toISOString()
-        };
-      });
     }, 600);
   };
 
@@ -4100,16 +3947,7 @@ Revision History:
       ? '\n\nLANGUAGE DIRECTIVE (CRITICAL): The final output must be written entirely in ' + lang + '. Do not mix English sentences with ' + lang + '. Do not use translation fragments or partial phrases. Approved proper names that must NOT be translated: Climate Opera Haus, RESONANCE 2027, The Climate Tetralogy, Soria Moria, The Golden Fountain, The Water Dragon, Roar to the Wind. All other text — headlines, body copy, CTAs, captions — must be natural, fluent ' + lang + ' as written by a native speaker. If Email / Letter format is used, write the greeting and sign-off in ' + lang + ' also.'
       : '';
 
-
-    const operatingCoreContext = compileOperatingCoreContext(operatingCore, {
-      workspace: creationMode === 'simple' ? 'Simple Mode' : (creationMode === 'quick' ? 'Quick Create' : 'Advanced Brief'),
-      channel: channel,
-      audience: aud
-    });
-
-    return `${operatingCoreContext}
-
-You are the COH Content Marketing Mastermind for Climate Opera Haus.
+    return `You are the COH Content Marketing Mastermind for Climate Opera Haus.
 
 ROLE: Create professional, source-grounded content for Climate Opera Haus.
 
@@ -4428,10 +4266,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 setActiveTab('source-library');
                 setNewSource({
                   ...newSource,
-                  
+                  role: 'Core Document',
+                  supportsOperatingCoreSection: section as any,
                   selectable: true,
                   status: 'Active',
-                  title: '', type: 'Other',  notes: '', content: '', url: ''
+                  title: '', type: 'Business Memo', useFor: '', notes: '', content: '', url: ''
                 });
               }}
               onLinkExistingSource={() => {
@@ -4440,6 +4279,313 @@ WRITING CLEANLINESS RULES (CRITICAL):
             />
           </div>
         )}
+        {activeTab === 'command-center' && (
+          <div className="space-y-8 animate-fadeIn max-w-6xl">
+            <div className="pb-6">
+              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-1">Command Center</h2>
+              <p className="text-sm text-coh-navy/60 font-sans">
+                Choose what to create, continue your latest work, or check what needs attention.
+              </p>
+            </div>
+
+            <div className="flex flex-col lg:flex-row gap-8">
+              
+              {/* Left Column: Main Commands & Continue */}
+              <div className="flex-1 space-y-8">
+                
+                {/* Section 1: What are you working on today? */}
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
+                  <h3 className="font-serif text-xl text-coh-navy mb-1">What are you working on today?</h3>
+                  <p className="text-xs text-coh-navy/60 mb-6">Start with a message, idea, source, campaign note, or visual direction.</p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* A. Write Content */}
+                    <div className="p-4 bg-coh-navy text-coh-cream rounded border border-coh-gold/20 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Write Content</h4>
+                        <p className="text-xs text-coh-cream/70 leading-relaxed font-sans mb-4">Draft a post, article, update, email, or campaign message.</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCreationMode('quick');
+                          setQuickBrief({ goal: '', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
+                          setStartedFromNote('Action: Write Content');
+                          setActiveTab('content-workspace');
+                        }}
+                        className="bg-coh-gold hover:bg-coh-gold/90 text-coh-navy text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Start Writing <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* B. Explore Ideas */}
+                    <div className="p-4 bg-coh-gold text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-navy tracking-wider font-bold mb-1">Explore Ideas</h4>
+                        <p className="text-xs text-coh-navy/80 leading-relaxed font-sans mb-4">Generate angles, hooks, and content directions before drafting.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('ideation-workspace')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 border border-coh-gold/20"
+                      >
+                        Explore Ideas <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* C. Use a Source */}
+                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Use a Source</h4>
+                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('source-library')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Add Source <ArrowRight size={12} />
+                      </button>
+                    </div>
+
+                    {/* D. Create Visuals */}
+                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
+                      <div>
+                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h4>
+                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Generate images from visual directions or custom prompts.</p>
+                      </div>
+                      <button
+                        onClick={() => setActiveTab('visual-studio')}
+                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1"
+                      >
+                        Open Visual Studio <ArrowRight size={12} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 2: Continue where you left off */}
+                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
+                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Continue where you left off</h3>
+                  
+                  {(() => {
+                    const unapprovedDraft = savedContent.find(c => c.status !== 'Approved');
+                    const approvedItem = savedContent.find(c => c.status === 'Approved');
+                    const promisingIdea = savedIdeas.find(i => i.status === 'Promising');
+                    const recentSource = sources.length > 0 ? sources[0] : null;
+
+                    if (unapprovedDraft) {
+                      return (
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 flex flex-col justify-between interactive-card">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Draft in Progress</span>
+                              <span className="text-[8px] bg-amber-50 text-amber-700 px-1 py-0.5 rounded font-bold uppercase border border-amber-200">Needs Review</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{unapprovedDraft.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{unapprovedDraft.text}</p>
+                          </div>
+                          <div>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setActiveDraftText(unapprovedDraft.text);
+                                setActiveDraftTitle(unapprovedDraft.title);
+                                setActiveDraftVersion(unapprovedDraft.version);
+                                setActiveDraftHistory([{
+                                  version: unapprovedDraft.version,
+                                  text: unapprovedDraft.text,
+                                  timestamp: unapprovedDraft.lastEdited,
+                                  actionUsed: 'Resume recent draft'
+                                }]);
+                                setActiveDraftSource(unapprovedDraft.source === 'Content Workspace' ? 'Content Workspace' : (unapprovedDraft.source === 'External Content' ? 'External Content' : 'Content Library'));
+                                setActiveTab('revision-studio');
+                              }}
+                              className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 rounded transition flex items-center justify-center gap-1 w-full cursor-pointer"
+                            >
+                              Continue <ArrowRight size={10} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else if (approvedItem) {
+                      return (
+                        <div className="bg-coh-cream/15 p-3 rounded border border-coh-gold/20 interactive-card flex flex-col justify-between">
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[9px] uppercase tracking-wider font-bold text-coh-gold">Latest Approved</span>
+                              <span className="text-[8px] bg-green-50 text-green-700 px-1 py-0.5 rounded font-bold uppercase border border-green-200">Approved</span>
+                            </div>
+                            <h4 className="font-serif text-sm font-bold text-coh-navy truncate">{approvedItem.title}</h4>
+                            <p className="text-[10px] text-coh-navy/60 line-clamp-1 mb-2">{approvedItem.text}</p>
+                          </div>
+                          <button onClick={(e) => { e.preventDefault(); setActiveTab('content-library'); }} className="bg-coh-navy text-coh-cream hover:bg-opacity-90 text-[10px] font-bold py-1.5 px-3 w-full rounded transition flex items-center justify-center gap-1 cursor-pointer">
+                            View Library <ArrowRight size={10} />
+                          </button>
+                        </div>
+                      );
+                    } else if (promisingIdea) {
+                      return (
+                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Promising Idea</span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{promisingIdea.title || promisingIdea.originalInput}</h4>
+                          <div className="flex gap-2 mt-4">
+                            <button onClick={() => setActiveTab('idea-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                              Open Ideas <ArrowRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else if (recentSource) {
+                      return (
+                        <div className="bg-coh-cream/15 p-5 rounded border border-coh-gold/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-[10px] uppercase tracking-wider font-bold text-coh-gold">Recent Source</span>
+                          </div>
+                          <h4 className="font-serif text-base font-bold text-coh-navy mb-1">{recentSource.title}</h4>
+                          <p className="text-xs text-coh-navy/60 line-clamp-2 leading-relaxed mb-4">{recentSource.notes}</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => setActiveTab('source-library')} className="bg-coh-navy text-coh-cream hover:bg-coh-navy-light text-xs font-bold py-2 px-4 rounded transition flex items-center gap-1">
+                              Continue <ArrowRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="p-6 bg-coh-cream/20 border border-coh-gold/10 rounded text-center">
+                          <span className="text-sm text-coh-navy/50 font-serif italic">Nothing in progress. Start something new above.</span>
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+
+              </div>
+
+              {/* Right Column: Status & Overview */}
+              <div className="w-full lg:w-72 space-y-6">
+                
+                {/* Section 3: Needs your attention */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Needs your attention</h3>
+                  <div className="flex flex-col gap-3">
+                    {aiStatus !== 'connected' && (
+                      <div className="flex flex-col gap-2 p-3 bg-red-50/50 border border-red-200/50 rounded">
+                        <span className="text-sm text-red-900 font-bold">AI generation is not connected.</span>
+                        <button onClick={() => setActiveTab('settings')} className="text-[10px] uppercase font-bold text-red-800 hover:text-red-900 self-start">Open Settings →</button>
+                      </div>
+                    )}
+                    
+                    {savedContent.some(c => c.status !== 'Approved') && (
+                      <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                        <span className="text-sm text-amber-900 font-bold">A draft may need review.</span>
+                        <button onClick={() => setActiveTab('content-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Review Draft →</button>
+                      </div>
+                    )}
+
+                    {selectableSources.some(s => s.status === 'Needs Review') && (
+                      <div className="flex flex-col gap-2 p-3 bg-amber-50/50 border border-amber-200/50 rounded">
+                        <span className="text-sm text-amber-900 font-bold">A source needs checking.</span>
+                        <button onClick={() => setActiveTab('source-library')} className="text-[10px] uppercase font-bold text-amber-800 hover:text-amber-900 self-start">Open Sources →</button>
+                      </div>
+                    )}
+
+                    {aiStatus === 'connected' && !savedContent.some(c => c.status !== 'Approved') && !selectableSources.some(s => s.status === 'Needs Review') && (
+                      <p className="text-xs text-coh-navy/60 leading-relaxed">
+                        Everything looks ready. You can start creating or continue your latest work.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section 4: Studio Status */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Studio Status</h3>
+                  <div className="flex flex-col gap-2 text-xs font-mono font-bold tracking-wider">
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">AI Text</span>
+                      <span className={aiStatus === 'connected' ? 'text-green-700' : 'text-amber-600'}>
+                        {aiStatus === 'connected' ? 'Connected' : 'Needs Setup'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Images</span>
+                      <span className={aiStatus === 'connected' && aiImageModel ? 'text-green-700' : 'text-amber-600'}>
+                        {aiStatus === 'connected' && aiImageModel ? 'Connected' : 'Needs Setup'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Content Rules</span>
+                      <span className={operatingCore.active ? 'text-green-700' : 'text-red-700'}>
+                        {operatingCore.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 5: Studio Overview */}
+                <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm">
+                  <h3 className="font-serif text-lg text-coh-navy mb-4">Studio Overview</h3>
+                  <div className="flex flex-col gap-2 text-xs font-mono font-bold tracking-wider">
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Content Items</span>
+                      <span className="text-coh-navy">{savedContent.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Approved</span>
+                      <span className="text-green-700">{savedContent.filter(c => c.status === 'Approved').length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Ideas</span>
+                      <span className="text-coh-navy">{savedIdeas.length}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-coh-gold/10">
+                      <span className="text-coh-navy/50 uppercase">Sources</span>
+                      <span className="text-coh-navy">{workspaceLocalSources.length + sources.length}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between mt-4">
+                    <button onClick={() => setActiveTab('content-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Content →</button>
+                    <button onClick={() => setActiveTab('source-library')} className="text-[9px] uppercase font-bold text-coh-navy interactive-link transition">Open Sources →</button>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* Quick Actions */}
+            <div className="mt-8 max-w-4xl">
+              <h3 className="font-serif text-sm text-coh-navy/80 font-semibold mb-3 flex items-center gap-2">
+                Quick Actions
+              </h3>
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                {[
+                  { title: 'LinkedIn Post', channel: 'LinkedIn', format: 'Post' },
+                  { title: 'Instagram Caption', channel: 'Instagram', format: 'Caption' },
+                  { title: 'Newsletter Section', channel: 'Newsletter', format: 'Newsletter Section' },
+                  { title: 'Website / News Article', channel: 'Website', format: 'Article' },
+                  { title: 'Sponsor Pitch', channel: 'Pitch Deck', format: 'Pitch' },
+                  { title: 'Multi-Channel Pack', channel: 'Campaign', format: 'Multi-Channel' }
+                ].map(item => (
+                  <div
+                    key={item.title}
+                    className="px-2 py-2 border border-coh-gold/20 bg-white hover:bg-coh-cream/50 rounded transition text-center cursor-pointer interactive-card flex items-center justify-center h-full shadow-sm"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      triggerQuickLauncher(item.channel, item.format, item.title === 'Multi-Channel Pack' ? 'Multi-Channel Pack' : 'Single Channel');
+                    }}
+                  >
+                    <span className="font-sans font-medium text-coh-navy text-[10px] leading-tight">{item.title}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* --- TAB: IDEATION WORKSPACE --- */}
         {activeTab === 'ideation-workspace' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6">
@@ -4677,6 +4823,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
           </div>
         )}
+
+        {/* --- TAB: IDEA LIBRARY --- */}
         {activeTab === 'idea-library' && (
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
@@ -4771,343 +4919,42 @@ WRITING CLEANLINESS RULES (CRITICAL):
             )}
           </div>
         )}
-        {activeTab === 'command-center' && (
-          <div className="space-y-8 animate-fadeIn max-w-6xl">
-            <div className="pb-6">
-              <h2 className="font-serif text-3xl font-normal text-coh-navy mb-1">Command Center</h2>
-              <p className="text-sm text-coh-navy/60 font-sans">
-                Choose what to create, continue your active work item, or check what needs attention.
-              </p>
-            </div>
 
-            <div className="flex flex-col lg:flex-row gap-8">
-              
-              {/* Left Column: Main Commands & Continue */}
-              <div className="flex-1 space-y-8">
-                
-                {/* Section 1: Start New Work */}
-                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
-                  <h3 className="font-serif text-xl text-coh-navy mb-1">Start New Work</h3>
-                  <p className="text-xs text-coh-navy/60 mb-6">Begin a new Work Item from scratch, an idea, or a source.</p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* A. Write Content */}
-                    <div className="p-4 bg-coh-navy text-coh-cream rounded border border-coh-gold/20 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Write Content</h4>
-                        <p className="text-xs text-coh-cream/70 leading-relaxed font-sans mb-4">Draft a post, article, update, email, or campaign message.</p>
-                      </div>
-                      <button
-                        onClick={() => {
-                          const id = `work-${Date.now()}`;
-                          setActiveWorkItem({
-                            id, title: 'New Content Draft', type: 'Content', status: 'Brief', draftVersions: [], imageResults: [], revisionHistory: [], approved: false, saved: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-                          });
-                          setCreationMode('quick');
-                          setQuickBrief({ goal: '', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
-                          setActiveTab('content-workspace');
-                        }}
-                        className="bg-coh-gold hover:bg-coh-gold/90 text-coh-navy text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 interactive-button"
-                      >
-                        Start Writing <ArrowRight size={12} />
-                      </button>
-                    </div>
-
-                    {/* B. Explore Ideas */}
-                    <div className="p-4 bg-coh-gold text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <h4 className="font-serif text-sm uppercase text-coh-navy tracking-wider font-bold mb-1">Explore Ideas</h4>
-                        <p className="text-xs text-coh-navy/80 leading-relaxed font-sans mb-4">Generate angles, hooks, and content directions before drafting.</p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('ideation-workspace')}
-                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 border border-coh-gold/20 interactive-button"
-                      >
-                        Explore Ideas <ArrowRight size={12} />
-                      </button>
-                    </div>
-
-                    {/* C. Use a Source */}
-                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Use a Source</h4>
-                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('source-library')}
-                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 interactive-button"
-                      >
-                        Add Source <ArrowRight size={12} />
-                      </button>
-                    </div>
-
-                    {/* D. Create Visuals */}
-                    <div className="p-4 bg-white text-coh-navy rounded border border-coh-gold/25 flex flex-col justify-between shadow-sm">
-                      <div>
-                        <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h4>
-                        <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Generate images from visual directions or custom prompts.</p>
-                      </div>
-                      <button
-                        onClick={() => setActiveTab('visual-studio')}
-                        className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 interactive-button"
-                      >
-                        Open Visual Studio <ArrowRight size={12} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Section 2: Continue Active Work */}
-                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
-                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Continue Active Work</h3>
-                  
-                  {activeWorkItem ? (
-                    <div className="bg-coh-cream p-4 rounded border border-coh-gold/30 interactive-card">
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
-                              {activeWorkItem.status}
-                            </span>
-                            <span className="text-xs text-coh-navy/60 font-semibold">{activeWorkItem.channel || activeWorkItem.type || 'Draft'}</span>
-                          </div>
-                          <h4 className="font-serif text-lg font-bold text-coh-navy">{activeWorkItem.title}</h4>
-                        </div>
-                        <span className="text-[10px] text-coh-navy/50">{activeWorkItem.updatedAt.split('T')[0]}</span>
-                      </div>
-                      <p className="text-xs text-coh-navy/70 line-clamp-2 mb-4">
-                        {activeWorkItem.draftVersions.length > 0 ? activeWorkItem.draftVersions[0].text.substring(0, 100) + '...' : 'No draft content yet.'}
-                      </p>
-                      
-                      <div className="flex gap-2 flex-wrap">
-                        {activeWorkItem.status === 'Draft' && !activeWorkItem.approved && (
-                          <button onClick={() => { setActiveTab('revision-studio'); }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Revise Draft</button>
-                        )}
-                        {activeWorkItem.visualDirection && activeWorkItem.imageResults.length === 0 && (
-                          <button onClick={() => setActiveTab('visual-studio')} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Create Visual</button>
-                        )}
-                        {activeWorkItem.status === 'Needs Source Check' && (
-                          <button onClick={() => setActiveTab('content-workspace')} className="text-xs bg-coh-gold text-coh-navy px-3 py-1.5 rounded hover:bg-coh-gold/90 font-semibold interactive-button">Review Source Check</button>
-                        )}
-                        {activeWorkItem.status === 'Approved' && !activeWorkItem.saved && (
-                          <button onClick={() => {
-                            const newSaved: SavedContent = {
-                              id: `saved-${Date.now()}`,
-                              title: activeWorkItem.title,
-                              pillar: "General",
-                              angle: "",
-                              audience: activeWorkItem.audience || "General Public",
-                              channel: activeWorkItem.channel || "",
-                              purpose: activeWorkItem.purpose || "General",
-                              status: 'Approved',
-                              sourcesUsed: [],
-                              createdAt: activeWorkItem.createdAt,
-                              lastEdited: new Date().toISOString(),
-                              text: activeWorkItem.draftVersions[0]?.text || "",
-                              notes: "Saved from Active Work Item",
-                              version: 1,
-                              visualDirection: activeWorkItem.visualDirection || "",
-                              visualAssets: activeWorkItem.imageResults as any
-                            };
-                            setSavedContent(prev => [newSaved, ...prev]);
-                            setActiveWorkItem(prev => prev ? { ...prev, saved: true, status: 'Saved' } : null);
-                            alert("Saved to library.");
-                          }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Save to Library</button>
-                        )}
-                        {activeWorkItem.saved && (
-                          <button onClick={() => setActiveTab('content-library')} className="text-xs bg-coh-cream text-coh-navy border border-coh-navy/20 px-3 py-1.5 rounded hover:bg-coh-navy/10 font-semibold interactive-button">Open Library</button>
-                        )}
-                        <button onClick={() => setActiveTab('content-workspace')} className="text-[10px] text-coh-navy underline ml-auto self-center">Open Workspace</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="bg-coh-cream/50 p-6 rounded border border-coh-gold/20 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm text-coh-navy/60 font-serif italic mb-3">No active work right now.</p>
-                      <button onClick={() => {
-                        const id = `work-${Date.now()}`;
-                        setActiveWorkItem({
-                          id, title: 'New Work Item', status: 'Brief', draftVersions: [], imageResults: [], revisionHistory: [], approved: false, saved: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-                        });
-                        setActiveTab('content-workspace');
-                      }} className="text-xs bg-coh-navy text-coh-cream px-4 py-2 rounded font-bold uppercase tracking-wider hover:bg-coh-navy-light transition interactive-button">
-                        Start New Work Item
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Section 3: Work Needing Attention */}
-                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
-                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Work Needing Attention</h3>
-                  <div className="space-y-2">
-                    {!aiProvider && (
-                      <div className="flex items-center gap-2 p-2 bg-[#fdfaf5] rounded border-l-2 border-orange-400 text-xs text-coh-navy">
-                        <AlertCircle size={14} className="text-orange-400" />
-                        <span>AI generation needs setup. Add an API key in Settings.</span>
-                        <button onClick={() => setActiveTab('settings')} className="ml-auto underline font-semibold text-orange-600">Fix</button>
-                      </div>
-                    )}
-                    {activeWorkItem?.status === 'Needs Source Check' && (
-                      <div className="flex items-center gap-2 p-2 bg-[#fdfaf5] rounded border-l-2 border-orange-400 text-xs text-coh-navy">
-                        <AlertCircle size={14} className="text-orange-400" />
-                        <span>Active draft needs source check.</span>
-                        <button onClick={() => setActiveTab('content-workspace')} className="ml-auto underline font-semibold text-orange-600">Review</button>
-                      </div>
-                    )}
-                    {activeWorkItem?.visualDirection && activeWorkItem.imageResults.length === 0 && (
-                      <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-gold text-xs text-coh-navy">
-                        <Camera size={14} className="text-coh-gold" />
-                        <span>Visual direction ready for image generation.</span>
-                        <button onClick={() => setActiveTab('visual-studio')} className="ml-auto underline font-semibold text-coh-navy">Create</button>
-                      </div>
-                    )}
-                    {activeWorkItem?.status === 'Approved' && !activeWorkItem.saved && (
-                      <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-navy text-xs text-coh-navy">
-                        <FileText size={14} className="text-coh-navy" />
-                        <span>Approved work item is unsaved.</span>
-                        <button onClick={() => setActiveTab('command-center')} className="ml-auto underline font-semibold text-coh-navy">Save</button>
-                      </div>
-                    )}
-                    
-                    {savedIdeas.some(i => i.status === 'New') && (
-                      <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-gold text-xs text-coh-navy">
-                        <Lightbulb size={14} className="text-coh-gold" />
-                        <span>{savedIdeas.filter(i => i.status === 'New').length} generated ideas ready to draft.</span>
-                        <button onClick={() => setActiveTab('idea-library')} className="ml-auto underline font-semibold text-coh-navy">View</button>
-                      </div>
-                    )}
-
-                    {(!activeWorkItem || (!activeWorkItem.visualDirection && activeWorkItem.status !== 'Needs Source Check' && activeWorkItem.status !== 'Approved')) && aiProvider && (
-                      <p className="text-xs text-coh-navy/50 italic p-2">Everything is caught up.</p>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Right Column: Studio Status & Quick Actions */}
-              <div className="lg:w-72 space-y-6">
-                
-                {/* Studio Status / Overview */}
-                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
-                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-4">Studio Status</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-coh-navy/70">Text Generation</span>
-                      <span className={`px-2 py-0.5 rounded font-semibold ${aiProvider && aiTextModel ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                        {aiProvider && aiTextModel ? 'Ready' : 'Needs Setup'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-coh-navy/70">Image Generation</span>
-                      <span className={`px-2 py-0.5 rounded font-semibold ${aiProvider && aiImageModel ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                        {aiProvider && aiImageModel ? 'Ready' : 'Check Settings'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-coh-navy/70">Content Rules</span>
-                      <span className={`px-2 py-0.5 rounded font-semibold ${operatingCore.active ? 'bg-coh-navy text-coh-cream' : 'bg-gray-200 text-gray-600'}`}>
-                        {operatingCore.active ? 'Active' : 'Bypassed'}
-                      </span>
-                    </div>
-                    
-                    <div className="h-px bg-coh-gold/15 my-2"></div>
-                    
-                    <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                      <div className="bg-coh-cream p-2 rounded border border-coh-gold/10">
-                        <div className="font-bold text-coh-navy text-lg">{[...workspaceLocalSources, ...sources].length}</div>
-                        <div className="text-coh-navy/60">Sources</div>
-                      </div>
-                      <div className="bg-coh-cream p-2 rounded border border-coh-gold/10">
-                        <div className="font-bold text-coh-navy text-lg">{savedContent.length}</div>
-                        <div className="text-coh-navy/60">Saved</div>
-                      </div>
-                      <div className="bg-coh-cream p-2 rounded border border-coh-gold/10 col-span-2">
-                        <div className="font-bold text-coh-navy text-lg">{savedIdeas.length}</div>
-                        <div className="text-coh-navy/60">Ideas</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm">
-                  <h3 className="font-serif text-sm font-bold text-coh-navy mb-3">Quick Actions</h3>
-                  <div className="space-y-2">
-                    {[
-                      { icon: <Globe size={14} />, label: "LinkedIn Post", format: "Post", channel: "LinkedIn" },
-                      { icon: <Mail size={14} />, label: "Newsletter Section", format: "Section", channel: "Newsletter" },
-                      { icon: <FileText size={14} />, label: "Website Article", format: "Article", channel: "Website" },
-                      { icon: <MessageSquare size={14} />, label: "WhatsApp Message", format: "Message", channel: "WhatsApp" },
-                      { icon: <Briefcase size={14} />, label: "Sponsor Pitch", format: "Pitch", channel: "Sponsor email" },
-                      { icon: <Layers size={14} />, label: "Multi-Channel Pack", format: "Pack", channel: "All" }
-                    ].map((qa, i) => (
-                      <button 
-                        key={i} 
-                        onClick={() => {
-                          const id = `work-${Date.now()}`;
-                          setActiveWorkItem({
-                            id, title: `New ${qa.label}`, type: 'Content', channel: qa.channel, outputFormat: qa.format, status: 'Brief', draftVersions: [], imageResults: [], revisionHistory: [], approved: false, saved: false, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
-                          });
-                          setCreationMode('quick');
-                          setQuickBrief({ goal: '', channel: qa.channel, notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: qa.format });
-                          setActiveTab('content-workspace');
-                        }}
-                        className="w-full flex items-center gap-3 p-2 text-sm text-left text-coh-navy bg-coh-cream hover:bg-coh-gold/20 rounded border border-coh-gold/20 transition-colors interactive-button"
-                      >
-                        <span className="text-coh-gold">{qa.icon}</span>
-                        {qa.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        )}
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
         {activeTab === 'content-workspace' && (
           <div className="space-y-8 animate-fadeIn">
             
 
-            {/* Active Work Item Header */}
-            <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            {/* Title and Validation Warning block */}
+            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
               <div>
-                <div className="flex items-center gap-3 mb-1">
-                  <h2 className="font-serif text-2xl font-bold text-coh-navy">
-                    {activeWorkItem?.title || "New Work Item"}
-                  </h2>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
-                    {activeWorkItem?.status || "Brief"}
+                <h2 className="font-serif text-3xl font-normal text-coh-navy">Content Workspace</h2>
+                <p className="text-sm text-coh-navy/60 font-sans mt-1">
+                  Draft, validate, and preview Climate Opera Haus campaigns. Choose a creation mode to begin.
+                </p>
+                {startedFromNote && (
+                  <span className="inline-block mt-2 bg-coh-gold/15 text-coh-navy text-[10px] px-2 py-0.5 rounded font-mono font-semibold">
+                    {startedFromNote}
                   </span>
-                </div>
-                <div className="flex gap-4 text-xs text-coh-navy/60 font-sans">
-                  <span>Channel: <strong className="text-coh-navy">{activeWorkItem?.channel || quickBrief.channel || "Not selected"}</strong></span>
-                  <span>Type: <strong className="text-coh-navy">{activeWorkItem?.type || "Content"}</strong></span>
-                </div>
-              </div>
-
-              {/* Mode Toggle Button Group */}
-              <div className="flex flex-col gap-2 items-end">
-                <button
-                  onClick={() => {
-                    const title = prompt("Rename Work Item:", activeWorkItem?.title || "New Work Item");
-                    if (title && title.trim()) {
-                      setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
-                    }
-                  }}
-                  className="text-[10px] text-coh-navy underline font-bold interactive-button"
-                >
-                  Rename Work Item
-                </button>
-              </div>
-            </div>
-            
-            <div className="flex justify-between items-end border-b border-coh-gold/20 pb-4">
-              <div>
-                <h3 className="font-serif text-xl font-normal text-coh-navy">Briefing Workspace</h3>
+                )}
+                {importedIdeationContext && (
+                  <div className="mt-4 bg-coh-cream border-l-2 border-coh-gold p-3 rounded text-xs flex justify-between items-start font-sans shadow-sm">
+                    <div>
+                      <strong className="text-coh-navy flex items-center gap-1 mb-1">
+                        <Lightbulb size={12} /> Imported from Ideation Workspace
+                      </strong>
+                      <p className="text-coh-navy/80 mb-1 line-clamp-2">{importedIdeationContext.explanation}</p>
+                      <span className="text-[10px] text-coh-navy/50 block">Original Input: "{importedIdeationContext.originalInput}"</span>
+                    </div>
+                    <button 
+                      onClick={() => setImportedIdeationContext(null)}
+                      className="text-coh-navy/40 hover:text-coh-navy ml-4 text-lg font-bold"
+                      title="Clear imported context"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                )}
               </div>
 
               {/* Mode Toggle Button Group */}
@@ -7490,9 +7337,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div>
                 <h2 className="font-serif text-3xl font-normal text-coh-navy">Source Library</h2>
                 <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
-                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
+                  Store and manage all documents, links, notes, examples, partner context, visual references, and source materials. Some sources can be linked to Operating Core as Core Documents. Others can be selected only for specific generation tasks.
                 </p>
-
+                <div className="mt-3 inline-flex items-center gap-2 bg-coh-cream/50 px-3 py-1.5 rounded border border-coh-gold/10">
+                  <span className="text-[10px] text-coh-navy/60 font-semibold uppercase">Helper:</span>
+                  <span className="text-xs text-coh-navy/70">Source Library stores task-specific materials. Foundational brain documents are managed by the superuser in Operating Core as Core Documents.</span>
+                  <button onClick={() => setActiveTab('operating-core')} className="text-xs font-bold text-coh-navy interactive-link transition ml-2">Open Operating Core →</button>
+                </div>
               </div>
 
               <div className="flex gap-2 text-xs">
@@ -7559,18 +7410,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         onChange={(e) => setNewSource({ ...newSource, type: e.target.value as SourceFile['type'] })}
                         className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
                       >
+                        <option value="Tone of Voice">Tone of Voice</option>
+                        <option value="Business Model">Business Model</option>
+                        <option value="Business Memo">Business Memo</option>
+                        <option value="Website Copy">Website Copy</option>
+                        <option value="Deck">Deck</option>
                         <option value="Event Notes">Event Notes</option>
-                        <option value="Partner Profile">Partner Profile</option>
-                        <option value="Sponsor Notes">Sponsor Notes</option>
-                        <option value="Meeting Notes">Meeting Notes</option>
-                        <option value="Campaign Notes">Campaign Notes</option>
-                        <option value="Article / Media Coverage">Article / Media Coverage</option>
-                        <option value="Website Reference">Website Reference</option>
-                        <option value="Visual Reference">Visual Reference</option>
+                        <option value="Partnership Notes">Partnership Notes</option>
+                        <option value="Sponsorship Notes">Sponsorship Notes</option>
                         <option value="Approved Example">Approved Example</option>
-                        <option value="Pasted Notes">Pasted Notes</option>
+                        <option value="Image / Visual Asset">Image / Visual Asset</option>
+                        <option value="Article / Media Coverage">Article / Media Coverage</option>
+                        <option value="Team Notes">Team Notes</option>
                         <option value="Link / URL">Link / URL</option>
-                        <option value="Other">Other</option>
                       </select>
                     </div>
 
@@ -7589,6 +7441,40 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-coh-navy/70 mb-1 font-medium">Role</label>
+                      <select
+                        value={newSource.role}
+                        onChange={(e) => setNewSource({ ...newSource, role: e.target.value as SourceFile['role'] })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
+                      >
+                        <option value="Core Document">Core Document</option>
+                        <option value="Task Source">Task Source</option>
+                        <option value="Approved Example">Approved Example</option>
+                        <option value="Partner Context">Partner Context</option>
+                        <option value="Visual Reference">Visual Reference</option>
+                        <option value="Archive">Archive</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-coh-navy/70 mb-1 font-medium">Supports Section</label>
+                      <select
+                        value={newSource.supportsOperatingCoreSection}
+                        onChange={(e) => setNewSource({ ...newSource, supportsOperatingCoreSection: e.target.value as SourceFile['supportsOperatingCoreSection'] })}
+                        className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy"
+                      >
+                        <option value="None">None</option>
+                        <option value="Core Passport">Core Passport</option>
+                        <option value="Strategy Kernel">Strategy Kernel</option>
+                        <option value="Audiences">Audiences</option>
+                        <option value="Channels">Channels</option>
+                        <option value="Claims">Claims</option>
+                        <option value="Voice">Voice</option>
+                        <option value="Visual">Visual</option>
+                        <option value="Revision">Revision</option>
+                      </select>
+                    </div>
                   </div>
 
                   {newSource.type === 'Link / URL' && (
@@ -7604,7 +7490,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   )}
 
-
+                  <div>
+                    <label className="block text-coh-navy/70 mb-1 font-medium">Use Case / Designation</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Strategic Partner Pitch Context"
+                      value={newSource.useFor}
+                      onChange={(e) => setNewSource({ ...newSource, useFor: e.target.value })}
+                      className="w-full bg-coh-cream border border-coh-gold/20 p-2.5 rounded text-coh-navy"
+                    />
+                  </div>
 
                   <div>
                     <label className="block text-coh-navy/70 mb-1 font-medium">Short Context / Notes</label>
@@ -7654,7 +7549,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="button"
                         onClick={() => {
                           setEditingSourceId(null);
-                          setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
+                          setNewSource({ title: '', type: 'Tone of Voice', status: 'Active', role: 'Task Source', supportsOperatingCoreSection: 'None', useFor: '', notes: '', content: '', url: '', selectable: true });
                         }}
                         className="bg-coh-cream text-coh-navy border border-coh-gold/20 py-2 px-3 rounded hover:bg-coh-cream-dark transition text-xs"
                       >
@@ -7705,8 +7600,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setEditingSourceId(null);
                               setNewSource({
                                 title: title,
-                                type: 'Other',
+                                type: title.includes('Deck') ? 'Deck' : 'Business Memo',
                                 status: 'Active',
+                                role: 'Core Document',
+                                supportsOperatingCoreSection: 'None',
+                                useFor: 'Core reference material',
                                 notes: 'Suggested document',
                                 content: '',
                                 url: '',
@@ -7727,10 +7625,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="space-y-3">
                   {(() => {
                     let filtered = selectableSources;
-                    if (sourceLibraryFilter === 'Approved Examples') {
-                      filtered = selectableSources.filter(s => s.type === 'Approved Example');
+                    if (sourceLibraryFilter === 'Core Documents') {
+                      filtered = selectableSources.filter(s => s.role === 'Core Document' || (s.supportsOperatingCoreSection && s.supportsOperatingCoreSection !== 'None'));
+                    } else if (sourceLibraryFilter === 'Task Sources') {
+                      filtered = selectableSources.filter(s => s.role === 'Task Source');
+                    } else if (sourceLibraryFilter === 'Approved Examples') {
+                      filtered = selectableSources.filter(s => s.role === 'Approved Example');
+                    } else if (sourceLibraryFilter === 'Partner Context') {
+                      filtered = selectableSources.filter(s => s.role === 'Partner Context');
+                    } else if (sourceLibraryFilter === 'Visual References') {
+                      filtered = selectableSources.filter(s => s.role === 'Visual Reference');
                     } else if (sourceLibraryFilter === 'Archive') {
-                      filtered = selectableSources.filter(s => s.status === 'Archived');
+                      filtered = selectableSources.filter(s => s.role === 'Archive' || s.status === 'Archived');
                     }
 
                     if (filtered.length === 0) {
@@ -7767,12 +7673,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </span>
                               {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-coh-navy/70">
-                                  {''}
+                                  {src.role}
                                 </span>
                               )}
                               {false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-coh-gold text-coh-navy">
-                                  Supports: {''}
+                                  Supports: {src.supportsOperatingCoreSection}
                                 </span>
                               )}
                               {src.selectable === false && (
@@ -7814,7 +7720,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Suggested Section</label>
                                       <span className="text-xs bg-white border border-coh-gold/20 px-2 py-1 rounded inline-block">
-                                        {false ? '' : 'Unassigned (Determine manually)'}
+                                        {src.supportsOperatingCoreSection !== 'None' ? src.supportsOperatingCoreSection : 'Unassigned (Determine manually)'}
                                       </span>
                                     </div>
                                     <div>
