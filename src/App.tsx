@@ -722,7 +722,14 @@ export default function App() {
   // --- Sources State ---
   const [sources, setSources] = useState<SourceFile[]>(() => {
     const local = localStorage.getItem('coh_sources_v11');
-    if (local) return JSON.parse(local);
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.warn('Failed to parse coh_sources_v11', e);
+      }
+    }
     return DEFAULT_COH_SOURCES.map(s => ({
       ...s,
       type: s.title.includes('Facts') ? 'Approved Example' : 'Tone of Voice',
@@ -1166,15 +1173,21 @@ export default function App() {
   const [savedContent, setSavedContent] = useState<SavedContent[]>(() => {
     const local = localStorage.getItem('coh_saved_content_v11');
     if (local) {
-      const parsed = JSON.parse(local) as SavedContent[];
-      // Map old legacy audience values
-      return parsed.map(item => {
-        let aud = item.audience;
-        if (aud === 'Arts Patrons') aud = 'Sponsors & Patrons';
-        else if (aud === 'Climate Activists') aud = 'Climate, Policy & Philanthropy Leaders';
-        else if (aud === 'Skeptics / Public') aud = 'General Public';
-        return { ...item, audience: aud };
-      });
+      try {
+        const parsed = JSON.parse(local) as SavedContent[];
+        if (Array.isArray(parsed)) {
+          // Map old legacy audience values
+          return parsed.map(item => {
+            let aud = item.audience;
+            if (aud === 'Arts Patrons') aud = 'Sponsors & Patrons';
+            else if (aud === 'Climate Activists') aud = 'Climate, Policy & Philanthropy Leaders';
+            else if (aud === 'Skeptics / Public') aud = 'General Public';
+            return { ...item, audience: aud };
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to parse coh_saved_content_v11', e);
+      }
     }
     return [
       {
@@ -1223,7 +1236,14 @@ export default function App() {
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>(() => {
 
     const local = localStorage.getItem('coh_saved_ideas_v1');
-    if (local) return JSON.parse(local);
+    if (local) {
+      try {
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) return parsed;
+      } catch (e) {
+        console.warn('Failed to parse coh_saved_ideas_v1', e);
+      }
+    }
     return [
       {
         id: 'idea-1',
