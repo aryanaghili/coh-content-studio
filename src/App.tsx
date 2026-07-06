@@ -1,3 +1,5 @@
+import { getCoreDocuments } from './lib/coreDocumentsStorage';
+import type { CoreDocument } from './lib/coreDocumentsStorage';
 import { useState, useEffect, useRef } from 'react';
 import {
   LayoutDashboard,
@@ -83,25 +85,7 @@ export interface WorkItem {
   origin?: string;
 }
 
-interface CoreDocument {
-  id: string;
-  title: string;
-  type: string;
-  status: 'Draft' | 'Active' | 'Archived' | 'Needs Review';
-  brainArea: string;
-  brainRole: string;
-  notes: string;
-  content: string;
-  distilledKernelNotes: string;
-  extractedClaimEvidence: string;
-  extractedVoiceGuidance: string;
-  extractedVisualGuidance: string;
-  extractedRevisionGuidance: string;
-  url: string;
-  createdAt: string;
-  updatedAt: string;
-  appliedToCore: boolean;
-}
+
 
 
 export const PROTECTED_COH_KERNEL = `
@@ -543,6 +527,16 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('command-center');
   const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
+  const [operatingCoreDocs, setOperatingCoreDocs] = useState<CoreDocument[]>([]);
+  
+  useEffect(() => {
+    const loadDocs = async () => {
+      const docs = await getCoreDocuments();
+      setOperatingCoreDocs(docs);
+    };
+    loadDocs();
+  }, []);
+
   const [operatingCore, setOperatingCore] = useState<OperatingCore>(() => {
     const saved = localStorage.getItem('coh_operating_core_v1');
     if (saved) {
@@ -1126,7 +1120,7 @@ export default function App() {
           audience: ideationFilterAudience,
           depth: ideationFilterDepth,
           quality: ideationFilterQuality,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation Workspace', audience: ideationFilterAudience })
+          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation Workspace', audience: ideationFilterAudience }, operatingCoreDocs)
         });
         const dateStr = new Date().toISOString().split('T')[0];
         const list: SavedIdea[] = [];

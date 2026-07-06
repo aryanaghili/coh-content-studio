@@ -1,19 +1,23 @@
 import re
 
-with open('src/App.tsx', 'r') as f:
+with open('src/components/OperatingCoreAdmin.tsx', 'r') as f:
     content = f.read()
 
-# Add Strategic Plan to Types if not there
-content = content.replace("| 'Business Model'", "| 'Business Model'\n    | 'Strategic Plan'")
+# Fix import
+content = content.replace(
+    "import { getCoreDocuments, addCoreDocument, updateCoreDocument, deleteCoreDocument, applyCoreDocumentToOperatingCore, unapplyCoreDocumentFromOperatingCore, CoreDocument } from '../lib/coreDocumentsStorage';",
+    "import { getCoreDocuments, addCoreDocument, updateCoreDocument, deleteCoreDocument, applyCoreDocumentToOperatingCore, unapplyCoreDocumentFromOperatingCore } from '../lib/coreDocumentsStorage';\nimport type { CoreDocument } from '../lib/coreDocumentsStorage';"
+)
 
-# Replace Link with Link / URL in the types list
-content = content.replace("| 'Link'", "| 'Link / URL'")
+# Fix value={doc.type} to value={doc.documentType}
+content = content.replace("value={doc.type ||", "value={doc.documentType ||")
 
-# Update form dropdowns if they exist. Let's find `<select value={newSource.type}` or similar.
-# In React, dropdowns for 'type' probably look like `<option value="Business Model">`
-content = content.replace('<option value="Link">Link</option>', '<option value="Link / URL">Link / URL</option>')
+# Fix value={doc.notes} to value={doc.shortContext}
+content = content.replace("value={doc.notes ||", "value={doc.shortContext ||")
 
-with open('src/App.tsx', 'w') as f:
+# Fix value={doc.content} to value={doc.rawText}
+content = content.replace("value={doc.content ||", "value={doc.rawText ||")
+
+with open('src/components/OperatingCoreAdmin.tsx', 'w') as f:
     f.write(content)
 
-print("Updated SourceFile Types.")

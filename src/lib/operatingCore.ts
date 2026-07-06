@@ -1,3 +1,4 @@
+import type { CoreDocument } from './coreDocumentsStorage';
 
 export const PROTECTED_COH_KERNEL = `
 PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
@@ -471,7 +472,7 @@ export interface CompileContext {
   action?: string;
 }
 
-export function compileOperatingCoreContext(core: OperatingCore | null, context: CompileContext): string {
+export function compileOperatingCoreContext(core: OperatingCore | null, context: CompileContext, appliedDocs: CoreDocument[] = []): string {
   // Always include the Protected Kernel at the very top.
   const sections: string[] = [
     PROTECTED_COH_KERNEL

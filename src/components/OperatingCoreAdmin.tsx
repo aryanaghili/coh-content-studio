@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { getCoreDocuments, addCoreDocument, updateCoreDocument, deleteCoreDocument, applyCoreDocumentToOperatingCore, unapplyCoreDocumentFromOperatingCore } from '../lib/coreDocumentsStorage';
+import type { CoreDocument } from '../lib/coreDocumentsStorage';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from '../lib/operatingCore';
 import type { 
   OperatingCore, AudienceProfile, ChannelRule, RevisionStandard, 
@@ -73,13 +75,18 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
 
   const [draftCore, setDraftCore] = useState<OperatingCore>(deepSanitize(safeCore));
   
-  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => {
-    const saved = localStorage.getItem('coh-operating-core-documents');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<CoreDocument[]>([]);
+  const [isLoadingDocs, setIsLoadingDocs] = useState(true);
+  
   useEffect(() => {
-    localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments));
-  }, [operatingCoreDocuments]);
+    const loadDocs = async () => {
+      setIsLoadingDocs(true);
+      const docs = await getCoreDocuments();
+      setOperatingCoreDocuments(docs);
+      setIsLoadingDocs(false);
+    };
+    loadDocs();
+  }, []);
   const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence'>('evidence');
   
   // Compiler Preview State
@@ -376,7 +383,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
               <div>
                 <div className="flex justify-between items-center mb-2 mt-4">
                   <label className="block text-xs font-bold text-coh-navy/80">Internal Law / Non-Negotiables</label>
-                  <button onClick={() => {
+                  <button onClick={async () => {
                     setDraftCore(prev => ({
                       ...prev, strategyKernel: { ...prev.strategyKernel, internalLaw: [...prev.strategyKernel.internalLaw, { id: generateId(), title: 'New Law', rule: '', enforcement: 'Strong guidance', appliesTo: ['All workspaces'] }] }
                     }))
@@ -401,7 +408,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                           <option value="Warn if violated">Warn if violated</option>
                           <option value="Reference only">Reference only</option>
                         </select>
-                        <button onClick={() => {
+                        <button onClick={async () => {
                           const newLaws = draftCore.strategyKernel.internalLaw.filter(l => l.id !== law.id);
                           updateKernelField('internalLaw', newLaws);
                         }} className="text-red-500 hover:text-red-700"><Trash2 size={14}/></button>
@@ -423,7 +430,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
                 <h3 className="font-serif text-xl font-bold text-coh-navy">Audience Logic</h3>
-                <button onClick={() => {
+                <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, audiences: [...prev.audiences, { id: generateId(), name: 'New Audience', caresAbout: '', proofNeeded: '', preferredTone: '', levelOfDetail: '', avoid: '', cta: '', relevantMessages: '' }]
                   }))
@@ -438,7 +445,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         newAuds[idx].name = e.target.value;
                         setDraftCore(prev => ({...prev, audiences: newAuds}));
                       }} className="font-serif text-lg font-bold bg-transparent border-b border-coh-gold/40 focus:outline-none" placeholder="Audience Name"/>
-                      <button onClick={() => {
+                      <button onClick={async () => {
                         const newAuds = draftCore.audiences.filter(a => a.id !== aud.id);
                         setDraftCore(prev => ({...prev, audiences: newAuds}));
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
@@ -464,7 +471,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
                 <h3 className="font-serif text-xl font-bold text-coh-navy">Channel Rules</h3>
-                <button onClick={() => {
+                <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, channels: [...prev.channels, { id: generateId(), name: 'New Channel', purpose: '', typicalStructure: '', lengthGuidance: '', toneGuidance: '', ctaGuidance: '', formattingRules: '', avoid: '' }]
                   }))
@@ -479,7 +486,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         newCh[idx].name = e.target.value;
                         setDraftCore(prev => ({...prev, channels: newCh}));
                       }} className="font-serif text-lg font-bold bg-transparent border-b border-coh-gold/40 focus:outline-none" placeholder="Channel Name"/>
-                      <button onClick={() => {
+                      <button onClick={async () => {
                         const newCh = draftCore.channels.filter(c => c.id !== ch.id);
                         setDraftCore(prev => ({...prev, channels: newCh}));
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
@@ -520,7 +527,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
 
               <div className="flex justify-between items-center mb-2 mt-4 border-b border-coh-gold/20 pb-2">
                 <label className="block text-sm font-bold text-coh-navy">Specific Claim Boundaries</label>
-                <button onClick={() => {
+                <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, claimsProofBoundaries: { ...prev.claimsProofBoundaries, claims: [...prev.claimsProofBoundaries.claims, { id: generateId(), text: '', type: 'Requires proof', proofRequirement: '', enforcement: 'Warn if violated' }] }
                   }))
@@ -551,7 +558,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claims: newC}}));
                       }} className="text-xs border border-coh-gold/30 rounded p-1 w-40 shrink-0" placeholder="Required Proof..."/>
                     )}
-                    <button onClick={() => {
+                    <button onClick={async () => {
                       const newC = draftCore.claimsProofBoundaries.claims.filter(c => c.id !== claim.id);
                       setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claims: newC}}));
                     }} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
@@ -605,7 +612,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
                 <h3 className="font-serif text-xl font-bold text-coh-navy">Revision Standards</h3>
-                <button onClick={() => {
+                <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, revisionStandards: [...prev.revisionStandards, { id: generateId(), action: 'New Standard', does: '', avoids: '', whenToUse: '', exampleGuidance: '', appliesTo: 'All workspaces' }]
                   }))
@@ -620,7 +627,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         newR[idx].action = e.target.value;
                         setDraftCore(p => ({...p, revisionStandards: newR}));
                       }} className="font-serif text-lg font-bold bg-transparent border-b border-coh-gold/40 focus:outline-none w-1/3" placeholder="Standard Name (e.g. Sharper)"/>
-                      <button onClick={() => {
+                      <button onClick={async () => {
                         const newR = draftCore.revisionStandards.filter(r => r.id !== rev.id);
                         setDraftCore(p => ({...p, revisionStandards: newR}));
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
@@ -643,18 +650,22 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
             <div className="space-y-6">
               <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
                 <h3 className="font-serif text-xl font-bold text-coh-navy">Core Documents</h3>
-                <button onClick={() => {
-                  setOperatingCoreDocuments([{
-                    id: generateId(),
+<div className="bg-red-50 border border-red-200 text-red-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
+                <span className="text-red-500">⚠️</span> 
+                <strong>Storage Warning:</strong> Local/browser storage only. Not safe for shared use. Connect a production database for team persistence.
+              </div>
+                <button onClick={async () => {
+                  const newDoc = await addCoreDocument({
                     title: 'New Core Document',
-                    type: 'Strategic Plan',
+                    documentType: 'Strategic Plan',
                     status: 'Draft',
                     brainArea: 'Passport',
                     brainRole: 'Rule',
-                    notes: '',
-                    content: '',
-                    extractedInsights: ''
-                  }, ...operatingCoreDocuments]);
+                    shortContext: '',
+                    rawText: '',
+                    createdBy: 'Superadmin'
+                  });
+                  setOperatingCoreDocuments([newDoc, ...operatingCoreDocuments]);
                 }} className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button">
                   <Plus size={12}/> Add Core Document
                 </button>
@@ -671,11 +682,14 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                     <div key={doc.id} className="border border-coh-gold/30 rounded bg-white overflow-hidden shadow-sm">
                       <div className="bg-coh-cream/30 border-b border-coh-gold/20 p-3 flex justify-between items-center">
                         <input value={doc.title} onChange={e => {
-                          const docs = [...operatingCoreDocuments];
-                          docs[idx].title = e.target.value;
-                          setOperatingCoreDocuments(docs);
+                          const val = e.target.value;
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].title = val;
+                            setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { title: val });
                         }} className="font-serif text-lg font-bold bg-transparent focus:outline-none w-1/2 border-b border-coh-gold/40" placeholder="Document Title"/>
-                        <button onClick={() => {
+                        <button onClick={async () => {
+                          await deleteCoreDocument(doc.id);
                           setOperatingCoreDocuments(operatingCoreDocuments.filter(d => d.id !== doc.id));
                         }} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
                       </div>
@@ -683,10 +697,12 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                       <div className="p-4 grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Type</label>
-                          <select value={doc.type || 'Strategic Plan'} onChange={e => {
+                          <select value={doc.documentType || 'Strategic Plan'} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].type = e.target.value;
+                            docs[idx].documentType = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { documentType: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Strategic Plan</option>
                             <option>Operating Memo</option>
@@ -699,9 +715,11 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Status</label>
                           <select value={doc.status || 'Draft'} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].status = e.target.value;
+                            docs[idx].status = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { status: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Draft</option>
                             <option>Approved</option>
@@ -711,9 +729,11 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Area</label>
                           <select value={doc.brainArea || 'Passport'} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].brainArea = e.target.value;
+                            docs[idx].brainArea = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { brainArea: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Passport</option>
                             <option>Strategy</option>
@@ -727,9 +747,11 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         <div>
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Role</label>
                           <select value={doc.brainRole || 'Rule'} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].brainRole = e.target.value;
+                            docs[idx].brainRole = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { brainRole: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
                             <option>Definition</option>
                             <option>Rule</option>
@@ -741,19 +763,23 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                         
                         <div className="col-span-2">
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Notes / Relevance</label>
-                          <input value={doc.notes || ''} onChange={e => {
+                          <input value={doc.shortContext || ''} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].notes = e.target.value;
+                            docs[idx].shortContext = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { shortContext: val });
                           }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" placeholder="Why is this document in the core?"/>
                         </div>
                         
                         <div className="col-span-2">
                           <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Content</label>
-                          <textarea value={doc.content || ''} onChange={e => {
+                          <textarea value={doc.rawText || ''} onChange={e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].content = e.target.value;
+                            docs[idx].rawText = val;
                             setOperatingCoreDocuments(docs);
+                            updateCoreDocument(doc.id, { rawText: val });
                           }} className="w-full bg-coh-cream/30 border border-coh-gold/20 p-2 rounded text-xs font-mono h-24 whitespace-pre-wrap" placeholder="Paste actual source text here..."/>
                         </div>
                         
@@ -762,17 +788,79 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
                             Extracted Insights 
                             <span className="text-[9px] font-normal text-coh-navy/60 bg-white px-1.5 py-0.5 rounded border border-coh-navy/10">Inferred System Logic</span>
                           </label>
-                          <textarea value={doc.extractedInsights || ''} onChange={e => {
+                          <textarea value={doc.extractedText || ''} onChange={async e => {
+                            const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
-                            docs[idx].extractedInsights = e.target.value;
+                            docs[idx].extractedText = val;
                             setOperatingCoreDocuments(docs);
-                          }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-16" placeholder="The system distills rules from the content here..."/>
+                            await updateCoreDocument(doc.id, { extractedText: val });
+                          }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-16 mb-2" placeholder="The system distills rules from the content here..."/>
                           
-                          <button onClick={() => {
-                            alert('Insight extracted and saved. In a full backend environment, this would hit the LLM and automatically populate the Operating Core fields.');
-                          }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
-                            Extract Insights & Save to Operating Core
-                          </button>
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Distilled Notes (Strategy)</label>
+                              <textarea value={doc.distilledKernelNotes || ''} onChange={async e => {
+                                const val = e.target.value;
+                                const docs = [...operatingCoreDocuments];
+                                docs[idx].distilledKernelNotes = val;
+                                setOperatingCoreDocuments(docs);
+                                await updateCoreDocument(doc.id, { distilledKernelNotes: val });
+                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Extracted Claim Evidence</label>
+                              <textarea value={doc.extractedClaimEvidence || ''} onChange={async e => {
+                                const val = e.target.value;
+                                const docs = [...operatingCoreDocuments];
+                                docs[idx].extractedClaimEvidence = val;
+                                setOperatingCoreDocuments(docs);
+                                await updateCoreDocument(doc.id, { extractedClaimEvidence: val });
+                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Voice Guidance</label>
+                              <textarea value={doc.extractedVoiceGuidance || ''} onChange={async e => {
+                                const val = e.target.value;
+                                const docs = [...operatingCoreDocuments];
+                                docs[idx].extractedVoiceGuidance = val;
+                                setOperatingCoreDocuments(docs);
+                                await updateCoreDocument(doc.id, { extractedVoiceGuidance: val });
+                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                            </div>
+                            <div>
+                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Visual Guidance</label>
+                              <textarea value={doc.extractedVisualGuidance || ''} onChange={async e => {
+                                const val = e.target.value;
+                                const docs = [...operatingCoreDocuments];
+                                docs[idx].extractedVisualGuidance = val;
+                                setOperatingCoreDocuments(docs);
+                                await updateCoreDocument(doc.id, { extractedVisualGuidance: val });
+                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                            </div>
+                          </div>
+
+                          {!doc.appliedToOperatingCore ? (
+                            <button onClick={async () => {
+                              const updated = await applyCoreDocumentToOperatingCore(doc.id);
+                              const docs = [...operatingCoreDocuments];
+                              docs[idx] = updated;
+                              setOperatingCoreDocuments(docs);
+                              alert('Insights saved and queued for compiler injection!');
+                            }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
+                              Review & Apply to Operating Core
+                            </button>
+                          ) : (
+                            <div className="mt-2 flex gap-2">
+                              <div className="flex-1 text-center bg-green-50 border border-green-200 text-green-800 text-xs font-bold uppercase py-2 rounded">
+                                ✅ Applied to Compiler
+                              </div>
+                              <button onClick={() => {
+                                alert('In a full implementation, this opens the exact target pane (e.g. Audiences) and copies the text.');
+                              }} className="flex-1 text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-cream transition-colors">
+                                Open Target Section
+                              </button>
+                            </div>
+                          )}
                         </div>
 
                       </div>
