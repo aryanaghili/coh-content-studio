@@ -1,4 +1,5 @@
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
+import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
 import { safeLocalStorageGet, safeLocalStorageSet } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
@@ -10,6 +11,7 @@ import {
 
 
   LayoutDashboard,
+  Calendar,
   FileText,
   Cpu,
   Sliders,
@@ -4373,6 +4375,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
             >
               <Lightbulb size={16} />
               Ideation Workspace
+            </button>
+            <button
+              onClick={() => setActiveTab('editorial-calendar')}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'editorial-calendar'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <Calendar size={16} />
+              Editorial Calendar Studio
             </button>
             <button
               onClick={() => setActiveTab('content-workspace')}
