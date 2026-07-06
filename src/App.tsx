@@ -694,7 +694,7 @@ export default function App() {
     }
   }, [settingsTestCooldown]);
   const [settingsKeyDirty, setSettingsKeyDirty] = useState<boolean>(false);
-  const [settingsSection, setSettingsSection] = useState<'ai' | 'content_rules'>('ai');
+  const [settingsSection, setSettingsSection] = useState<'ai'>('ai');
 
   // --- Authentication States & Handlers ---
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -2364,8 +2364,8 @@ export default function App() {
 
   // ─────────────────────────────────────────────────────────────────
   // GENERATION ENGINE v2
-  // Hierarchy: brief → notes → sources → channel+format → Content Rules active
-  // Content Rules active is a guardrail / fact boundary, NOT the content itself.
+  // Hierarchy: brief → notes → sources → channel+format → Operating Core active
+  // Operating Core active is a guardrail / fact boundary, NOT the content itself.
   // ─────────────────────────────────────────────────────────────────
 
   /** Step 1 — Extract creation intent and classify user input type */
@@ -4132,7 +4132,7 @@ Use the selected audience to adapt the language, proof points, level of explanat
 
 Do not invent facts, titles, dates, venues, partners, sponsors, technologies, or project names.
 
-Stay anchored to the user’s specific brief. Use Content Rules active only as guidance and fact boundary. Do not replace the user’s request with generic COH positioning.
+Stay anchored to the user’s specific brief. Use Operating Core active rules only as guidance and fact boundary. Do not replace the user’s request with generic COH positioning.
 
 Do not treat the output format as a generic post. Match the structure to the selected channel and format.
 Create the content and a matching visual design brief. Keep metadata outside the final copy.
@@ -5000,7 +5000,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </span>
                     </div>
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-coh-navy/70">Content Rules</span>
+                      <span className="text-coh-navy/70">Operating Core Rules</span>
                       <span className={`px-2 py-0.5 rounded font-semibold ${operatingCore.active ? 'bg-coh-navy text-coh-cream' : 'bg-gray-200 text-gray-600'}`}>
                         {operatingCore.active ? 'Active' : 'Bypassed'}
                       </span>
@@ -5921,7 +5921,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {/* Add / Select Sources (INTEGRATED IN BRIEF) */}
                     <div>
                       <label className="block text-coh-navy/70 font-semibold mb-1">
-                        Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Content Rules active rules are always active separately." />
+                        Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
                       </label>
                       
                       <div className="border border-coh-gold/15 p-2.5 rounded bg-coh-cream/50 max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
@@ -7900,14 +7900,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <div className="border-b border-coh-gold/20 pb-6">
               <h2 className="font-serif text-3xl font-normal text-coh-navy">Settings</h2>
               <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                Configure AI provider, generation mode, and content rules.
+                Configure AI provider and generation mode.
+              </p>
+              <p className="text-xs text-coh-navy/50 font-sans italic bg-coh-cream/50 p-2 rounded border border-coh-gold/10 inline-block mt-2">
+                Note: Content, voice, claims, audience, visual, and revision rules are managed in Operating Core. Settings is for technical configuration.
               </p>
             </div>
 
             {/* Section Nav */}
             <div className="flex justify-between items-center mb-2">
               <div className="flex gap-2">
-                {([['ai', 'AI Connection'], ['content_rules', 'Content Rules']] as const).map(([key, label]) => (
+                {([['ai', 'AI Connection']] as const).map(([key, label]) => (
                   <button
                     key={key}
                     onClick={() => setSettingsSection(key)}
@@ -8230,84 +8233,6 @@ OPENAI_MODEL=gpt-4.1`}
               </div>
             )}
 
-            {/* ── Content Rules ─────────────────────────────────────── */}
-            {settingsSection === 'content_rules' && (
-              <div className="bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
-                <div className="border-b border-coh-gold/15 pb-2">
-                  <h3 className="font-serif text-lg text-coh-navy font-semibold font-bold">Content Rules</h3>
-                  <p className="text-xs text-coh-navy/60 mt-1">
-                    Content Rules guide voice, approved facts, channel behavior, output format behavior, audience behavior, claim boundaries, and writing cleanliness.
-                    These rules are applied as guardrails during AI generation and prototype output.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  {[
-                    { name: 'Approved Facts', desc: 'Soria Moria, The Golden Fountain, The Water Dragon, Roar to the Wind. Climate as lived condition, not campaign theme.', status: approvedFactsLoaded },
-                    { name: 'Voice Rules', desc: 'Precise, composed, human, charged copywriting bounds.', status: voiceRulesLoaded },
-                    { name: 'Channel Rules', desc: 'Platform character constraints, links context, and layout styles.', status: channelsLoaded },
-                    { name: 'Audience Rules', desc: 'Adapts vocabulary, explanations, and CTA focus across key distribution audiences.', status: true },
-                    { name: 'Output Format Rules', desc: 'Format-specific length, tone, and structure constraints.', status: true },
-                    { name: 'Claim Boundaries', desc: 'Restricts unapproved inventions of locations, dates, sponsors, or project names.', status: true },
-                    { name: 'Writing Cleanliness Rules', desc: 'Enforces clean export-safe punctuation. Replaces em dashes, zero-width chars, curly quotes, and formulaic AI formatting.', status: true },
-                    { name: 'Approved Examples', desc: 'Grounded copy models for verification against fact boundary.', status: true },
-                  ].map(mod => (
-                    <div key={mod.name} className="bg-coh-cream p-4 rounded border border-coh-gold/15 flex flex-col justify-between h-36">
-                      <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <span className="font-bold text-coh-navy font-serif">{mod.name}</span>
-                          <span className={`text-[9px] font-mono font-bold ${mod.status ? 'text-green-700' : 'text-red-700'}`}>
-                            {mod.status ? 'ACTIVE' : 'MISSING'}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-coh-navy/60 leading-relaxed">{mod.desc}</p>
-                      </div>
-                      <span className="text-[9px] text-coh-navy/40 font-mono mt-2 block border-t border-coh-gold/10 pt-1.5">
-                        Last Updated: 2026-06-30
-                      </span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-4 border-t border-coh-gold/15 space-y-4">
-                  <h4 className="font-serif text-sm font-bold text-coh-navy">Writing Cleanliness</h4>
-                  <div className="flex items-center justify-between bg-coh-cream p-4 rounded border border-coh-gold/15 text-xs">
-                    <div>
-                      <span className="font-bold text-coh-navy block text-xs">Auto-Cleanup (On by default)</span>
-                      <span className="text-[11px] text-coh-navy/60 leading-relaxed block mt-1">
-                        Automatically cleans em dashes, zero-width characters, and formulaic AI formatting before saving, copying, or exporting drafts.
-                      </span>
-                    </div>
-                    <input
-                      type="checkbox"
-                      checked={writingCleanupOn}
-                      onChange={(e) => setWritingCleanupOn(e.target.checked)}
-                      className="rounded border-coh-gold text-coh-navy focus:ring-coh-navy w-5 h-5 cursor-pointer"
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-coh-gold/15 text-xs text-coh-navy/55 space-y-4">
-                  <button
-                    onClick={() => {
-                      if (window.confirm("Restore all default COH Knowledge Base sources? This will overwrite your source cache.")) {
-                        setSources(DEFAULT_COH_SOURCES.map(s => ({
-                          ...s,
-                          type: s.title.includes('Facts') ? 'Approved Example' : 'Tone of Voice',
-                          status: 'Active' as const,
-                          selected: false
-                        })) as SourceFile[]);
-                        localStorage.removeItem('coh_sources_v11');
-                        alert("Default COH content rules reloaded.");
-                      }
-                    }}
-                    className="bg-red-800 text-white hover:bg-red-900 py-2 px-5 rounded transition text-xs font-semibold"
-                  >
-                    Reset &amp; Reload Default Content Rules
-                  </button>
-                </div>
-              </div>
-            )}
 
           </div>
         )}
