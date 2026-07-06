@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useToast } from './ui/Toast';
 import { getCoreDocuments, addCoreDocument, updateCoreDocument, deleteCoreDocument, applyCoreDocumentToOperatingCore, unapplyCoreDocumentFromOperatingCore } from '../lib/coreDocumentsStorage';
 import type { CoreDocument } from '../lib/coreDocumentsStorage';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from '../lib/operatingCore';
@@ -35,7 +36,10 @@ const deepSanitize = (obj: any): any => {
   return obj;
 };
 
-export default function OperatingCoreAdmin({ core, sourceLibrary = [], dbStatus = 'local_only', onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
+export default function OperatingCoreAdmin({
+ core, sourceLibrary = [], dbStatus = 'local_only', onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) { 
+  const { showToast } = useToast();
+
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   // Ensure safe fallback from local storage
   const defaultCore = createDefaultOperatingCore();
@@ -1029,7 +1033,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], dbStatus 
     }
     setOperatingCoreDocuments(docs);
     
-                              alert('Insights saved and queued for compiler injection!');
+                              showToast('Insights saved and queued for compiler injection!', 'success');
                             }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
                               Review & Apply to Operating Core
                             </button>
@@ -1039,7 +1043,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], dbStatus 
                                 ✅ Applied to Compiler
                               </div>
                               <button onClick={() => {
-                                alert('In a full implementation, this opens the exact target pane (e.g. Audiences) and copies the text.');
+                                showToast('In a full implementation, this opens the exact target pane (e.g. Audiences) and copies the text.', 'info');
                               }} className="flex-1 text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-cream transition-colors">
                                 Open Target Section
                               </button>

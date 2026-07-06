@@ -1,3 +1,4 @@
+import { safeLocalStorageGet, safeLocalStorageSet } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
 import { useState, useEffect, useRef } from 'react';
@@ -638,11 +639,9 @@ export default function App() {
         if (res.status === 503) {
           setDbStatus('local_only');
           // Fallback to localStorage
-          const saved = localStorage.getItem('coh_operating_core_v1');
-          if (saved) {
-            try {
-              setOperatingCore(safeMergeOperatingCore(JSON.parse(saved)));
-            } catch (e) { console.error('Failed to parse local core'); }
+          const parsed = safeLocalStorageGet<any>('coh_operating_core_v1', null);
+          if (parsed) {
+            setOperatingCore(safeMergeOperatingCore(parsed));
           }
         } else if (res.ok) {
           const data = await res.json();
@@ -663,22 +662,19 @@ export default function App() {
       } catch (err) {
         console.error('API fetch error', err);
         setDbStatus('local_only');
-        const saved = localStorage.getItem('coh_operating_core_v1');
-        if (saved) {
-          try {
-            setOperatingCore(safeMergeOperatingCore(JSON.parse(saved)));
-          } catch (e) { console.error('Failed to parse local core'); }
-        }
+        const parsed = safeLocalStorageGet<any>('coh_operating_core_v1', null);
+          if (parsed) {
+            setOperatingCore(safeMergeOperatingCore(parsed));
+          }
       }
     };
     fetchCore();
   }, []);
 
   const [operatingCore_init_unused, setOperatingCore_init_unused] = useState<OperatingCore>(() => {
-    const saved = localStorage.getItem('coh_operating_core_v1');
-    if (saved) {
+    const parsed = safeLocalStorageGet<any>('coh_operating_core_v1', null);
+    if (parsed) {
       try {
-        const parsed = JSON.parse(saved);
         const normalizeDeep = (obj: any): any => {
           if (typeof obj === 'string') return normalizeText(obj);
           if (Array.isArray(obj)) return obj.map(normalizeDeep);
@@ -700,7 +696,7 @@ export default function App() {
 
   useEffect(() => {
     if (dbStatus === 'local_only') {
-      localStorage.setItem('coh_operating_core_v1', JSON.stringify(operatingCore));
+      safeLocalStorageSet('coh_operating_core_v1', JSON.stringify(operatingCore));
     } else if (dbStatus === 'configured') {
       fetch('/api/operating-core', {
         method: 'PUT',
@@ -1212,7 +1208,7 @@ export default function App() {
 
   useEffect(() => {
     if (activeWorkItem) {
-      localStorage.setItem('coh_active_work_item_v1', JSON.stringify(activeWorkItem));
+      safeLocalStorageSet('coh_active_work_item_v1', JSON.stringify(activeWorkItem));
     } else {
       localStorage.removeItem('coh_active_work_item_v1');
     }
@@ -1257,7 +1253,7 @@ export default function App() {
   const [isIdeating, setIsIdeating] = useState<boolean>(false);
 
   useEffect(() => {
-    localStorage.setItem('coh_saved_ideas_v1', JSON.stringify(savedIdeas));
+    safeLocalStorageSet('coh_saved_ideas_v1', JSON.stringify(savedIdeas));
   }, [savedIdeas]);
 
   // --- Ideation Actions and Helper Functions ---
@@ -1604,11 +1600,11 @@ export default function App() {
 
   // --- LocalStorage Sync ---
   useEffect(() => {
-    localStorage.setItem('coh_sources_v11', JSON.stringify(sources));
+    safeLocalStorageSet('coh_sources_v11', JSON.stringify(sources));
   }, [sources]);
 
   useEffect(() => {
-    localStorage.setItem('coh_saved_content_v11', JSON.stringify(savedContent));
+    safeLocalStorageSet('coh_saved_content_v11', JSON.stringify(savedContent));
   }, [savedContent]);
 
   // --- Brain Status Calculations ---
@@ -4492,7 +4488,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         
 </ErrorBoundary>)}
-        {activeTab === 'ideation-workspace' && (
+        {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6">
               <h2 className="font-serif text-3xl font-normal text-coh-navy mb-2">Ideation Workspace</h2>
@@ -4728,7 +4724,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
           </div>
-        )}
+        </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
@@ -4824,7 +4820,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         
 </ErrorBoundary>)}
-        {activeTab === 'command-center' && (
+        {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="space-y-8 animate-fadeIn max-w-6xl">
             <div className="pb-6">
               <h2 className="font-serif text-3xl font-normal text-coh-navy mb-1">Command Center</h2>
@@ -4975,7 +4971,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   ) : (
                     <div className="bg-coh-cream/50 p-6 rounded border border-coh-gold/20 flex flex-col items-center justify-center text-center">
-                      <p className="text-sm text-coh-navy/60 font-serif italic mb-3">No active work right now.</p>
+                      <p className="text-sm text-coh-navy/60 font-serif italic mb-3">You don't have an active work item right now. Start a new draft or explore ideas from the options above.</p>
                       <button onClick={() => {
                         const id = `work-${Date.now()}`;
                         setActiveWorkItem({
@@ -5119,7 +5115,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
           </div>
-        )}
+        </ErrorBoundary>)}
         {/* --- TAB 2: CONTENT WORKSPACE --- */}
         {activeTab === 'content-workspace' && (<ErrorBoundary fallbackTitle="Content Workspace Error">
           <div className="space-y-8 animate-fadeIn">
