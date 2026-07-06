@@ -1,4 +1,8 @@
+with open('src/lib/operatingCore.ts', 'r') as f:
+    content = f.read()
 
+# Let's replace the whole file since we need to rewrite all defaults and the kernel according to the prompt
+new_content = """
 export const PROTECTED_COH_KERNEL = `
 PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
 
@@ -478,7 +482,7 @@ export function compileOperatingCoreContext(core: OperatingCore | null, context:
   ];
 
   if (!core || !core.active) {
-    return sections.join('\n');
+    return sections.join('\\n');
   }
 
   sections.push("--- OPERATING CORE CONTEXT ---");
@@ -510,9 +514,9 @@ STRATEGY KERNEL:
       const laws = core.strategyKernel.internalLaw
         .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Content generation') || law.appliesTo.includes('Ideation Workspace'))
         .map(law => `- [${law.enforcement.toUpperCase()}] ${law.title}: ${law.rule}`)
-        .join('\n');
+        .join('\\n');
       if (laws) {
-        sections.push(`\nINTERNAL LAW (NON-NEGOTIABLES):\n${laws}`);
+        sections.push(`\\nINTERNAL LAW (NON-NEGOTIABLES):\\n${laws}`);
       }
     }
   }
@@ -548,17 +552,17 @@ CHANNEL RULES: ${channelMatch.name}
 
   // Claim boundaries
   if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio', 'Ideation Workspace'].includes(context.workspace)) {
-    const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\n');
-    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\n');
-    const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\n');
+    const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\\n');
+    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\\n');
+    const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\\n');
     
     if (approved || requiresProof || forbidden) {
-      sections.push(`\nCLAIMS & PROOF BOUNDARIES:`);
+      sections.push(`\\nCLAIMS & PROOF BOUNDARIES:`);
       sections.push(`OVERSTATEMENT WARNING: ${core.claimsProofBoundaries.overstatementWarnings}`);
       sections.push(`STYLE RULES: ${core.claimsProofBoundaries.claimStyleRules}`);
-      if (approved) sections.push(`APPROVED CLAIMS:\n${approved}`);
-      if (requiresProof) sections.push(`REQUIRES PROOF:\n${requiresProof}`);
-      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\n${forbidden}`);
+      if (approved) sections.push(`APPROVED CLAIMS:\\n${approved}`);
+      if (requiresProof) sections.push(`REQUIRES PROOF:\\n${requiresProof}`);
+      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\\n${forbidden}`);
     }
   }
 
@@ -599,10 +603,14 @@ VISUAL DNA:
 - CLICHES TO AVOID (CRITICAL): ${core.visualDNA.visualClichesToAvoid}`);
   }
 
-  return sections.join('\n');
+  return sections.join('\\n');
 }
 
 export function normalizeText(text: string | null | undefined): string {
   if (!text) return '';
-  return text.replace(/\n/g, '\n').replace(/\s+$/, '');
+  return text.replace(/\\n/g, '\\n').replace(/\\s+$/, '');
 }
+"""
+
+with open('src/lib/operatingCore.ts', 'w') as f:
+    f.write(new_content)

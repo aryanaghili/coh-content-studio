@@ -18,6 +18,20 @@ interface Props {
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
+
+const deepSanitize = (obj: any): any => {
+  if (typeof obj === 'string') return obj.replace(/\\n/g, '\n');
+  if (Array.isArray(obj)) return obj.map(deepSanitize);
+  if (obj !== null && typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+      newObj[key] = deepSanitize(obj[key]);
+    }
+    return newObj;
+  }
+  return obj;
+};
+
 export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, onReset, onAddNewCoreSource, onLinkExistingSource }: Props) {
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   // Ensure safe fallback from local storage
@@ -57,7 +71,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
     learningInbox: core.learningInbox || defaultCore.learningInbox
   } : defaultCore;
 
-  const [draftCore, setDraftCore] = useState<OperatingCore>(safeCore);
+  const [draftCore, setDraftCore] = useState<OperatingCore>(deepSanitize(safeCore));
   
   const [operatingCoreDocuments, setOperatingCoreDocuments] = useState<any[]>(() => {
     const saved = localStorage.getItem('coh-operating-core-documents');
@@ -66,7 +80,7 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
   useEffect(() => {
     localStorage.setItem('coh-operating-core-documents', JSON.stringify(operatingCoreDocuments));
   }, [operatingCoreDocuments]);
-  const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence'>('passport');
+  const [activeTab, setActiveTab] = useState<'passport' | 'kernel' | 'audiences' | 'channels' | 'claims' | 'voice' | 'visual' | 'revision' | 'evidence'>('evidence');
   
   // Compiler Preview State
   const [showPreview, setShowPreview] = useState(false);
@@ -227,8 +241,8 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
               {draftCore.active ? 'ACTIVE' : 'INACTIVE'}
             </button>
           </div>
-          <div className="flex items-center gap-1 bg-coh-navy/5 px-2 py-1 rounded border border-coh-navy/10 text-[10px] text-coh-navy/70 font-mono mt-1">
-            <span className="font-bold">Protected COH Foundation:</span> Always On
+          <div className="flex items-center gap-2 bg-coh-gold/10 px-3 py-2 rounded border border-coh-gold/30 text-xs text-coh-navy font-mono mt-2 mb-2 w-fit">
+            <Lock size={14} className="text-coh-gold"/> <span className="font-bold uppercase">Protected COH Kernel:</span> <span className="text-green-700 font-bold">ALWAYS ON</span>
           </div>
           <div className="flex gap-2">
             <button onClick={onReset} className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-1 px-3 py-1.5 text-xs border border-coh-gold/30 text-coh-navy/60 hover:bg-coh-cream rounded transition-colors action-button">
@@ -627,143 +641,147 @@ export default function OperatingCoreAdmin({ core, sourceLibrary = [], onSave, o
           {/* CORE SOURCES */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Documents</h3>
-              <p className="text-xs text-coh-navy/60 mb-4">
-                Core Documents are foundational documents that shape the Operating Core and become part of the system brain. They are managed here by the superuser.
-                <br/><br/>
-                Add or link them directly here. They do not appear as normal user task sources unless explicitly marked as selectable.
-              </p>
-              
-              
-              <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm mb-8">
-                <h4 className="font-serif text-sm font-bold text-coh-navy mb-2">Suggested Core Documents, not uploaded yet:</h4>
-                <ul className="text-xs text-coh-navy/60 list-disc list-inside space-y-1">
-                  {[
-                    "COH Business Model",
-                    "COH Business Memo",
-                    "COH Phase 1 Strategic Plan",
-                    "COH Master Deck",
-                    "COH Website Copy",
-                    "COH One-Pager",
-                    "Sponsorship Deck",
-                    "Approved Output Examples"
-                  ].filter(doc => !sourceLibrary.some(s => s.title.includes(doc) || doc.includes(s.title)))
-                   .map(doc => (
-                    <li key={doc} className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 rounded-full bg-coh-gold/40"></span>
-                      <span>{doc}</span>
-                      <span className="text-[10px] uppercase font-bold text-coh-gold cursor-pointer hover:underline" onClick={() => {
-                        if (onAddNewCoreSource) onAddNewCoreSource('Strategy Kernel');
-                      }}>Add / Upload / Link</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
+                <h3 className="font-serif text-xl font-bold text-coh-navy">Core Documents</h3>
+                <button onClick={() => {
+                  setOperatingCoreDocuments([{
+                    id: generateId(),
+                    title: 'New Core Document',
+                    type: 'Strategic Plan',
+                    status: 'Draft',
+                    brainArea: 'Passport',
+                    brainRole: 'Rule',
+                    notes: '',
+                    content: '',
+                    extractedInsights: ''
+                  }, ...operatingCoreDocuments]);
+                }} className="text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button">
+                  <Plus size={12}/> Add Core Document
+                </button>
               </div>
+              <p className="text-xs text-coh-navy/60 mb-4">These are foundational brain documents. They are not normal user sources. They dictate the internal logic of the system.</p>
 
-              <div className="space-y-8">
-                {['Core Passport', 'Strategy Kernel', 'Audiences', 'Channels', 'Claims', 'Voice', 'Visual', 'Revision'].map(section => {
-                  const sourcesForSection = sourceLibrary.filter(src => src.supportsOperatingCoreSection === section);
-                  
-                  return (
-                    <div key={section} className="border border-coh-gold/20 rounded p-4 bg-white shadow-sm">
-                      <h4 className="font-serif text-lg font-bold text-coh-navy mb-3 pb-1 border-b border-coh-gold/10">{section}</h4>
+              {operatingCoreDocuments.length === 0 ? (
+                <div className="text-center p-8 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded">
+                  <p className="text-xs text-coh-navy/50 italic mb-2">No Core Documents linked yet.</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {operatingCoreDocuments.map((doc, idx) => (
+                    <div key={doc.id} className="border border-coh-gold/30 rounded bg-white overflow-hidden shadow-sm">
+                      <div className="bg-coh-cream/30 border-b border-coh-gold/20 p-3 flex justify-between items-center">
+                        <input value={doc.title} onChange={e => {
+                          const docs = [...operatingCoreDocuments];
+                          docs[idx].title = e.target.value;
+                          setOperatingCoreDocuments(docs);
+                        }} className="font-serif text-lg font-bold bg-transparent focus:outline-none w-1/2 border-b border-coh-gold/40" placeholder="Document Title"/>
+                        <button onClick={() => {
+                          setOperatingCoreDocuments(operatingCoreDocuments.filter(d => d.id !== doc.id));
+                        }} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
+                      </div>
                       
-                      {sourcesForSection.length > 0 ? (
-                        <div className="space-y-3 mb-4">
-                          {sourcesForSection.map(src => (
-                            <div key={src.id} className="bg-coh-cream/30 p-4 rounded border border-coh-gold/10 flex flex-col gap-2">
-                              <div className="flex justify-between items-start">
-                                <div>
-                                  <span className="text-[9px] uppercase font-mono font-bold bg-coh-gold/20 text-coh-navy px-1.5 py-0.5 rounded mr-2">{src.type}</span>
-                                  {src.role && <span className="text-[9px] text-coh-navy/60 uppercase font-semibold border border-coh-navy/20 px-1.5 py-0.5 rounded mr-2">{src.role}</span>}
-                                  {src.status && <span className={`text-[9px] uppercase font-semibold px-1.5 py-0.5 rounded ${src.status === 'Active' ? 'bg-green-50 text-green-700' : 'bg-coh-cream text-coh-navy/60'}`}>{src.status}</span>}
-                                  <h5 className="font-bold text-coh-navy text-sm mt-1">{src.title}</h5>
-                                  {src.notes && <p className="text-xs text-coh-navy/70 mt-1 italic">{src.notes}</p>}
-                                  {src.url && <a href={src.url} target="_blank" rel="noreferrer" className="block text-[10px] text-blue-600 hover:underline mt-1 break-all">{src.url}</a>}
-                                </div>
-                              </div>
-                              <div className="flex gap-3 mt-2 pt-2 border-t border-coh-gold/10">
-                                <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy interactive-link transition action-button" onClick={() => alert('Open source clicked')}>Open source</button>
-                                
-                                <button 
-                                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[10px] uppercase font-bold text-coh-navy interactive-link transition action-button" 
-                                  onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
-                                >
-                                  Apply to Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
-                                </button>
-                                
-                                {extractingInsightFor === src.id && (
-                                  <div className="mt-3 p-4 bg-white border border-coh-gold/20 rounded animate-fadeIn w-full">
-                                    <h5 className="font-serif font-bold text-coh-navy mb-2 text-sm">Extract Insight for Operating Core</h5>
-                                    <p className="text-[10px] text-coh-navy/60 mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section above.</p>
-                                    
-                                    <div className="space-y-3">
-                                      <div>
-                                        <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Suggested Section</label>
-                                        <span className="text-xs bg-coh-cream border border-coh-gold/20 px-2 py-1 rounded inline-block">
-                                          {src.supportsOperatingCoreSection !== 'None' ? src.supportsOperatingCoreSection : 'Unassigned'}
-                                        </span>
-                                      </div>
-                                      <div>
-                                        <label className="block text-[10px] font-bold uppercase text-coh-navy/70 mb-1">Extract Note</label>
-                                        <textarea 
-                                          className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-xs text-coh-navy" 
-                                          rows={3} 
-                                          placeholder="Draft the rule, claim, or insight here..."
-                                          id={`extract-core-${src.id}`}
-                                        />
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <button 
-                                          onClick={() => {
-                                            const el = document.getElementById(`extract-core-${src.id}`) as HTMLTextAreaElement;
-                                            if (el && el.value) {
-                                              navigator.clipboard.writeText(el.value);
-                                              alert('Copied to clipboard. You can now paste this into the Operating Core fields above.');
-                                            }
-                                          }}
-                                          className="bg-white border border-coh-gold/30 hover:bg-coh-gold/10 text-coh-navy px-3 py-1.5 rounded text-[10px] font-bold uppercase transition action-button"
-                                        >
-                                          Copy to Clipboard
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-                                )}
+                      <div className="p-4 grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Type</label>
+                          <select value={doc.type || 'Strategic Plan'} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].type = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                            <option>Strategic Plan</option>
+                            <option>Operating Memo</option>
+                            <option>Canon Script</option>
+                            <option>Treatment</option>
+                            <option>Brand Guide</option>
+                            <option>Visual DNA Guide</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Status</label>
+                          <select value={doc.status || 'Draft'} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].status = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                            <option>Draft</option>
+                            <option>Approved</option>
+                            <option>Deprecated</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Area</label>
+                          <select value={doc.brainArea || 'Passport'} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].brainArea = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                            <option>Passport</option>
+                            <option>Strategy</option>
+                            <option>Audience</option>
+                            <option>Channels</option>
+                            <option>Claims</option>
+                            <option>Voice</option>
+                            <option>Visual</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Role</label>
+                          <select value={doc.brainRole || 'Rule'} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].brainRole = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                            <option>Definition</option>
+                            <option>Rule</option>
+                            <option>Constraint</option>
+                            <option>Direction</option>
+                            <option>Aspiration</option>
+                          </select>
+                        </div>
+                        
+                        <div className="col-span-2">
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Notes / Relevance</label>
+                          <input value={doc.notes || ''} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].notes = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" placeholder="Why is this document in the core?"/>
+                        </div>
+                        
+                        <div className="col-span-2">
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Content</label>
+                          <textarea value={doc.content || ''} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].content = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full bg-coh-cream/30 border border-coh-gold/20 p-2 rounded text-xs font-mono h-24 whitespace-pre-wrap" placeholder="Paste actual source text here..."/>
+                        </div>
+                        
+                        <div className="col-span-2 bg-coh-navy/5 border border-coh-navy/10 p-3 rounded">
+                          <label className="block text-[10px] uppercase font-bold text-coh-navy mb-1 flex items-center justify-between">
+                            Extracted Insights 
+                            <span className="text-[9px] font-normal text-coh-navy/60 bg-white px-1.5 py-0.5 rounded border border-coh-navy/10">Inferred System Logic</span>
+                          </label>
+                          <textarea value={doc.extractedInsights || ''} onChange={e => {
+                            const docs = [...operatingCoreDocuments];
+                            docs[idx].extractedInsights = e.target.value;
+                            setOperatingCoreDocuments(docs);
+                          }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-16" placeholder="The system distills rules from the content here..."/>
+                          
+                          <button onClick={() => {
+                            alert('Insight extracted and saved. In a full backend environment, this would hit the LLM and automatically populate the Operating Core fields.');
+                          }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
+                            Extract Insights & Save to Operating Core
+                          </button>
+                        </div>
 
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center p-4 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded mb-4">
-                          <p className="text-xs text-coh-navy/50 italic">No Core Documents linked yet.</p>
-                        </div>
-                      )}
-                      
-                      <div className="flex gap-2">
-                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-navy text-coh-cream px-3 py-1.5 rounded hover:bg-coh-navy-light transition font-semibold flex items-center gap-1 action-button interactive-button" onClick={() => onAddNewCoreSource && onAddNewCoreSource(section)}>
-                          <Plus size={12} /> Upload Core Document
-                        </button>
-                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
-                          Upload Core Folder
-                        </button>
-                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
-                          Add Core Document Link
-                        </button>
-                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
-                          Paste Core Document Text
-                        </button>
-                        <button className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-xs bg-coh-cream text-coh-navy px-3 py-1.5 rounded border border-coh-gold/30 hover:bg-coh-gold/20 transition font-semibold action-button">
-                          Add Manual Core Document
-                        </button>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
-          )}\n
+          )}
         </div>
       </div>
       {/* COMPILER PREVIEW FEATURE */}
