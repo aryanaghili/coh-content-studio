@@ -106,43 +106,66 @@ export async function generateImage(config, input) {
   const url = `${baseUrl || 'https://api.openai.com'}/v1/images/generations`;
 
   const isGPTImage = requestedModel.startsWith('gpt-image');
-  let size = input.aspectRatio || '1024x1024';
+  
+  let reqWidth = input.width || 1024;
+  let reqHeight = input.height || 1024;
+  let sizeStr = `${reqWidth}x${reqHeight}`;
+  
+  let mappedWidth = reqWidth;
+  let mappedHeight = reqHeight;
+  let mappedSizeStr = sizeStr;
+  
   let requestBody = {
     model: requestedModel,
     prompt: prompt,
     n: 1
   };
 
-  const isPortrait = size.includes('Portrait') || size === '4:5' || size === '9:16' || size.includes('Instagram Story') || size.includes('1024x1792') || size.includes('1024x1536');
-  const isLandscape = size.includes('Landscape') || size === '16:9' || size === '21:9' || size.includes('Website Hero') || size.includes('Newsletter Header') || size.includes('Wide Banner') || size.includes('1792x1024') || size.includes('1536x1024');
-  
-  const mappedSize = isPortrait ? '1024x1792' : (isLandscape ? '1792x1024' : '1024x1024');
-  size = mappedSize;
-  requestBody.size = size;
-
-
+  // Validation & Mapping
   if (isGPTImage) {
+    // Exact sizing validation for GPT Image 2
+    if (reqWidth % 16 !== 0 || reqHeight % 16 !== 0) {
+      throw new Error("Width and height must be multiples of 16.");
+    }
+    const maxEdge = Math.max(reqWidth, reqHeight);
+    const minEdge = Math.min(reqWidth, reqHeight);
+    if (maxEdge > 3840) {
+      throw new Error("The maximum dimension cannot exceed 3840 pixels.");
+    }
+    if (maxEdge / minEdge > 3) {
+      throw new Error("The longest side cannot be more than 3x the shortest side.");
+    }
+    const totalPixels = reqWidth * reqHeight;
+    // We assume pixels are within valid range for gpt-image-2
+    
+    requestBody.size = sizeStr;
     const q = input.quality === 'hd' ? 'high' : (input.quality || 'high');
     const supportedQualities = ['low', 'medium', 'high', 'auto'];
     if (supportedQualities.includes(q)) requestBody.quality = q;
+    
   } else if (requestedModel.startsWith('dall-e-3')) {
     requestBody.response_format = 'b64_json';
     requestBody.quality = input.quality === 'hd' ? 'hd' : 'standard';
-    // dall-e-3 only supports 1024x1024, 1024x1792, 1792x1024. Map others to nearest.
-    if (!['1024x1024', '1024x1792', '1792x1024'].includes(size)) {
-       requestBody.size = '1024x1024';
+    
+    // DALL-E 3 only supports 1024x1024, 1024x1792, 1792x1024
+    if (reqWidth === reqHeight) {
+       mappedSizeStr = '1024x1024';
+    } else if (reqWidth > reqHeight) {
+       mappedSizeStr = '1792x1024';
+    } else {
+       mappedSizeStr = '1024x1792';
     }
+    requestBody.size = mappedSizeStr;
+    
   } else if (requestedModel.startsWith('dall-e-2')) {
     requestBody.response_format = 'b64_json';
-    // dall-e-2 doesn't support hd quality
-    if (size !== '256x256' && size !== '512x512' && size !== '1024x1024') {
-        requestBody.size = '1024x1024'; // fallback
-    }
+    // DALL-E 2 only supports square sizes
+    mappedSizeStr = '1024x1024';
+    requestBody.size = mappedSizeStr;
   } else {
-    // Other models might not support response_format or quality
+    requestBody.size = sizeStr;
     if (input.quality === 'hd') requestBody.quality = 'hd';
   }
-
 
   console.log("Visual Studio image request", {
     selectedAspectRatio: input.aspectRatio,

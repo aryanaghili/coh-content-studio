@@ -259,7 +259,7 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
 
 app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
   try {
-    const { prompt, promptBuildMode, aspectRatio, visualStyle, visualBrief, inputMode, provider, model } = req.body;
+    const { prompt, promptBuildMode, aspectRatio, presetId, width, height, visualStyle, visualBrief, inputMode, provider, model } = req.body;
     
     // Compile prompt on the backend
     let compiledPrompt = '';
@@ -356,6 +356,7 @@ app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
     // Call the provider manager with the compiled prompt
     const generateInput = {
       ...req.body,
+      presetId, width, height,
       prompt: finalCompiledPrompt,
       quality: req.body.quality || 'high'
     };

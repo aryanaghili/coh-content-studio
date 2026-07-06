@@ -27,6 +27,7 @@ import {
   FolderHeart,
   Cpu as CpuIcon
 , AlertCircle, Camera, Globe, Mail, MessageSquare, Briefcase, Layers} from 'lucide-react';
+import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from './lib/aspectRatios';
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
@@ -727,7 +728,9 @@ export default function App() {
   const [showAdvancedBrief, setShowAdvancedBrief] = useState<boolean>(false);
   const [vsGeneratedImages, setVsGeneratedImages] = useState<any[]>([]);
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
-  const [vsAspectRatio, setVsAspectRatio] = useState<string>('1024x1024');
+  const [vsAspectRatio, setVsAspectRatio] = useState<string>('core-sq-1');
+  const [vsCustomWidth, setVsCustomWidth] = useState<number>(1024);
+  const [vsCustomHeight, setVsCustomHeight] = useState<number>(1024);
   const [vsVisualStyle, setVsVisualStyle] = useState<string>('Editorial Photomontage');
   const [vsNumImages, setVsNumImages] = useState<number>(1);
 
@@ -954,10 +957,16 @@ export default function App() {
       return;
     }
     
+    const selectedPreset = getPresetById(vsAspectRatio);
+    const actualWidth = vsAspectRatio === 'custom' ? vsCustomWidth : (selectedPreset?.width || 1024);
+    const actualHeight = vsAspectRatio === 'custom' ? vsCustomHeight : (selectedPreset?.height || 1024);
+
     const payload = {
       prompt: vsManualPrompt,
       promptBuildMode: vsPromptMode,
-      aspectRatio: vsAspectRatio,
+      presetId: vsAspectRatio,
+      width: actualWidth,
+      height: actualHeight,
       visualStyle: vsVisualStyle,
       visualBrief: {
         concept: vsConcept,
@@ -6627,24 +6636,35 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       onChange={(e) => setVsAspectRatio(e.target.value)}
                       className="w-full bg-coh-cream border border-coh-gold/20 p-2 text-xs text-coh-navy rounded"
                     >
-                      <option value="Square 1:1 (1024x1024)">Square 1:1 (1024x1024)</option>
-                      <option value="LinkedIn Post (1024x1024)">LinkedIn Post (1:1)</option>
-                      <option value="Instagram Feed (1024x1024)">Instagram Feed (1:1)</option>
-                      
-                      <option disabled>──────────</option>
-                      
-                      <option value="Landscape (1536x1024)">Landscape (1536x1024)</option>
-                      <option value="Landscape 3:2 (1536x1024)">Landscape 3:2 (1536x1024)</option>
-                      <option value="Wide Banner / Hero (landscape) (1536x1024)">Wide Banner / Hero (landscape)</option>
-                      <option value="Newsletter Header (1536x1024)">Newsletter Header (landscape)</option>
-                      <option value="Website Hero (1536x1024)">Website Hero (landscape)</option>
-                      
-                      <option disabled>──────────</option>
-
-                      <option value="Portrait (1024x1536)">Portrait (1024x1536)</option>
-                      <option value="Portrait 4:5 (1024x1536)">Portrait 4:5 (1024x1536)</option>
-                      <option value="Instagram Story (1024x1536)">Instagram Story (portrait)</option>
+                      {ASPECT_RATIO_GROUP_ORDER.map(group => (
+                        <optgroup key={group} label={group}>
+                          {ASPECT_RATIO_PRESETS.filter(p => p.group === group).map(preset => {
+                            const isSupported = !preset.supportedModels || preset.supportedModels.includes(aiImageModel || '');
+                            return (
+                              <option key={preset.id} value={preset.id} disabled={!isSupported}>
+                                {preset.label} {preset.ratio} ({preset.width}x{preset.height}) {!isSupported ? '(Unsupported)' : ''}
+                              </option>
+                            );
+                          })}
+                        </optgroup>
+                      ))}
+                      {aiImageModel?.startsWith('gpt-image-2') && (
+                        <option value="custom">Advanced custom size...</option>
+                      )}
                     </select>
+
+                    {vsAspectRatio === 'custom' && (
+                      <div className="mt-2 flex gap-2">
+                        <div className="flex-1">
+                          <label className="block text-[10px] text-coh-navy/60 mb-1">Width (px)</label>
+                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
+                        </div>
+                        <div className="flex-1">
+                          <label className="block text-[10px] text-coh-navy/60 mb-1">Height (px)</label>
+                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-coh-cream border border-coh-gold/20 p-1.5 text-xs rounded" />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div>
