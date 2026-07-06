@@ -1,3 +1,5 @@
+import { Menu, X } from "lucide-react";
+
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
 import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
@@ -605,6 +607,7 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
   const [operatingCoreDocs, setOperatingCoreDocs] = useState<CoreDocument[]>([]);
@@ -4326,10 +4329,28 @@ WRITING CLEANLINESS RULES (CRITICAL):
   }
 
   return (
-    <div className="min-h-screen flex bg-coh-cream font-sans text-coh-navy antialiased">
+    <div className="min-h-screen flex flex-col md:flex-row bg-coh-cream font-sans text-coh-navy antialiased">
       
-      {/* --- Sidebar Navigation (REORDERED) --- */}
-      <aside className="w-85 border-r border-coh-gold/30 bg-coh-navy text-coh-cream flex flex-col justify-between p-8 shrink-0">
+      {/* --- Mobile Top Bar --- */}
+      <div className="md:hidden flex items-center justify-between bg-coh-navy text-coh-cream p-4 border-b border-coh-gold/30 shrink-0">
+        <div className="font-serif text-lg font-normal tracking-tight text-coh-cream">
+          Climate Opera Haus
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -mr-2 text-coh-gold hover:text-coh-cream">
+          <Menu size={24} />
+        </button>
+      </div>
+
+      {/* --- Sidebar Navigation Overlay/Drawer --- */}
+      <div 
+        className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
+      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-85 max-w-[85vw] border-r border-coh-gold/30 bg-coh-navy text-coh-cream flex flex-col justify-between p-6 md:p-8 shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        {/* Mobile close button */}
+        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-coh-gold hover:text-coh-cream">
+          <X size={24} />
+        </button>
         <div>
           <div className="mb-10">
             <span className="font-serif tracking-widest text-xs uppercase text-coh-gold block mb-2">Climate Opera Haus</span>
@@ -4343,7 +4364,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Overview
             </div>
             <button
-              onClick={() => setActiveTab('command-center')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'command-center'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4358,7 +4379,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Workspaces
             </div>
             <button
-              onClick={() => setActiveTab('ideation-workspace')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'ideation-workspace'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4369,7 +4390,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Ideation Workspace
             </button>
             <button
-              onClick={() => setActiveTab('editorial-calendar')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('editorial-calendar'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'editorial-calendar'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4380,7 +4401,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Editorial Calendar Studio
             </button>
             <button
-              onClick={() => setActiveTab('content-workspace')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'content-workspace'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4391,7 +4412,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Content Workspace
             </button>
             <button
-              onClick={() => setActiveTab('visual-studio')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'visual-studio'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4404,7 +4425,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Visual Studio
             </button>
             <button
-              onClick={() => setActiveTab('revision-studio')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('revision-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
                 activeTab === 'revision-studio'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4422,7 +4443,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Libraries
             </div>
             <button
-              onClick={() => setActiveTab('idea-library')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'idea-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4433,7 +4454,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Idea Library
             </button>
             <button
-              onClick={() => setActiveTab('content-library')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'content-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4444,7 +4465,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Content Library
             </button>
             <button
-              onClick={() => setActiveTab('source-library')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('source-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'source-library'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4459,7 +4480,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Configuration
             </div>
             <button
-              onClick={() => setActiveTab('operating-core')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'operating-core'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4470,7 +4491,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Operating Core
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'settings'
                   ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
@@ -4486,7 +4507,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
       </aside>
 
       {/* --- Main Workspace Canvas --- */}
-      <main className="flex-1 overflow-y-auto px-12 py-10">
+      <main className="flex-1 overflow-y-auto px-4 md:px-12 py-6 md:py-10 flex flex-col min-w-0">
         
         {/* --- TAB 1: COMMAND CENTER --- */}
         
@@ -4751,7 +4772,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="empty-state-icon">💡</div>
                     <h3 className="empty-state-title">No Ideas Yet</h3>
                     <p className="empty-state-text">Head over to the Ideation Workspace to explore and save concepts.</p>
-                    <Button onClick={() => setActiveTab('ideation-workspace')} className="mt-4" variant="outline">Go to Ideation Workspace</Button>
+                    <Button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }} className="mt-4" variant="outline">Go to Ideation Workspace</Button>
                   </div>
                 )}
               </div>
@@ -4850,7 +4871,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <div className="empty-state-icon">💡</div>
                 <h3 className="empty-state-title">No Saved Ideas</h3>
                 <p className="empty-state-text">Your generated ideas will appear here once you save them.</p>
-                <Button onClick={() => setActiveTab('ideation-workspace')} className="mt-4" variant="outline">Explore Ideas</Button>
+                <Button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }} className="mt-4" variant="outline">Explore Ideas</Button>
               </div>
             )}
           </div>
@@ -4905,7 +4926,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <p className="text-xs text-coh-navy/80 leading-relaxed font-sans mb-4">Generate angles, hooks, and content directions before drafting.</p>
                       </div>
                       <button
-                        onClick={() => setActiveTab('ideation-workspace')}
+                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
                         className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 border border-coh-gold/20 interactive-button"
                       >
                         Explore Ideas <ArrowRight size={12} />
@@ -4919,7 +4940,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
                       </div>
                       <button
-                        onClick={() => setActiveTab('source-library')}
+                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('source-library'); }}
                         className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 interactive-button"
                       >
                         Add Source <ArrowRight size={12} />
@@ -4933,7 +4954,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <p className="text-xs text-coh-navy/60 leading-relaxed font-sans mb-4">Generate images from visual directions or custom prompts.</p>
                       </div>
                       <button
-                        onClick={() => setActiveTab('visual-studio')}
+                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
                         className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold text-[10px] font-bold py-1.5 px-3 rounded uppercase self-start flex items-center gap-1 interactive-button"
                       >
                         Open Visual Studio <ArrowRight size={12} />
@@ -4969,10 +4990,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <button onClick={() => { setActiveTab('revision-studio'); }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Revise Draft</button>
                         )}
                         {activeWorkItem.visualDirection && activeWorkItem.imageResults.length === 0 && (
-                          <button onClick={() => setActiveTab('visual-studio')} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Create Visual</button>
+                          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Create Visual</button>
                         )}
                         {activeWorkItem.status === 'Needs Source Check' && (
-                          <button onClick={() => setActiveTab('content-workspace')} className="text-xs bg-coh-gold text-coh-navy px-3 py-1.5 rounded hover:bg-coh-gold/90 font-semibold interactive-button">Review Source Check</button>
+                          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }} className="text-xs bg-coh-gold text-coh-navy px-3 py-1.5 rounded hover:bg-coh-gold/90 font-semibold interactive-button">Review Source Check</button>
                         )}
                         {activeWorkItem.status === 'Approved' && !activeWorkItem.saved && (
                           <button onClick={() => {
@@ -5000,9 +5021,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Save to Library</button>
                         )}
                         {activeWorkItem.saved && (
-                          <button onClick={() => setActiveTab('content-library')} className="text-xs bg-coh-cream text-coh-navy border border-coh-navy/20 px-3 py-1.5 rounded hover:bg-coh-navy/10 font-semibold interactive-button">Open Library</button>
+                          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }} className="text-xs bg-coh-cream text-coh-navy border border-coh-navy/20 px-3 py-1.5 rounded hover:bg-coh-navy/10 font-semibold interactive-button">Open Library</button>
                         )}
-                        <button onClick={() => setActiveTab('content-workspace')} className="text-[10px] text-coh-navy underline ml-auto self-center">Open Workspace</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }} className="text-[10px] text-coh-navy underline ml-auto self-center">Open Workspace</button>
                       </div>
                     </div>
                   ) : (
@@ -5029,28 +5050,28 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex items-center gap-2 p-2 bg-[#fdfaf5] rounded border-l-2 border-orange-400 text-xs text-coh-navy">
                         <AlertCircle size={14} className="text-orange-400" />
                         <span>AI generation needs setup. Add an API key in Settings.</span>
-                        <button onClick={() => setActiveTab('settings')} className="ml-auto underline font-semibold text-orange-600">Fix</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); }} className="ml-auto underline font-semibold text-orange-600">Fix</button>
                       </div>
                     )}
                     {activeWorkItem?.status === 'Needs Source Check' && (
                       <div className="flex items-center gap-2 p-2 bg-[#fdfaf5] rounded border-l-2 border-orange-400 text-xs text-coh-navy">
                         <AlertCircle size={14} className="text-orange-400" />
                         <span>Active draft needs source check.</span>
-                        <button onClick={() => setActiveTab('content-workspace')} className="ml-auto underline font-semibold text-orange-600">Review</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }} className="ml-auto underline font-semibold text-orange-600">Review</button>
                       </div>
                     )}
                     {activeWorkItem?.visualDirection && activeWorkItem.imageResults.length === 0 && (
                       <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-gold text-xs text-coh-navy">
                         <Camera size={14} className="text-coh-gold" />
                         <span>Visual direction ready for image generation.</span>
-                        <button onClick={() => setActiveTab('visual-studio')} className="ml-auto underline font-semibold text-coh-navy">Create</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }} className="ml-auto underline font-semibold text-coh-navy">Create</button>
                       </div>
                     )}
                     {activeWorkItem?.status === 'Approved' && !activeWorkItem.saved && (
                       <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-navy text-xs text-coh-navy">
                         <FileText size={14} className="text-coh-navy" />
                         <span>Approved work item is unsaved.</span>
-                        <button onClick={() => setActiveTab('command-center')} className="ml-auto underline font-semibold text-coh-navy">Save</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }} className="ml-auto underline font-semibold text-coh-navy">Save</button>
                       </div>
                     )}
                     
@@ -5058,7 +5079,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex items-center gap-2 p-2 bg-coh-cream rounded border-l-2 border-coh-gold text-xs text-coh-navy">
                         <Lightbulb size={14} className="text-coh-gold" />
                         <span>{savedIdeas.filter(i => i.status === 'New').length} generated ideas ready to draft.</span>
-                        <button onClick={() => setActiveTab('idea-library')} className="ml-auto underline font-semibold text-coh-navy">View</button>
+                        <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }} className="ml-auto underline font-semibold text-coh-navy">View</button>
                       </div>
                     )}
 
@@ -6404,7 +6425,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             </div>
                           </div>
                           <button
-                            onClick={() => setActiveTab('prompt-builder')}
+                            onClick={() => { setIsMobileMenuOpen(false); setActiveTab('prompt-builder'); }}
                             className="inline-flex items-center gap-1.5 bg-coh-navy text-coh-gold text-[10px] font-bold px-3 py-1.5 rounded hover:bg-coh-navy-light transition"
                           >
                             Build {lang} AI Prompt <ArrowRight size={10} />
@@ -7574,7 +7595,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         Copy to Clipboard
                                       </button>
                                       <button 
-                                        onClick={() => setActiveTab('operating-core')}
+                                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
                                         className="bg-coh-navy hover:bg-coh-navy-light text-coh-gold px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
                                       >
                                         Open Operating Core
