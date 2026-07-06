@@ -28,15 +28,48 @@ async function callMistral(apiKey, model, systemPrompt, userPrompt) {
 }
 
 export async function generate(config, input) {
-  const { apiKey, model } = config;
+  const { apiKey, baseUrl } = config;
+  const model = config.textModel || config.model;
+  if (!model) return { success: false, errorType: 'CONFIGURATION_ERROR', userMessage: 'Text model is missing from generation request.' };
+  
   const prompt = buildGenerationPrompt(input);
   const systemPrompt = 'You are an expert content strategist. Always return valid JSON matching the requested schema exactly. Never include markdown codeblock wrappers. Return only raw JSON.';
-  const rawText = await callMistral(apiKey, model, systemPrompt, prompt);
-  const parsed = repairJson(rawText);
-  if (!parsed) throw new Error('Could not parse response from Mistral. Raw: ' + (rawText || '').substring(0, 200));
+  
+  let rawText;
+  try {
+    rawText = await callMistral(apiKey, model, baseUrl, systemPrompt, prompt, true);
+  } catch (err) {
+    return { success: false, errorType: 'PROVIDER_ERROR', userMessage: friendlyError(err), debug: { message: err.message } };
+  }
+
+  let parsed = repairJson(rawText);
+  
+  // Retry logic
+  if (parsed && parsed.success === false && parsed.errorType === 'AI_PARSE_ERROR') {
+      try {
+          const repairPrompt = `Repair this into valid JSON matching this schema. Do not add commentary. Raw Output: ${rawText}`;
+          const repairedText = await callMistral(apiKey, model, baseUrl, systemPrompt, repairPrompt, true);
+          const repairedParsed = repairJson(repairedText);
+          if (repairedParsed && repairedParsed.success !== false) {
+              parsed = repairedParsed;
+          }
+      } catch (e) {
+          console.error("JSON Repair retry failed for mistral", e);
+      }
+  }
+
+  if (parsed && parsed.success === false && parsed.errorType === 'AI_PARSE_ERROR') {
+      return parsed; // pass the fallback object straight through
+  }
+  
+  if (!parsed) {
+     return { success: false, errorType: 'AI_PARSE_ERROR', userMessage: 'Could not parse response from mistral.', fallbackText: rawText };
+  }
+  
   const qg = runQualityGate(parsed, input);
-  parsed.qualityCheck = qg;
-  return parsed;
+  if (parsed.qualityCheck) { parsed.qualityCheck = qg; } else { parsed.qualityCheck = qg; }
+  
+  return { success: true, data: parsed };
 }
 
 export async function testConnection(config) {

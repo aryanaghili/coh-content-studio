@@ -6500,7 +6500,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="cursor-not-allowed opacity-50 bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button"
+                          className="cursor-not-allowed opacity-50 bg-coh-gold hover:bg-coh-gold-dark text-coh-navy px-3 py-1.5 rounded font-bold text-[10px] font-serif transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}

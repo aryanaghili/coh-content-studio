@@ -45,16 +45,25 @@ export async function generate(config, input) {
   try {
     rawText = await callOpenAI(apiKey, model, baseUrl, systemPrompt, prompt, true);
   } catch (err) {
-    return {
-      success: false,
-      errorType: 'PROVIDER_ERROR',
-      userMessage: friendlyError(err),
-      debug: { message: err.message }
-    };
+    return { success: false, errorType: 'PROVIDER_ERROR', userMessage: friendlyError(err), debug: { message: err.message } };
   }
 
-  const parsed = repairJson(rawText);
+  let parsed = repairJson(rawText);
   
+  // If parsing fails, try one repair retry
+  if (parsed && parsed.success === false && parsed.errorType === 'AI_PARSE_ERROR') {
+      try {
+          const repairPrompt = `Repair this into valid JSON matching this schema. Do not add commentary. Raw Output: ${rawText}`;
+          const repairedText = await callOpenAI(apiKey, model, baseUrl, systemPrompt, repairPrompt, true);
+          const repairedParsed = repairJson(repairedText);
+          if (repairedParsed && repairedParsed.success !== false) {
+              parsed = repairedParsed;
+          }
+      } catch (e) {
+          console.error("JSON Repair retry failed", e);
+      }
+  }
+
   if (parsed && parsed.success === false && parsed.errorType === 'AI_PARSE_ERROR') {
       return parsed; // pass the fallback object straight through
   }
@@ -66,11 +75,7 @@ export async function generate(config, input) {
   const qg = runQualityGate(parsed, input);
   if (parsed.qualityCheck) { parsed.qualityCheck = qg; } else { parsed.qualityCheck = qg; }
   
-  // Wrap standard success response in our envelope
-  return {
-    success: true,
-    data: parsed
-  };
+  return { success: true, data: parsed };
 }
 
 export async function compileImagePrompt(config, systemPrompt, userPrompt) {

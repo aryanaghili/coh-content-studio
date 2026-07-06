@@ -133,3 +133,56 @@ body {
     @apply scale-[0.97];
   }
 }
+
+/* Interactive Button and Tab Affordances */
+.interactive-btn {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.interactive-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.interactive-btn:active:not(:disabled) {
+  transform: scale(0.98);
+  box-shadow: none;
+}
+
+.interactive-btn:focus-visible {
+  outline: 2px solid theme('colors.blue.500');
+  outline-offset: 2px;
+}
+
+.interactive-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+
+.interactive-tab {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.interactive-tab:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.interactive-tab:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.interactive-tab:focus-visible {
+  outline: 2px solid theme('colors.blue.500');
+  outline-offset: -2px;
+}
+
+.interactive-tab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
