@@ -31,6 +31,7 @@ import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from '.
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { safeMergeOperatingCore } from './lib/operatingCore';
+import { safeRead } from './lib/storage';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
