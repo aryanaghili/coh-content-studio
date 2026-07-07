@@ -3,7 +3,7 @@ import { Menu, X } from "lucide-react";
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
 import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
-import { safeLocalStorageGet, safeLocalStorageSet } from './utils/storage';
+import { safeLocalStorageGet, safeLocalStorageSet, safeLocalStorageRemove } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
 import { Button } from './components/ui/Button';
@@ -706,15 +706,8 @@ export default function App() {
 
   // --- Sources State ---
   const [sources, setSources] = useState<SourceFile[]>(() => {
-    const local = localStorage.getItem('coh_sources_v11');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        console.warn('Failed to parse coh_sources_v11', e);
-      }
-    }
+    const parsed = safeLocalStorageGet('coh_sources_v11', null);
+    if (Array.isArray(parsed)) return parsed as SourceFile[];
     return DEFAULT_COH_SOURCES.map(s => ({
       ...s,
       type: s.title.includes('Facts') ? 'Approved Example' : 'Tone of Voice',
@@ -1160,23 +1153,15 @@ export default function App() {
 
   // --- Content Library State ---
   const [savedContent, setSavedContent] = useState<SavedContent[]>(() => {
-    const local = localStorage.getItem('coh_saved_content_v11');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local) as SavedContent[];
-        if (Array.isArray(parsed)) {
-          // Map old legacy audience values
-          return parsed.map(item => {
-            let aud = item.audience;
-            if (aud === 'Arts Patrons') aud = 'Sponsors & Patrons';
-            else if (aud === 'Climate Activists') aud = 'Climate, Policy & Philanthropy Leaders';
-            else if (aud === 'Skeptics / Public') aud = 'General Public';
-            return { ...item, audience: aud };
-          });
-        }
-      } catch (e) {
-        console.warn('Failed to parse coh_saved_content_v11', e);
-      }
+    const parsed = safeLocalStorageGet('coh_saved_content_v11', null);
+    if (Array.isArray(parsed)) {
+      return (parsed as SavedContent[]).map(item => {
+        let aud = item.audience;
+        if (aud === 'Arts Patrons') aud = 'Sponsors & Patrons';
+        else if (aud === 'Climate Activists') aud = 'Climate, Policy & Philanthropy Leaders';
+        else if (aud === 'Skeptics / Public') aud = 'General Public';
+        return { ...item, audience: aud };
+      });
     }
     return [
       {
@@ -1202,37 +1187,20 @@ export default function App() {
 
   // --- WORK ITEM STATE ---
   const [activeWorkItem, setActiveWorkItem] = useState<WorkItem | null>(() => {
-    const local = localStorage.getItem('coh_active_work_item_v1');
-    if (local) {
-      try {
-        return JSON.parse(local) as WorkItem;
-      } catch (e) {
-        console.error("Failed to parse active work item", e);
-        return null;
-      }
-    }
-    return null;
+    return safeLocalStorageGet('coh_active_work_item_v1', null) as WorkItem | null;
   });
 
   useEffect(() => {
     if (activeWorkItem) {
       safeLocalStorageSet('coh_active_work_item_v1', JSON.stringify(activeWorkItem));
     } else {
-      localStorage.removeItem('coh_active_work_item_v1');
+      safeLocalStorageRemove('coh_active_work_item_v1');
     }
   }, [activeWorkItem]);
 
   const [savedIdeas, setSavedIdeas] = useState<SavedIdea[]>(() => {
-
-    const local = localStorage.getItem('coh_saved_ideas_v1');
-    if (local) {
-      try {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {
-        console.warn('Failed to parse coh_saved_ideas_v1', e);
-      }
-    }
+    const parsed = safeLocalStorageGet('coh_saved_ideas_v1', null);
+    if (Array.isArray(parsed)) return parsed as SavedIdea[];
     return [
       {
         id: 'idea-1',

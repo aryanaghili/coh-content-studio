@@ -17,3 +17,11 @@ export function safeLocalStorageSet<T>(key: string, value: T): void {
     console.error(`[Storage] Failed to save to localStorage key "${key}".`, e);
   }
 }
+
+export function safeLocalStorageRemove(key: string): void {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    console.warn(`[Storage] Failed to remove localStorage key "${key}".`, e);
+  }
+}
