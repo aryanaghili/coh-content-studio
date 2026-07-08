@@ -421,11 +421,11 @@ const MODEL_REGISTRY: AIModelConfig[] = [
   // OpenAI Text
   { id: 'gpt-5.5', label: 'GPT-5.5', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content', isRecommended: true },
   { id: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
-  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'faster drafts, ideation, lighter content operations' },
+  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'Drafts, Ideation, Revision, Prompt generation, Daily content operations' },
   { id: 'gpt-4o', label: 'GPT-4o (Legacy)', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
   
   // OpenAI Image
-  { id: 'gpt-image-2', label: 'GPT Image 2', provider: 'openai', type: 'image', quality: 'Highest', speed: 'Medium', usage: 'High', bestUseCase: 'refined editorial visuals, premium campaign imagery, realistic visual concepts', isRecommended: true },
+  { id: 'gpt-image-2', label: 'GPT Image 2', provider: 'openai', type: 'image', quality: 'Highest', speed: 'Medium', usage: 'High', bestUseCase: 'Visual Studio, Campaign artwork, Social media graphics, Editorial illustrations', isRecommended: true },
   { id: 'gpt-image-1', label: 'GPT Image 1', provider: 'openai', type: 'image', quality: 'High', speed: 'Medium', usage: 'Medium-high', bestUseCase: 'general high-quality image generation' },
   { id: 'dall-e-3', label: 'DALL-E 3 (Legacy)', provider: 'openai', type: 'image', quality: 'Legacy / compatible', speed: 'Medium', usage: 'Medium-high', bestUseCase: 'fallback image generation if GPT Image models are unavailable' },
   
@@ -855,8 +855,8 @@ export default function App() {
 
   // Settings form fields (never persisted to localStorage, sent to backend only)
   const [settingsProvider, setSettingsProvider] = useState<string>('openai');
-  const [settingsTextModel, setSettingsTextModel] = useState<string>('gpt-4o');
-  const [settingsImageModel, setSettingsImageModel] = useState<string>('dall-e-3');
+  const [settingsTextModel, setSettingsTextModel] = useState<string>(() => safeLocalStorageGet('coh_settings_text_model', 'gpt-5.4-mini'));
+  const [settingsImageModel, setSettingsImageModel] = useState<string>(() => safeLocalStorageGet('coh_settings_image_model', 'gpt-image-2'));
   const [settingsApiKey, setSettingsApiKey] = useState<string>('');
   const [settingsBaseUrl, setSettingsBaseUrl] = useState<string>('');
   const [settingsTestResult, setSettingsTestResult] = useState<string>('');
@@ -864,6 +864,27 @@ export default function App() {
   const [settingsApplying, setSettingsApplying] = useState<boolean>(false);
   const [settingsTesting, setSettingsTesting] = useState<boolean>(false);
   const [settingsTestCooldown, setSettingsTestCooldown] = useState<number>(0);
+  const [fallbackWarning, setFallbackWarning] = useState<string>('');
+
+  useEffect(() => {
+    let fallbackTriggered = false;
+    
+    if (settingsTextModel && !MODEL_REGISTRY.some(m => m.id === settingsTextModel && m.type === 'text')) {
+      setSettingsTextModel('gpt-5.4-mini');
+      safeLocalStorageSet('coh_settings_text_model', 'gpt-5.4-mini');
+      fallbackTriggered = true;
+    }
+    
+    if (settingsImageModel && !MODEL_REGISTRY.some(m => m.id === settingsImageModel && m.type === 'image')) {
+      setSettingsImageModel('gpt-image-2');
+      safeLocalStorageSet('coh_settings_image_model', 'gpt-image-2');
+      fallbackTriggered = true;
+    }
+
+    if (fallbackTriggered) {
+      setFallbackWarning('The previously selected model is unavailable. The recommended default has been selected.');
+    }
+  }, [settingsTextModel, settingsImageModel]);
   
   // Cooldown effect
   useEffect(() => {
@@ -7850,10 +7871,26 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                   {/* Text Model */}
                   <div>
-                    <label className="block text-sm font-semibold text-coh-navy mb-1">Text Generation Model</label>
+                    {fallbackWarning && (
+                      <div className="bg-amber-50 text-amber-800 p-2 rounded mb-4 text-sm font-semibold border border-amber-200">
+                        {fallbackWarning}
+                      </div>
+                    )}
+                    <label className="block text-sm font-semibold text-coh-navy mb-1 flex items-center gap-2">
+                      Text Generation Model
+                      {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.isRecommended && (
+                        <span className="bg-green-100 text-green-800 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-bold">Recommended Default</span>
+                      )}
+                    </label>
                     <select
                       value={settingsTextModel}
-                      onChange={(e) => { setSettingsTextModel(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
+                      onChange={(e) => { 
+                        setSettingsTextModel(e.target.value); 
+                        safeLocalStorageSet('coh_settings_text_model', e.target.value);
+                        setSettingsTestPassed(null); 
+                        setSettingsKeyDirty(true); 
+                        setFallbackWarning('');
+                      }}
                       disabled={!settingsProvider}
                       className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono disabled:opacity-50"
                     >
@@ -7865,10 +7902,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <p className="text-xs text-coh-navy/50 mt-1 mb-2">Controls written outputs such as drafts, ideas, revisions, and prompts.</p>
                     
                     {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
-                      <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-2 rounded flex flex-wrap gap-x-4 gap-y-1">
-                        <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
-                        <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
-                        <span className="w-full"><strong className="text-coh-navy">Best for:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.bestUseCase}</span>
+                      <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-3 rounded flex flex-col gap-2">
+                        <div className="flex gap-4">
+                          <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
+                          <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
+                        </div>
+                        <div>
+                          <strong className="text-coh-navy block mb-1">Best for:</strong>
+                          <ul className="list-disc pl-4 space-y-0.5">
+                            {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.bestUseCase.split(',').map((item, idx) => (
+                              <li key={idx}>{item.trim()}</li>
+                            ))}
+                          </ul>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -7876,10 +7922,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {/* Image Model */}
                   {(settingsProvider === 'openai' || settingsProvider === 'openrouter') && (
                     <div>
-                      <label className="block text-sm font-semibold text-coh-navy mb-1">Image Generation Model</label>
+                      <label className="block text-sm font-semibold text-coh-navy mb-1 flex items-center gap-2">
+                        Image Generation Model
+                        {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.isRecommended && (
+                          <span className="bg-green-100 text-green-800 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-bold">Recommended Default</span>
+                        )}
+                      </label>
                       <select
                         value={settingsImageModel}
-                        onChange={(e) => { setSettingsImageModel(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
+                        onChange={(e) => { 
+                          setSettingsImageModel(e.target.value); 
+                          safeLocalStorageSet('coh_settings_image_model', e.target.value);
+                          setSettingsTestPassed(null); 
+                          setSettingsKeyDirty(true); 
+                          setFallbackWarning('');
+                        }}
                         disabled={!settingsProvider}
                         className="w-full bg-coh-cream border border-coh-gold/20 p-2 rounded text-coh-navy text-sm font-mono disabled:opacity-50"
                       >
@@ -7895,10 +7952,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </p>
                       
                       {settingsImageModel && MODEL_REGISTRY.find(m => m.id === settingsImageModel) && (
-                        <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-2 rounded flex flex-wrap gap-x-4 gap-y-1">
-                          <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.quality}</span>
-                          <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.speed}</span>
-                          <span className="w-full"><strong className="text-coh-navy">Best for:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.bestUseCase}</span>
+                        <div className="mt-2 text-xs text-coh-navy/70 bg-coh-navy/5 p-3 rounded flex flex-col gap-2">
+                          <div className="flex gap-4">
+                            <span><strong className="text-coh-navy">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.quality}</span>
+                            <span><strong className="text-coh-navy">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.speed}</span>
+                          </div>
+                          <div>
+                            <strong className="text-coh-navy block mb-1">Best for:</strong>
+                            <ul className="list-disc pl-4 space-y-0.5">
+                              {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.bestUseCase.split(',').map((item, idx) => (
+                                <li key={idx}>{item.trim()}</li>
+                              ))}
+                            </ul>
+                          </div>
                         </div>
                       )}
                     </div>
