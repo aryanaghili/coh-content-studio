@@ -1,5 +1,6 @@
 import { Menu, X } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { buildAdvancedBriefFromCalendarItem } from './utils/calendarHandoffUtils';
 
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
@@ -3369,6 +3370,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
       try {
         const canonicalInput = {
           mode: creationMode === 'quick' ? 'quick_create' : 'advanced_brief',
+          origin: activeWorkItem?.calendarItemId ? 'editorial-calendar' : 'standard',
           rawInput: goal || notes,
           creationIntent: explicitIntent,
           creationScope: scope,
@@ -5218,24 +5220,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 setActiveWorkItem(workItem);
                 setCreationMode('advanced');
                 
-                const packScope = workItem.isMultiChannelPack ? 'Multi-Channel Pack' : 'Single Channel';
-                
+                const advancedBriefPayload = buildAdvancedBriefFromCalendarItem(workItem);
                 setAdvancedBrief(prev => ({
                   ...prev,
-                  topic: workItem.title || '',
-                  directionMode: 'custom',
-                  angle: workItem.editorialThesis || '',
-                  customDirection: `Core Message: ${workItem.coreMessage}\nInstruction: ${workItem.draftInstruction}`,
-                  channel: workItem.channel || 'LinkedIn',
-                  outputFormat: workItem.format || 'Post',
-                  pillar: workItem.strategicFocus || 'General / Custom',
-                  audience: workItem.audience || 'General Public',
-                  purpose: workItem.adoptionTrack || 'General / Open',
-                  mustInclude: workItem.proofNeeded || '',
-                  mustAvoid: workItem.riskToAvoid || '',
-                  creationIntent: 'Infer automatically',
-                  creationScope: packScope,
-                  targetChannels: workItem.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
+                  ...advancedBriefPayload
                 }));
                 
                 setActiveTab('content-workspace');

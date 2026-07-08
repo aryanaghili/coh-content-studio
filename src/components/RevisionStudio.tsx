@@ -80,6 +80,7 @@ export interface RevisionState {
   isGenerating: boolean;
   error: string | null;
   settingsChangedAfterRevision: boolean;
+  revisionSource?: 'current' | 'original';
 }
 
 const DEFAULT_REVISION_STATE: RevisionState = {
@@ -98,7 +99,8 @@ const DEFAULT_REVISION_STATE: RevisionState = {
   versionHistory: [],
   isGenerating: false,
   error: null,
-  settingsChangedAfterRevision: false
+  settingsChangedAfterRevision: false,
+  revisionSource: 'current'
 };
 
 interface RevisionStudioProps {
@@ -198,7 +200,7 @@ export function RevisionStudio({
         }
         
         const result = await aiService.revise({
-          previousDraft: state.currentDraft,
+          previousDraft: state.revisionSource === 'original' ? state.originalDraft : state.currentDraft,
           rawInput: state.optionalContext,
           channel: state.channel,
           outputFormat: state.format,
@@ -378,9 +380,31 @@ export function RevisionStudio({
             </div>
             
             {state.settingsChangedAfterRevision && (
-              <div className="mt-3 bg-yellow-50 text-yellow-800 p-2 text-xs rounded border border-yellow-200 flex items-center gap-2">
-                <AlertTriangle size={14} />
-                Settings changed. Generate a new revision to apply them.
+              <div className="mt-3 bg-yellow-50 text-yellow-800 p-3 text-xs rounded border border-yellow-200 flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle size={14} />
+                  <span>Settings changed. Generate a new revision to apply them.</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between bg-white/50 p-2 rounded">
+                    <span className="font-semibold text-yellow-900">Revise from:</span>
+                    <select 
+                      className="bg-white border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
+                      onChange={(e) => updateSetting('revisionSource', e.target.value)}
+                      value={state.revisionSource || 'current'}
+                    >
+                      <option value="current">Current version</option>
+                      <option value="original">Original text</option>
+                    </select>
+                  </div>
+                  <Button 
+                    variant="primary" 
+                    className="w-full text-xs py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white border-none"
+                    onClick={() => runRevision(state.selectedAction || 'custom-instruction')}
+                  >
+                    Generate New Revision
+                  </Button>
+                </div>
               </div>
             )}
             {state.error && (

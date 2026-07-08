@@ -417,10 +417,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     
     if (mode === 'Generate New Version') {
       protectedItems = [];
-    } else if (mode === 'Generate Alternative Strategy') {
+    } else if (mode === 'Generate Alternative Angle') {
       protectedItems = [];
       ctx.audiencePrimary = ctx.audienceSecondary || ctx.audiencePrimary; // Shift audience for alt strategy
-    } else if (mode === 'Preserve Approved Items and Regenerate the Rest') {
+    } else if (mode === 'Preserve Approved Items and Regenerate the Rest' || mode === 'Regenerate All Items') {
+      // Default behavior is to preserve approved, handoff, drafted, manual (protected)
       protectedItems = items.filter(i => i.status === 'Approved' || i.status === 'Draft Handoff' || i.status === 'Drafted' || i.isProtected);
     } else if (mode === 'Regenerate Weak Items Only') {
       protectedItems = items.filter(i => i.riskLevel !== 'High' && i.riskLevel !== 'Medium' && i.sourceBasis !== 'Needs validation');
@@ -436,7 +437,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       const targetChannel = window.prompt(`Which channel to regenerate? (${cycle.activeChannels.join(', ')})`, cycle.activeChannels[0]);
       protectedItems = items.filter(i => i.channel.toLowerCase() !== (targetChannel || '').toLowerCase());
     } else {
-      protectedItems = items.filter(i => i.isProtected || i.status !== 'Proposed');
+      protectedItems = items.filter(i => i.isProtected || i.status === 'Approved' || i.status === 'Draft Handoff' || i.status === 'Drafted');
     }
 
     const itemsToGenerate = Math.max(0, ctx.intensityNum - protectedItems.length);
@@ -461,6 +462,16 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
       // 8. enrichCalendarItems()
       const enriched = enrichCalendarItems(scheduled, ctx);
+
+      // Validate placeholders
+      enriched.forEach(item => {
+        const fields = [item.editorialThesis, item.coreMessage, item.proofNeeded, item.draftInstruction, item.audienceInsight];
+        const hasPlaceholder = fields.some(f => /\{evidence\}|\{source\}|\{partner\}|\{proof\}|\{date\}/i.test(f || ''));
+        if (hasPlaceholder) {
+          item.status = 'Needs Source';
+          item.proofNeeded = item.proofNeeded?.includes('{') ? 'Proof needed: specific production milestone, capture plan, partner confirmation, or approved document.' : item.proofNeeded;
+        }
+      });
 
       const combinedItems = [...protectedItems, ...enriched].sort((a, b) => a.date.localeCompare(b.date));
       setItems(combinedItems);
@@ -584,7 +595,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   };
 
   const selectCalendarItems = (candidates: any[], ctx: any, countNeeded: number) => {
-    candidates.sort((a, b) => b.score - a.score);
+    // Add randomization so regeneration isn't identical
+    const noise = () => Math.random() * 5 - 2.5; 
+    candidates.sort((a, b) => (b.score + noise()) - (a.score + noise()));
     
     const selected = [];
     const usedCombos = new Set();
@@ -597,7 +610,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       if (!usedCombos.has(combo)) {
         selected.push(c);
         usedCombos.add(combo);
-      } else if (ctx.mode === 'Alternative Strategy' || selected.length < countNeeded / 2) {
+      } else if (ctx.mode === 'Alternative Angle' || selected.length < countNeeded / 2) {
         selected.push(c);
       }
     }
@@ -952,7 +965,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-bold text-coh-navy/50 uppercase tracking-wider">
-              Version: <span className="text-coh-navy">v{cycle.version}</span> | Status: <span className="text-coh-navy">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
+              Status: <span className="text-coh-navy">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
             </span>
             <Button onClick={onOpenLibrary} variant="outline" className="text-xs py-1.5 px-3">
               <Archive size={16} className="mr-1" /> Open Library
@@ -1103,7 +1116,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
             <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-coh-gold/10">
               <div className="flex items-center border border-coh-gold/30 rounded overflow-hidden shadow-sm">
-                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('New Version'); }} variant="primary" className="rounded-none border-r border-coh-gold/20 px-6 py-2.5">
+                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-coh-gold/20 px-6 py-2.5">
                   <RefreshCw size={16} className="mr-2 inline" /> {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 <select 
@@ -1119,11 +1132,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 >
                   <option value="" disabled>Specific Regeneration...</option>
                   <option value="Generate New Version">Generate New Version</option>
+                  <option value="Regenerate All Items">Regenerate All Items</option>
                   <option value="Regenerate Weak Items Only">Regenerate Weak Items Only</option>
                   <option value="Regenerate Selected Week">Regenerate Selected Week</option>
                   <option value="Regenerate Selected Channel">Regenerate Selected Channel</option>
-                  <option value="Generate Alternative Strategy">Generate Alternative Strategy</option>
-                  <option value="Preserve Approved Items and Regenerate the Rest">Preserve Approved Items and Regenerate the Rest</option>
+                  <option value="Generate Alternative Angle">Generate Alternative Angle</option>
+                  <option value="Preserve Approved Items and Regenerate the Rest">Preserve Approved and Manual Items</option>
                 </select>
               </div>
               
@@ -1374,12 +1388,27 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   {items.find(i => i.id === selectedItem.id) ? 'Save Changes' : 'Add to Calendar'}
                 </Button>
                 <Button variant="primary" onClick={() => {
-                  let updatedItem = { ...selectedItem, status: 'Approved' };
+                  const fields = [selectedItem.editorialThesis, selectedItem.coreMessage, selectedItem.proofNeeded, selectedItem.draftInstruction];
+                  const hasPlaceholder = fields.some(f => /\{evidence\}|\{source\}|\{partner\}|\{proof\}|\{date\}/i.test(f || ''));
+                  
+                  if (hasPlaceholder) {
+                    alert('This item still contains unresolved placeholders. Add proof or source detail before creating a draft.');
+                    let updatedItem = { ...selectedItem, status: 'Needs Source' };
+                    if (!items.find(i => i.id === selectedItem.id)) {
+                      setItems([...items, updatedItem as any]);
+                    } else {
+                      handleUpdateItem(selectedItem.id, {status: 'Needs Source'});
+                    }
+                    setSelectedItem(updatedItem as any);
+                    return;
+                  }
+
+                  let updatedItem = { ...selectedItem, status: 'Draft Handoff' };
                   if (!items.find(i => i.id === selectedItem.id)) {
                     setItems([...items, updatedItem as any]);
                     reviewCalendarQuality([...items, updatedItem as any], buildContextFromState(), arc);
                   } else {
-                    handleUpdateItem(selectedItem.id, {status: 'Approved'});
+                    handleUpdateItem(selectedItem.id, {status: 'Draft Handoff'});
                   }
                   handleCreateDraft(updatedItem as any);
                   setSelectedItem(null);
