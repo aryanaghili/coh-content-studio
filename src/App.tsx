@@ -1,4 +1,5 @@
 import { Menu, X } from "lucide-react";
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
@@ -626,7 +627,29 @@ function Tooltip({ text }: { text: string }) {
 export default function App() {
   const [authError, setAuthError] = useState('');
   // --- Navigation & Core State ---
-  const [activeTab, setActiveTab] = useState<string>('command-center');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const validTabs = [
+    'command-center', 'ideation-workspace', 'editorial-calendar', 'content-workspace',
+    'visual-studio', 'revision-studio', 'idea-library', 'content-library', 
+    'source-library', 'operating-core', 'settings', 'calendar-library', 'prompt-builder'
+  ];
+
+  const currentPath = location.pathname.substring(1);
+  const activeTab = validTabs.includes(currentPath) ? currentPath : 'command-center';
+
+  useEffect(() => {
+    if (currentPath !== '' && !validTabs.includes(currentPath)) {
+      navigate('/command-center', { replace: true });
+    } else if (currentPath === '') {
+      navigate('/command-center', { replace: true });
+    }
+  }, [currentPath, navigate]);
+
+  const setActiveTab = (tab: string) => {
+    navigate(`/${tab}`);
+  };
   const [calendarToLoad, setCalendarToLoad] = useState<SavedCalendar | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
