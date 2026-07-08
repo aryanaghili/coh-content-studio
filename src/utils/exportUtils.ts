@@ -97,6 +97,7 @@ export const mapItemToHootsuiteRow = (item: CalendarItem, cycle: any, contentMap
   if (!isSupported) statusWarning += 'Unsupported Channel. ';
   if (!hasFinalCopy && !isFallback) statusWarning += 'Missing final copy. ';
   if (!isReady && !isFallback) statusWarning += 'Not approved/scheduled. ';
+  if ((item as any).sourceWarning || item.status === 'Needs Source') statusWarning += 'Unresolved source warning. ';
 
   const isBoosted = 'No';
   const organization = "Aryan Aghili's Organization";

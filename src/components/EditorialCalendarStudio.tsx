@@ -357,7 +357,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   const [review, setReview] = useState<CalendarReview>({ status: 'Not ready', strengths: [], gaps: [], risks: [], recommendedFixes: [] });
   const [viewMode, setViewMode] = useState<'List' | 'Week' | 'Month'>('List');
   const [selectedItem, setSelectedItem] = useState<CalendarItem | null>(null);
-  const [validationErrors, setValidationErrors] = useState<{field: string, label: string}[]>([]);
+  const [validationResult, setValidationResult] = useState<{hardBlockers: any[], sourceWarnings: any[], qualityWarnings: any[]} | null>(null);
   
   // Advanced settings panel state
   const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
@@ -693,6 +693,18 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       if (s.channel === 'Instagram') s.visualDirection = 'Element-coded artistic capture';
       if (s.channel === 'TikTok') s.visualDirection = 'Direct-to-camera or raw rehearsal footage';
       
+      // Clean up curly braces from generated strings
+      Object.keys(s).forEach(k => {
+        if (typeof (s as any)[k] === 'string' && /\{([^}]+)\}/.test((s as any)[k])) {
+          if (s.pillar === 'Strategic Partners' || s.pillar === 'Sponsorship and Institutional Adoption') {
+            if (k === 'editorialThesis') (s as any)[k] = "A partner contribution should be explained through its concrete role in production, capture, distribution, education, or institutional adoption.";
+            if (k === 'proofNeeded') (s as any)[k] = "Add partner name, partner category, or specific contribution before final approval.";
+            if (k === 'sourceBasis') (s as any)[k] = "Needs Source";
+          } else {
+             (s as any)[k] = (s as any)[k].replace(/\{([^}]+)\}/g, '$1');
+          }
+        }
+      });
       s.draftInstruction = `Write a ${s.contentUnitType} for ${s.channel}. Focus: ${s.editorialThesis}. Avoid: ${s.riskToAvoid}.`;
       s.status = 'Proposed';
       s.riskLevel = 'Low';
@@ -780,13 +792,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     }
   };
 
-  const validatePlaceholders = (item: CalendarItem) => {
+  const validateCalendarItemForDraft = (item: CalendarItem) => {
     const fieldsToCheck = [
       { key: 'title', label: 'Title' },
       { key: 'editorialThesis', label: 'Editorial Thesis' },
       { key: 'coreMessage', label: 'Core Message' },
       { key: 'audienceInsight', label: 'Audience Insight' },
-      { key: 'proofNeeded', label: 'Proof Needed' },
       { key: 'visualDirection', label: 'Visual Direction' },
       { key: 'suggestedCTA', label: 'Suggested CTA' },
       { key: 'riskToAvoid', label: 'Risk to Avoid' },
@@ -795,19 +806,48 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       { key: 'reasonForRecommendation', label: 'Reason for Recommendation' }
     ];
 
-    const placeholderRegex = /(\{[^}]+\}|\[source needed\]|\[proof needed\]|\bTBD\b|\bTK\b|\bplaceholder\b)/i;
-    const errors: {field: string, label: string}[] = [];
+    const hardBlockers: {field: string, label: string}[] = [];
+    const sourceWarnings: {field: string, label: string}[] = [];
+    const qualityWarnings: {field: string, label: string}[] = [];
 
+    const blockRegex = /(\{[^}]+\}|\[(partner|evidence|source|insert|add detail|TBD)\]|\b(TBD|TK|placeholder)\b)/i;
+    
     fieldsToCheck.forEach(({ key, label }) => {
       const val = (item as any)[key] || '';
-      if (placeholderRegex.test(val)) {
-        errors.push({ field: key, label });
-      } else if (key === 'proofNeeded' && val.trim().toLowerCase() === 'source needed') {
-        errors.push({ field: key, label });
+      if (blockRegex.test(val)) {
+        hardBlockers.push({ field: key, label });
       }
     });
 
-    return errors;
+    const proofNeededVal = item.proofNeeded || '';
+    if (blockRegex.test(proofNeededVal)) {
+      hardBlockers.push({ field: 'proofNeeded', label: 'Proof Needed' });
+    }
+
+    const proofNeededLower = proofNeededVal.trim().toLowerCase();
+    if (!proofNeededVal.trim() || proofNeededLower === 'source needed' || proofNeededLower === 'evidence needed' || proofNeededLower === 'partner detail needed' || proofNeededLower === 'needs validation.') {
+      sourceWarnings.push({ field: 'proofNeeded', label: 'Proof Needed' });
+    }
+    
+    const sourceBasisVal = item.sourceBasis || '';
+    if (sourceBasisVal === 'Operating Core-backed' || sourceBasisVal === 'Needs Source' || sourceBasisVal === 'Needs Validation') {
+      sourceWarnings.push({ field: 'sourceBasis', label: 'Source Basis' });
+    }
+
+    const visualDirLower = (item.visualDirection || '').toLowerCase();
+    if (visualDirLower.includes('dependent on channel format') || visualDirLower === '') {
+      qualityWarnings.push({ field: 'visualDirection', label: 'Visual Direction' });
+    }
+    const ctaLower = (item.suggestedCTA || '').toLowerCase();
+    if (ctaLower.includes('engage with material') || ctaLower.includes('generic') || ctaLower === '') {
+      qualityWarnings.push({ field: 'suggestedCTA', label: 'Suggested CTA' });
+    }
+    const insightLower = (item.audienceInsight || '').toLowerCase();
+    if (insightLower.includes('audience requires concrete evidence') || insightLower.includes('generic') || insightLower === '') {
+      qualityWarnings.push({ field: 'audienceInsight', label: 'Audience Insight' });
+    }
+
+    return { hardBlockers, sourceWarnings, qualityWarnings };
   };
 
   const handleRemoveItem = (id: string) => {
@@ -816,7 +856,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     reviewCalendarQuality(newItems, buildContextFromState(), arc);
   };
 
-  const handleCreateDraft = (item: CalendarItem) => {
+  const handleCreateDraft = (item: CalendarItem & {sourceWarning?: boolean}) => {
+    let advancedDraftInstruction = item.draftInstruction;
+    if (item.sourceWarning) {
+      advancedDraftInstruction += `\n\nSource status:\nThis item is Operating Core-backed but still requires source/proof before final approval.\n\nProof still needed:\n${item.proofNeeded}\n\nDrafting instruction:\nDraft carefully. Do not present unsupported details as confirmed facts. Use language that allows source confirmation later.\n\nMust Avoid:\nDo not invent partner names, dates, evidence, sponsors, locations, or confirmed proof.`;
+    }
+
     const handoffPayload = {
       id: `cal-${item.id}`,
       calendarItemId: item.id,
@@ -841,7 +886,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       suggestedCTA: item.suggestedCTA,
       riskToAvoid: item.riskToAvoid,
       claimSafetyNote: 'Verify claims against Operating Core.',
-      draftInstruction: item.draftInstruction,
+      draftInstruction: advancedDraftInstruction,
       operatingCoreInstructions: 'Apply COH tone and voice guidelines.',
       
       // Pack Support
@@ -950,6 +995,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     executeExport(format, items, cycle);
   };
 
+  const getErrorClass = (field: string) => {
+    if (!validationResult) return '';
+    if (validationResult.hardBlockers.some(e => e.field === field)) return 'border-red-400';
+    if (validationResult.sourceWarnings.some(e => e.field === field)) return 'border-amber-400';
+    if (validationResult.qualityWarnings.some(e => e.field === field)) return 'border-amber-200 text-amber-900 bg-amber-50';
+    return '';
+  };
+
   const renderMonthView = () => {
     if (items.length === 0) return null;
     const [yearStr, monthStr] = cycle.planningMonth?.split('-') || ['2024', '01'];
@@ -969,7 +1022,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div key={dayNum} className={`bg-white border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-coh-gold/40 shadow-sm' : 'border-coh-gold/10'}`}>
           <span className="text-[10px] font-bold text-coh-navy/40">{dayNum}</span>
           {dayItems.map(item => (
-            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationErrors([]); }} className="bg-coh-cream p-1.5 rounded border border-coh-gold/20 cursor-pointer hover:border-coh-gold transition flex flex-col gap-0.5">
+            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-coh-cream p-1.5 rounded border border-coh-gold/20 cursor-pointer hover:border-coh-gold transition flex flex-col gap-0.5">
               <div className="text-[9px] uppercase font-bold text-coh-gold line-clamp-1">{item.channel}</div>
               <div className="text-[10px] font-semibold text-coh-navy leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
             </div>
@@ -1257,7 +1310,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                             </div>
                           </div>
 
-                          <button className="p-2 text-coh-gold hover:text-coh-navy bg-coh-cream rounded transition" onClick={() => { setSelectedItem(item); setValidationErrors([]); }}>
+                          <button className="p-2 text-coh-gold hover:text-coh-navy bg-coh-cream rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
                             <ChevronRight size={20} />
                           </button>
                         </div>
@@ -1328,22 +1381,43 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               <h3 className="font-serif text-lg font-bold flex items-center gap-2">
                 <FileText size={18} className="text-coh-gold"/> Calendar Item Details
               </h3>
-              <button onClick={() => { setSelectedItem(null); setValidationErrors([]); }} className="hover:text-coh-gold transition"><X size={20} /></button>
+              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="hover:text-coh-gold transition"><X size={20} /></button>
             </div>
             
             <div className="p-4 md:p-6 overflow-y-auto flex-1 text-sm space-y-6">
               
-              {validationErrors.length > 0 && (
+              {validationResult && validationResult.hardBlockers.length > 0 && (
                 <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
                   <div className="flex items-center gap-2 text-red-800 font-bold mb-2">
                     <AlertTriangle size={16} /> Action Required
                   </div>
-                  <p className="text-red-700 text-xs mb-2">This item still contains unresolved placeholders. Add proof or source detail to the following fields before creating a draft:</p>
+                  <p className="text-red-700 text-xs mb-2">Resolve these placeholders before creating a draft:</p>
                   <ul className="list-disc list-inside text-red-700 text-xs space-y-1 ml-2">
-                    {validationErrors.map((err, i) => (
-                      <li key={i}><span className="font-bold">{err.label}</span></li>
+                    {validationResult.hardBlockers.map((err, i) => (
+                      <li key={i}>{err.label} contains unresolved placeholder</li>
                     ))}
                   </ul>
+                </div>
+              )}
+              {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length > 0 && (
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded">
+                  <div className="flex items-center gap-2 text-amber-800 font-bold mb-2">
+                    <AlertTriangle size={16} /> Source Warning
+                  </div>
+                  <p className="text-amber-700 text-xs mb-2">This item can be drafted, but it still needs source/proof before approval or publishing:</p>
+                  <ul className="list-disc list-inside text-amber-700 text-xs space-y-1 ml-2">
+                    {validationResult.sourceWarnings.map((err, i) => (
+                      <li key={i}>{err.label}: {err.field === 'proofNeeded' ? selectedItem.proofNeeded : selectedItem.sourceBasis}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length === 0 && validationResult.qualityWarnings.length > 0 && (
+                <div className="bg-gray-100 border-l-4 border-gray-400 p-4 rounded">
+                  <div className="flex items-center gap-2 text-gray-800 font-bold mb-2">
+                    <AlertTriangle size={16} /> Quality Warning
+                  </div>
+                  <p className="text-gray-700 text-xs mb-2">This item can be drafted, but more detail would improve the result.</p>
                 </div>
               )}
 
@@ -1353,7 +1427,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 <div className="space-y-3 bg-gray-50 p-4 rounded border border-gray-200">
                   <h4 className="text-xs font-bold uppercase text-coh-navy">1. Scheduling</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${validationErrors.some(e => e.field === 'date') ? 'border-red-400' : ''}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
                     <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Status</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.status} onChange={e => handleLocalDraftUpdate({status: e.target.value})}><option>Proposed</option><option>Needs Source</option><option>Needs review</option><option>Approved</option><option>Draft Handoff</option><option>Drafting</option></select></div>
                     <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Channel</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.channel} onChange={e => handleLocalDraftUpdate({channel: e.target.value})}>{CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
                     <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Format</label><input type="text" className="form-control p-1.5 w-full text-xs" value={selectedItem.format} onChange={e => handleLocalDraftUpdate({format: e.target.value})} /></div>
@@ -1375,13 +1449,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* 3. Editorial Brief */}
               <div className="space-y-3 border border-coh-gold/20 p-4 rounded">
                 <h4 className="text-xs font-bold uppercase text-coh-gold">3. Editorial Brief</h4>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${validationErrors.some(e => e.field === 'title') ? 'border-red-400' : ''}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${validationErrors.some(e => e.field === 'editorialThesis') ? 'border-red-400' : ''}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${getErrorClass('title')}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${getErrorClass('editorialThesis')}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${validationErrors.some(e => e.field === 'coreMessage') ? 'border-red-400' : ''}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${validationErrors.some(e => e.field === 'audienceInsight') ? 'border-red-400' : ''}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('coreMessage')}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('audienceInsight')}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
                 </div>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${validationErrors.some(e => e.field === 'suggestedCTA') ? 'border-red-400' : ''}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${getErrorClass('suggestedCTA')}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1400,15 +1474,15 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                       <option>Not source-ready</option>
                     </select>
                   </div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${validationErrors.some(e => e.field === 'proofNeeded') ? 'border-red-400' : ''}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-50 ${validationErrors.some(e => e.field === 'riskToAvoid') ? 'border-red-400' : 'border-red-200'}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('proofNeeded')}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-50 ${getErrorClass('riskToAvoid')}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
                 </div>
 
                 {/* 5. Creative Direction */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-bold uppercase text-coh-gold border-b border-coh-gold/20 pb-1">5. Creative Direction</h4>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${validationErrors.some(e => e.field === 'visualDirection') ? 'border-red-400' : ''}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${validationErrors.some(e => e.field === 'draftInstruction') ? 'border-red-400' : ''}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('visualDirection')}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('draftInstruction')}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
                 </div>
               </div>
 
@@ -1421,7 +1495,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
             <div className="p-4 border-t border-coh-gold/20 flex flex-col md:flex-row justify-between gap-4 bg-gray-50 shrink-0">
               <div className="flex gap-2">
-                <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationErrors([]); }}>
+                <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationResult(null); }}>
                   <Trash2 size={16} className="inline mr-1"/> {items.find(i => i.id === selectedItem.id) ? 'Delete' : 'Cancel'}
                 </Button>
                 {items.find(i => i.id === selectedItem.id) && (
@@ -1440,15 +1514,15 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                     reviewCalendarQuality(newItems, buildContextFromState(), arc);
                   }
                   setSelectedItem(null);
-                  setValidationErrors([]);
+                  setValidationResult(null);
                 }} className="flex-1 md:flex-none">
                   {items.find(i => i.id === selectedItem.id) ? 'Save Changes' : 'Add to Calendar'}
                 </Button>
                 <Button variant="primary" onClick={() => {
-                  const errors = validatePlaceholders(selectedItem);
+                  const result = validateCalendarItemForDraft(selectedItem);
                   
-                  if (errors.length > 0) {
-                    setValidationErrors(errors);
+                  if (result.hardBlockers.length > 0) {
+                    setValidationResult(result);
                     return;
                   }
 
@@ -1463,7 +1537,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   }
                   handleCreateDraft(updatedItem as any);
                   setSelectedItem(null);
-                  setValidationErrors([]);
+                  setValidationResult(null);
                 }} className="flex-1 md:flex-none">
                   Approve & Create Draft
                 </Button>
