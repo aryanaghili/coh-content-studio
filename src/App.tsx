@@ -3,6 +3,8 @@ import { Menu, X } from "lucide-react";
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
 import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
+import { CalendarLibrary } from './components/CalendarLibrary';
+import type { SavedCalendar } from './components/CalendarLibrary';
 import { safeLocalStorageGet, safeLocalStorageSet, safeLocalStorageRemove } from './utils/storage';
 import { getCoreDocuments } from './lib/coreDocumentsStorage';
 import type { CoreDocument } from './lib/coreDocumentsStorage';
@@ -95,6 +97,21 @@ export interface WorkItem {
   
   approved: boolean;
   saved: boolean;
+  
+  // Cross-library tracking & calendar mapping
+  calendarId?: string;
+  calendarVersionId?: string;
+  calendarItemId?: string;
+  ideaId?: string;
+  sourceIds?: string[];
+  contentItemId?: string;
+  visualAssetId?: string;
+  revisionVersionId?: string;
+
+  // Advanced Brief overrides / Multi-Channel fields
+  isMultiChannelPack?: boolean;
+  packTitle?: string;
+  targetChannels?: string[];
   
   createdAt: string;
   updatedAt: string;
@@ -326,6 +343,9 @@ interface SavedContent {
   visualIdeation?: string;
   visualAssets?: { id: string; url: string; prompt: string; createdAt: string; provider: string; model: string; aspectRatio: string; sourceDirection: string }[];
   source?: string;
+  calendarId?: string;
+  calendarVersionId?: string;
+  calendarItemId?: string;
 }
 
 interface SavedIdea {
@@ -607,6 +627,7 @@ export default function App() {
   const [authError, setAuthError] = useState('');
   // --- Navigation & Core State ---
   const [activeTab, setActiveTab] = useState<string>('command-center');
+  const [calendarToLoad, setCalendarToLoad] = useState<SavedCalendar | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [sourceLibraryFilter, setSourceLibraryFilter] = useState<string>("All");
   const [extractingInsightFor, setExtractingInsightFor] = useState<string | null>(null);
@@ -687,7 +708,7 @@ export default function App() {
 
   useEffect(() => {
     if (dbStatus === 'local_only') {
-      safeLocalStorageSet('coh_operating_core_v1', JSON.stringify(operatingCore));
+      safeLocalStorageSet('coh_operating_core_v1', operatingCore);
     } else if (dbStatus === 'configured') {
       fetch('/api/operating-core', {
         method: 'PUT',
@@ -1185,14 +1206,23 @@ export default function App() {
 
   // --- Ideation Workspace States ---
 
-  // --- WORK ITEM STATE ---
   const [activeWorkItem, setActiveWorkItem] = useState<WorkItem | null>(() => {
-    return safeLocalStorageGet('coh_active_work_item_v1', null) as WorkItem | null;
+    let saved = safeLocalStorageGet('coh_active_work_item_v1', null) as any;
+    if (typeof saved === 'string') {
+      try { saved = JSON.parse(saved); } catch (e) { saved = null; }
+    }
+    if (saved && typeof saved === 'object') {
+      if (!saved.draftVersions) saved.draftVersions = [];
+      if (!saved.imageResults) saved.imageResults = [];
+      if (!saved.revisionHistory) saved.revisionHistory = [];
+      return saved as WorkItem;
+    }
+    return null;
   });
 
   useEffect(() => {
     if (activeWorkItem) {
-      safeLocalStorageSet('coh_active_work_item_v1', JSON.stringify(activeWorkItem));
+      safeLocalStorageSet('coh_active_work_item_v1', activeWorkItem);
     } else {
       safeLocalStorageRemove('coh_active_work_item_v1');
     }
@@ -1236,7 +1266,7 @@ export default function App() {
   const [isIdeating, setIsIdeating] = useState<boolean>(false);
 
   useEffect(() => {
-    safeLocalStorageSet('coh_saved_ideas_v1', JSON.stringify(savedIdeas));
+    safeLocalStorageSet('coh_saved_ideas_v1', savedIdeas);
   }, [savedIdeas]);
 
   // --- Ideation Actions and Helper Functions ---
@@ -1587,11 +1617,11 @@ export default function App() {
 
   // --- LocalStorage Sync ---
   useEffect(() => {
-    safeLocalStorageSet('coh_sources_v11', JSON.stringify(sources));
+    safeLocalStorageSet('coh_sources_v11', sources);
   }, [sources]);
 
   useEffect(() => {
-    safeLocalStorageSet('coh_saved_content_v11', JSON.stringify(savedContent));
+    safeLocalStorageSet('coh_saved_content_v11', savedContent);
   }, [savedContent]);
 
   // --- Brain Status Calculations ---
@@ -4411,6 +4441,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Libraries
             </div>
             <button
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('calendar-library'); }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
+                activeTab === 'calendar-library'
+                  ? 'bg-coh-gold text-coh-navy font-semibold shadow-sm'
+                  : 'text-coh-gold/70 hover:bg-coh-navy-light hover:text-coh-cream'
+              }`}
+            >
+              <Calendar size={16} />
+              Calendar Library
+            </button>
+            <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'idea-library'
@@ -4947,7 +4988,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           </div>
                           <h4 className="font-serif text-lg font-bold text-coh-navy">{(activeWorkItem?.title || 'Standalone Draft')}</h4>
                         </div>
-                        <span className="text-[10px] text-coh-navy/50">{activeWorkItem.updatedAt.split('T')[0]}</span>
+                        <span className="text-[10px] text-coh-navy/50">{(activeWorkItem.updatedAt || activeWorkItem.createdAt || new Date().toISOString()).split('T')[0]}</span>
                       </div>
                       <p className="text-xs text-coh-navy/70 line-clamp-2 mb-4">
                         {activeWorkItem.draftVersions.length > 0 ? activeWorkItem.draftVersions[0].text.substring(0, 100) + '...' : 'No draft content yet.'}
@@ -4970,18 +5011,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               title: (activeWorkItem?.title || 'Standalone Draft'),
                               pillar: "General",
                               angle: "",
-                              audience: activeWorkItem.audience || "General Public",
-                              channel: activeWorkItem.channel || "",
-                              purpose: activeWorkItem.purpose || "General",
+                              audience: activeWorkItem?.audience || "General Public",
+                              channel: activeWorkItem?.channel || "",
+                              purpose: activeWorkItem?.purpose || "General",
                               status: 'Approved',
                               sourcesUsed: [],
-                              createdAt: activeWorkItem.createdAt,
+                              createdAt: activeWorkItem?.createdAt || new Date().toISOString(),
                               lastEdited: new Date().toISOString(),
-                              text: activeWorkItem.draftVersions[0]?.text || "",
+                              text: activeWorkItem?.draftVersions[0]?.text || "",
                               notes: "Saved from Active Work Item",
                               version: 1,
-                              visualDirection: activeWorkItem.visualDirection || "",
-                              visualAssets: activeWorkItem.imageResults as any
+                              visualDirection: activeWorkItem?.visualDirection || "",
+                              visualAssets: activeWorkItem?.imageResults as any,
+                              calendarId: activeWorkItem?.calendarId,
+                              calendarVersionId: activeWorkItem?.calendarVersionId,
+                              calendarItemId: activeWorkItem?.calendarItemId
                             };
                             setSavedContent(prev => [newSaved, ...prev]);
                             setActiveWorkItem(prev => prev ? { ...prev, saved: true, status: 'Saved' } : null);
@@ -5145,9 +5189,44 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {activeTab === 'editorial-calendar' && (
           <ErrorBoundary fallbackTitle="Editorial Calendar Error">
             <EditorialCalendarStudio 
+              initialCalendar={calendarToLoad}
+              onOpenLibrary={() => setActiveTab('calendar-library')}
               onHandoff={(workItem) => {
                 setActiveWorkItem(workItem);
+                setCreationMode('advanced');
+                
+                const packScope = workItem.isMultiChannelPack ? 'Multi-Channel Pack' : 'Single Channel';
+                
+                setAdvancedBrief(prev => ({
+                  ...prev,
+                  topic: workItem.title || '',
+                  directionMode: 'custom',
+                  angle: workItem.editorialThesis || '',
+                  customDirection: `Core Message: ${workItem.coreMessage}\nInstruction: ${workItem.draftInstruction}`,
+                  channel: workItem.channel || 'LinkedIn',
+                  outputFormat: workItem.format || 'Post',
+                  pillar: workItem.strategicFocus || 'General / Custom',
+                  audience: workItem.audience || 'General Public',
+                  purpose: workItem.adoptionTrack || 'General / Open',
+                  mustInclude: workItem.proofNeeded || '',
+                  mustAvoid: workItem.riskToAvoid || '',
+                  creationIntent: 'Infer automatically',
+                  creationScope: packScope,
+                  targetChannels: workItem.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
+                }));
+                
                 setActiveTab('content-workspace');
+              }}
+            />
+          </ErrorBoundary>
+        )}
+        {/* --- CALENDAR LIBRARY --- */}
+        {activeTab === 'calendar-library' && (
+          <ErrorBoundary fallbackTitle="Calendar Library Error">
+            <CalendarLibrary 
+              onOpenCalendar={(calendar) => {
+                setCalendarToLoad(calendar);
+                setActiveTab('editorial-calendar');
               }}
             />
           </ErrorBoundary>
@@ -5702,6 +5781,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">
                       Advanced Brief Fields
                     </h3>
+
+                    {activeWorkItem?.calendarItemId && (
+                      <div className="bg-coh-gold/10 border border-coh-gold/30 p-3 rounded flex flex-col gap-1 text-xs">
+                        <div className="font-bold text-coh-navy">📅 Created from Editorial Calendar</div>
+                        <div className="text-coh-navy/70">
+                          This brief was generated from a strategic calendar item. 
+                          <button onClick={() => setActiveTab('editorial-calendar')} className="text-coh-gold underline ml-2 hover:text-coh-navy">
+                            Back to Calendar
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
                     <div>
                       <label className="block text-coh-navy/70 font-semibold mb-0.5">What should this content respond to or develop?</label>

@@ -1,0 +1,24 @@
+import puppeteer from 'puppeteer';
+
+(async () => {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  
+  page.on('console', msg => {
+    if (msg.type() === 'error') console.error('PAGE ERROR:', msg.text());
+    else console.log('PAGE LOG:', msg.text());
+  });
+  
+  page.on('pageerror', err => {
+    console.error('PAGE EXCEPTION:', err.message);
+  });
+
+  try {
+    await page.goto('http://localhost:5174', { waitUntil: 'networkidle0', timeout: 10000 });
+    console.log('Page loaded successfully');
+  } catch (err) {
+    console.error('Error loading page:', err);
+  }
+  
+  await browser.close();
+})();
