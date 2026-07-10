@@ -5296,6 +5296,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   >
                     Rename Work Item
                   </button>
+                  <button
+                    onClick={() => setActiveWorkItem(null)}
+                    className="text-[10px] text-coh-navy/50 hover:text-red-700 underline font-bold interactive-button mt-1"
+                  >
+                    Clear Workspace
+                  </button>
                 </div>
               </div>
             ) : (
@@ -6686,6 +6692,20 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             className="interactive-link transition"
                           >
                             Copy AI Image Prompt
+                          </button>
+                          <span className="text-coh-gold/30">|</span>
+                          <button
+                            onClick={() => {
+                              handleSendToVisualStudio(
+                                { id: `generated-${Date.now()}`, title: `${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Visual Direction` },
+                                draftOptions.visualIdeation,
+                                'Content'
+                              );
+                              setActiveTab('visual-studio');
+                            }}
+                            className="interactive-link transition text-coh-navy flex items-center gap-1 font-bold"
+                          >
+                            <Lightbulb size={11} /> Send to Visual Studio
                           </button>
                         </div>
                       </div>
