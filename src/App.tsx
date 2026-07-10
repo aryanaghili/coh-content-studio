@@ -4598,9 +4598,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
         {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="page-shell">
-            <div className="border-b border-coh-gold/20 pb-6">
-              <div className="page-header"><h2 className="page-title">Ideation Workspace</h2></div>
-              <p className="text-sm text-coh-navy/60 font-sans">
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Ideation Workspace</h2>
+              <p className="page-subtitle">
                 Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
               </p>
             </div>
@@ -4836,13 +4836,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="page-shell">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
-              <div>
-                <div className="page-header"><h2 className="page-title">Idea Library</h2></div>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                  Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
-                </p>
-              </div>
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Idea Library</h2>
+              <p className="page-subtitle">
+                Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
+              </p>
             </div>
 
             {/* List of saved ideas */}
@@ -4934,9 +4932,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
         {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="page-shell">
-            <div className="pb-6">
-              <div className="page-header"><h2 className="page-title">Command Center</h2></div>
-              <p className="text-sm text-coh-navy/60 font-sans">
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Command Center</h2>
+              <p className="page-subtitle">
                 Choose what to create, continue your active work item, or check what needs attention.
               </p>
             </div>
@@ -5268,10 +5266,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="page-shell">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
-              <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
-                    <h2 className="font-serif text-2xl font-bold text-coh-navy">
+                    <h2 className="page-title">
                       {(activeWorkItem?.title || 'Standalone Draft')}
                     </h2>
                     <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-navy text-coh-cream px-2 py-0.5 rounded status-badge">
@@ -5305,53 +5303,52 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <h2 className="page-title">Content Workspace</h2>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-cream border border-coh-gold/20 text-coh-navy px-2 py-0.5 rounded">
-                  Standalone Draft
-                </span>
+              <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <h2 className="page-title">Content Workspace</h2>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-coh-cream border border-coh-gold/20 text-coh-navy px-2 py-0.5 rounded">
+                      Standalone Draft
+                    </span>
+                  </div>
+                  <p className="page-subtitle">Draft, edit, and optimize individual content assets with core guidance.</p>
+                </div>
+                
+                {/* Mode Toggle Button Group */}
+                <div className="flex bg-coh-navy/5 p-1 rounded border border-coh-gold/15 shrink-0">
+                  <button
+                    onClick={() => setCreationMode('simple')}
+                    className={`px-4 py-2 text-xs font-semibold rounded transition ${
+                      creationMode === 'simple'
+                        ? 'bg-coh-navy text-coh-gold shadow-sm'
+                        : 'text-coh-navy/60 hover:text-coh-navy'
+                    }`}
+                  >
+                    Simple Mode
+                  </button>
+                  <button
+                    onClick={() => setCreationMode('quick')}
+                    className={`px-4 py-2 text-xs font-semibold rounded transition ${
+                      creationMode === 'quick'
+                        ? 'bg-coh-navy text-coh-gold shadow-sm'
+                        : 'text-coh-navy/60 hover:text-coh-navy'
+                    }`}
+                  >
+                    Quick Create
+                  </button>
+                  <button
+                    onClick={() => setCreationMode('advanced')}
+                    className={`px-4 py-2 text-xs font-semibold rounded transition ${
+                      creationMode === 'advanced'
+                        ? 'bg-coh-navy text-coh-gold shadow-sm'
+                        : 'text-coh-navy/60 hover:text-coh-navy'
+                    }`}
+                  >
+                    Advanced Brief
+                  </button>
+                </div>
               </div>
             )}
-            
-            <div className="flex justify-between items-end border-b border-coh-gold/20 pb-4">
-              <div>
-                
-              </div>
-
-              {/* Mode Toggle Button Group */}
-              <div className="flex bg-coh-navy/5 p-1 rounded border border-coh-gold/15">
-                <button
-                  onClick={() => setCreationMode('simple')}
-                  className={`px-4 py-2 text-xs font-semibold rounded transition ${
-                    creationMode === 'simple'
-                      ? 'bg-coh-navy text-coh-gold shadow-sm'
-                      : 'text-coh-navy/60 hover:text-coh-navy'
-                  }`}
-                >
-                  Simple Mode
-                </button>
-                <button
-                  onClick={() => setCreationMode('quick')}
-                  className={`px-4 py-2 text-xs font-semibold rounded transition ${
-                    creationMode === 'quick'
-                      ? 'bg-coh-navy text-coh-gold shadow-sm'
-                      : 'text-coh-navy/60 hover:text-coh-navy'
-                  }`}
-                >
-                  Quick Create
-                </button>
-                <button
-                  onClick={() => setCreationMode('advanced')}
-                  className={`px-4 py-2 text-xs font-semibold rounded transition ${
-                    creationMode === 'advanced'
-                      ? 'bg-coh-navy text-coh-gold shadow-sm'
-                      : 'text-coh-navy/60 hover:text-coh-navy'
-                  }`}
-                >
-                  Advanced Brief
-                </button>
-              </div>
-            </div>
 
             {/* Validation warning block */}
             {validationWarning && (
@@ -6836,11 +6833,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 3: REVISION STUDIO --- */}
         {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
-              <div>
-                <div className="page-header"><h2 className="page-title">Visual Studio</h2></div>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1">Create visual outputs from full visual directions or custom prompts.</p>
-              </div>
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Visual Studio</h2>
+              <p className="page-subtitle">Create visual outputs from full visual directions or custom prompts.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -7099,13 +7094,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="page-shell">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
-              <div>
-                <div className="page-header"><h2 className="page-title">Content Library</h2></div>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1">
-                  Access, duplicate, and filter approved COH content assets.
-                </p>
-              </div>
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Content Library</h2>
+              <p className="page-subtitle">
+                Access, duplicate, and filter approved COH content assets.
+              </p>
             </div>
 
             <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm flex gap-4 text-xs flex-wrap items-center">
@@ -7352,16 +7345,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="page-shell">
-            <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-end">
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
-                <div className="page-header"><h2 className="page-title">Source Library</h2></div>
-                <p className="text-sm text-coh-navy/60 font-sans mt-1 max-w-3xl">
+                <h2 className="page-title">Source Library</h2>
+                <p className="page-subtitle">
                   Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
                 </p>
-
               </div>
 
-              <div className="flex gap-2 text-xs">
+              <div className="flex gap-2 text-xs shrink-0">
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -7747,9 +7739,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="page-shell-narrow">
-            <div className="border-b border-coh-gold/20 pb-6">
-              <div className="page-header"><h2 className="page-title">Settings</h2></div>
-              <p className="text-sm text-coh-navy/60 font-sans mt-1">
+            <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
+              <h2 className="page-title">Settings</h2>
+              <p className="page-subtitle">
                 Configure AI provider and generation mode.
               </p>
               <p className="text-xs text-coh-navy/50 font-sans italic bg-coh-cream/50 p-2 rounded border border-coh-gold/10 inline-block mt-2">
