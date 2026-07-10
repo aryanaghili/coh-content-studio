@@ -838,8 +838,13 @@ export default function App() {
   const [vsTypography, setVsTypography] = useState<string>('');
   const [vsElements, setVsElements] = useState<string>('');
   const [vsAvoid, setVsAvoid] = useState<string>('');
+  const [vsNegativePrompt, setVsNegativePrompt] = useState<string>('');
   const [vsAIPrompt, setVsAIPrompt] = useState<string>('');
   const [vsNotes, setVsNotes] = useState<string>('');
+  const [vsTextContent, setVsTextContent] = useState<string>('');
+  const [vsAttribution, setVsAttribution] = useState<string>('');
+  const [vsRawImportedDirection, setVsRawImportedDirection] = useState<string>('');
+  const [vsImportValidation, setVsImportValidation] = useState<{ total: number, recognized: number, missing: string[] } | null>(null);
   const [vsPromptMode, setVsPromptMode] = useState<'Full' | 'AI Only' | 'Full + AI' | 'Manual Only'>('Full + AI');
   const [vsInputMode, setVsInputMode] = useState<'Imported' | 'Manual'>('Manual');
   const [vsManualPrompt, setVsManualPrompt] = useState<string>('');
@@ -1065,41 +1070,115 @@ export default function App() {
   };
 
   // --- Visual Studio Logic ---
-  const handleSendToVisualStudio = (item: any, rawDirection: string, type: 'Idea' | 'Content' | 'Library') => {
+  const handleSendToVisualStudio = (item: any, rawDirection: any, type: 'Idea' | 'Content' | 'Library') => {
+    // Preserve existing item state
     setVsSourceItem({ id: item.id, title: item.title || item.originalInput || 'Untitled', type });
+    setVsRawImportedDirection(typeof rawDirection === 'string' ? rawDirection : JSON.stringify(rawDirection));
     
-    // Strip markdown bolding to make matching robust
-    const cleanDir = rawDirection.replace(/\*\*/g, '');
+    // Check if it's already a canonical object vs raw string
+    let parsedFields: any = {};
+    if (typeof rawDirection === 'object' && rawDirection !== null) {
+       parsedFields = rawDirection; // Assume it's already structured
+    } else {
+       // Legacy String Parser
+       let text = (rawDirection || '').replace(/\r\n/g, '\n');
+       
+       const fields: any = {
+          visualConcept: '', formatRecommendation: '', moodAtmosphere: '', composition: '',
+          colorMaterialDirection: '', typographyLayout: '', keyVisualElements: '', whatToAvoid: '',
+          aiImagePrompt: '', negativePrompt: '', designerNotes: ''
+       };
+       
+       const headingPatterns = [
+          { key: 'visualConcept', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Visual Concept\b[*:_]*$/i },
+          { key: 'formatRecommendation', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:Format Recommendation|Format(?:s)?\b)[*:_]*$/i },
+          { key: 'moodAtmosphere', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Mood(?:\s*(?:[\/&]|and)\s*Atmosphere)?\b[*:_]*$/i },
+          { key: 'composition', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Composition\b[*:_]*$/i },
+          { key: 'colorMaterialDirection', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Color(?:\s*(?:[\/&]|and)\s*Material\b.*?)?[*:_]*$/i },
+          { key: 'typographyLayout', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Typography(?:\s*(?:[\/&]|and)\s*Layout)?\b[*:_]*$/i },
+          { key: 'keyVisualElements', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:Key )?Visual Elements\b[*:_]*$/i },
+          { key: 'whatToAvoid', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:What to )?Avoid\b[*:_]*$/i },
+          { key: 'aiImagePrompt', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?AI Image Prompt\b[*:_]*$/i },
+          { key: 'negativePrompt', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Negative Prompt\b[*:_]*$/i },
+          { key: 'designerNotes', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Designer Notes\b[*:_]*$/i }
+       ];
+       
+       const lines = text.split('\n');
+       let currentField = null;
+       
+       for (let line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          
+          let isHeadingLine = false;
+          
+          for (const { key, pattern } of headingPatterns) {
+             if (pattern.test(trimmed)) {
+                currentField = key;
+                isHeadingLine = true;
+                break;
+             }
+             
+             // Regex for inline value like "**Visual Concept**: value"
+             const inlineMatch = trimmed.match(/^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(Visual Concept|Format Recommendation|Format|Mood(?:\s*(?:[\/&]|and)\s*Atmosphere)?|Composition|Color(?:\s*(?:[\/&]|and)\s*Material.*?)?|Typography(?:\s*(?:[\/&]|and)\s*Layout)?|(?:Key )?Visual Elements|(?:What to )?Avoid|AI Image Prompt|Negative Prompt|Designer Notes)[*:_]+\s*(.*)$/i);
+             
+             if (inlineMatch && inlineMatch[1]) {
+                for (const hp of headingPatterns) {
+                   if (hp.pattern.test(inlineMatch[1])) {
+                      currentField = hp.key;
+                      const val = inlineMatch[2].trim();
+                      if (val) {
+                         fields[currentField] += (fields[currentField] ? '\n' : '') + val.replace(/^["'\-\*\s]+/, '').replace(/["'\-\*\s]+$/, '');
+                      }
+                      isHeadingLine = true;
+                      break;
+                   }
+                }
+                if (isHeadingLine) break;
+             }
+          }
+          
+          if (!isHeadingLine && currentField) {
+             const cleaned = trimmed.replace(/^[\*\-\s]+/, ''); // Strip leading bullets
+             if (cleaned) {
+                fields[currentField] += (fields[currentField] ? '\n' : '') + cleaned;
+             }
+          }
+       }
+       parsedFields = fields;
+    }
     
-    // Helper to extract by key, stopping at the next key or end of string
-    const extract = (keyPattern: string) => {
-      const regex = new RegExp(`${keyPattern}:\\s*([\\s\\S]*?)(?=\\n-?\\s*[A-Z][a-zA-Z\\s/]*:|$)`, 'i');
-      const match = cleanDir.match(regex);
-      return match ? match[1].trim() : '';
-    };
-
-    const conceptMatch = extract('Concept');
-    const formatMatch = extract('Recommendation') || extract('Format');
-    const moodMatch = extract('Mood.*?');
-    const compMatch = extract('Composition');
-    const colorMatch = extract('Color.*?');
-    const typoMatch = extract('Typography.*?');
-    const elMatch = extract('Key.*?Elements');
-    const avoidMatch = extract('Avoid');
-    const aiMatch = extract('AI Image Prompt');
-    const notesMatch = extract('Designer Notes');
-
-    setVsConcept(conceptMatch || cleanDir);
-    setVsFormat(formatMatch);
-    setVsMood(moodMatch);
-    setVsComposition(compMatch);
-    setVsPalette(colorMatch);
-    setVsTypography(typoMatch);
-    setVsElements(elMatch);
-    setVsAvoid(avoidMatch);
-    setVsAIPrompt(aiMatch);
-    setVsNotes(notesMatch);
-
+    // Determine Validation State
+    const requiredFields = ['visualConcept', 'moodAtmosphere', 'composition', 'colorMaterialDirection', 'keyVisualElements'];
+    const optionalFields = ['formatRecommendation', 'typographyLayout', 'whatToAvoid', 'aiImagePrompt', 'negativePrompt', 'designerNotes'];
+    
+    const allExpected = [...requiredFields, ...optionalFields];
+    let recognized = 0;
+    const missing: string[] = [];
+    
+    for (const f of allExpected) {
+      if (parsedFields[f] && parsedFields[f].trim().length > 0) recognized++;
+      else missing.push(f);
+    }
+    
+    // Map parsed structured fields safely to React State
+    setVsConcept(parsedFields.visualConcept || '');
+    setVsFormat(parsedFields.formatRecommendation || parsedFields.format || '');
+    setVsMood(parsedFields.moodAtmosphere || '');
+    setVsComposition(parsedFields.composition || '');
+    setVsPalette(parsedFields.colorMaterialDirection || '');
+    setVsTypography(parsedFields.typographyLayout || '');
+    setVsElements(parsedFields.keyVisualElements || '');
+    setVsAvoid(parsedFields.whatToAvoid || '');
+    setVsAIPrompt(parsedFields.aiImagePrompt || '');
+    setVsNegativePrompt(parsedFields.negativePrompt || '');
+    setVsNotes(parsedFields.designerNotes || '');
+    
+    setVsTextContent(parsedFields.textContent || '');
+    setVsAttribution(parsedFields.attribution || '');
+    
+    setVsImportValidation({ total: allExpected.length, recognized, missing });
+    
     setVsInputMode('Imported');
     setVsPromptMode('Full + AI');
     setActiveTab('visual-studio');
@@ -1132,7 +1211,10 @@ export default function App() {
         elements: vsElements,
         avoid: vsAvoid,
         aiPrompt: vsAIPrompt,
-        notes: vsNotes
+        negativePrompt: vsNegativePrompt,
+        notes: vsNotes,
+        textContent: vsTextContent,
+        attribution: vsAttribution
       },
       inputMode: vsInputMode,
       provider: aiProvider,
@@ -6840,7 +6922,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
 
         {/* --- TAB 3: REVISION STUDIO --- */}
-        {activeTab === 'visual-studio' && (<ErrorBoundary fallbackTitle="Visual Studio Error">
+        {activeTab === 'visual-studio' && (() => {
+          const isTextLed = /(quote card|text-led|text-heavy|typographic|nameplate|headline card)/i.test(vsConcept + ' ' + vsFormat + ' ' + vsComposition);
+          return (
+          <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
             <div className="bg-white border border-coh-gold/20 p-6 rounded-lg shadow-sm mb-8">
               <h2 className="page-title">Visual Studio</h2>
@@ -6969,18 +7054,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div className="pt-2 border-t border-coh-gold/10 mt-4">
-                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage || !aiProvider} variant="primary" size="lg" className="w-full">
+                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage || !aiProvider || (isTextLed && !vsTextContent.trim())} variant="primary" size="lg" className="w-full">
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
                     </Button>
+                    {isTextLed && !vsTextContent.trim() && (
+                      <p className="text-[10px] text-red-500 text-center mt-1 font-semibold">Missing required Text Content for Quote Card format</p>
+                    )}
                   </div>
-                  {!aiProvider && <p className="text-xs text-red-500 text-center">No AI provider configured.</p>}
-                  {aiLastError && <p className="text-xs text-red-500 text-center">{aiLastError}</p>}
+                  {!aiProvider && <p className="text-xs text-red-500 text-center mt-2">No AI provider configured.</p>}
+                  {aiLastError && <p className="text-xs text-red-500 text-center mt-2">{aiLastError}</p>}
                 </div>
 
               {/* Structured Visual Brief Editor */}
-              <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 max-h-[80vh] overflow-y-auto text-xs">
-                <div className="flex justify-between items-center mb-4 border-b border-coh-gold/15 pb-2">
+              <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
+                <div className="flex justify-between items-center mb-2 border-b border-coh-gold/15 pb-2">
                   <h3 className="font-serif text-base font-bold text-coh-navy">Structured Visual Brief</h3>
                   {vsInputMode === 'Manual' && (
                     <button
@@ -6994,6 +7082,50 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 
                 {(vsInputMode === 'Imported' || showAdvancedBrief) ? (
                   <div className="space-y-4">
+                    
+                    {/* Validation UI */}
+                    {vsInputMode === 'Imported' && vsImportValidation && (
+                       <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2 flex flex-col gap-1">
+                          <div className="flex items-center justify-between">
+                             <span className="font-semibold text-blue-900">Brief Import Status</span>
+                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${vsImportValidation.recognized > 5 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                                {vsImportValidation.recognized}/{vsImportValidation.total} Fields Parsed
+                             </span>
+                          </div>
+                          {vsImportValidation.missing.length > 0 && (
+                            <p className="text-[10px] text-blue-700 italic">
+                               Unrecognized optional fields: {vsImportValidation.missing.join(', ')}
+                            </p>
+                          )}
+                       </div>
+                    )}
+                  
+                    {/* Text-led specific fields */}
+                    {isTextLed && (
+                      <div className="bg-coh-gold/10 p-3 rounded border border-coh-gold/30 mb-2">
+                         <div className="mb-3">
+                           <label className="block text-coh-navy font-bold mb-1 flex items-center gap-1">Text Content (Required) <span className="text-red-500">*</span></label>
+                           <textarea
+                             value={vsTextContent}
+                             onChange={(e) => setVsTextContent(e.target.value)}
+                             rows={3}
+                             placeholder="The exact quote or text to display on the card..."
+                             className="w-full bg-white border border-coh-gold/40 p-2 text-xs text-coh-navy rounded font-sans"
+                           />
+                         </div>
+                         <div>
+                           <label className="block text-coh-navy font-bold mb-1">Attribution / Nameplate (Optional)</label>
+                           <input
+                             type="text"
+                             value={vsAttribution}
+                             onChange={(e) => setVsAttribution(e.target.value)}
+                             placeholder="e.g. John Doe, CEO"
+                             className="w-full bg-white border border-coh-gold/40 p-2 text-xs text-coh-navy rounded font-sans"
+                           />
+                         </div>
+                      </div>
+                    )}
+
                     {[
                       { label: 'Visual Concept', value: vsConcept, setter: setVsConcept },
                       { label: 'Format Recommendation', value: vsFormat, setter: setVsFormat },
@@ -7004,6 +7136,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       { label: 'Key Visual Elements', value: vsElements, setter: setVsElements },
                       { label: 'What to Avoid', value: vsAvoid, setter: setVsAvoid },
                       { label: 'AI Image Prompt', value: vsAIPrompt, setter: setVsAIPrompt },
+                      { label: 'Negative Prompt', value: vsNegativePrompt, setter: setVsNegativePrompt },
                       { label: 'Designer Notes', value: vsNotes, setter: setVsNotes }
                     ].map(field => (
                       <div key={field.label}>
@@ -7085,7 +7218,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
           </div>
         
-</ErrorBoundary>)}
+</ErrorBoundary>)})()}
 
         {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
           <RevisionStudio

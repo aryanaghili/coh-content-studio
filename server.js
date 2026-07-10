@@ -272,6 +272,8 @@ app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
     let baseAvoid = '';
     let baseNotes = '';
     let baseAiPrompt = '';
+    let textContentInstructions = '';
+    let explicitNegativePrompt = '';
 
     if (promptBuildMode === 'Full' || promptBuildMode === 'Full + AI') {
       if (visualBrief?.concept) baseConcept = `Visual Concept: ${visualBrief.concept}\n`;
@@ -279,7 +281,20 @@ app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
       if (visualBrief?.mood) baseMood = `Mood/Atmosphere: ${visualBrief.mood}\n`;
       if (visualBrief?.composition) baseComposition = `Composition: ${visualBrief.composition}\n`;
       if (visualBrief?.palette) basePalette = `Color / Material Direction: ${visualBrief.palette}\n`;
-      if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography} (Note: Typography and layout notes are for downstream graphic design. Do NOT generate large readable text, headlines, captions, or slogans inside the image unless specifically requested below.)\n`;
+      
+      // Handle Typography and Text Content strictly
+      if (visualBrief?.textContent && visualBrief.textContent.trim()) {
+        textContentInstructions = `CRITICAL REQUIREMENT - You MUST generate an image containing this exact text:\n"${visualBrief.textContent}"\n`;
+        if (visualBrief.attribution && visualBrief.attribution.trim()) {
+          textContentInstructions += `Also include this attribution/nameplate text:\n"${visualBrief.attribution}"\n`;
+        }
+        textContentInstructions += `Ensure the text is highly legible, prominent, and perfectly spelled. Treat this as a typographic or quote card design.\n`;
+        
+        if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography}\n`;
+      } else {
+        if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography} (Note: Typography and layout notes are for downstream graphic design. Do NOT generate large readable text, headlines, captions, or slogans inside the image unless specifically requested below.)\n`;
+      }
+      
       if (visualBrief?.elements) baseElements = `Key Visual Elements: ${visualBrief.elements}\n`;
       if (visualBrief?.avoid) baseAvoid = `Negative Prompt (Avoid these completely): ${visualBrief.avoid}\n`;
       if (visualBrief?.notes) baseNotes = `Designer Notes: ${visualBrief.notes}\n`;
@@ -287,9 +302,10 @@ app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
     
     if (promptBuildMode === 'AI Only' || promptBuildMode === 'Full + AI') {
       if (visualBrief?.aiPrompt) baseAiPrompt = `\nSpecific AI Prompt Instructions: ${visualBrief.aiPrompt}\n`;
+      if (visualBrief?.negativePrompt) explicitNegativePrompt = `\nExplicit Negative Prompt (DO NOT INCLUDE): ${visualBrief.negativePrompt}\n`;
     }
 
-    let corePrompt = baseConcept + baseFormat + baseMood + baseComposition + basePalette + baseTypography + baseElements + baseAvoid + baseNotes + baseAiPrompt;
+    let corePrompt = textContentInstructions + baseConcept + baseFormat + baseMood + baseComposition + basePalette + baseTypography + baseElements + baseAvoid + baseNotes + baseAiPrompt + explicitNegativePrompt;
 
     // 2. Handle Manual Prompts vs Structured Prompts
     if (inputMode === 'Manual' && prompt) {
