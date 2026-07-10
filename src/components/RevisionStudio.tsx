@@ -293,11 +293,10 @@ export function RevisionStudio({
     <div className="page-shell">
       <div className="bg-white border border-coh-gold/20 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
         <div>
-          <h2 className="text-coh-navy font-serif text-lg font-semibold flex items-center gap-2">
-            <Wand2 size={18} className="text-coh-gold" />
+          <h2 className="page-title">
             Revision Studio
           </h2>
-          <p className="text-xs text-coh-navy/60 font-sans">
+          <p className="page-subtitle">
             Refine, adapt, and translate content across your ecosystem.
           </p>
         </div>

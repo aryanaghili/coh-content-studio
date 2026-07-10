@@ -1047,10 +1047,10 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       {/* Header & Action Bar */}
       <div className="bg-white border-b border-coh-gold/20 p-6 shrink-0 flex justify-between items-center">
         <div>
-          <h1 className="font-serif text-2xl text-coh-navy flex items-center gap-2">
-            <Calendar className="text-coh-gold" size={24}/> Editorial Calendar Studio
-          </h1>
-          <p className="text-sm text-coh-navy/60 mt-1">Strategic content engine powered by Operating Core constraints.</p>
+          <h2 className="page-title">
+            Editorial Calendar Studio
+          </h2>
+          <p className="page-subtitle">Strategic content engine powered by Operating Core constraints.</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-3">

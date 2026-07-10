@@ -4390,7 +4390,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
-      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-85 max-w-[85vw] border-r border-coh-gold/30 bg-coh-navy text-coh-cream flex flex-col justify-between p-6 md:p-8 shrink-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-85 max-w-[85vw] border-r border-coh-gold/30 bg-coh-navy text-coh-cream flex flex-col justify-between p-6 md:p-8 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Mobile close button */}
         <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-coh-gold hover:text-coh-cream">
           <X size={24} />
@@ -4605,9 +4605,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </p>
             </div>
 
-            <div className="grid grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Input Form Column */}
-              <div className="col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
+              <div className="col-span-1 lg:col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
                 <h3 className="font-serif text-base font-bold text-coh-navy border-b border-coh-gold/15 pb-2">
                   New Exploration
                 </h3>
@@ -4716,7 +4716,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </button>
               </div>
 
-              <div className="col-span-8 space-y-6">
+              <div className="col-span-1 lg:col-span-8 space-y-6">
                 {generatedIdeas.length > 0 ? (
                   <div className="space-y-6">
                     {/* Unique Categories derived from the list */}
@@ -5455,10 +5455,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {/* Three Panel Layout */}
-            <div className="grid grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* PANEL 1: BRIEF */}
-              <div className="col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
+              <div className="col-span-1 lg:col-span-4 bg-white border border-coh-gold/20 p-5 rounded shadow-sm space-y-4 text-xs">
                 
                 {creationMode === 'simple' ? (
                   <div className="space-y-4">
@@ -6464,7 +6464,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="col-span-8 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
+              <div className="col-span-1 lg:col-span-8 bg-white border border-coh-gold/20 p-6 rounded shadow-sm space-y-6">
                 
                 <div className="border-b border-coh-gold/15 pb-2 flex justify-between items-center">
                   <h3 className="font-serif text-lg font-semibold text-coh-navy">

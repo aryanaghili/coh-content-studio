@@ -80,10 +80,10 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
     <div className="h-full flex flex-col bg-[#faf9f6]">
       <div className="bg-white border-b border-coh-gold/20 p-6 shrink-0 flex justify-between items-center">
         <div>
-          <h1 className="font-serif text-2xl text-coh-navy flex items-center gap-2">
-            <FolderOpen className="text-coh-gold" size={24}/> Calendar Library
-          </h1>
-          <p className="text-sm text-coh-navy/60 mt-1">Manage and load saved editorial calendars across different versions.</p>
+          <h2 className="page-title">
+            Calendar Library
+          </h2>
+          <p className="page-subtitle">Manage and load saved editorial calendars across different versions.</p>
         </div>
       </div>
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
