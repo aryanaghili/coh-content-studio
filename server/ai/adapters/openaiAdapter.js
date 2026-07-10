@@ -199,7 +199,7 @@ export async function generateImage(config, input) {
 
   console.log("Visual Studio image request", {
     selectedAspectRatio: input.aspectRatio,
-    mappedSize: size,
+    mappedSize: requestBody.size,
     provider: 'openai',
     model: requestedModel,
     quality: requestBody.quality,
