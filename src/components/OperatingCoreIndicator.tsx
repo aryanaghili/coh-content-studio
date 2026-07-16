@@ -29,7 +29,7 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
 
   return (
     <div className="inline-flex items-center gap-1.5 mb-2">
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coh-navy text-coh-cream border border-coh-navy/10 rounded-full text-[10px] font-semibold cursor-default group relative">
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coh-navy text-coh-cream border border-white/10 rounded-full text-[10px] font-semibold cursor-default group relative">
         <span className="text-coh-gold">🛡️</span>
         <span>Protected COH Foundation</span>
         
@@ -41,7 +41,7 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
       </div>
 
       {isCoreActive && (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coh-navy/5 border border-coh-navy/10 rounded-full text-[10px] font-semibold text-coh-navy/60 cursor-default group relative">
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-coh-navy/5 border border-white/10 rounded-full text-[10px] font-semibold text-white/60 cursor-default group relative">
           <Cpu size={12} className="text-coh-gold" />
           <span>Operating Core Active</span>
           

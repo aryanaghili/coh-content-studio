@@ -999,7 +999,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     if (!validationResult) return '';
     if (validationResult.hardBlockers.some(e => e.field === field)) return 'border-red-400';
     if (validationResult.sourceWarnings.some(e => e.field === field)) return 'border-amber-400';
-    if (validationResult.qualityWarnings.some(e => e.field === field)) return 'border-amber-200 text-amber-900 bg-amber-50';
+    if (validationResult.qualityWarnings.some(e => e.field === field)) return 'border-amber-200 text-amber-900 bg-amber-500/10 backdrop-blur-md';
     return '';
   };
 
@@ -1011,7 +1011,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDay = new Date(year, month - 1, 1).getDay();
     
-    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-gray-50/50 border border-gray-100 rounded min-h-[120px]" />);
+    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-white/5 backdrop-blur-md/50 border border-white/10 rounded min-h-[120px]" />);
     
     const days = Array.from({ length: daysInMonth }).map((_, i) => {
       const dayNum = i + 1;
@@ -1019,12 +1019,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       const dayItems = items.filter(item => item.date === dateStr);
       
       return (
-        <div key={dayNum} className={`bg-white border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-coh-gold/40 shadow-sm' : 'border-coh-gold/10'}`}>
-          <span className="text-[10px] font-bold text-coh-navy/40">{dayNum}</span>
+        <div key={dayNum} className={`bg-white/5 backdrop-blur-md border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-coh-gold/40 shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : 'border-white/10'}`}>
+          <span className="text-[10px] font-bold text-white/40">{dayNum}</span>
           {dayItems.map(item => (
-            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-coh-cream p-1.5 rounded border border-coh-gold/20 cursor-pointer hover:border-coh-gold transition flex flex-col gap-0.5">
+            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-white/10 backdrop-blur-sm p-1.5 rounded border border-white/10 cursor-pointer hover:border-coh-gold transition flex flex-col gap-0.5">
               <div className="text-[9px] uppercase font-bold text-coh-gold line-clamp-1">{item.channel}</div>
-              <div className="text-[10px] font-semibold text-coh-navy leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
+              <div className="text-[10px] font-semibold text-white leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
             </div>
           ))}
         </div>
@@ -1034,7 +1034,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     return (
       <div className="grid grid-cols-7 gap-2">
         {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => (
-          <div key={d} className="text-[10px] font-bold text-coh-navy/50 text-center uppercase py-2">{d}</div>
+          <div key={d} className="text-[10px] font-bold text-white/50 text-center uppercase py-2">{d}</div>
         ))}
         {blanks}
         {days}
@@ -1043,9 +1043,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#faf9f6]">
+    <div className="h-full flex flex-col bg-transparent">
       {/* Header & Action Bar */}
-      <div className="bg-white border-b border-coh-gold/20 p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-white/5 backdrop-blur-md border-b border-white/10 p-6 shrink-0 flex justify-between items-center">
         <div>
           <h2 className="page-title">
             Editorial Calendar Studio
@@ -1054,8 +1054,8 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-coh-navy/50 uppercase tracking-wider">
-              Status: <span className="text-coh-navy">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
+            <span className="text-[10px] font-bold text-white/50 uppercase tracking-wider">
+              Status: <span className="text-white">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
             </span>
             <Button onClick={onOpenLibrary} variant="outline" className="text-xs py-1.5 px-3">
               <Archive size={16} className="mr-1" /> Open Library
@@ -1067,7 +1067,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
           {items.length > 0 && (
             <div className="flex items-center gap-2">
               <select 
-                className="bg-white border border-coh-gold/20 text-coh-navy text-xs font-semibold px-2 py-1 rounded outline-none cursor-pointer hover:border-coh-gold/40 transition"
+                className="bg-white/5 backdrop-blur-md border border-white/10 text-white text-xs font-semibold px-2 py-1 rounded outline-none cursor-pointer hover:border-coh-gold/40 transition"
                 onChange={(e) => {
                   if (e.target.value) {
                     handleExport(e.target.value);
@@ -1091,10 +1091,10 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div className="flex flex-col gap-6 h-full pb-20">
           
           {/* Horizontal Controls Panel */}
-          <div className="bg-white border border-coh-gold/20 p-5 rounded shadow-sm shrink-0">
-            <div className="flex justify-between items-center mb-4 border-b border-coh-gold/10 pb-3">
-              <h3 className="font-serif text-xl font-bold text-coh-navy">Monthly Planning Parameters</h3>
-              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-coh-navy/60 hover:text-coh-navy flex items-center gap-1">
+          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] shrink-0">
+            <div className="flex justify-between items-center mb-4 border-b border-white/10 pb-3">
+              <h3 className="font-serif text-xl font-bold text-white">Monthly Planning Parameters</h3>
+              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-white/60 hover:text-white flex items-center gap-1">
                 <Settings2 size={14} /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
               </button>
             </div>
@@ -1103,11 +1103,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Timing & Intensity */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-coh-navy/60 mb-1 uppercase text-[10px]">Planning Month</label>
+                  <label className="block font-bold text-white/60 mb-1 uppercase text-[10px]">Planning Month</label>
                   <input type="month" className="form-control p-1.5 w-full text-sm font-semibold" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block font-bold text-coh-navy/60 mb-1 uppercase text-[10px]">Publishing Intensity</label>
+                  <label className="block font-bold text-white/60 mb-1 uppercase text-[10px]">Publishing Intensity</label>
                   <select className="form-control p-1.5 w-full" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
                     <option value="Light: 4-6 items">Light: 4-6 items</option>
                     <option value="Moderate: 8-12 items">Moderate: 8-12 items</option>
@@ -1118,15 +1118,15 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Strategic Focus */}
-              <div className="space-y-4 bg-coh-cream/30 p-3 rounded border border-coh-gold/10">
+              <div className="space-y-4 bg-white/10 backdrop-blur-sm/30 p-3 rounded border border-white/10">
                 <div>
-                  <label className="block font-bold text-coh-navy mb-1 uppercase text-[10px]">Primary Focus</label>
+                  <label className="block font-bold text-white mb-1 uppercase text-[10px]">Primary Focus</label>
                   <select className="form-control p-1.5 w-full border-coh-gold/50 font-bold" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-coh-navy/70 mb-1 uppercase text-[10px]">Secondary Focus (Layering)</label>
+                  <label className="block font-bold text-white/70 mb-1 uppercase text-[10px]">Secondary Focus (Layering)</label>
                   <select className="form-control p-1.5 w-full" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
@@ -1144,13 +1144,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Audience */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-coh-navy mb-1 uppercase text-[10px]">Primary Audience</label>
+                  <label className="block font-bold text-white mb-1 uppercase text-[10px]">Primary Audience</label>
                   <select className="form-control p-1.5 w-full" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-coh-navy/70 mb-1 uppercase text-[10px]">Secondary Audience</label>
+                  <label className="block font-bold text-white/70 mb-1 uppercase text-[10px]">Secondary Audience</label>
                   <select className="form-control p-1.5 w-full" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
                     <option value="None">None</option>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
@@ -1160,14 +1160,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
               {/* Channels */}
               <div>
-                <label className="block font-bold text-coh-navy/60 mb-2 uppercase text-[10px]">Active Channels</label>
+                <label className="block font-bold text-white/60 mb-2 uppercase text-[10px]">Active Channels</label>
                 <div className="flex flex-wrap gap-2">
                   {CHANNELS.map(c => (
                     <button key={c} onClick={() => {
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-coh-navy text-coh-gold shadow-sm' : 'bg-coh-cream text-coh-navy border border-coh-gold/30 hover:border-coh-gold'}`}
+                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-coh-navy text-coh-gold shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : 'bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:border-coh-gold'}`}
                     >
                       {c}
                     </button>
@@ -1177,13 +1177,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {showAdvancedSettings && (
-              <div className="mt-4 p-4 border border-coh-navy/10 rounded bg-gray-50">
-                <h4 className="text-xs font-bold text-coh-navy uppercase tracking-wider mb-3">Channel Audience Map</h4>
-                <p className="text-xs text-coh-navy/60 mb-4">Override the primary audience on specific active channels.</p>
+              <div className="mt-4 p-4 border border-white/10 rounded bg-white/5 backdrop-blur-md">
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3">Channel Audience Map</h4>
+                <p className="text-xs text-white/60 mb-4">Override the primary audience on specific active channels.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cycle.activeChannels.map(c => (
-                    <div key={c} className="flex items-center gap-3 bg-white p-2 rounded border border-gray-200 shadow-sm">
-                      <div className="w-24 text-xs font-semibold text-coh-navy shrink-0">{c}</div>
+                    <div key={c} className="flex items-center gap-3 bg-white/5 backdrop-blur-md p-2 rounded border border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                      <div className="w-24 text-xs font-semibold text-white shrink-0">{c}</div>
                       <select className="form-control p-1 text-xs w-full" 
                         value={cycle.channelAudienceMap[c]?.primary || cycle.primaryAudience}
                         onChange={(e) => {
@@ -1204,9 +1204,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-coh-gold/10">
-              <div className="flex items-center border border-coh-gold/30 rounded overflow-hidden shadow-sm">
-                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-coh-gold/20 px-6 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-white/10">
+              <div className="flex items-center border border-white/20 rounded overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-white/10 px-6 py-2.5">
                   <RefreshCw size={16} className="mr-2 inline" /> {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 <select 
@@ -1242,7 +1242,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             <div className="col-span-1 lg:col-span-8 flex flex-col h-full gap-6">
               {/* Monthly Editorial Arc */}
               {arc && items.length > 0 && (
-                <div className="bg-coh-navy text-coh-cream p-5 rounded shadow-sm shrink-0">
+                <div className="bg-coh-navy text-coh-cream p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] shrink-0">
                   <h3 className="font-serif text-lg font-bold text-coh-gold mb-3 flex items-center gap-2">
                     <LayoutList size={18} /> Monthly Editorial Arc
                   </h3>
@@ -1276,41 +1276,41 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               )}
 
               {/* Calendar Canvas */}
-              <div className="flex flex-col flex-1 bg-white border border-coh-gold/20 rounded shadow-sm min-h-[400px]">
-                <div className="border-b border-coh-gold/20 p-4 bg-coh-cream/30 flex justify-between items-center shrink-0">
-                  <h3 className="font-serif text-xl font-bold text-coh-navy">Calendar Canvas</h3>
-                  <div className="flex gap-1 bg-white border border-coh-gold/30 rounded p-0.5">
-                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-coh-cream text-coh-navy shadow-sm' : 'text-coh-navy/50 hover:text-coh-navy'}`}><LayoutList size={16} /></button>
-                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-coh-cream text-coh-navy shadow-sm' : 'text-coh-navy/50 hover:text-coh-navy'}`}><Calendar size={16} /></button>
+              <div className="flex flex-col flex-1 bg-white/5 backdrop-blur-md border border-white/10 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] min-h-[400px]">
+                <div className="border-b border-white/10 p-4 bg-white/10 backdrop-blur-sm/30 flex justify-between items-center shrink-0">
+                  <h3 className="font-serif text-xl font-bold text-white">Calendar Canvas</h3>
+                  <div className="flex gap-1 bg-white/5 backdrop-blur-md border border-white/20 rounded p-0.5">
+                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-white/10 backdrop-blur-sm text-white shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : 'text-white/50 hover:text-white'}`}><LayoutList size={16} /></button>
+                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-white/10 backdrop-blur-sm text-white shadow-[0_4px_30px_rgba(0,0,0,0.1)]' : 'text-white/50 hover:text-white'}`}><Calendar size={16} /></button>
                   </div>
                 </div>
 
                 <div className="p-4 flex-1 overflow-y-auto">
                   {items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-coh-navy/40">
+                    <div className="flex flex-col items-center justify-center h-full text-white/40">
                       <Calendar size={48} className="mb-4 opacity-50" />
                       <p>Generate a calendar to see your items.</p>
                     </div>
                   ) : viewMode === 'Month' ? renderMonthView() : (
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="bg-white border border-coh-gold/30 rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
+                        <div key={item.id} className="bg-white/5 backdrop-blur-md border border-white/20 rounded p-4 flex gap-4 items-center shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:shadow transition group">
                           <div className="flex-1 flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <div className="flex flex-col gap-1 w-full md:w-auto shrink-0 min-w-[150px]">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-coh-navy bg-coh-cream px-2 py-0.5 rounded">{item.date}</span>
+                                <span className="text-xs font-bold text-white bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded">{item.date}</span>
                                 <span className="text-[10px] uppercase font-bold text-coh-gold">{item.channel}</span>
                               </div>
-                              <span className="text-sm font-semibold text-coh-navy">{item.contentUnitType}</span>
+                              <span className="text-sm font-semibold text-white">{item.contentUnitType}</span>
                             </div>
                             
-                            <div className="flex-1 text-xs text-coh-navy/70 border-l border-coh-gold/20 pl-4">
-                              <p className="font-bold mb-0.5 text-coh-navy">{item.editorialThesis}</p>
-                              <p className="line-clamp-1 italic text-coh-navy/50">{item.reasonForRecommendation}</p>
+                            <div className="flex-1 text-xs text-white/70 border-l border-white/10 pl-4">
+                              <p className="font-bold mb-0.5 text-white">{item.editorialThesis}</p>
+                              <p className="line-clamp-1 italic text-white/50">{item.reasonForRecommendation}</p>
                             </div>
                           </div>
 
-                          <button className="p-2 text-coh-gold hover:text-coh-navy bg-coh-cream rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
+                          <button className="p-2 text-coh-gold hover:text-white bg-white/10 backdrop-blur-sm rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
                             <ChevronRight size={20} />
                           </button>
                         </div>
@@ -1323,16 +1323,16 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
             {/* Review Panel */}
             <div className="col-span-1 lg:col-span-4 space-y-6 lg:overflow-y-auto lg:pr-2 pb-6 lg:max-h-full">
-              <div className="bg-white border border-coh-gold/20 rounded shadow-sm p-5 sticky top-0">
-                <h3 className="font-serif text-lg font-bold text-coh-navy mb-4 flex items-center gap-2">
+              <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] p-5 sticky top-0">
+                <h3 className="font-serif text-lg font-bold text-white mb-4 flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-coh-gold" /> Calendar Review
                 </h3>
                 
                 <div className="mb-6">
                   <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold w-full justify-center border ${
-                    review.status === 'Strong' ? 'bg-green-50 text-green-700 border-green-200' : 
+                    review.status === 'Strong' ? 'bg-green-500/10 backdrop-blur-md text-green-700 border-green-200' : 
                     review.status === 'Needs improvement' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
-                    'bg-red-50 text-red-700 border-red-200'
+                    'bg-red-500/10 backdrop-blur-md text-red-700 border-red-200'
                   }`}>
                     {review.status === 'Strong' && <CheckCircle2 size={14}/>}
                     {review.status !== 'Strong' && <AlertTriangle size={14}/>}
@@ -1344,25 +1344,25 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   {review.strengths.length > 0 && (
                     <div>
                       <h4 className="font-bold text-green-700 text-xs uppercase mb-2 flex items-center gap-1"><Plus size={12}/> Strengths</h4>
-                      <ul className="space-y-2">{review.strengths.map((s, i) => <li key={i} className="text-coh-navy/80 text-xs pl-3 border-l-2 border-green-300">{s}</li>)}</ul>
+                      <ul className="space-y-2">{review.strengths.map((s, i) => <li key={i} className="text-white/80 text-xs pl-3 border-l-2 border-green-300">{s}</li>)}</ul>
                     </div>
                   )}
                   {review.gaps.length > 0 && (
                     <div>
                       <h4 className="font-bold text-yellow-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Gaps</h4>
-                      <ul className="space-y-2">{review.gaps.map((g, i) => <li key={i} className="text-coh-navy/80 text-xs pl-3 border-l-2 border-yellow-300">{g}</li>)}</ul>
+                      <ul className="space-y-2">{review.gaps.map((g, i) => <li key={i} className="text-white/80 text-xs pl-3 border-l-2 border-yellow-300">{g}</li>)}</ul>
                     </div>
                   )}
                   {review.risks.length > 0 && (
                     <div>
                       <h4 className="font-bold text-red-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Risks / Repetition</h4>
-                      <ul className="space-y-2">{review.risks.map((r, i) => <li key={i} className="text-coh-navy/80 text-xs pl-3 border-l-2 border-red-300">{r}</li>)}</ul>
+                      <ul className="space-y-2">{review.risks.map((r, i) => <li key={i} className="text-white/80 text-xs pl-3 border-l-2 border-red-300">{r}</li>)}</ul>
                     </div>
                   )}
                   {review.recommendedFixes.length > 0 && (
                     <div>
                       <h4 className="font-bold text-coh-gold text-xs uppercase mb-2 flex items-center gap-1"><Settings2 size={12}/> Recommendations</h4>
-                      <ul className="space-y-2">{review.recommendedFixes.map((r, i) => <li key={i} className="text-coh-navy/80 text-xs pl-3 border-l-2 border-coh-gold/50">{r}</li>)}</ul>
+                      <ul className="space-y-2">{review.recommendedFixes.map((r, i) => <li key={i} className="text-white/80 text-xs pl-3 border-l-2 border-coh-gold/50">{r}</li>)}</ul>
                     </div>
                   )}
                 </div>
@@ -1376,7 +1376,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       {/* EXTENDED EDITORIAL BRIEF MODAL */}
       {selectedItem && (
         <div className="fixed inset-0 bg-coh-navy/80 z-[100] flex justify-center items-start md:items-center p-0 md:p-4 overflow-y-auto">
-          <div className="bg-white w-full h-full md:h-auto md:max-w-4xl md:rounded-lg shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
+          <div className="bg-white/5 backdrop-blur-md w-full h-full md:h-auto md:max-w-4xl md:rounded-lg shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
             <div className="bg-coh-navy p-4 flex justify-between items-center text-white shrink-0">
               <h3 className="font-serif text-lg font-bold flex items-center gap-2">
                 <FileText size={18} className="text-coh-gold"/> Calendar Item Details
@@ -1387,7 +1387,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             <div className="p-4 md:p-6 overflow-y-auto flex-1 text-sm space-y-6">
               
               {validationResult && validationResult.hardBlockers.length > 0 && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                <div className="bg-red-500/10 backdrop-blur-md border-l-4 border-red-500 p-4 rounded">
                   <div className="flex items-center gap-2 text-red-800 font-bold mb-2">
                     <AlertTriangle size={16} /> Action Required
                   </div>
@@ -1400,7 +1400,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
               )}
               {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length > 0 && (
-                <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded">
+                <div className="bg-amber-500/10 backdrop-blur-md border-l-4 border-amber-500 p-4 rounded">
                   <div className="flex items-center gap-2 text-amber-800 font-bold mb-2">
                     <AlertTriangle size={16} /> Source Warning
                   </div>
@@ -1413,7 +1413,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
               )}
               {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length === 0 && validationResult.qualityWarnings.length > 0 && (
-                <div className="bg-gray-100 border-l-4 border-gray-400 p-4 rounded">
+                <div className="bg-white/10 backdrop-blur-md border-l-4 border-white/20 p-4 rounded">
                   <div className="flex items-center gap-2 text-gray-800 font-bold mb-2">
                     <AlertTriangle size={16} /> Quality Warning
                   </div>
@@ -1424,47 +1424,47 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* 1. Scheduling */}
-                <div className="space-y-3 bg-gray-50 p-4 rounded border border-gray-200">
-                  <h4 className="text-xs font-bold uppercase text-coh-navy">1. Scheduling</h4>
+                <div className="space-y-3 bg-white/5 backdrop-blur-md p-4 rounded border border-white/10">
+                  <h4 className="text-xs font-bold uppercase text-white">1. Scheduling</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Status</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.status} onChange={e => handleLocalDraftUpdate({status: e.target.value})}><option>Proposed</option><option>Needs Source</option><option>Needs review</option><option>Approved</option><option>Draft Handoff</option><option>Drafting</option></select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Channel</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.channel} onChange={e => handleLocalDraftUpdate({channel: e.target.value})}>{CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Format</label><input type="text" className="form-control p-1.5 w-full text-xs" value={selectedItem.format} onChange={e => handleLocalDraftUpdate({format: e.target.value})} /></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Status</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.status} onChange={e => handleLocalDraftUpdate({status: e.target.value})}><option>Proposed</option><option>Needs Source</option><option>Needs review</option><option>Approved</option><option>Draft Handoff</option><option>Drafting</option></select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Channel</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.channel} onChange={e => handleLocalDraftUpdate({channel: e.target.value})}>{CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Format</label><input type="text" className="form-control p-1.5 w-full text-xs" value={selectedItem.format} onChange={e => handleLocalDraftUpdate({format: e.target.value})} /></div>
                   </div>
                 </div>
 
                 {/* 2. Strategy */}
-                <div className="space-y-3 bg-gray-50 p-4 rounded border border-gray-200">
-                  <h4 className="text-xs font-bold uppercase text-coh-navy">2. Strategy</h4>
+                <div className="space-y-3 bg-white/5 backdrop-blur-md p-4 rounded border border-white/10">
+                  <h4 className="text-xs font-bold uppercase text-white">2. Strategy</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Unit Type</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.contentUnitType} onChange={e => handleLocalDraftUpdate({contentUnitType: e.target.value})}>{UNIT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Pillar</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.pillar} onChange={e => handleLocalDraftUpdate({pillar: e.target.value})}>{PILLARS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Audience</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.audience} onChange={e => handleLocalDraftUpdate({audience: e.target.value})}>{AUDIENCES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Adoption Track</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.adoptionTrack} onChange={e => handleLocalDraftUpdate({adoptionTrack: e.target.value})}>{ADOPTION_TRACKS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Unit Type</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.contentUnitType} onChange={e => handleLocalDraftUpdate({contentUnitType: e.target.value})}>{UNIT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Pillar</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.pillar} onChange={e => handleLocalDraftUpdate({pillar: e.target.value})}>{PILLARS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Audience</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.audience} onChange={e => handleLocalDraftUpdate({audience: e.target.value})}>{AUDIENCES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Adoption Track</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.adoptionTrack} onChange={e => handleLocalDraftUpdate({adoptionTrack: e.target.value})}>{ADOPTION_TRACKS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
                   </div>
                 </div>
               </div>
 
               {/* 3. Editorial Brief */}
-              <div className="space-y-3 border border-coh-gold/20 p-4 rounded">
+              <div className="space-y-3 border border-white/10 p-4 rounded">
                 <h4 className="text-xs font-bold uppercase text-coh-gold">3. Editorial Brief</h4>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${getErrorClass('title')}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${getErrorClass('editorialThesis')}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${getErrorClass('title')}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${getErrorClass('editorialThesis')}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('coreMessage')}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('audienceInsight')}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('coreMessage')}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('audienceInsight')}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
                 </div>
-                <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${getErrorClass('suggestedCTA')}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${getErrorClass('suggestedCTA')}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 4. Evidence & Safety */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-coh-gold border-b border-coh-gold/20 pb-1">4. Evidence and Safety</h4>
+                  <h4 className="text-xs font-bold uppercase text-coh-gold border-b border-white/10 pb-1">4. Evidence and Safety</h4>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Source Basis</label>
-                    <select className="form-control p-1.5 w-full text-xs font-bold text-coh-navy" value={selectedItem.sourceBasis} onChange={e => handleLocalDraftUpdate({sourceBasis: e.target.value})}>
+                    <label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Source Basis</label>
+                    <select className="form-control p-1.5 w-full text-xs font-bold text-white" value={selectedItem.sourceBasis} onChange={e => handleLocalDraftUpdate({sourceBasis: e.target.value})}>
                       <option>Operating Core-backed</option>
                       <option>Core Document-backed</option>
                       <option>Source Library-backed</option>
@@ -1474,28 +1474,28 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                       <option>Not source-ready</option>
                     </select>
                   </div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('proofNeeded')}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-50 ${getErrorClass('riskToAvoid')}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('proofNeeded')}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-500/10 backdrop-blur-md ${getErrorClass('riskToAvoid')}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
                 </div>
 
                 {/* 5. Creative Direction */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-coh-gold border-b border-coh-gold/20 pb-1">5. Creative Direction</h4>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('visualDirection')}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-coh-navy/50 mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('draftInstruction')}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
+                  <h4 className="text-xs font-bold uppercase text-coh-gold border-b border-white/10 pb-1">5. Creative Direction</h4>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('visualDirection')}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-white/50 mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('draftInstruction')}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
                 </div>
               </div>
 
               {/* 6. Recommendation Logic */}
-              <div className="bg-coh-cream/50 p-4 rounded border border-coh-gold/20">
-                <h4 className="text-xs font-bold uppercase text-coh-navy mb-2">6. Recommendation Logic</h4>
-                <p className="text-xs text-coh-navy/80 italic">{selectedItem.reasonForRecommendation}</p>
+              <div className="bg-white/10 backdrop-blur-sm/50 p-4 rounded border border-white/10">
+                <h4 className="text-xs font-bold uppercase text-white mb-2">6. Recommendation Logic</h4>
+                <p className="text-xs text-white/80 italic">{selectedItem.reasonForRecommendation}</p>
               </div>
             </div>
 
-            <div className="p-4 border-t border-coh-gold/20 flex flex-col md:flex-row justify-between gap-4 bg-gray-50 shrink-0">
+            <div className="p-4 border-t border-white/10 flex flex-col md:flex-row justify-between gap-4 bg-white/5 backdrop-blur-md shrink-0">
               <div className="flex gap-2">
-                <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationResult(null); }}>
+                <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-500/10 backdrop-blur-md border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationResult(null); }}>
                   <Trash2 size={16} className="inline mr-1"/> {items.find(i => i.id === selectedItem.id) ? 'Delete' : 'Cancel'}
                 </Button>
                 {items.find(i => i.id === selectedItem.id) && (

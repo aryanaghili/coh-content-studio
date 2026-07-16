@@ -183,12 +183,10 @@ export default function OperatingCoreAdmin({
   if (!isUnlocked) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
-        <div className="bg-white rounded-lg p-8 shadow-sm border border-neutral-200 max-w-md w-full text-center">
-          <div className="mx-auto w-12 h-12 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-            <Lock className="w-6 h-6 text-neutral-600" />
-          </div>
-          <h2 className="text-xl font-serif text-neutral-900 mb-2">Operating Core Locked</h2>
-          <p className="text-sm text-neutral-500 mb-6">
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] max-w-md w-full text-center">
+          <Lock className="mx-auto mb-4 text-coh-gold" size={32} />
+          <h2 className="text-xl font-serif text-white mb-2">Operating Core Locked</h2>
+          <p className="text-sm text-white/70 mb-6">
             The Operating Core is the foundational brain of COH Content Studio. It is restricted to superuser administrators to prevent accidental overwrites of strategic guardrails.
           </p>
           <form onSubmit={handleUnlock} className="flex flex-col gap-3">
@@ -263,16 +261,16 @@ export default function OperatingCoreAdmin({
   return (
     <div className="space-y-6 animate-fadeIn pb-24">
       {/* Header */}
-      <div className="border-b border-coh-gold/20 pb-6 flex justify-between items-start">
-        <div>
-          <h2 className="font-serif text-3xl font-normal text-coh-navy">Operating Core</h2>
-          <p className="text-sm text-coh-navy/60 font-sans mt-1">
+      <div className="border-b border-white/10 pb-6 flex justify-between items-start">
+        <div className="mb-6">
+          <h2 className="page-title">Operating Core</h2>
+          <p className="page-subtitle">
             The single source of truth for strategy, audience, voice, visual DNA, and guardrails across all workspaces.
           </p>
         </div>
         <div className="flex flex-col items-end gap-3">
           <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-coh-navy/60">Core Status:</span>
+            <span className="text-xs font-semibold text-white/60">Core Status:</span>
             <button
               onClick={() => setDraftCore(prev => ({ ...prev, active: !prev.active }))}
               className={`px-3 py-1 rounded text-xs font-bold font-mono transition-colors ${
@@ -282,26 +280,26 @@ export default function OperatingCoreAdmin({
               {draftCore.active ? 'ACTIVE' : 'INACTIVE'}
             </button>
           </div>
-          <div className="flex items-center gap-2 bg-coh-gold/10 px-3 py-2 rounded border border-coh-gold/30 text-xs text-coh-navy font-mono mt-2 mb-2 w-fit">
+          <div className="flex items-center gap-2 bg-coh-gold/10 px-3 py-2 rounded border border-white/20 text-xs text-white font-mono mt-2 mb-2 w-fit">
             <Lock size={14} className="text-coh-gold"/> <span className="font-bold uppercase">Protected COH Kernel:</span> <span className="text-green-700 font-bold">ALWAYS ON</span>
           </div>
           <div className="flex gap-2">
-            <button onClick={onReset} className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-1 px-3 py-1.5 text-xs border border-coh-gold/30 text-coh-navy/60 hover:bg-coh-cream rounded transition-colors action-button">
+            <button onClick={onReset} className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-1 px-3 py-1.5 text-xs border border-white/20 text-white/60 hover:bg-white/10 backdrop-blur-sm rounded transition-colors action-button">
               <RefreshCw size={12} /> Reset to Defaults
             </button>
             <button onClick={handleSave} className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-1 px-4 py-1.5 bg-coh-navy text-white text-sm font-semibold rounded hover:bg-coh-navy/90 transition-colors action-button">
               <Save size={14} /> Save Core
             </button>
           </div>
-          {draftCore.lastUpdated && <span className="text-[10px] text-coh-navy/40 font-mono">Last updated: {new Date(draftCore.lastUpdated).toLocaleString()}</span>}
+          {draftCore.lastUpdated && <span className="text-[10px] text-white/40 font-mono">Last updated: {new Date(draftCore.lastUpdated).toLocaleString()}</span>}
         </div>
       </div>
 
       <div className="flex gap-6">
         {/* Sidebar Tabs */}
         <div className="w-1/4 space-y-1">
-          <div className="mb-4 p-3 bg-coh-gold/5 rounded border border-coh-gold/15 text-xs">
-            <h4 className="font-bold text-coh-navy mb-2 border-b border-coh-gold/15 pb-1">Completeness</h4>
+          <div className="mb-4 p-3 bg-coh-gold/5 rounded border border-white/10 text-xs">
+            <h4 className="font-bold text-white mb-2 border-b border-white/10 pb-1">Completeness</h4>
             <ul className="space-y-1 font-mono text-[9px]">
               <li className="flex justify-between"><span>Core Passport</span><span className={completeness.passport === 'Strong' ? 'text-green-600' : 'text-red-500'}>{completeness.passport}</span></li>
               <li className="flex justify-between"><span>Strategy Kernel</span><span className={completeness.kernel === 'Strong' ? 'text-green-600' : 'text-red-500'}>{completeness.kernel}</span></li>
@@ -314,28 +312,28 @@ export default function OperatingCoreAdmin({
             </ul>
           </div>
           
-          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Documents</button>
-          <button onClick={() => setActiveTab('passport')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'passport' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Core Passport</button>
-          <button onClick={() => setActiveTab('kernel')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'kernel' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Strategy Kernel</button>
-          <button onClick={() => setActiveTab('audiences')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'audiences' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Audiences</button>
-          <button onClick={() => setActiveTab('channels')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'channels' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Channels</button>
-          <button onClick={() => setActiveTab('claims')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'claims' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Claims</button>
-          <button onClick={() => setActiveTab('voice')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'voice' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Voice</button>
-          <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Visual</button>
-          <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-coh-navy/70 hover:bg-coh-cream'}`}>Revision</button>
+          <button onClick={() => setActiveTab('evidence')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'evidence' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Core Documents</button>
+          <button onClick={() => setActiveTab('passport')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'passport' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Core Passport</button>
+          <button onClick={() => setActiveTab('kernel')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'kernel' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Strategy Kernel</button>
+          <button onClick={() => setActiveTab('audiences')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'audiences' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Audiences</button>
+          <button onClick={() => setActiveTab('channels')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'channels' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Channels</button>
+          <button onClick={() => setActiveTab('claims')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'claims' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Claims</button>
+          <button onClick={() => setActiveTab('voice')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'voice' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Voice</button>
+          <button onClick={() => setActiveTab('visual')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'visual' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Visual</button>
+          <button onClick={() => setActiveTab('revision')} className={`w-full text-left px-3 py-2 text-sm rounded transition-colors ${activeTab === 'revision' ? 'bg-coh-navy text-white font-semibold' : 'text-white/70 hover:bg-white/10 backdrop-blur-sm'}`}>Revision</button>
           <div className="h-px bg-coh-gold/15 my-2"></div>
         </div>
 
         {/* Content Area */}
-        <div className="w-3/4 bg-white p-6 rounded shadow-sm border border-coh-gold/10 h-[600px] overflow-y-auto">
+        <div className="w-3/4 bg-white/5 backdrop-blur-md p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] border border-white/10 h-[600px] overflow-y-auto">
           {/* CORE PASSPORT */}
           {activeTab === 'passport' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Core Passport</h3>
-              <p className="text-xs text-coh-navy/60 mb-4">The quick identity layer of the system. Tells the Operating Core who we are before applying deeper rules.</p>
+              <h3 className="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">Core Passport</h3>
+              <p className="text-xs text-white/60 mb-4">The quick identity layer of the system. Tells the Operating Core who we are before applying deeper rules.</p>
               
               {draftCore.corePassport.organizationName.toLowerCase() !== 'climate opera haus' && (
-                <div className="bg-red-50 border border-red-200 text-red-800 text-sm p-4 rounded mb-6 flex items-start gap-3">
+                <div className="bg-red-500/10 backdrop-blur-md border border-red-200 text-red-800 text-sm p-4 rounded mb-6 flex items-start gap-3">
                   <div className="text-red-500 mt-0.5">⚠️</div>
                   <div>
                     <strong className="block mb-1">Generic Repurposing Warning</strong>
@@ -346,44 +344,44 @@ export default function OperatingCoreAdmin({
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Organization Name</label>
-                  <input value={draftCore.corePassport.organizationName} onChange={e => updatePassportField('organizationName', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Organization Name</label>
+                  <input value={draftCore.corePassport.organizationName} onChange={e => updatePassportField('organizationName', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Category</label>
-                  <input value={draftCore.corePassport.category} onChange={e => updatePassportField('category', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Category</label>
+                  <input value={draftCore.corePassport.category} onChange={e => updatePassportField('category', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">One-Line Definition</label>
-                  <textarea value={draftCore.corePassport.oneLineDefinition} onChange={e => updatePassportField('oneLineDefinition', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">One-Line Definition</label>
+                  <textarea value={draftCore.corePassport.oneLineDefinition} onChange={e => updatePassportField('oneLineDefinition', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-red-700/80 mb-1">What We Are Not</label>
-                  <textarea value={draftCore.corePassport.whatWeAreNot} onChange={e => updatePassportField('whatWeAreNot', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-16" />
+                  <textarea value={draftCore.corePassport.whatWeAreNot} onChange={e => updatePassportField('whatWeAreNot', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Core Distinction</label>
-                  <textarea value={draftCore.corePassport.coreDistinction} onChange={e => updatePassportField('coreDistinction', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Core Distinction</label>
+                  <textarea value={draftCore.corePassport.coreDistinction} onChange={e => updatePassportField('coreDistinction', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Operating Logic</label>
-                  <textarea value={draftCore.corePassport.operatingLogic} onChange={e => updatePassportField('operatingLogic', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Operating Logic</label>
+                  <textarea value={draftCore.corePassport.operatingLogic} onChange={e => updatePassportField('operatingLogic', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Current Strategic Phase</label>
-                  <textarea value={draftCore.corePassport.currentStrategicPhase} onChange={e => updatePassportField('currentStrategicPhase', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Current Strategic Phase</label>
+                  <textarea value={draftCore.corePassport.currentStrategicPhase} onChange={e => updatePassportField('currentStrategicPhase', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Primary Strategic Priorities</label>
-                  <textarea value={draftCore.corePassport.primaryStrategicPriorities} onChange={e => updatePassportField('primaryStrategicPriorities', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Primary Strategic Priorities</label>
+                  <textarea value={draftCore.corePassport.primaryStrategicPriorities} onChange={e => updatePassportField('primaryStrategicPriorities', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Default Communication Posture</label>
-                  <input value={draftCore.corePassport.defaultCommunicationPosture} onChange={e => updatePassportField('defaultCommunicationPosture', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Default Communication Posture</label>
+                  <input value={draftCore.corePassport.defaultCommunicationPosture} onChange={e => updatePassportField('defaultCommunicationPosture', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" />
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-bold text-red-700/80 mb-1">Never Collapse Into</label>
-                  <textarea value={draftCore.corePassport.neverCollapseInto} onChange={e => updatePassportField('neverCollapseInto', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-16" />
+                  <textarea value={draftCore.corePassport.neverCollapseInto} onChange={e => updatePassportField('neverCollapseInto', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-16" />
                 </div>
               </div>
             </div>
@@ -392,31 +390,31 @@ export default function OperatingCoreAdmin({
           {/* STRATEGY KERNEL */}
           {activeTab === 'kernel' && (
             <div className="space-y-6">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Strategy Kernel</h3>
-              <p className="text-xs text-coh-navy/60 mb-4">The deepest strategic logic inside the Operating Core.</p>
+              <h3 className="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">Strategy Kernel</h3>
+              <p className="text-xs text-white/60 mb-4">The deepest strategic logic inside the Operating Core.</p>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Positioning</label>
-                  <textarea value={draftCore.strategyKernel.positioning} onChange={e => updateKernelField('positioning', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Positioning</label>
+                  <textarea value={draftCore.strategyKernel.positioning} onChange={e => updateKernelField('positioning', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Strategic Ambition</label>
-                  <textarea value={draftCore.strategyKernel.strategicAmbition} onChange={e => updateKernelField('strategicAmbition', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Strategic Ambition</label>
+                  <textarea value={draftCore.strategyKernel.strategicAmbition} onChange={e => updateKernelField('strategicAmbition', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Value Proposition</label>
-                  <textarea value={draftCore.strategyKernel.valueProposition} onChange={e => updateKernelField('valueProposition', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Value Proposition</label>
+                  <textarea value={draftCore.strategyKernel.valueProposition} onChange={e => updateKernelField('valueProposition', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Proof Ladder</label>
-                  <textarea value={draftCore.strategyKernel.proofLadder} onChange={e => updateKernelField('proofLadder', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-24" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Proof Ladder</label>
+                  <textarea value={draftCore.strategyKernel.proofLadder} onChange={e => updateKernelField('proofLadder', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-24" />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-2 mt-4">
-                  <label className="block text-xs font-bold text-coh-navy/80">Internal Law / Non-Negotiables</label>
+                  <label className="block text-xs font-bold text-white/80">Internal Law / Non-Negotiables</label>
                   <button onClick={async () => {
                     setDraftCore(prev => ({
                       ...prev, strategyKernel: { ...prev.strategyKernel, internalLaw: [...prev.strategyKernel.internalLaw, { id: generateId(), title: 'New Law', rule: '', enforcement: 'Strong guidance', appliesTo: ['All workspaces'] }] }
@@ -425,18 +423,18 @@ export default function OperatingCoreAdmin({
                 </div>
                 <div className="space-y-3">
                   {draftCore.strategyKernel.internalLaw.map((law, idx) => (
-                    <div key={law.id} className="border border-coh-gold/20 p-3 rounded bg-coh-cream/50">
+                    <div key={law.id} className="border border-white/10 p-3 rounded bg-white/10 backdrop-blur-sm/50">
                       <div className="flex justify-between gap-2 mb-2">
                         <input value={law.title} onChange={e => {
                           const newLaws = [...draftCore.strategyKernel.internalLaw];
                           newLaws[idx].title = e.target.value;
                           updateKernelField('internalLaw', newLaws);
-                        }} className="font-bold text-sm bg-transparent border-b border-coh-gold/30 w-1/3" placeholder="Rule Title"/>
+                        }} className="font-bold text-sm bg-transparent border-b border-white/20 w-1/3" placeholder="Rule Title"/>
                         <select value={law.enforcement} onChange={e => {
                           const newLaws = [...draftCore.strategyKernel.internalLaw];
                           newLaws[idx].enforcement = e.target.value as EnforcementLevel;
                           updateKernelField('internalLaw', newLaws);
-                        }} className="text-xs bg-white border border-coh-gold/30 rounded p-1">
+                        }} className="text-xs bg-white/5 backdrop-blur-md border border-white/20 rounded p-1">
                           <option value="Always apply">Always apply</option>
                           <option value="Strong guidance">Strong guidance</option>
                           <option value="Warn if violated">Warn if violated</option>
@@ -451,7 +449,7 @@ export default function OperatingCoreAdmin({
                         const newLaws = [...draftCore.strategyKernel.internalLaw];
                         newLaws[idx].rule = e.target.value;
                         updateKernelField('internalLaw', newLaws);
-                      }} className="w-full text-sm p-2 rounded border border-coh-gold/20 bg-white text-coh-navy h-16" placeholder="The exact rule logic..." />
+                      }} className="w-full text-sm p-2 rounded border border-white/10 bg-white/5 backdrop-blur-md text-white h-16" placeholder="The exact rule logic..." />
                     </div>
                   ))}
                 </div>
@@ -462,8 +460,8 @@ export default function OperatingCoreAdmin({
           {/* AUDIENCES */}
           {activeTab === 'audiences' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
-                <h3 className="font-serif text-xl font-bold text-coh-navy">Audience Logic</h3>
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                <h3 className="font-serif text-xl font-bold text-white">Audience Logic</h3>
                 <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, audiences: [...prev.audiences, { id: generateId(), name: 'New Audience', caresAbout: '', proofNeeded: '', preferredTone: '', levelOfDetail: '', avoid: '', cta: '', relevantMessages: '' }]
@@ -472,7 +470,7 @@ export default function OperatingCoreAdmin({
               </div>
               <div className="space-y-6">
                 {draftCore.audiences.map((aud, idx) => (
-                  <div key={aud.id} className="border border-coh-gold/20 rounded p-4 bg-coh-cream/30">
+                  <div key={aud.id} className="border border-white/10 rounded p-4 bg-white/10 backdrop-blur-sm/30">
                     <div className="flex justify-between mb-3">
                       <input value={aud.name} onChange={e => {
                         const newAuds = [...draftCore.audiences];
@@ -485,14 +483,14 @@ export default function OperatingCoreAdmin({
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">Cares About</label><input value={aud.caresAbout} onChange={e => { const a=[...draftCore.audiences]; a[idx].caresAbout=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What they may misunderstand</label><input value={aud.mayMisunderstand || ''} onChange={e => { const a=[...draftCore.audiences]; a[idx].mayMisunderstand=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-50 rounded text-red-900" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Proof Needed</label><input value={aud.proofNeeded} onChange={e => { const a=[...draftCore.audiences]; a[idx].proofNeeded=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Preferred Tone</label><input value={aud.preferredTone} onChange={e => { const a=[...draftCore.audiences]; a[idx].preferredTone=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Level of Detail</label><input value={aud.levelOfDetail} onChange={e => { const a=[...draftCore.audiences]; a[idx].levelOfDetail=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">CTA</label><input value={aud.cta} onChange={e => { const a=[...draftCore.audiences]; a[idx].cta=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">Relevant Messages</label><input value={aud.relevantMessages} onChange={e => { const a=[...draftCore.audiences]; a[idx].relevantMessages=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What to Avoid</label><input value={aud.avoid} onChange={e => { const a=[...draftCore.audiences]; a[idx].avoid=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-50 rounded text-red-900" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">Cares About</label><input value={aud.caresAbout} onChange={e => { const a=[...draftCore.audiences]; a[idx].caresAbout=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What they may misunderstand</label><input value={aud.mayMisunderstand || ''} onChange={e => { const a=[...draftCore.audiences]; a[idx].mayMisunderstand=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-500/10 backdrop-blur-md rounded text-red-900" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Proof Needed</label><input value={aud.proofNeeded} onChange={e => { const a=[...draftCore.audiences]; a[idx].proofNeeded=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Preferred Tone</label><input value={aud.preferredTone} onChange={e => { const a=[...draftCore.audiences]; a[idx].preferredTone=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Level of Detail</label><input value={aud.levelOfDetail} onChange={e => { const a=[...draftCore.audiences]; a[idx].levelOfDetail=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">CTA</label><input value={aud.cta} onChange={e => { const a=[...draftCore.audiences]; a[idx].cta=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">Relevant Messages</label><input value={aud.relevantMessages} onChange={e => { const a=[...draftCore.audiences]; a[idx].relevantMessages=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What to Avoid</label><input value={aud.avoid} onChange={e => { const a=[...draftCore.audiences]; a[idx].avoid=e.target.value; setDraftCore(p=>({...p,audiences:a})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-500/10 backdrop-blur-md rounded text-red-900" /></div>
                     </div>
                   </div>
                 ))}
@@ -503,8 +501,8 @@ export default function OperatingCoreAdmin({
           {/* CHANNELS */}
           {activeTab === 'channels' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
-                <h3 className="font-serif text-xl font-bold text-coh-navy">Channel Rules</h3>
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                <h3 className="font-serif text-xl font-bold text-white">Channel Rules</h3>
                 <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, channels: [...prev.channels, { id: generateId(), name: 'New Channel', purpose: '', typicalStructure: '', lengthGuidance: '', toneGuidance: '', ctaGuidance: '', formattingRules: '', avoid: '' }]
@@ -513,7 +511,7 @@ export default function OperatingCoreAdmin({
               </div>
               <div className="space-y-6">
                 {draftCore.channels.map((ch, idx) => (
-                  <div key={ch.id} className="border border-coh-gold/20 rounded p-4 bg-coh-cream/30">
+                  <div key={ch.id} className="border border-white/10 rounded p-4 bg-white/10 backdrop-blur-sm/30">
                     <div className="flex justify-between mb-3">
                       <input value={ch.name} onChange={e => {
                         const newCh = [...draftCore.channels];
@@ -526,13 +524,13 @@ export default function OperatingCoreAdmin({
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">Purpose</label><input value={ch.purpose} onChange={e => { const c=[...draftCore.channels]; c[idx].purpose=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Tone Guidance</label><input value={ch.toneGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].toneGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Length Guidance</label><input value={ch.lengthGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].lengthGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Formatting Rules</label><input value={ch.formattingRules} onChange={e => { const c=[...draftCore.channels]; c[idx].formattingRules=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">CTA Guidance</label><input value={ch.ctaGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].ctaGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">Typical Structure</label><input value={ch.typicalStructure} onChange={e => { const c=[...draftCore.channels]; c[idx].typicalStructure=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What to Avoid</label><input value={ch.avoid} onChange={e => { const c=[...draftCore.channels]; c[idx].avoid=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-50 rounded text-red-900" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">Purpose</label><input value={ch.purpose} onChange={e => { const c=[...draftCore.channels]; c[idx].purpose=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Tone Guidance</label><input value={ch.toneGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].toneGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Length Guidance</label><input value={ch.lengthGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].lengthGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Formatting Rules</label><input value={ch.formattingRules} onChange={e => { const c=[...draftCore.channels]; c[idx].formattingRules=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">CTA Guidance</label><input value={ch.ctaGuidance} onChange={e => { const c=[...draftCore.channels]; c[idx].ctaGuidance=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">Typical Structure</label><input value={ch.typicalStructure} onChange={e => { const c=[...draftCore.channels]; c[idx].typicalStructure=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-red-600/70">What to Avoid</label><input value={ch.avoid} onChange={e => { const c=[...draftCore.channels]; c[idx].avoid=e.target.value; setDraftCore(p=>({...p,channels:c})) }} className="w-full text-xs p-1.5 border border-red-200 bg-red-500/10 backdrop-blur-md rounded text-red-900" /></div>
                     </div>
                   </div>
                 ))}
@@ -543,24 +541,24 @@ export default function OperatingCoreAdmin({
           {/* CLAIMS */}
           {activeTab === 'claims' && (
             <div className="space-y-4">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Claims &amp; Proof Boundaries</h3>
+              <h3 className="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">Claims &amp; Proof Boundaries</h3>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div>
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Proof Points to Use</label>
-                  <textarea value={draftCore.claimsProofBoundaries.proofPoints} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, proofPoints: e.target.value}}))} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Proof Points to Use</label>
+                  <textarea value={draftCore.claimsProofBoundaries.proofPoints} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, proofPoints: e.target.value}}))} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Overstatement Warnings</label>
-                  <textarea value={draftCore.claimsProofBoundaries.overstatementWarnings} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, overstatementWarnings: e.target.value}}))} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Overstatement Warnings</label>
+                  <textarea value={draftCore.claimsProofBoundaries.overstatementWarnings} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, overstatementWarnings: e.target.value}}))} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
                 <div className="col-span-2">
-                  <label className="block text-xs font-bold text-coh-navy/80 mb-1">Claim Style Rules</label>
-                  <textarea value={draftCore.claimsProofBoundaries.claimStyleRules} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claimStyleRules: e.target.value}}))} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" />
+                  <label className="block text-xs font-bold text-white/80 mb-1">Claim Style Rules</label>
+                  <textarea value={draftCore.claimsProofBoundaries.claimStyleRules} onChange={e => setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claimStyleRules: e.target.value}}))} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" />
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mb-2 mt-4 border-b border-coh-gold/20 pb-2">
-                <label className="block text-sm font-bold text-coh-navy">Specific Claim Boundaries</label>
+              <div className="flex justify-between items-center mb-2 mt-4 border-b border-white/10 pb-2">
+                <label className="block text-sm font-bold text-white">Specific Claim Boundaries</label>
                 <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, claimsProofBoundaries: { ...prev.claimsProofBoundaries, claims: [...prev.claimsProofBoundaries.claims, { id: generateId(), text: '', type: 'Requires proof', proofRequirement: '', enforcement: 'Warn if violated' }] }
@@ -569,12 +567,12 @@ export default function OperatingCoreAdmin({
               </div>
               <div className="space-y-2">
                 {draftCore.claimsProofBoundaries.claims.map((claim, idx) => (
-                  <div key={claim.id} className="border border-coh-gold/20 p-2 rounded flex gap-2 items-start bg-white">
+                  <div key={claim.id} className="border border-white/10 p-2 rounded flex gap-2 items-start bg-white/5 backdrop-blur-md">
                     <select value={claim.type} onChange={e => {
                       const newC = [...draftCore.claimsProofBoundaries.claims];
                       newC[idx].type = e.target.value as ClaimType;
                       setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claims: newC}}));
-                    }} className="text-xs border border-coh-gold/30 rounded p-1.5 w-32 shrink-0">
+                    }} className="text-xs border border-white/20 rounded p-1.5 w-32 shrink-0">
                       <option value="Approved">Approved</option>
                       <option value="Requires proof">Requires proof</option>
                       <option value="Aspirational">Aspirational</option>
@@ -584,13 +582,13 @@ export default function OperatingCoreAdmin({
                       const newC = [...draftCore.claimsProofBoundaries.claims];
                       newC[idx].text = e.target.value;
                       setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claims: newC}}));
-                    }} className="text-sm border border-coh-gold/30 rounded p-1 flex-1" placeholder="Claim text..."/>
+                    }} className="text-sm border border-white/20 rounded p-1 flex-1" placeholder="Claim text..."/>
                     {claim.type === 'Requires proof' && (
                       <input value={claim.proofRequirement} onChange={e => {
                         const newC = [...draftCore.claimsProofBoundaries.claims];
                         newC[idx].proofRequirement = e.target.value;
                         setDraftCore(p => ({...p, claimsProofBoundaries: {...p.claimsProofBoundaries, claims: newC}}));
-                      }} className="text-xs border border-coh-gold/30 rounded p-1 w-40 shrink-0" placeholder="Required Proof..."/>
+                      }} className="text-xs border border-white/20 rounded p-1 w-40 shrink-0" placeholder="Required Proof..."/>
                     )}
                     <button onClick={async () => {
                       const newC = draftCore.claimsProofBoundaries.claims.filter(c => c.id !== claim.id);
@@ -605,18 +603,18 @@ export default function OperatingCoreAdmin({
           {/* VOICE & LANGUAGE */}
           {activeTab === 'voice' && (
             <div className="space-y-4">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Voice &amp; Language</h3>
+              <h3 className="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">Voice &amp; Language</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="block text-xs font-bold text-coh-navy/80 mb-1">Overall Tone</label><textarea value={draftCore.voiceAndLanguage.overallTone} onChange={e => updateVoiceField('overallTone', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-coh-navy/80 mb-1">Writing Style</label><textarea value={draftCore.voiceAndLanguage.writingStyle} onChange={e => updateVoiceField('writingStyle', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Sentence Rhythm</label><input value={draftCore.voiceAndLanguage.sentenceRhythm} onChange={e => updateVoiceField('sentenceRhythm', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Formality Level</label><input value={draftCore.voiceAndLanguage.formalityLevel} onChange={e => updateVoiceField('formalityLevel', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Emotional Intensity</label><input value={draftCore.voiceAndLanguage.emotionalIntensity} onChange={e => updateVoiceField('emotionalIntensity', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Founder Voice Notes</label><input value={draftCore.voiceAndLanguage.founderVoiceNotes} onChange={e => updateVoiceField('founderVoiceNotes', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-green-700/80 mb-1">Preferred Phrases (comma separated)</label><textarea value={draftCore.voiceAndLanguage.preferredPhrases.join(', ')} onChange={e => updateVoiceField('preferredPhrases', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-green-300 bg-green-50 text-green-900 h-20" /></div>
-                <div><label className="block text-xs font-bold text-red-700/80 mb-1">Avoid Phrases (comma separated)</label><textarea value={draftCore.voiceAndLanguage.avoidPhrases.join(', ')} onChange={e => updateVoiceField('avoidPhrases', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-20" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">AI Phrasing to Avoid (comma separated)</label><input value={draftCore.voiceAndLanguage.aiPhrasesToAvoid.join(', ')} onChange={e => updateVoiceField('aiPhrasesToAvoid', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-coh-navy/80 mb-1">Clean Writing Rules</label><input value={draftCore.voiceAndLanguage.cleanWritingRules} onChange={e => updateVoiceField('cleanWritingRules', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-white/80 mb-1">Overall Tone</label><textarea value={draftCore.voiceAndLanguage.overallTone} onChange={e => updateVoiceField('overallTone', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-white/80 mb-1">Writing Style</label><textarea value={draftCore.voiceAndLanguage.writingStyle} onChange={e => updateVoiceField('writingStyle', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Sentence Rhythm</label><input value={draftCore.voiceAndLanguage.sentenceRhythm} onChange={e => updateVoiceField('sentenceRhythm', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Formality Level</label><input value={draftCore.voiceAndLanguage.formalityLevel} onChange={e => updateVoiceField('formalityLevel', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Emotional Intensity</label><input value={draftCore.voiceAndLanguage.emotionalIntensity} onChange={e => updateVoiceField('emotionalIntensity', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Founder Voice Notes</label><input value={draftCore.voiceAndLanguage.founderVoiceNotes} onChange={e => updateVoiceField('founderVoiceNotes', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-green-700/80 mb-1">Preferred Phrases (comma separated)</label><textarea value={draftCore.voiceAndLanguage.preferredPhrases.join(', ')} onChange={e => updateVoiceField('preferredPhrases', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-green-300 bg-green-500/10 backdrop-blur-md text-green-900 h-20" /></div>
+                <div><label className="block text-xs font-bold text-red-700/80 mb-1">Avoid Phrases (comma separated)</label><textarea value={draftCore.voiceAndLanguage.avoidPhrases.join(', ')} onChange={e => updateVoiceField('avoidPhrases', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-20" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">AI Phrasing to Avoid (comma separated)</label><input value={draftCore.voiceAndLanguage.aiPhrasesToAvoid.join(', ')} onChange={e => updateVoiceField('aiPhrasesToAvoid', e.target.value.split(',').map(s=>s.trim()))} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-white/80 mb-1">Clean Writing Rules</label><input value={draftCore.voiceAndLanguage.cleanWritingRules} onChange={e => updateVoiceField('cleanWritingRules', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
               </div>
             </div>
           )}
@@ -624,19 +622,19 @@ export default function OperatingCoreAdmin({
           {/* VISUAL DNA */}
           {activeTab === 'visual' && (
             <div className="space-y-4">
-              <h3 className="font-serif text-xl font-bold text-coh-navy border-b border-coh-gold/20 pb-2">Visual DNA</h3>
+              <h3 className="font-serif text-xl font-bold text-white border-b border-white/10 pb-2">Visual DNA</h3>
               <div className="grid grid-cols-2 gap-4">
-                <div className="col-span-2"><label className="block text-xs font-bold text-coh-navy/80 mb-1">Visual Atmosphere</label><textarea value={draftCore.visualDNA.visualAtmosphere} onChange={e => updateVisualField('visualAtmosphere', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Mood</label><textarea value={draftCore.visualDNA.mood} onChange={e => updateVisualField('mood', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Photography Style</label><textarea value={draftCore.visualDNA.photographyStyle} onChange={e => updateVisualField('photographyStyle', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Composition Principles</label><input value={draftCore.visualDNA.compositionPrinciples} onChange={e => updateVisualField('compositionPrinciples', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Color / Material Direction</label><input value={draftCore.visualDNA.colorMaterialDirection} onChange={e => updateVisualField('colorMaterialDirection', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Format / Aspect Preferences</label><input value={draftCore.visualDNA.formatAspectPreferences} onChange={e => updateVisualField('formatAspectPreferences', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div><label className="block text-xs font-bold text-coh-navy/80 mb-1">Typography Notes</label><input value={draftCore.visualDNA.typographyNotes} onChange={e => updateVisualField('typographyNotes', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-coh-navy/80 mb-1">Image Prompt Rules</label><textarea value={draftCore.visualDNA.imagePromptRules} onChange={e => updateVisualField('imagePromptRules', e.target.value)} className="w-full text-sm p-2 rounded border border-coh-gold/30 bg-coh-cream text-coh-navy h-16" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Negative Prompt Rules</label><textarea value={draftCore.visualDNA.negativePromptRules} onChange={e => updateVisualField('negativePromptRules', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-16" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Clichés to Avoid</label><textarea value={draftCore.visualDNA.visualClichesToAvoid} onChange={e => updateVisualField('visualClichesToAvoid', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-16" /></div>
-                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Symbols to Use Carefully</label><textarea value={draftCore.visualDNA.visualSymbolsToUseCarefully} onChange={e => updateVisualField('visualSymbolsToUseCarefully', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-50 text-red-900 h-16" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-white/80 mb-1">Visual Atmosphere</label><textarea value={draftCore.visualDNA.visualAtmosphere} onChange={e => updateVisualField('visualAtmosphere', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Mood</label><textarea value={draftCore.visualDNA.mood} onChange={e => updateVisualField('mood', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Photography Style</label><textarea value={draftCore.visualDNA.photographyStyle} onChange={e => updateVisualField('photographyStyle', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Composition Principles</label><input value={draftCore.visualDNA.compositionPrinciples} onChange={e => updateVisualField('compositionPrinciples', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Color / Material Direction</label><input value={draftCore.visualDNA.colorMaterialDirection} onChange={e => updateVisualField('colorMaterialDirection', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Format / Aspect Preferences</label><input value={draftCore.visualDNA.formatAspectPreferences} onChange={e => updateVisualField('formatAspectPreferences', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div><label className="block text-xs font-bold text-white/80 mb-1">Typography Notes</label><input value={draftCore.visualDNA.typographyNotes} onChange={e => updateVisualField('typographyNotes', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-white/80 mb-1">Image Prompt Rules</label><textarea value={draftCore.visualDNA.imagePromptRules} onChange={e => updateVisualField('imagePromptRules', e.target.value)} className="w-full text-sm p-2 rounded border border-white/20 bg-white/10 backdrop-blur-sm text-white h-16" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Negative Prompt Rules</label><textarea value={draftCore.visualDNA.negativePromptRules} onChange={e => updateVisualField('negativePromptRules', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-16" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Clichés to Avoid</label><textarea value={draftCore.visualDNA.visualClichesToAvoid} onChange={e => updateVisualField('visualClichesToAvoid', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-16" /></div>
+                <div className="col-span-2"><label className="block text-xs font-bold text-red-700/80 mb-1">Symbols to Use Carefully</label><textarea value={draftCore.visualDNA.visualSymbolsToUseCarefully} onChange={e => updateVisualField('visualSymbolsToUseCarefully', e.target.value)} className="w-full text-sm p-2 rounded border border-red-300 bg-red-500/10 backdrop-blur-md text-red-900 h-16" /></div>
               </div>
             </div>
           )}
@@ -644,8 +642,8 @@ export default function OperatingCoreAdmin({
           {/* REVISION STANDARDS */}
           {activeTab === 'revision' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
-                <h3 className="font-serif text-xl font-bold text-coh-navy">Revision Standards</h3>
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                <h3 className="font-serif text-xl font-bold text-white">Revision Standards</h3>
                 <button onClick={async () => {
                   setDraftCore(prev => ({
                     ...prev, revisionStandards: [...prev.revisionStandards, { id: generateId(), action: 'New Standard', does: '', avoids: '', whenToUse: '', exampleGuidance: '', appliesTo: 'All workspaces' }]
@@ -654,7 +652,7 @@ export default function OperatingCoreAdmin({
               </div>
               <div className="space-y-4">
                 {draftCore.revisionStandards.map((rev, idx) => (
-                  <div key={rev.id} className="border border-coh-gold/20 rounded p-4 bg-coh-cream/30">
+                  <div key={rev.id} className="border border-white/10 rounded p-4 bg-white/10 backdrop-blur-sm/30">
                     <div className="flex justify-between items-center mb-3">
                       <input value={rev.action} onChange={e => {
                         const newR = [...draftCore.revisionStandards];
@@ -667,11 +665,11 @@ export default function OperatingCoreAdmin({
                       }} className="text-red-500 hover:text-red-700"><Trash2 size={16}/></button>
                     </div>
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">What it does</label><input value={rev.does} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].does=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">What it avoids</label><input value={rev.avoids} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].avoids=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">When to use</label><input value={rev.whenToUse} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].whenToUse=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div><label className="text-[10px] uppercase font-bold text-coh-navy/60">Applies To</label><input value={rev.appliesTo} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].appliesTo=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
-                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-coh-navy/60">Example Guidance</label><input value={rev.exampleGuidance} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].exampleGuidance=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">What it does</label><input value={rev.does} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].does=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">What it avoids</label><input value={rev.avoids} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].avoids=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">When to use</label><input value={rev.whenToUse} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].whenToUse=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div><label className="text-[10px] uppercase font-bold text-white/60">Applies To</label><input value={rev.appliesTo} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].appliesTo=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
+                      <div className="col-span-2"><label className="text-[10px] uppercase font-bold text-white/60">Example Guidance</label><input value={rev.exampleGuidance} onChange={e => { const r=[...draftCore.revisionStandards]; r[idx].exampleGuidance=e.target.value; setDraftCore(p=>({...p,revisionStandards:r})) }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" /></div>
                     </div>
                   </div>
                 ))}
@@ -682,15 +680,15 @@ export default function OperatingCoreAdmin({
           {/* CORE SOURCES */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center border-b border-coh-gold/20 pb-2 mb-4">
-                <h3 className="font-serif text-xl font-bold text-coh-navy">Core Documents</h3>
+              <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
+                <h3 className="font-serif text-xl font-bold text-white">Core Documents</h3>
 {dbStatus === 'local_only' ? (
-              <div className="bg-red-50 border border-red-200 text-red-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
+              <div className="bg-red-500/10 backdrop-blur-md border border-red-200 text-red-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
                 <span className="text-red-500">⚠️</span> 
                 <strong>Storage Warning:</strong> Local/browser storage only. Not safe for shared use. Connect a production database for team persistence.
               </div>
               ) : dbStatus === 'configured' ? (
-              <div className="bg-green-50 border border-green-200 text-green-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
+              <div className="bg-green-500/10 backdrop-blur-md border border-green-200 text-green-800 text-xs p-3 rounded mb-4 flex items-center gap-2">
                 <span className="text-green-500">✓</span> 
                 <strong>Persistent storage configured.</strong> Team knowledge base is active.
               </div>
@@ -736,17 +734,17 @@ export default function OperatingCoreAdmin({
                   <Plus size={12}/> Add Core Document
                 </button>
               </div>
-              <p className="text-xs text-coh-navy/60 mb-4">These are foundational brain documents. They are not normal user sources. They dictate the internal logic of the system.</p>
+              <p className="text-xs text-white/60 mb-4">These are foundational brain documents. They are not normal user sources. They dictate the internal logic of the system.</p>
 
               {operatingCoreDocuments.length === 0 ? (
-                <div className="text-center p-8 bg-coh-cream/10 border border-dashed border-coh-gold/30 rounded">
-                  <p className="text-xs text-coh-navy/50 italic mb-2">No Core Documents linked yet.</p>
+                <div className="text-center p-8 bg-white/10 backdrop-blur-sm/10 border border-dashed border-white/20 rounded">
+                  <p className="text-xs text-white/50 italic mb-2">No Core Documents linked yet.</p>
                 </div>
               ) : (
                 <div className="space-y-6">
                   {operatingCoreDocuments.map((doc, idx) => (
-                    <div key={doc.id} className="border border-coh-gold/30 rounded bg-white overflow-hidden shadow-sm">
-                      <div className="bg-coh-cream/30 border-b border-coh-gold/20 p-3 flex justify-between items-center">
+                    <div key={doc.id} className="border border-white/20 rounded bg-white/5 backdrop-blur-md overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                      <div className="bg-white/10 backdrop-blur-sm/30 border-b border-white/10 p-3 flex justify-between items-center">
                         <input value={doc.title} onChange={e => {
                           const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -776,7 +774,7 @@ export default function OperatingCoreAdmin({
                       
                       <div className="p-4 grid grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Type</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Document Type</label>
                           <select value={doc.documentType || 'Strategic Plan'} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -792,7 +790,7 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { documentType: val });
-                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                          }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md">
                             <option>Strategic Plan</option>
                             <option>Operating Memo</option>
                             <option>Canon Script</option>
@@ -802,7 +800,7 @@ export default function OperatingCoreAdmin({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Status</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Status</label>
                           <select value={doc.status || 'Draft'} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -818,14 +816,14 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { status: val });
-                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                          }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md">
                             <option>Draft</option>
                             <option>Approved</option>
                             <option>Deprecated</option>
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Area</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Brain Area</label>
                           <select value={doc.brainArea || 'Passport'} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -841,7 +839,7 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { brainArea: val });
-                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                          }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md">
                             <option>Passport</option>
                             <option>Strategy</option>
                             <option>Audience</option>
@@ -852,7 +850,7 @@ export default function OperatingCoreAdmin({
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Brain Role</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Brain Role</label>
                           <select value={doc.brainRole || 'Rule'} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -868,7 +866,7 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { brainRole: val });
-                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white">
+                          }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md">
                             <option>Definition</option>
                             <option>Rule</option>
                             <option>Constraint</option>
@@ -878,7 +876,7 @@ export default function OperatingCoreAdmin({
                         </div>
                         
                         <div className="col-span-2">
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Notes / Relevance</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Notes / Relevance</label>
                           <input value={doc.shortContext || ''} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -894,11 +892,11 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { shortContext: val });
-                          }} className="w-full text-xs p-1.5 border border-coh-gold/20 rounded bg-white" placeholder="Why is this document in the core?"/>
+                          }} className="w-full text-xs p-1.5 border border-white/10 rounded bg-white/5 backdrop-blur-md" placeholder="Why is this document in the core?"/>
                         </div>
                         
                         <div className="col-span-2">
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Document Content</label>
+                          <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Document Content</label>
                           <textarea value={doc.rawText || ''} onChange={e => {
                             const val = e.target.value;
                             const docs = [...operatingCoreDocuments];
@@ -914,13 +912,13 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             updateCoreDocument(doc.id, { rawText: val });
-                          }} className="w-full bg-coh-cream/30 border border-coh-gold/20 p-2 rounded text-xs font-mono h-24 whitespace-pre-wrap" placeholder="Paste actual source text here..."/>
+                          }} className="w-full bg-white/10 backdrop-blur-sm/30 border border-white/10 p-2 rounded text-xs font-mono h-24 whitespace-pre-wrap" placeholder="Paste actual source text here..."/>
                         </div>
                         
-                        <div className="col-span-2 bg-coh-navy/5 border border-coh-navy/10 p-3 rounded">
-                          <label className="block text-[10px] uppercase font-bold text-coh-navy mb-1 flex items-center justify-between">
+                        <div className="col-span-2 bg-coh-navy/5 border border-white/10 p-3 rounded">
+                          <label className="block text-[10px] uppercase font-bold text-white mb-1 flex items-center justify-between">
                             Extracted Insights 
-                            <span className="text-[9px] font-normal text-coh-navy/60 bg-white px-1.5 py-0.5 rounded border border-coh-navy/10">Inferred System Logic</span>
+                            <span className="text-[9px] font-normal text-white/60 bg-white/5 backdrop-blur-md px-1.5 py-0.5 rounded border border-white/10">Inferred System Logic</span>
                           </label>
                           <textarea value={doc.extractedText || ''} onChange={async e => {
                             const val = e.target.value;
@@ -937,11 +935,11 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                             await updateCoreDocument(doc.id, { extractedText: val });
-                          }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-16 mb-2" placeholder="The system distills rules from the content here..."/>
+                          }} className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white h-16 mb-2" placeholder="The system distills rules from the content here..."/>
                           
                           <div className="grid grid-cols-2 gap-2 mb-2">
                             <div>
-                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Distilled Notes (Strategy)</label>
+                              <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Distilled Notes (Strategy)</label>
                               <textarea value={doc.distilledKernelNotes || ''} onChange={async e => {
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
@@ -957,10 +955,10 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                                 await updateCoreDocument(doc.id, { distilledKernelNotes: val });
-                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                              }} className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white h-12"/>
                             </div>
                             <div>
-                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Extracted Claim Evidence</label>
+                              <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Extracted Claim Evidence</label>
                               <textarea value={doc.extractedClaimEvidence || ''} onChange={async e => {
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
@@ -976,10 +974,10 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                                 await updateCoreDocument(doc.id, { extractedClaimEvidence: val });
-                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                              }} className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white h-12"/>
                             </div>
                             <div>
-                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Voice Guidance</label>
+                              <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Voice Guidance</label>
                               <textarea value={doc.extractedVoiceGuidance || ''} onChange={async e => {
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
@@ -995,10 +993,10 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                                 await updateCoreDocument(doc.id, { extractedVoiceGuidance: val });
-                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                              }} className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white h-12"/>
                             </div>
                             <div>
-                              <label className="block text-[10px] uppercase font-bold text-coh-navy/70 mb-1">Visual Guidance</label>
+                              <label className="block text-[10px] uppercase font-bold text-white/70 mb-1">Visual Guidance</label>
                               <textarea value={doc.extractedVisualGuidance || ''} onChange={async e => {
                                 const val = e.target.value;
                                 const docs = [...operatingCoreDocuments];
@@ -1014,7 +1012,7 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                                 await updateCoreDocument(doc.id, { extractedVisualGuidance: val });
-                              }} className="w-full bg-white border border-coh-gold/20 p-2 rounded text-xs text-coh-navy h-12"/>
+                              }} className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white h-12"/>
                             </div>
                           </div>
 
@@ -1034,17 +1032,17 @@ export default function OperatingCoreAdmin({
     setOperatingCoreDocuments(docs);
     
                               showToast('Insights saved and queued for compiler injection!', 'success');
-                            }} className="mt-2 w-full text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
+                            }} className="mt-2 w-full text-center bg-white/5 backdrop-blur-md border border-coh-navy/20 text-white text-xs font-bold uppercase py-2 rounded hover:bg-coh-navy hover:text-white transition-colors">
                               Review & Apply to Operating Core
                             </button>
                           ) : (
                             <div className="mt-2 flex gap-2">
-                              <div className="flex-1 text-center bg-green-50 border border-green-200 text-green-800 text-xs font-bold uppercase py-2 rounded">
+                              <div className="flex-1 text-center bg-green-500/10 backdrop-blur-md border border-green-200 text-green-800 text-xs font-bold uppercase py-2 rounded">
                                 ✅ Applied to Compiler
                               </div>
                               <button onClick={() => {
                                 showToast('In a full implementation, this opens the exact target pane (e.g. Audiences) and copies the text.', 'info');
-                              }} className="flex-1 text-center bg-white border border-coh-navy/20 text-coh-navy text-xs font-bold uppercase py-2 rounded hover:bg-coh-cream transition-colors">
+                              }} className="flex-1 text-center bg-white/5 backdrop-blur-md border border-coh-navy/20 text-white text-xs font-bold uppercase py-2 rounded hover:bg-white/10 backdrop-blur-sm transition-colors">
                                 Open Target Section
                               </button>
                             </div>
@@ -1061,32 +1059,32 @@ export default function OperatingCoreAdmin({
         </div>
       </div>
       {/* COMPILER PREVIEW FEATURE */}
-      <div className="mt-8 border border-coh-gold/20 bg-white rounded p-4">
-        <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-2 font-serif font-bold text-coh-navy w-full text-left focus:outline-none">
+      <div className="mt-8 border border-white/10 bg-white/5 backdrop-blur-md rounded p-4">
+        <button onClick={() => setShowPreview(!showPreview)} className="flex items-center gap-2 font-serif font-bold text-white w-full text-left focus:outline-none">
           {showPreview ? <EyeOff size={16}/> : <Eye size={16}/>}
           Compiler Preview
         </button>
         
         {showPreview && (
-          <div className="mt-4 pt-4 border-t border-coh-gold/20">
-            <p className="text-xs text-coh-navy/60 mb-4">Select a mock workspace context to preview exactly what rules are compiled and injected into the AI prompt.</p>
+          <div className="mt-4 pt-4 border-t border-white/10">
+            <p className="text-xs text-white/60 mb-4">Select a mock workspace context to preview exactly what rules are compiled and injected into the AI prompt.</p>
             <div className="flex gap-4 mb-4">
-              <select value={previewCtx.workspace} onChange={e => setPreviewCtx({...previewCtx, workspace: e.target.value as any})} className="text-xs p-2 border rounded border-coh-gold/30">
+              <select value={previewCtx.workspace} onChange={e => setPreviewCtx({...previewCtx, workspace: e.target.value as any})} className="text-xs p-2 border rounded border-white/20">
                 <option value="Advanced Brief">Content Workspace (Advanced Brief)</option>
                 <option value="Ideation Workspace">Ideation Workspace</option>
                 <option value="Visual Studio">Visual Studio</option>
                 <option value="Revision Studio">Revision Studio</option>
               </select>
-              <select value={previewCtx.audience} onChange={e => setPreviewCtx({...previewCtx, audience: e.target.value})} className="text-xs p-2 border rounded border-coh-gold/30">
+              <select value={previewCtx.audience} onChange={e => setPreviewCtx({...previewCtx, audience: e.target.value})} className="text-xs p-2 border rounded border-white/20">
                 <option value="">No Audience</option>
                 {draftCore.audiences.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
               </select>
-              <select value={previewCtx.channel} onChange={e => setPreviewCtx({...previewCtx, channel: e.target.value})} className="text-xs p-2 border rounded border-coh-gold/30">
+              <select value={previewCtx.channel} onChange={e => setPreviewCtx({...previewCtx, channel: e.target.value})} className="text-xs p-2 border rounded border-white/20">
                 <option value="">No Channel</option>
                 {draftCore.channels.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
               {previewCtx.workspace === 'Revision Studio' && (
-                <select value={previewCtx.action} onChange={e => setPreviewCtx({...previewCtx, action: e.target.value})} className="text-xs p-2 border rounded border-coh-gold/30">
+                <select value={previewCtx.action} onChange={e => setPreviewCtx({...previewCtx, action: e.target.value})} className="text-xs p-2 border rounded border-white/20">
                   <option value="">No Action</option>
                   {draftCore.revisionStandards.map(r => <option key={r.id} value={r.action}>{r.action}</option>)}
                 </select>

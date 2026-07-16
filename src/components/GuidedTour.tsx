@@ -95,7 +95,7 @@ export const GuidedTour: React.FC = () => {
   if (currentStep === 0) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
-        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] p-8 max-w-md w-full relative">
+        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] p-8 max-w-md w-full relative">
           <button onClick={skipTour} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
@@ -117,13 +117,13 @@ export const GuidedTour: React.FC = () => {
           
           <div className="flex flex-wrap justify-center gap-2 mb-8 px-4">
             {TOUR_STEPS.slice(1).map((step, i) => (
-              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-coh-navy text-coh-gold/80 px-2 py-1 rounded-full border border-coh-gold/10">
+              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-coh-navy text-coh-gold/80 px-2 py-1 rounded-full border border-white/10">
                 {step.title}
               </span>
             ))}
           </div>
 
-          <button onClick={nextStep} className="w-full bg-gradient-to-r from-coh-gold to-yellow-600 text-coh-navy font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+          <button onClick={nextStep} className="w-full bg-gradient-to-r from-coh-gold to-yellow-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
             <Sparkles size={18} />
             Start Tour
           </button>
@@ -164,7 +164,7 @@ export const GuidedTour: React.FC = () => {
         Positioned relative to the target rect, or centered if target is hidden.
       */}
       <div 
-        className={`absolute bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
+        className={`absolute bg-white/5 backdrop-blur-md/10 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
         style={targetRect ? {
           top: Math.max(20, targetRect.top),
           left: targetRect.right + padding + 12, // Position to the right of sidebar items

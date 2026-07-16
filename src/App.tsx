@@ -4404,7 +4404,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white/10 backdrop-blur-sm font-sans text-white">
+      <div className="min-h-screen flex items-center justify-center bg-white/5 backdrop-blur-md/10 backdrop-blur-sm font-sans text-white">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-coh-gold border-t-coh-navy rounded-full animate-spin mx-auto" />
           <p className="font-serif text-sm italic text-white/60">Verifying secure session...</p>
@@ -4415,8 +4415,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white/10 backdrop-blur-sm font-sans text-white antialiased">
-        <div className="w-full max-w-md bg-white/5 backdrop-blur-md border border-white/20 p-8 rounded-lg shadow-lg space-y-6">
+      <div className="min-h-screen flex items-center justify-center bg-white/5 backdrop-blur-md/10 backdrop-blur-sm font-sans text-white antialiased">
+        <div className="w-full max-w-md bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/20 p-8 rounded-lg shadow-lg space-y-6">
           <div className="text-center space-y-2">
             <span className="font-serif tracking-widest text-[10px] uppercase text-coh-gold block">Climate Opera Haus</span>
             <h1 className="font-serif text-2xl font-semibold text-white">COH Content Studio</h1>
@@ -4432,7 +4432,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 value={authUsernameInput}
                 onChange={(e) => setAuthUsernameInput(e.target.value)}
                 placeholder="Enter username"
-                className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-sm font-sans"
+                className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-sm font-sans"
                 required
               />
             </div>
@@ -4445,13 +4445,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 value={authPasswordInput}
                 onChange={(e) => setAuthPasswordInput(e.target.value)}
                 placeholder="Enter password"
-                className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-sm font-sans"
+                className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-sm font-sans"
                 required
               />
             </div>
 
             {authError && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200/50 p-3 rounded font-sans">
+              <p className="text-xs text-red-600 bg-red-500/10 backdrop-blur-md border border-red-200/50 p-3 rounded font-sans">
                 {authError}
               </p>
             )}
@@ -4470,7 +4470,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
   }
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white/10 backdrop-blur-sm font-sans text-white antialiased">
+    <div className="min-h-screen flex flex-col md:flex-row bg-white/5 backdrop-blur-md/10 backdrop-blur-sm font-sans text-white antialiased">
       
       {/* --- Mobile Top Bar --- */}
       <div className="md:hidden flex items-center justify-between bg-coh-navy text-coh-cream p-4 border-b border-white/20 shrink-0">
@@ -4670,7 +4670,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 1: COMMAND CENTER --- */}
         
         {activeTab === 'operating-core' && (<ErrorBoundary fallbackTitle="Operating Core Error">
-          <div className="h-full overflow-hidden bg-[#faf9f6]">
+          <div className="h-full overflow-hidden bg-transparent">
             <OperatingCoreAdmin 
               dbStatus={dbStatus}
               core={operatingCore} 
@@ -4701,7 +4701,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
         {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Ideation Workspace</h2>
               <p className="page-subtitle">
                 Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
@@ -4710,7 +4710,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Input Form Column */}
-              <div className="col-span-1 lg:col-span-4 bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
+              <div className="col-span-1 lg:col-span-4 bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
                 <h3 className="font-serif text-base font-bold text-white border-b border-white/10 pb-2">
                   New Exploration
                 </h3>
@@ -4724,7 +4724,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     rows={4}
                     value={ideationInput}
                     onChange={(e) => setIdeationInput(e.target.value)}
-                    className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white font-mono text-[11px]"
+                    className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white font-mono text-[11px]"
                     placeholder="e.g. Why is climate opera superior to other forms of climate art?"
                   />
                 </div>
@@ -4738,7 +4738,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={ideationFilterChannel}
                         onChange={(e) => setIdeationFilterChannel(e.target.value)}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
                       >
                         {CHANNELS.slice(0, 7).map(c => (
                           <option key={c} value={c}>{c}</option>
@@ -4751,7 +4751,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={ideationFilterLanguage}
                         onChange={(e) => setIdeationFilterLanguage(e.target.value)}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
                       >
                         {LANGUAGES.map(l => (
                           <option key={l.id} value={l.label}>{l.label}</option>
@@ -4766,7 +4766,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={ideationFilterQuality}
                         onChange={(e) => setIdeationFilterQuality(e.target.value)}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
                       >
                         <option value="Practical">Practical</option>
                         <option value="Bold">Bold</option>
@@ -4785,7 +4785,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={ideationFilterDepth}
                         onChange={(e) => setIdeationFilterDepth(e.target.value)}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
                       >
                         <option value="Light">Light</option>
                         <option value="Standard">Standard</option>
@@ -4800,7 +4800,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <select
                       value={ideationFilterAudience}
                       onChange={(e) => setIdeationFilterAudience(e.target.value)}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-white text-[11px]"
                     >
                       <option value="General Public">General Public</option>
                       <option value="Sponsors & Patrons">Sponsors & Patrons</option>
@@ -4831,12 +4831,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                         <div className="grid grid-cols-2 gap-4">
                           {generatedIdeas.filter(idea => idea.category === cat).map(idea => (
-                            <div key={idea.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
+                            <div key={idea.id} className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
                               <div className="space-y-2">
                                 <div className="flex justify-between items-start">
                                   <h4 className="font-serif font-bold text-white text-sm leading-snug">{idea.title}</h4>
                                   <span className={`text-[8px] px-1.5 py-0.5 rounded font-mono font-bold uppercase ${
-                                    idea.status === 'Promising' ? 'bg-coh-gold/20 text-white' : 'bg-white/10 backdrop-blur-sm text-white/60'
+                                    idea.status === 'Promising' ? 'bg-coh-gold/20 text-white' : 'bg-white/5 backdrop-blur-md/10 backdrop-blur-sm text-white/60'
                                   }`}>
                                     {idea.status}
                                   </span>
@@ -4845,13 +4845,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 <p className="text-[10px] text-coh-gold font-semibold leading-relaxed font-sans">Why it works: {idea.whyItWorks}</p>
                                 
                                 {idea.possibleHook && (
-                                  <div className="bg-white/10 backdrop-blur-sm/40 p-2 border border-white/10 rounded font-sans text-[10px] italic text-white/80">
+                                  <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-2 border border-white/10 rounded font-sans text-[10px] italic text-white/80">
                                     Hook idea: "{idea.possibleHook}"
                                   </div>
                                 )}
 
                                 {idea.possibleFirstPost && (
-                                  <div className="bg-white/10 backdrop-blur-sm/30 p-2 border border-white/10 rounded font-sans text-[10px] text-white/80">
+                                  <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/30 p-2 border border-white/10 rounded font-sans text-[10px] text-white/80">
                                     <span className="font-semibold block text-[9px] uppercase text-white/60 mb-0.5">First Post Idea:</span>
                                     "{idea.possibleFirstPost}"
                                   </div>
@@ -4868,10 +4868,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 </p>
 
                                 <div className="flex gap-1.5 flex-wrap items-center pt-1 text-[9px] font-mono text-white/50">
-                                  <span className="bg-white/10 backdrop-blur-sm px-1.5 rounded">{idea.suggestedChannel}</span>
-                                  <span className="bg-white/10 backdrop-blur-sm px-1.5 rounded">{idea.suggestedFormat}</span>
-                                  {idea.suggestedAudience && <span className="bg-white/10 backdrop-blur-sm px-1.5 rounded">Audience: {idea.suggestedAudience}</span>}
-                                  {idea.suggestedTone && <span className="bg-white/10 backdrop-blur-sm px-1.5 rounded">Tone: {idea.suggestedTone}</span>}
+                                  <span className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-1.5 rounded">{idea.suggestedChannel}</span>
+                                  <span className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-1.5 rounded">{idea.suggestedFormat}</span>
+                                  {idea.suggestedAudience && <span className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-1.5 rounded">Audience: {idea.suggestedAudience}</span>}
+                                  {idea.suggestedTone && <span className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-1.5 rounded">Tone: {idea.suggestedTone}</span>}
                                 </div>
                               </div>
 
@@ -4939,7 +4939,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Idea Library</h2>
               <p className="page-subtitle">
                 Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
@@ -4950,7 +4950,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {savedIdeas.length > 0 ? (
               <div className="grid grid-cols-2 gap-6">
                 {savedIdeas.map(idea => (
-                  <div key={idea.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
+                  <div key={idea.id} className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start gap-2 flex-wrap">
                         <div>
@@ -4971,8 +4971,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           className={`text-[10px] font-bold p-1 rounded font-mono border border-white/10 ${
                             idea.status === 'Ready for Content' ? 'bg-blue-50 text-blue-800' :
                             idea.status === 'Promising' ? 'bg-coh-gold/15 text-white' :
-                            idea.status === 'Used' ? 'bg-green-50 text-green-800' :
-                            'bg-gray-50 text-gray-800'
+                            idea.status === 'Used' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
+                            'bg-white/5 backdrop-blur-md text-gray-800'
                           }`}
                         >
                           <option value="New">New</option>
@@ -4984,7 +4984,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed bg-white/10 backdrop-blur-sm/45 p-4 border border-white/10 rounded font-sans">
+                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/45 p-4 border border-white/10 rounded font-sans">
                         {idea.explanation}
                       </p>
 
@@ -5001,7 +5001,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex gap-2 items-center">
                         <button
                           onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
-                          className="bg-white/10 backdrop-blur-sm text-coh-gold hover:text-coh-gold-dark border border-white/10 px-3 py-1.5 rounded font-serif font-bold text-[10px] flex items-center gap-1"
+                          className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm text-coh-gold hover:text-coh-gold-dark border border-white/10 px-3 py-1.5 rounded font-serif font-bold text-[10px] flex items-center gap-1"
                         >
                           <Lightbulb size={10} /> Send Visual Direction to Visual Studio
                         </button>
@@ -5035,7 +5035,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)}
         {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Command Center</h2>
               <p className="page-subtitle">
                 Choose what to create, continue your active work item, or check what needs attention.
@@ -5048,7 +5048,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="flex-1 space-y-8">
                 
                 {/* Section 1: Start New Work */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                   <h3 className="font-serif text-xl text-white mb-1">Start New Work</h3>
                   <p className="text-xs text-white/60 mb-6">Begin a new Work Item from scratch, an idea, or a source.</p>
                   
@@ -5090,7 +5090,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     {/* C. Use a Source */}
-                    <div className="p-4 bg-white/5 backdrop-blur-md text-white rounded border border-white/10 flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                    <div className="p-4 bg-white/5 backdrop-blur-md/5 backdrop-blur-md text-white rounded border border-white/10 flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                       <div>
                         <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Use a Source</h4>
                         <p className="text-xs text-white/60 leading-relaxed font-sans mb-4">Turn a document, pasted text, notes, or URL into content.</p>
@@ -5104,7 +5104,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     {/* D. Create Visuals */}
-                    <div className="p-4 bg-white/5 backdrop-blur-md text-white rounded border border-white/10 flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                    <div className="p-4 bg-white/5 backdrop-blur-md/5 backdrop-blur-md text-white rounded border border-white/10 flex flex-col justify-between shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                       <div>
                         <h4 className="font-serif text-sm uppercase text-coh-gold tracking-wider font-bold mb-1">Create Visuals</h4>
                         <p className="text-xs text-white/60 leading-relaxed font-sans mb-4">Generate images from visual directions or custom prompts.</p>
@@ -5120,11 +5120,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Section 2: Continue Active Work */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                   <h3 className="font-serif text-sm font-bold text-white mb-3">Continue Active Work</h3>
                   
                   {activeWorkItem ? (
-                    <div className="bg-white/10 backdrop-blur-sm p-4 rounded border border-white/20 interactive-card">
+                    <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-4 rounded border border-white/20 interactive-card">
                       <div className="flex justify-between items-start mb-2">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -5180,13 +5180,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           }} className="text-xs bg-coh-navy text-white px-3 py-1.5 rounded hover:bg-coh-navy/90 font-semibold interactive-button">Save to Library</button>
                         )}
                         {activeWorkItem.saved && (
-                          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }} className="text-xs bg-white/10 backdrop-blur-sm text-white border border-coh-navy/20 px-3 py-1.5 rounded hover:bg-coh-navy/10 font-semibold interactive-button">Open Library</button>
+                          <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }} className="text-xs bg-white/5 backdrop-blur-md/10 backdrop-blur-sm text-white border border-coh-navy/20 px-3 py-1.5 rounded hover:bg-coh-navy/10 font-semibold interactive-button">Open Library</button>
                         )}
                         <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }} className="text-[10px] text-white underline ml-auto self-center">Open Workspace</button>
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-white/10 backdrop-blur-sm/50 p-6 rounded border border-white/10 flex flex-col items-center justify-center text-center">
+                    <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 p-6 rounded border border-white/10 flex flex-col items-center justify-center text-center">
                       <p className="text-sm text-white/60 font-serif italic mb-3">You don't have an active work item right now. Start a new draft or explore ideas from the options above.</p>
                       <button onClick={() => {
                         const id = `work-${Date.now()}`;
@@ -5202,7 +5202,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Section 3: Work Needing Attention */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                   <h3 className="font-serif text-sm font-bold text-white mb-3">Work Needing Attention</h3>
                   <div className="space-y-2">
                     {!aiProvider && (
@@ -5220,14 +5220,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
                     )}
                     {activeWorkItem?.visualDirection && activeWorkItem.imageResults.length === 0 && (
-                      <div className="flex items-center gap-2 p-2 bg-white/10 backdrop-blur-sm rounded border-l-2 border-coh-gold text-xs text-white">
+                      <div className="flex items-center gap-2 p-2 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm rounded border-l-2 border-coh-gold text-xs text-white">
                         <Camera size={14} className="text-coh-gold" />
                         <span>Visual direction ready for image generation.</span>
                         <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }} className="ml-auto underline font-semibold text-white">Create</button>
                       </div>
                     )}
                     {activeWorkItem?.status === 'Approved' && !activeWorkItem.saved && (
-                      <div className="flex items-center gap-2 p-2 bg-white/10 backdrop-blur-sm rounded border-l-2 border-coh-navy text-xs text-white">
+                      <div className="flex items-center gap-2 p-2 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm rounded border-l-2 border-coh-navy text-xs text-white">
                         <FileText size={14} className="text-white" />
                         <span>Approved work item is unsaved.</span>
                         <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }} className="ml-auto underline font-semibold text-white">Save</button>
@@ -5235,7 +5235,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     )}
                     
                     {savedIdeas.some(i => i.status === 'New') && (
-                      <div className="flex items-center gap-2 p-2 bg-white/10 backdrop-blur-sm rounded border-l-2 border-coh-gold text-xs text-white">
+                      <div className="flex items-center gap-2 p-2 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm rounded border-l-2 border-coh-gold text-xs text-white">
                         <Lightbulb size={14} className="text-coh-gold" />
                         <span>{savedIdeas.filter(i => i.status === 'New').length} generated ideas ready to draft.</span>
                         <button onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }} className="ml-auto underline font-semibold text-white">View</button>
@@ -5254,7 +5254,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="lg:w-72 space-y-6">
                 
                 {/* Studio Status / Overview */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                   <h3 className="font-serif text-sm font-bold text-white mb-4">Studio Status</h3>
                   
                   <div className="space-y-4">
@@ -5280,15 +5280,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="h-px bg-coh-gold/15 my-2"></div>
                     
                     <div className="grid grid-cols-2 gap-2 text-center text-xs">
-                      <div className="bg-white/10 backdrop-blur-sm p-2 rounded border border-white/10">
+                      <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-2 rounded border border-white/10">
                         <div className="font-bold text-white text-lg">{[...workspaceLocalSources, ...sources].length}</div>
                         <div className="text-white/60">Sources</div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2 rounded border border-white/10">
+                      <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-2 rounded border border-white/10">
                         <div className="font-bold text-white text-lg">{savedContent.length}</div>
                         <div className="text-white/60">Saved</div>
                       </div>
-                      <div className="bg-white/10 backdrop-blur-sm p-2 rounded border border-white/10 col-span-2">
+                      <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-2 rounded border border-white/10 col-span-2">
                         <div className="font-bold text-white text-lg">{savedIdeas.length}</div>
                         <div className="text-white/60">Ideas</div>
                       </div>
@@ -5297,7 +5297,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Quick Actions */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                   <h3 className="font-serif text-sm font-bold text-white mb-3">Quick Actions</h3>
                   <div className="space-y-2">
                     {[
@@ -5319,7 +5319,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setQuickBrief({ goal: '', channel: qa.channel, notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: qa.format });
                           setActiveTab('content-workspace');
                         }}
-                        className="w-full flex items-center gap-3 p-2 text-sm text-left text-white bg-white/10 backdrop-blur-sm hover:bg-coh-gold/20 rounded border border-white/10 transition-colors interactive-button"
+                        className="w-full flex items-center gap-3 p-2 text-sm text-left text-white bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/20 rounded border border-white/10 transition-colors interactive-button"
                       >
                         <span className="text-coh-gold">{qa.icon}</span>
                         {qa.label}
@@ -5369,7 +5369,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="page-shell">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="page-title">
@@ -5406,11 +5406,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
               </div>
             ) : (
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                 <div>
                   <div className="flex items-center gap-3">
                     <h2 className="page-title">Content Workspace</h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/10 backdrop-blur-sm border border-white/10 text-white px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 text-white px-2 py-0.5 rounded">
                       Standalone Draft
                     </span>
                   </div>
@@ -5455,7 +5455,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* Validation warning block */}
             {validationWarning && (
-              <div className="bg-red-50 border border-red-200 p-4 rounded text-xs text-red-800 font-semibold flex items-center gap-2 animate-pulse">
+              <div className="bg-red-500/10 backdrop-blur-md border border-red-200 p-4 rounded text-xs text-red-800 font-semibold flex items-center gap-2 animate-pulse">
                 <AlertTriangle size={15} />
                 <span>{validationWarning}</span>
               </div>
@@ -5476,7 +5476,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             )}
 
             {/* Honest Prototype Banner */}
-            <div className="bg-amber-50/70 border border-white/20 p-4 rounded text-xs text-white flex justify-between items-center gap-4 flex-wrap">
+            <div className="bg-amber-500/10 backdrop-blur-md/70 border border-white/20 p-4 rounded text-xs text-white flex justify-between items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
                 <AlertTriangle size={15} className="text-coh-gold shrink-0" />
                 <span>Needs review: drafts are generated by local logic. For final-quality copy, use Prompt Builder or connect an AI model.</span>
@@ -5489,10 +5489,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {/* Content Starters container */}
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-3">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-3">
               <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
                 <span className="font-semibold text-white/80 text-sm">Content Starters</span>
-                <span className="text-xs text-coh-gold font-semibold bg-white/10 backdrop-blur-sm px-2 py-1 rounded">
+                <span className="text-xs text-coh-gold font-semibold bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-2 py-1 rounded">
                   {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
                 </span>
               </div>
@@ -5506,7 +5506,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button
                           key={temp.name}
                           onClick={() => applyTemplate(temp)}
-                          className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1.5 px-3 rounded text-[11px] transition font-medium"
+                          className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1.5 px-3 rounded text-[11px] transition font-medium"
                           title={temp.desc}
                         >
                           {temp.name}
@@ -5520,37 +5520,37 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => applyExampleChip('tetralogy')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Announce Tetralogy
                       </button>
                       <button
                         onClick={() => applyExampleChip('cultural-ip')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Cultural IP & Model
                       </button>
                       <button
                         onClick={() => applyExampleChip('event-notes')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Nordic Air (Soria Moria)
                       </button>
                       <button
                         onClick={() => applyExampleChip('instagram-img')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Water Dragon Caption
                       </button>
                       <button
                         onClick={() => applyExampleChip('sponsor-facing')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Patron Pitch Paragraph
                       </button>
                       <button
                         onClick={() => applyExampleChip('newsletter-update')}
-                        className="bg-white/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold/25 text-white border border-white/10 py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Earth Canon Update
                       </button>
@@ -5564,7 +5564,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               
               {/* PANEL 1: BRIEF */}
-              <div className="col-span-1 lg:col-span-4 bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
+              <div className="col-span-1 lg:col-span-4 bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
                 
                 {creationMode === 'simple' ? (
                   <div className="space-y-4">
@@ -5579,7 +5579,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         rows={6}
                         value={simpleBrief.goal}
                         onChange={(e) => setSimpleBrief({ ...simpleBrief, goal: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Draft a partner update about the new Climate Canon project..."
                       />
                     </div>
@@ -5591,7 +5591,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={simpleBrief.channel}
                         onChange={(e) => setSimpleBrief({ ...simpleBrief, channel: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                       >
                         {CHANNELS.map(ch => (
                           <option key={ch} value={ch}>{ch}</option>
@@ -5603,14 +5603,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <label className="block text-white/80 font-bold mb-1 text-[11px] uppercase tracking-wider">
                         Add Context (Optional)
                       </label>
-                      <div className="flex gap-1.5 bg-white/10 backdrop-blur-sm/40 p-1 rounded">
+                      <div className="flex gap-1.5 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-1 rounded">
                         {(['paste', 'upload', 'link'] as const).map(mode => (
                           <button
                             key={mode}
                             type="button"
                             onClick={() => setInlineSourceType(mode)}
                             className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                              inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-white/60 hover:bg-white/10 backdrop-blur-sm'
+                              inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-white/60 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm'
                             }`}
                           >
                             {mode === 'link' ? 'URL' : mode}
@@ -5625,14 +5625,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             placeholder="Source Title"
                             value={inlinePasteData.title}
                             onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                           />
                           <textarea
                             rows={3}
                             placeholder="Paste source text..."
                             value={inlinePasteData.content}
                             onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] font-mono"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] font-mono"
                           />
                           <div className="flex justify-between items-center text-[10px]">
                             <label className="flex items-center gap-1">
@@ -5661,14 +5661,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             placeholder="Source Name"
                             value={inlineLinkData.title}
                             onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                           />
                           <input
                             type="text"
                             placeholder="URL (https://...)"
                             value={inlineLinkData.url}
                             onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                           />
                           <p className="text-[9px] text-white/40">Paste the relevant excerpt or summary so the system knows what to use. The app may not read the webpage automatically yet.</p>
                           <textarea
@@ -5676,10 +5676,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             placeholder="Relevant excerpt or summary..."
                             value={inlineLinkData.summary}
                             onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                           />
                           {linkWarning && (
-                            <p className="text-[9px] text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200 leading-normal font-semibold">
+                            <p className="text-[9px] text-amber-700 bg-amber-500/10 backdrop-blur-md p-1.5 rounded border border-amber-200 leading-normal font-semibold">
                               {linkWarning}
                             </p>
                           )}
@@ -5714,7 +5714,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <button
                             type="button"
                             onClick={() => inlineFileInputRef.current?.click()}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/10 backdrop-blur-sm-dark p-2 rounded text-center text-[11px] font-semibold text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm-dark p-2 rounded text-center text-[11px] font-semibold text-white"
                           >
                             Upload File
                           </button>
@@ -5746,7 +5746,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       )}
                     </div>
 
-                    <div className="bg-white/10 backdrop-blur-sm/30 border border-white/10 p-3 rounded">
+                    <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/30 border border-white/10 p-3 rounded">
                       <p className="text-[10px] text-white/70 italic text-center">
                         The system will infer format, audience, tone, and purpose from your request.
                       </p>
@@ -5765,7 +5765,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         rows={2}
                         value={quickBrief.goal}
                         onChange={(e) => setQuickBrief({ ...quickBrief, goal: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Specify campaign goal or theme..."
                       />
                     </div>
@@ -5785,7 +5785,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           }));
                           setFormatAdjustedNote('');
                         }}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                       >
                         <option value="Single Channel">Single Channel</option>
                         <option value="Multi-Channel Pack">Multi-Channel Pack</option>
@@ -5795,7 +5795,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {quickBrief.creationScope === 'Multi-Channel Pack' ? (
                       <div>
                         <label className="block text-white/70 font-semibold mb-1">Target Channels</label>
-                        <div className="grid grid-cols-2 gap-2 bg-white/10 backdrop-blur-sm/50 p-2.5 border border-white/10 rounded max-h-32 overflow-y-auto">
+                        <div className="grid grid-cols-2 gap-2 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 p-2.5 border border-white/10 rounded max-h-32 overflow-y-auto">
                           {CHANNELS.map(ch => {
                             const isChecked = quickBrief.targetChannels?.includes(ch);
                             return (
@@ -5827,7 +5827,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <select
                             value={quickBrief.channel}
                             onChange={(e) => handleChannelChange(e.target.value, false)}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                           >
                             {CHANNELS.map(ch => (
                               <option key={ch} value={ch}>{ch}</option>
@@ -5845,7 +5845,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setQuickBrief({ ...quickBrief, outputFormat: e.target.value });
                               setFormatAdjustedNote('');
                             }}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                           >
                             {(CHANNEL_FORMATS[quickBrief.channel] || []).map(fmt => (
                               <option key={fmt} value={fmt}>{fmt}</option>
@@ -5868,7 +5868,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={quickBrief.language}
                           onChange={(e) => setQuickBrief({ ...quickBrief, language: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                         >
                           {LANGUAGES.map(l => (
                           <option key={l.id} value={l.label}>{l.label}</option>
@@ -5883,7 +5883,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         rows={5}
                         value={quickBrief.notes}
                         onChange={(e) => setQuickBrief({ ...quickBrief, notes: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white font-mono text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white font-mono text-[11px]"
                         placeholder="Paste notes, facts, article excerpts, image descriptions, or source material."
                       />
                     </div>
@@ -5896,7 +5896,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="text"
                         value={quickBrief.mustInclude}
                         onChange={(e) => setQuickBrief({ ...quickBrief, mustInclude: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Add phrases, facts, or points that must appear."
                       />
                     </div>
@@ -5909,7 +5909,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="text"
                         value={quickBrief.mustAvoid}
                         onChange={(e) => setQuickBrief({ ...quickBrief, mustAvoid: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Add words, claims, or tones to avoid."
                       />
                     </div>
@@ -5939,7 +5939,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         rows={2}
                         value={advancedBrief.topic}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, topic: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                         placeholder="Announce the canon or specific post topic..."
                       />
                     </div>
@@ -5951,7 +5951,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={advancedBrief.creationIntent || 'Infer automatically'}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, creationIntent: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                       >
                         <option value="Infer automatically">Infer automatically</option>
                         <option value="Answer a question">Answer a question</option>
@@ -5984,7 +5984,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           }));
                           setFormatAdjustedNote('');
                         }}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                       >
                         <option value="Single Channel">Single Channel</option>
                         <option value="Multi-Channel Pack">Multi-Channel Pack</option>
@@ -5994,7 +5994,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {advancedBrief.creationScope === 'Multi-Channel Pack' ? (
                       <div>
                         <label className="block text-white/70 font-semibold mb-1">Target Channels</label>
-                        <div className="grid grid-cols-2 gap-2 bg-white/10 backdrop-blur-sm/50 p-2 border border-white/10 rounded max-h-32 overflow-y-auto font-sans">
+                        <div className="grid grid-cols-2 gap-2 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 p-2 border border-white/10 rounded max-h-32 overflow-y-auto font-sans">
                           {CHANNELS.map(ch => {
                             const isChecked = advancedBrief.targetChannels?.includes(ch);
                             return (
@@ -6024,7 +6024,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <select
                             value={advancedBrief.channel}
                             onChange={(e) => handleChannelChange(e.target.value, true)}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                           >
                             {CHANNELS.map(ch => (
                               <option key={ch} value={ch}>{ch}</option>
@@ -6042,7 +6042,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setAdvancedBrief({ ...advancedBrief, outputFormat: e.target.value });
                               setFormatAdjustedNote('');
                             }}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                           >
                             {(CHANNEL_FORMATS[advancedBrief.channel] || []).map(fmt => (
                               <option key={fmt} value={fmt}>{fmt}</option>
@@ -6065,7 +6065,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={advancedBrief.pillar}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, pillar: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                         >
                           <option value="General / Custom">General / Custom</option>
                           <option value="Climate Tetralogy & Canon">Climate Tetralogy & Canon</option>
@@ -6086,7 +6086,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={advancedBrief.language}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, language: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                         >
                           {LANGUAGES.map(l => (
                           <option key={l.id} value={l.label}>{l.label}</option>
@@ -6103,7 +6103,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={advancedBrief.audience}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, audience: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                       >
                         <option value="General Public">General Public</option>
                         <option value="Cultural Audience">Cultural Audience</option>
@@ -6130,7 +6130,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <textarea
                           value={advancedBrief.customAudience}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, customAudience: e.target.value })}
-                          className="w-full min-h-[80px] resize-y bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-xs"
+                          className="w-full min-h-[80px] resize-y bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-xs"
                           placeholder="Example: Nordic cultural funders, climate-tech executives, opera patrons, or local community partners"
                         />
                         <p className="text-[9px] text-white/40 mt-1">Describe the group in plain language so the system can adapt tone, vocabulary, and CTA.</p>
@@ -6145,7 +6145,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={advancedBrief.purpose}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, purpose: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                         >
                           <option value="General / Open">General / Open</option>
                           <option value="Awareness">Awareness</option>
@@ -6174,7 +6174,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={advancedBrief.directionMode}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, directionMode: e.target.value as any })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                       >
                         <option value="auto">Use Suggested Framing</option>
                         <option value="none">Create Directly From Brief</option>
@@ -6192,7 +6192,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           rows={2}
                           value={advancedBrief.customDirection}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, customDirection: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-xs"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white text-xs"
                           placeholder="Example: Position this as a sponsor opportunity, not a public announcement."
                         />
                       </div>
@@ -6212,7 +6212,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setAdvancedBrief({ ...advancedBrief, angle: e.target.value });
                             }
                           }}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                         >
                           <option value="Create From Scratch / No Direction">Create Directly From Brief</option>
                           <option value="Write My Own Direction">Use My Own Framing</option>
@@ -6229,7 +6229,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
                       </label>
                       
-                      <div className="border border-white/10 p-2.5 rounded bg-white/10 backdrop-blur-sm/50 max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
+                      <div className="border border-white/10 p-2.5 rounded bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
                         {[...selectableSources, ...workspaceLocalSources].map(src => {
                           const isSel = advancedBrief.selectedSourceIds.includes(src.id);
                           return (
@@ -6255,15 +6255,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
 
                       {/* INLINE SOURCE ADD PANEL - Add URL */}
-                      <div className="border border-white/10 p-3 rounded bg-white/5 backdrop-blur-md space-y-2">
-                        <div className="flex gap-1.5 bg-white/10 backdrop-blur-sm/40 p-1 rounded">
+                      <div className="border border-white/10 p-3 rounded bg-white/5 backdrop-blur-md/5 backdrop-blur-md space-y-2">
+                        <div className="flex gap-1.5 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-1 rounded">
                           {(['paste', 'upload', 'link'] as const).map(mode => (
                             <button
                               key={mode}
                               type="button"
                               onClick={() => setInlineSourceType(mode)}
                               className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                                inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-white/60 hover:bg-white/10 backdrop-blur-sm'
+                                inlineSourceType === mode ? 'bg-coh-navy text-coh-gold' : 'text-white/60 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm'
                               }`}
                             >
                               {mode === 'link' ? 'URL' : mode}
@@ -6278,14 +6278,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               placeholder="Source Title"
                               value={inlinePasteData.title}
                               onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                             />
                             <textarea
                               rows={3}
                               placeholder="Paste source text..."
                               value={inlinePasteData.content}
                               onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] font-mono"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] font-mono"
                             />
                             <div className="flex justify-between items-center text-[10px]">
                               <label className="flex items-center gap-1">
@@ -6314,14 +6314,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               placeholder="Source Name"
                               value={inlineLinkData.title}
                               onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                             />
                             <input
                               type="text"
                               placeholder="URL (https://...)"
                               value={inlineLinkData.url}
                               onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                             />
                             <p className="text-[9px] text-white/40">Paste the relevant excerpt or summary so the system knows what to use. The app may not read the webpage automatically yet.</p>
                             
@@ -6330,11 +6330,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               placeholder="Relevant excerpt or summary..."
                               value={inlineLinkData.summary}
                               onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px]"
                             />
                             
                             {linkWarning && (
-                              <p className="text-[9px] text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-200 leading-normal font-semibold">
+                              <p className="text-[9px] text-amber-700 bg-amber-500/10 backdrop-blur-md p-1.5 rounded border border-amber-200 leading-normal font-semibold">
                                 {linkWarning}
                               </p>
                             )}
@@ -6370,7 +6370,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               type="button"
                               onClick={() => inlineFileInputRef.current?.click()}
-                              className="w-full bg-white/10 backdrop-blur-sm border border-white/10 hover:bg-white/10 backdrop-blur-sm-dark p-2 rounded text-center text-[11px] font-semibold text-white"
+                              className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm-dark p-2 rounded text-center text-[11px] font-semibold text-white"
                             >
                               Upload File
                             </button>
@@ -6412,7 +6412,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="text"
                         value={advancedBrief.mustInclude}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, mustInclude: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Add phrases, facts, or points that must appear."
                       />
                     </div>
@@ -6425,7 +6425,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         type="text"
                         value={advancedBrief.mustAvoid}
                         onChange={(e) => setAdvancedBrief({ ...advancedBrief, mustAvoid: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                         placeholder="Add words, claims, or tones to avoid."
                       />
                     </div>
@@ -6438,7 +6438,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={advancedBrief.desiredLength}
                           onChange={(e) => setAdvancedBrief({ ...advancedBrief, desiredLength: e.target.value })}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                         >
                           <option value="Short: 50-80 words">Short: 50-80 words</option>
                           <option value="Medium: 120-180 words">Medium: 120-180 words</option>
@@ -6456,7 +6456,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             type="text"
                             value={advancedBrief.customLengthCount}
                             onChange={(e) => setAdvancedBrief({ ...advancedBrief, customLengthCount: e.target.value })}
-                            className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white"
                             placeholder="Desired word count range"
                           />
                         </div>
@@ -6491,13 +6491,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </p>
 
                   <div className="grid grid-cols-2 gap-1.5 text-[9px] font-mono mb-2">
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.corePassport.oneLineDefinition ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.corePassport.oneLineDefinition ? 'bg-green-500/10 backdrop-blur-md text-green-700' : 'bg-red-500/10 backdrop-blur-md text-red-700'}`}>
                       Identity Locked
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.claims.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.claimsProofBoundaries.claims.length > 0 ? 'bg-green-500/10 backdrop-blur-md text-green-700' : 'bg-red-500/10 backdrop-blur-md text-red-700'}`}>
                       Boundaries Active
                     </span>
-                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.voiceAndLanguage.overallTone.length > 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    <span className={`px-2 py-1 rounded text-center font-bold ${operatingCore.voiceAndLanguage.overallTone.length > 0 ? 'bg-green-500/10 backdrop-blur-md text-green-700' : 'bg-red-500/10 backdrop-blur-md text-red-700'}`}>
                       Voice Calibrated
                     </span>
                     <span className={`px-2 py-1 rounded text-center font-bold bg-coh-gold/10 text-white`}>
@@ -6530,7 +6530,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </span>
                               <p className="text-[10px] text-white/60">{chk.desc}</p>
                               {!chk.pass && (
-                                <div className="text-[9px] bg-red-50 p-2 border border-red-100 rounded text-red-800 space-y-1">
+                                <div className="text-[9px] bg-red-500/10 backdrop-blur-md p-2 border border-red-100 rounded text-red-800 space-y-1">
                                   <div><strong>Issue:</strong> {chk.whyItMatters}</div>
                                   <div><strong>Fix:</strong> {chk.suggestedFix}</div>
                                 </div>
@@ -6554,7 +6554,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                     <details className="text-[10px] text-white/40 cursor-pointer">
                       <summary className="interactive-link transition">Inspect Compiled Prompt</summary>
-                      <pre className="mt-2 p-3 bg-white/10 backdrop-blur-sm/50 rounded border border-white/10 overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
+                      <pre className="mt-2 p-3 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 rounded border border-white/10 overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
                         {compileStructuredPrompt()}
                       </pre>
                     </details>
@@ -6570,7 +6570,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="col-span-1 lg:col-span-8 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-6">
+              <div className="col-span-1 lg:col-span-8 bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-6">
                 
                 <div className="border-b border-white/10 pb-2 flex justify-between items-center">
                   <h3 className="font-serif text-lg font-semibold text-white">
@@ -6586,7 +6586,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {draftOptions ? (
                   <div className="space-y-6">
                     {isBriefOutdated && (
-                      <div className="bg-amber-50 border border-amber-300 p-3.5 rounded text-xs text-white flex justify-between items-center animate-fadeIn">
+                      <div className="bg-amber-500/10 backdrop-blur-md border border-amber-300 p-3.5 rounded text-xs text-white flex justify-between items-center animate-fadeIn">
                         <span>Inputs changed. Regenerate to apply the latest brief.</span>
                         <button
                           disabled={isGeneratingDrafts || aiIsGenerating}
@@ -6599,7 +6599,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     )}
 
                     {draftOptions.contextWarning && (
-                      <div className="bg-amber-50 border border-amber-300 p-4 rounded text-xs text-white flex items-center gap-2 font-semibold">
+                      <div className="bg-amber-500/10 backdrop-blur-md border border-amber-300 p-4 rounded text-xs text-white flex items-center gap-2 font-semibold">
                         <AlertTriangle size={15} className="text-coh-gold shrink-0" />
                         <span>{draftOptions.contextWarning}</span>
                       </div>
@@ -6613,7 +6613,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       const lang = parts[1] || '';
                       const message = parts[2] || '';
                       return (
-                        <div className={`p-4 rounded border text-xs space-y-2 ${isRTL ? 'bg-red-50 border-red-300' : 'bg-amber-50 border-amber-300'}`}>
+                        <div className={`p-4 rounded border text-xs space-y-2 ${isRTL ? 'bg-red-500/10 backdrop-blur-md border-red-300' : 'bg-amber-500/10 backdrop-blur-md border-amber-300'}`}>
                           <div className="flex items-start gap-2">
                             <AlertTriangle size={14} className={`shrink-0 mt-0.5 ${isRTL ? 'text-red-600' : 'text-amber-600'}`} />
                             <div className="space-y-1.5">
@@ -6634,8 +6634,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="space-y-4">
 
                       {/* Option A card */}
-                      <div className="border border-white/10 rounded bg-white/5 backdrop-blur-md flex flex-col overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-                        <div className="bg-white/10 backdrop-blur-sm/40 p-3 border-b border-white/10 flex justify-between items-center">
+                      <div className="border border-white/10 rounded bg-white/5 backdrop-blur-md/5 backdrop-blur-md flex flex-col overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-3 border-b border-white/10 flex justify-between items-center">
                           <span className="font-serif text-xs font-bold text-white">Option A — Direct / Institutional</span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionA) ? (
@@ -6661,7 +6661,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             {draftOptions.optionA}
                           </p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm/15 p-3 border-t border-white/10 flex flex-wrap gap-2">
+                        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/15 p-3 border-t border-white/10 flex flex-wrap gap-2">
                           <button
                             onClick={() => {
                               setActiveDraftText(draftOptions.optionA);
@@ -6691,8 +6691,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
 
                       {/* Option B card */}
-                      <div className="border border-white/10 rounded bg-white/5 backdrop-blur-md flex flex-col overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-                        <div className="bg-white/10 backdrop-blur-sm/40 p-3 border-b border-white/10 flex justify-between items-center">
+                      <div className="border border-white/10 rounded bg-white/5 backdrop-blur-md/5 backdrop-blur-md flex flex-col overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-3 border-b border-white/10 flex justify-between items-center">
                           <span className="font-serif text-xs font-bold text-white">Option B — Human / Narrative</span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionB) ? (
@@ -6718,7 +6718,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             {draftOptions.optionB}
                           </p>
                         </div>
-                        <div className="bg-white/10 backdrop-blur-sm/15 p-3 border-t border-white/10 flex flex-wrap gap-2">
+                        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/15 p-3 border-t border-white/10 flex flex-wrap gap-2">
                           <button
                             onClick={() => {
                               setActiveDraftText(draftOptions.optionB);
@@ -6750,13 +6750,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     {/* 2. Shorter Version */}
-                    <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded text-xs space-y-2">
+                    <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-4 rounded text-xs space-y-2">
                       <span className="font-serif font-bold text-white text-xs block">Shorter Version</span>
                       <p className="text-xs text-white/80 italic leading-relaxed">{draftOptions.optionC}</p>
                     </div>
 
                     {/* 3. Visual Direction */}
-                    <div className="bg-white/10 backdrop-blur-sm/55 p-4 border border-white/10 rounded text-xs space-y-2">
+                    <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/55 p-4 border border-white/10 rounded text-xs space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-serif font-bold text-white text-xs block">
                           Visual Direction <Tooltip text="Design guidance for a visual designer, carousel, post graphic, or image prompt." />
@@ -6840,7 +6840,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={anotherVersionStyle}
                           onChange={(e) => setAnotherVersionStyle(e.target.value)}
-                          className="bg-white/5 backdrop-blur-md border border-white/10 text-[10px] text-white p-1.5 rounded font-bold"
+                          className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 text-[10px] text-white p-1.5 rounded font-bold"
                         >
                           <option value="default">Default Variation</option>
                           <option value="More direct">More direct</option>
@@ -6863,14 +6863,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     {/* 5. Recommended Approach */}
                     {advancedBrief.directionMode === 'auto' && (
-                      <details className="text-xs border border-white/10 p-3 rounded bg-white/10 backdrop-blur-sm/15 cursor-pointer">
+                      <details className="text-xs border border-white/10 p-3 rounded bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/15 cursor-pointer">
                         <summary className="font-semibold text-white hover:text-coh-gold font-serif">View Recommended Approaches</summary>
                         <div className="space-y-3 mt-3">
                           {getDynamicDirections().map(d => {
                             const isSel = d.title === advancedBrief.angle;
                             return (
                               <div key={d.title} className={`p-3 border rounded text-xs transition cursor-default ${
-                                isSel ? 'border-coh-gold bg-white/5 backdrop-blur-md' : 'border-white/10 bg-white/5 backdrop-blur-md/50'
+                                isSel ? 'border-coh-gold bg-white/5 backdrop-blur-md/5 backdrop-blur-md' : 'border-white/10 bg-white/5 backdrop-blur-md/5 backdrop-blur-md/50'
                               }`}>
                                 <h4 className="font-serif font-bold text-white mb-1">{d.title}</h4>
                                 <p className="text-white/60 text-[11px] mb-2">{d.strategicFrame}</p>
@@ -6894,7 +6894,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         customDirection: d.whatToSay
                                       });
                                     }}
-                                    className="bg-white/10 backdrop-blur-sm border border-white/10 text-white px-2 py-1 rounded text-[10px]"
+                                    className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 text-white px-2 py-1 rounded text-[10px]"
                                   >
                                     Edit Approach
                                   </button>
@@ -6905,7 +6905,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         angle: 'Create From Scratch / No Direction'
                                       });
                                     }}
-                                    className="bg-red-50 text-red-700 px-2 py-1 rounded text-[10px]"
+                                    className="bg-red-500/10 backdrop-blur-md text-red-700 px-2 py-1 rounded text-[10px]"
                                   >
                                     Skip Approach
                                   </button>
@@ -6939,7 +6939,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
           return (
           <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Visual Studio</h2>
               <p className="page-subtitle">Create visual outputs from full visual directions or custom prompts.</p>
             </div>
@@ -6949,7 +6949,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="lg:col-span-5 space-y-6">
                 
                 {/* Input Mode Selector */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
                   <h3 className="font-serif text-base font-bold text-white border-b border-white/10 pb-2">Input Mode</h3>
                   
                   <div className="flex bg-coh-navy/5 p-1 rounded border border-white/10">
@@ -6988,14 +6988,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         onChange={(e) => setVsManualPrompt(e.target.value)}
                         placeholder="Paste a prompt, visual direction, image idea, or creative brief."
                         rows={4}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-xs font-sans"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-xs font-sans"
                       />
                     </div>
                   )}
                 </div>
 
                 {/* Generation Controls */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 text-xs">
                   <h3 className="font-serif text-base font-bold text-white border-b border-white/10 pb-2">Generation Settings</h3>
                   
                   <div>
@@ -7003,7 +7003,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <select
                       value={vsPromptMode}
                       onChange={(e) => setVsPromptMode(e.target.value as any)}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
                     >
                       {vsInputMode === 'Manual' && <option value="Manual Only">Manual Prompt Only</option>}
                       <option value="Full + AI">Full Visual Direction + AI Image Prompt</option>
@@ -7017,7 +7017,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <select
                       value={vsAspectRatio}
                       onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
                     >
                       {ASPECT_RATIO_GROUP_ORDER.map(group => (
                         <optgroup key={group} label={group}>
@@ -7040,11 +7040,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="mt-2 flex gap-2">
                         <div className="flex-1">
                           <label className="block text-[10px] text-white/60 mb-1">Width (px)</label>
-                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 text-xs rounded" />
                         </div>
                         <div className="flex-1">
                           <label className="block text-[10px] text-white/60 mb-1">Height (px)</label>
-                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 text-xs rounded" />
                         </div>
                       </div>
                     )}
@@ -7055,7 +7055,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <select
                       value={vsVisualStyle}
                       onChange={(e) => setVsVisualStyle(e.target.value)}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded"
                     >
                       <option value="Editorial Photomontage">Editorial Photomontage</option>
                       <option value="Cinematic Realism">Cinematic Realism</option>
@@ -7079,7 +7079,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
               {/* Structured Visual Brief Editor */}
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
+              <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
                 <div className="flex justify-between items-center mb-2 border-b border-white/10 pb-2">
                   <h3 className="font-serif text-base font-bold text-white">Structured Visual Brief</h3>
                   {vsInputMode === 'Manual' && (
@@ -7122,7 +7122,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              onChange={(e) => setVsTextContent(e.target.value)}
                              rows={3}
                              placeholder="The exact quote or text to display on the card..."
-                             className="w-full bg-white/5 backdrop-blur-md border border-coh-gold/40 p-2 text-xs text-white rounded font-sans"
+                             className="w-full bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-coh-gold/40 p-2 text-xs text-white rounded font-sans"
                            />
                          </div>
                          <div>
@@ -7132,7 +7132,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              value={vsAttribution}
                              onChange={(e) => setVsAttribution(e.target.value)}
                              placeholder="e.g. John Doe, CEO"
-                             className="w-full bg-white/5 backdrop-blur-md border border-coh-gold/40 p-2 text-xs text-white rounded font-sans"
+                             className="w-full bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-coh-gold/40 p-2 text-xs text-white rounded font-sans"
                            />
                          </div>
                       </div>
@@ -7157,7 +7157,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           value={field.value}
                           onChange={(e) => field.setter(e.target.value)}
                           rows={field.label === 'Visual Concept' || field.label === 'AI Image Prompt' ? 3 : 2}
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded font-sans"
+                          className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 text-xs text-white rounded font-sans"
                         />
                       </div>
                     ))}
@@ -7171,7 +7171,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-6">
+              <div className="lg:col-span-7 bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-6">
                 <div className="border-b border-white/10 pb-2 flex justify-between items-center">
                   <h3 className="font-serif text-lg font-semibold text-white">
                     Results
@@ -7179,24 +7179,24 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
                 
                 {isGeneratingImage ? (
-                  <div className="bg-white/10 backdrop-blur-sm p-12 rounded text-center border border-dashed border-white/20 flex flex-col items-center justify-center space-y-3">
+                  <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-12 rounded text-center border border-dashed border-white/20 flex flex-col items-center justify-center space-y-3">
                     <div className="w-8 h-8 border-4 border-coh-gold border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-white font-semibold text-sm">Generating...</p>
                   </div>
                 ) : vsGeneratedImages.length === 0 ? (
-                  <div className="bg-white/10 backdrop-blur-sm p-8 rounded text-center text-white/50 italic border border-dashed border-white/20">
+                  <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-8 rounded text-center text-white/50 italic border border-dashed border-white/20">
                     No images generated yet.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {vsGeneratedImages.map(img => (
-                      <div key={img.id} className="bg-white/5 backdrop-blur-md border border-white/10 rounded p-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] group">
+                      <div key={img.id} className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 rounded p-4 shadow-[0_4px_30px_rgba(0,0,0,0.1)] group">
                         <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-white/10" />
                         <div className="flex gap-2 text-xs">
                           <a
                             href={img.url}
                             download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
-                            className="w-full bg-white/10 backdrop-blur-sm hover:bg-coh-gold hover:text-white text-white/80 border border-white/20 py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
+                            className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm hover:bg-coh-gold hover:text-white text-white/80 border border-white/20 py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
@@ -7204,15 +7204,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                         {/* Compiled Prompt Preview */}
                         {img.promptUsed && (
-                          <details className="mt-4 border border-coh-navy/10 rounded overflow-hidden">
-                            <summary className="bg-white/10 backdrop-blur-sm px-3 py-2 text-[10px] uppercase tracking-wider text-white/60 font-bold cursor-pointer select-none flex justify-between">
+                          <details className="mt-4 border border-white/10 rounded overflow-hidden">
+                            <summary className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-3 py-2 text-[10px] uppercase tracking-wider text-white/60 font-bold cursor-pointer select-none flex justify-between">
                               <span>Compiled Prompt Preview (Debug)</span>
                               <span className="opacity-50 font-mono">
                                 {img.generationSize || '1024x1024'} → {img.deliverySize || '1024x1024'}
                               </span>
                             </summary>
-                            <div className="p-3 bg-white/5 backdrop-blur-md text-[11px] font-mono text-white/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
-                              <div className="mb-2 pb-2 border-b border-coh-navy/10 text-[9px] opacity-70 grid grid-cols-2 gap-2">
+                            <div className="p-3 bg-white/5 backdrop-blur-md/5 backdrop-blur-md text-[11px] font-mono text-white/80 whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                              <div className="mb-2 pb-2 border-b border-white/10 text-[9px] opacity-70 grid grid-cols-2 gap-2">
                                 <div>Model: {img.model || 'unknown'}</div>
                                 <div>Quality: {img.quality || 'high'}</div>
                                 <div>Provider: {img.provider || 'unknown'}</div>
@@ -7248,14 +7248,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Content Library</h2>
               <p className="page-subtitle">
                 Access, duplicate, and filter approved COH content assets.
               </p>
             </div>
 
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex gap-4 text-xs flex-wrap items-center">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex gap-4 text-xs flex-wrap items-center">
               <div className="flex items-center gap-1 text-coh-gold shrink-0">
                 <Filter size={15} />
                 <span className="font-semibold uppercase tracking-wider font-mono">Filters</span>
@@ -7268,7 +7268,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search title, copy, or elements..."
-                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-1 rounded text-[11px] w-full text-white"
+                  className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1 rounded text-[11px] w-full text-white"
                 />
               </div>
 
@@ -7277,7 +7277,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <select
                   value={filterChannel}
                   onChange={(e) => setFilterChannel(e.target.value)}
-                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
+                  className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
                 >
                   <option value="All">All Channels</option>
                   <option value="LinkedIn">LinkedIn</option>
@@ -7297,7 +7297,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
+                  className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Draft">Draft</option>
@@ -7312,7 +7312,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <select
                   value={filterPillar}
                   onChange={(e) => setFilterPillar(e.target.value)}
-                  className="bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
+                  className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-white text-[11px]"
                 >
                   <option value="All">All Pillars</option>
                   <option value="Climate Tetralogy & Canon">Climate Tetralogy & Canon</option>
@@ -7328,7 +7328,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   setFilterPillar('All');
                   setSearchQuery('');
                 }}
-                className="px-3 py-1.5 rounded bg-white/10 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white uppercase hover:bg-white/10 backdrop-blur-sm-dark transition"
+                className="px-3 py-1.5 rounded bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white uppercase hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm-dark transition"
               >
                 Reset
               </button>
@@ -7337,7 +7337,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {actualFilteredSaved.length > 0 ? (
               <div className="grid grid-cols-2 gap-6">
                 {actualFilteredSaved.map(item => (
-                  <div key={item.id} className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
+                  <div key={item.id} className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <div>
@@ -7359,10 +7359,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           value={item.status}
                           onChange={(e) => handleUpdateStatus(item.id, e.target.value as SavedContent['status'])}
                           className={`text-[10px] font-bold p-1 rounded font-mono border border-white/10 ${
-                            item.status === 'Published' ? 'bg-green-50 text-green-800' :
+                            item.status === 'Published' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
                             item.status === 'Approved' ? 'bg-blue-50 text-blue-800' :
-                            item.status === 'Revised' ? 'bg-amber-50 text-amber-800' :
-                            'bg-gray-50 text-gray-800'
+                            item.status === 'Revised' ? 'bg-amber-500/10 backdrop-blur-md text-amber-800' :
+                            'bg-white/5 backdrop-blur-md text-gray-800'
                           }`}
                         >
                           <option value="Draft">Draft</option>
@@ -7372,7 +7372,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed bg-white/10 backdrop-blur-sm/45 p-4 border border-white/10 rounded">
+                      <p className="text-xs text-white/80 whitespace-pre-wrap leading-relaxed bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/45 p-4 border border-white/10 rounded">
                         {item.text}
                       </p>
 
@@ -7421,7 +7421,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </button>
                             </div>
                           </div>
-                          <div className="bg-white/10 backdrop-blur-sm/35 p-3 border border-white/10 rounded text-[11px] text-white/80 whitespace-pre-wrap font-sans leading-relaxed">
+                          <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/35 p-3 border border-white/10 rounded text-[11px] text-white/80 whitespace-pre-wrap font-sans leading-relaxed">
                             {formatVisualDirectionForDisplay(
                               item.visualDirection || item.visualIdeation,
                               item.channel,
@@ -7488,7 +7488,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-white/10 rounded bg-white/5 backdrop-blur-md">
+              <div className="text-center py-20 border border-dashed border-white/10 rounded bg-white/5 backdrop-blur-md/5 backdrop-blur-md">
                 <p className="text-xs text-white/60 max-w-sm mx-auto">No saved content meets the active filters.</p>
               </div>
             )}
@@ -7499,7 +7499,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="page-shell">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <div>
                 <h2 className="page-title">Source Library</h2>
                 <p className="page-subtitle">
@@ -7540,7 +7540,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             <div className="grid grid-cols-3 gap-8">
               {/* Form panel */}
-              <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] h-fit space-y-6">
+              <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] h-fit space-y-6">
                 <div>
                   <h3 className="font-serif text-lg text-white-light pb-2 border-b border-white/10">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
@@ -7559,7 +7559,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       placeholder="e.g. Soria Moria Funding Memo"
                       value={newSource.title}
                       onChange={(e) => setNewSource({ ...newSource, title: e.target.value })}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white"
                     />
                   </div>
 
@@ -7569,7 +7569,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={newSource.type}
                         onChange={(e) => setNewSource({ ...newSource, type: e.target.value as SourceFile['type'] })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                       >
                         <option value="Event Notes">Event Notes</option>
                         <option value="Partner Profile">Partner Profile</option>
@@ -7591,7 +7591,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <select
                         value={newSource.status}
                         onChange={(e) => setNewSource({ ...newSource, status: e.target.value as SourceFile['status'] })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                       >
                         <option value="Active">Active</option>
                         <option value="Archived">Archived</option>
@@ -7611,7 +7611,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         placeholder="https://..."
                         value={newSource.url || ''}
                         onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white font-mono text-[11px]"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2.5 rounded text-white font-mono text-[11px]"
                       />
                     </div>
                   )}
@@ -7625,7 +7625,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       rows={3}
                       value={newSource.notes}
                       onChange={(e) => setNewSource({ ...newSource, notes: e.target.value })}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white"
                     />
                   </div>
 
@@ -7637,7 +7637,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       required
                       value={newSource.content}
                       onChange={(e) => setNewSource({ ...newSource, content: e.target.value })}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white font-mono text-[11px]"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white font-mono text-[11px]"
                     />
                   </div>
 
@@ -7668,7 +7668,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setEditingSourceId(null);
                           setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
                         }}
-                        className="bg-white/10 backdrop-blur-sm text-white border border-white/10 py-2 px-3 rounded hover:bg-white/10 backdrop-blur-sm-dark transition text-xs"
+                        className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm text-white border border-white/10 py-2 px-3 rounded hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm-dark transition text-xs"
                       >
                         Cancel
                       </button>
@@ -7689,7 +7689,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition ${
                         sourceLibraryFilter === filter 
                           ? 'bg-coh-navy text-coh-gold' 
-                          : 'bg-white/10 backdrop-blur-sm border border-white/10 text-white/60 hover:bg-coh-gold/10 hover:text-white'
+                          : 'bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 text-white/60 hover:bg-coh-gold/10 hover:text-white'
                       }`}
                     >
                       {filter}
@@ -7699,10 +7699,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
                 {false && (
-                  <div className="space-y-3 bg-white/10 backdrop-blur-sm/30 p-4 border border-dashed border-white/20 rounded">
+                  <div className="space-y-3 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/30 p-4 border border-dashed border-white/20 rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-serif text-sm font-bold text-white">Suggested Core Documents</h3>
-                      <span className="text-[9px] uppercase font-bold text-coh-gold bg-white/5 backdrop-blur-md px-1.5 py-0.5 rounded border border-white/10">Not uploaded yet</span>
+                      <span className="text-[9px] uppercase font-bold text-coh-gold bg-white/5 backdrop-blur-md/5 backdrop-blur-md px-1.5 py-0.5 rounded border border-white/10">Not uploaded yet</span>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
@@ -7710,7 +7710,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Phase 1 Strategic Plan\n- COH Master Deck',
                         'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
                       ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
-                        <div key={title} className="bg-white/5 backdrop-blur-md p-3 border border-white/10 rounded flex justify-between items-center shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
+                        <div key={title} className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md p-3 border border-white/10 rounded flex justify-between items-center shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
                           <span className="text-[11px] font-semibold text-white">{title}</span>
                           <button 
                             onClick={() => {
@@ -7752,8 +7752,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     return filtered.map(src => {
                       const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
                       return (
-                        <div key={src.id} className={`bg-white/5 backdrop-blur-md border p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex gap-4 transition ${
-                          isSelected ? 'border-coh-gold bg-white/10 backdrop-blur-sm/10' : 'border-white/10'
+                        <div key={src.id} className={`bg-white/5 backdrop-blur-md/5 backdrop-blur-md border p-5 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex gap-4 transition ${
+                          isSelected ? 'border-coh-gold bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/10' : 'border-white/10'
                         }`}>
                           <div className="pt-1 select-none">
                             <input
@@ -7771,9 +7771,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 {src.type}
                               </span>
                               <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
-                                src.status === 'Active' ? 'bg-green-50 text-green-700' :
-                                src.status === 'Archived' ? 'bg-gray-100 text-gray-700' :
-                                'bg-amber-50 text-amber-700'
+                                src.status === 'Active' ? 'bg-green-500/10 backdrop-blur-md text-green-700' :
+                                src.status === 'Archived' ? 'bg-white/10 backdrop-blur-md text-gray-700' :
+                                'bg-amber-500/10 backdrop-blur-md text-amber-700'
                               }`}>
                                 {src.status}
                               </span>
@@ -7788,7 +7788,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 </span>
                               )}
                               {src.selectable === false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-50">
+                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-500/10 backdrop-blur-md">
                                   Non-Selectable
                                 </span>
                               )}
@@ -7799,7 +7799,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                             <details className="text-[10px] text-white/40 cursor-pointer pt-1">
                               <summary className="interactive-link transition">Show Full Text</summary>
-                              <pre className="mt-2 p-3 bg-white/10 backdrop-blur-sm/50 rounded border border-white/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
+                              <pre className="mt-2 p-3 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 rounded border border-white/10 overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
                                 {src.content}
                               </pre>
                               {src.url && (
@@ -7818,21 +7818,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </button>
                               
                               {false && (
-                                <div className="mt-3 p-4 bg-white/10 backdrop-blur-sm border border-white/10 rounded animate-fadeIn">
+                                <div className="mt-3 p-4 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 rounded animate-fadeIn">
                                   <h5 className="font-serif font-bold text-white mb-2 text-sm">Extract Insight for Operating Core</h5>
                                   <p className="text-[10px] text-white/60 mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.</p>
                                   
                                   <div className="space-y-3">
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-white/70 mb-1">Suggested Section</label>
-                                      <span className="text-xs bg-white/5 backdrop-blur-md border border-white/10 px-2 py-1 rounded inline-block">
+                                      <span className="text-xs bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 px-2 py-1 rounded inline-block">
                                         {false ? '' : 'Unassigned (Determine manually)'}
                                       </span>
                                     </div>
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-white/70 mb-1">Extract Note</label>
                                       <textarea 
-                                        className="w-full bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white" 
+                                        className="w-full bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-2 rounded text-xs text-white" 
                                         rows={3} 
                                         placeholder="Draft the rule, claim, or insight here..."
                                         id={`extract-${src.id}`}
@@ -7847,7 +7847,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                             /* Copied handled by state */
                                           }
                                         }}
-                                        className="bg-white/5 backdrop-blur-md border border-white/20 hover:bg-coh-gold/10 text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
+                                        className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/20 hover:bg-coh-gold/10 text-white px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
                                       >
                                         Copy to Clipboard
                                       </button>
@@ -7867,13 +7867,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <div className="flex flex-col gap-2 shrink-0">
                             <button
                               onClick={() => handleEditSource(src)}
-                              className="text-white hover:text-coh-gold p-1 hover:bg-white/10 backdrop-blur-sm rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-white hover:text-coh-gold p-1 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm rounded transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Edit3 size={12} /> Edit
                             </button>
                             <button
                               onClick={() => handleDeleteSource(src.id)}
-                              className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-50 rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-500/10 backdrop-blur-md rounded transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Trash2 size={12} /> Delete
                             </button>
@@ -7893,12 +7893,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="page-shell-narrow">
-            <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
+            <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded-lg shadow-[0_4px_30px_rgba(0,0,0,0.1)] mb-8">
               <h2 className="page-title">Settings</h2>
               <p className="page-subtitle">
                 Configure AI provider and generation mode.
               </p>
-              <p className="text-xs text-white/50 font-sans italic bg-white/10 backdrop-blur-sm/50 p-2 rounded border border-white/10 inline-block mt-2">
+              <p className="text-xs text-white/50 font-sans italic bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/50 p-2 rounded border border-white/10 inline-block mt-2">
                 Note: Content, voice, claims, audience, visual, and revision rules are managed in Operating Core. Settings is for technical configuration.
               </p>
             </div>
@@ -7910,7 +7910,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     key={key}
                     onClick={() => setSettingsSection(key)}
-                    className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-coh-navy text-coh-cream' : 'bg-white/10 backdrop-blur-sm border border-white/10 text-white hover:bg-coh-gold/10'}`}
+                    className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-coh-navy text-coh-cream' : 'bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 text-white hover:bg-coh-gold/10'}`}
                   >
                     {label}
                   </button>
@@ -7932,8 +7932,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
 
                 {/* Status Badge */}
-                <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm border border-white/10 p-4 rounded">
-                  <span className={`w-3 h-3 rounded-full ${aiStatus === 'connected' ? (settingsKeyDirty ? 'bg-yellow-500' : 'bg-green-500') : aiStatus === 'error' ? 'bg-red-500' : aiStatus === 'testing' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-300'}`} />
+                <div className="flex items-center gap-3 bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-4 rounded">
+                  <span className={`w-3 h-3 rounded-full ${aiStatus === 'connected' ? (settingsKeyDirty ? 'bg-yellow-500' : 'bg-green-500/10 backdrop-blur-md0') : aiStatus === 'error' ? 'bg-red-500/10 backdrop-blur-md0' : aiStatus === 'testing' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-300'}`} />
                   <div className="flex-1">
                     <span className="text-sm font-bold text-white">
                       {aiStatus === 'connected' && !settingsKeyDirty ? 'AI Generation Active' :
@@ -7966,7 +7966,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Form */}
-                <div className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-5">
+                <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md border border-white/10 p-6 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] space-y-5">
                   <h3 className="font-serif text-lg text-white font-semibold">Configure AI Provider</h3>
                   
                   {/* Provider */}
@@ -7993,7 +7993,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setSettingsTestResult('');
                         setSettingsKeyDirty(true);
                       }}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm"
                     >
                       <option value="openai">OpenAI</option>
                       <option value="gemini">Google Gemini</option>
@@ -8012,7 +8012,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         value={settingsBaseUrl}
                         onChange={(e) => { setSettingsBaseUrl(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
                         placeholder="https://openrouter.ai/api/v1"
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono"
                       />
                     </div>
                   )}
@@ -8025,10 +8025,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       value={settingsApiKey}
                       onChange={(e) => { setSettingsApiKey(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); setSettingsTestResult(''); }}
                       placeholder={MODEL_REGISTRY.find(m => m.provider === settingsProvider)?.provider === 'openai' ? 'sk-proj-...' : 'Enter API key'}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono"
                       autoComplete="off"
                     />
-                    <p className="text-xs text-white/60 font-semibold bg-white/10 backdrop-blur-sm/40 p-2 mt-2 border border-white/10 rounded">
+                    <p className="text-xs text-white/60 font-semibold bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/40 p-2 mt-2 border border-white/10 rounded">
                       API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser.
                     </p>
                   </div>
@@ -8038,7 +8038,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {/* Text Model */}
                   <div>
                     {fallbackWarning && (
-                      <div className="bg-amber-50 text-amber-800 p-2 rounded mb-4 text-sm font-semibold border border-amber-200">
+                      <div className="bg-amber-500/10 backdrop-blur-md text-amber-800 p-2 rounded mb-4 text-sm font-semibold border border-amber-200">
                         {fallbackWarning}
                       </div>
                     )}
@@ -8058,7 +8058,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setFallbackWarning('');
                       }}
                       disabled={!settingsProvider}
-                      className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono disabled:opacity-50"
+                      className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono disabled:opacity-50"
                     >
                       {!settingsTextModel && <option value="">Select a model</option>}
                       {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'text').map(m => (
@@ -8104,7 +8104,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setFallbackWarning('');
                         }}
                         disabled={!settingsProvider}
-                        className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono disabled:opacity-50"
+                        className="w-full bg-white/5 backdrop-blur-md/10 backdrop-blur-sm border border-white/10 p-2 rounded text-white text-sm font-mono disabled:opacity-50"
                       >
                         {!settingsImageModel && <option value="">Select a model</option>}
                         {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'image').map(m => (
@@ -8247,7 +8247,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         ['prompt_builder', 'Prompt Builder Fallback', 'Show a copyable AI prompt instead of generating directly. Use when no API key is available.'],
                         ['prototype', 'Prototype Structure Only', 'Show template structure as a starting frame. Not final copy.'],
                       ] as const).map(([val, title, desc]) => (
-                        <label key={val} className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition ${generationMode === val ? 'border-coh-navy bg-white/10 backdrop-blur-sm' : 'border-white/10 hover:bg-white/10 backdrop-blur-sm/60'}`}>
+                        <label key={val} className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition ${generationMode === val ? 'border-coh-navy bg-white/5 backdrop-blur-md/10 backdrop-blur-sm' : 'border-white/10 hover:bg-white/5 backdrop-blur-md/10 backdrop-blur-sm/60'}`}>
                           <input type="radio" name="genMode" value={val} checked={generationMode === val} onChange={() => setGenerationMode(val)} className="mt-0.5" />
                           <div>
                             <span className="font-semibold text-sm text-white block">{title}</span>
@@ -8261,8 +8261,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {/* .env instructions */}
                   <div className="pt-4 border-t border-white/10 text-xs text-white/60 space-y-2">
                     <p className="font-semibold text-white text-xs">Persistent Setup via .env (Recommended for development)</p>
-                    <p>Add your key to <code className="bg-white/10 backdrop-blur-sm px-1 rounded">.env</code> and restart the server. The key will be loaded automatically.</p>
-                    <pre className="bg-white/10 backdrop-blur-sm p-2 rounded text-[10px] font-mono overflow-x-auto">
+                    <p>Add your key to <code className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm px-1 rounded">.env</code> and restart the server. The key will be loaded automatically.</p>
+                    <pre className="bg-white/5 backdrop-blur-md/10 backdrop-blur-sm p-2 rounded text-[10px] font-mono overflow-x-auto">
 {`# Example .env
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-...
@@ -8284,7 +8284,7 @@ OPENAI_MODEL=gpt-4.1`}
       {/* Overwrite Confirmation Modal */}
       {pendingIdeaToCopy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-coh-navy/80 backdrop-blur-sm">
-          <div className="bg-white/5 backdrop-blur-md rounded-lg shadow-xl border border-white/10 p-6 max-w-sm w-full relative">
+          <div className="bg-white/5 backdrop-blur-md/5 backdrop-blur-md rounded-lg shadow-xl border border-white/10 p-6 max-w-sm w-full relative">
             <button onClick={() => setPendingIdeaToCopy(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
               <X size={16} />
             </button>
