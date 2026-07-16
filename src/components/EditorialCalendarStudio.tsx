@@ -1011,7 +1011,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDay = new Date(year, month - 1, 1).getDay();
     
-    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-slate-50 border border-slate-100 rounded min-h-[120px]" />);
+    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-slate-50 border border-border-standard rounded min-h-[120px]" />);
     
     const days = Array.from({ length: daysInMonth }).map((_, i) => {
       const dayNum = i + 1;
@@ -1019,12 +1019,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       const dayItems = items.filter(item => item.date === dateStr);
       
       return (
-        <div key={dayNum} className={`bg-white border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-violet-300 shadow-sm' : 'border-slate-100'}`}>
-          <span className="text-[10px] font-bold text-slate-400">{dayNum}</span>
+        <div key={dayNum} className={`bg-white border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-violet-300 shadow-sm' : 'border-border-standard'}`}>
+          <span className="text-[10px] font-bold text-text-muted">{dayNum}</span>
           {dayItems.map(item => (
-            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-white p-1.5 rounded border border-slate-100 cursor-pointer hover:border-violet-500 transition flex flex-col gap-0.5">
-              <div className="text-[9px] uppercase font-bold text-violet-600 line-clamp-1">{item.channel}</div>
-              <div className="text-[10px] font-semibold text-slate-800 leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
+            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-white p-1.5 rounded border border-border-standard cursor-pointer hover:border-brand-gold transition flex flex-col gap-0.5">
+              <div className="text-[9px] uppercase font-bold text-brand-gold line-clamp-1">{item.channel}</div>
+              <div className="text-[10px] font-semibold text-text-primary leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
             </div>
           ))}
         </div>
@@ -1034,7 +1034,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     return (
       <div className="grid grid-cols-7 gap-2">
         {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => (
-          <div key={d} className="text-[10px] font-bold text-slate-500 text-center uppercase py-2">{d}</div>
+          <div key={d} className="text-[10px] font-bold text-text-secondary text-center uppercase py-2">{d}</div>
         ))}
         {blanks}
         {days}
@@ -1045,7 +1045,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   return (
     <div className="h-full flex flex-col bg-transparent">
       {/* Header & Action Bar */}
-      <div className="bg-white border-b border-slate-100 p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-white border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
         <div>
           <h2 className="page-title">
             Editorial Calendar Studio
@@ -1054,20 +1054,20 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         </div>
         <div className="flex flex-col items-end gap-2">
           <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-              Status: <span className="text-slate-800">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
+            <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+              Status: <span className="text-text-primary">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
             </span>
             <Button onClick={onOpenLibrary} variant="outline" className="text-xs py-1.5 px-3">
               <Archive size={16} className="mr-1" /> Open Library
             </Button>
-            <Button onClick={handleSaveCalendar} variant="secondary" className={`text-xs py-1.5 px-3 transition-colors ${saveSuccess ? 'bg-green-600 text-slate-800 border-green-600 hover:bg-green-700' : ''}`}>
+            <Button onClick={handleSaveCalendar} variant="secondary" className={`text-xs py-1.5 px-3 transition-colors ${saveSuccess ? 'bg-green-600 text-text-primary border-green-600 hover:bg-green-700' : ''}`}>
               {saveSuccess ? <><CheckCircle2 size={16} className="mr-1" /> Saved to Library</> : <><Save size={16} className="mr-1" /> Save Calendar</>}
             </Button>
           </div>
           {items.length > 0 && (
             <div className="flex items-center gap-2">
               <select 
-                className="bg-white border border-slate-100 text-slate-800 text-xs font-semibold px-2 py-1 rounded outline-none cursor-pointer hover:border-violet-300 transition"
+                className="bg-surface-primary border border-border-standard text-text-primary text-xs font-semibold px-2 py-1 rounded outline-none cursor-pointer hover:border-violet-300 transition"
                 onChange={(e) => {
                   if (e.target.value) {
                     handleExport(e.target.value);
@@ -1091,10 +1091,10 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div className="flex flex-col gap-6 h-full pb-20">
           
           {/* Horizontal Controls Panel */}
-          <div className="bg-white border border-slate-100 p-5 rounded shadow-sm shrink-0">
-            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-              <h3 className="font-sans text-xl font-bold text-slate-800">Monthly Planning Parameters</h3>
-              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-1">
+          <div className="bg-surface-primary border border-border-standard p-5 rounded shadow-sm shrink-0">
+            <div className="flex justify-between items-center mb-4 border-b border-border-standard pb-3">
+              <h3 className="font-sans text-xl font-bold text-text-primary">Monthly Planning Parameters</h3>
+              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-text-secondary hover:text-text-primary flex items-center gap-1">
                 <Settings2 size={14} /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
               </button>
             </div>
@@ -1103,11 +1103,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Timing & Intensity */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-slate-500 mb-1 uppercase text-[10px]">Planning Month</label>
+                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Planning Month</label>
                   <input type="month" className="form-control p-1.5 w-full text-sm font-semibold" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-500 mb-1 uppercase text-[10px]">Publishing Intensity</label>
+                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Publishing Intensity</label>
                   <select className="form-control p-1.5 w-full" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
                     <option value="Light: 4-6 items">Light: 4-6 items</option>
                     <option value="Moderate: 8-12 items">Moderate: 8-12 items</option>
@@ -1118,15 +1118,15 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Strategic Focus */}
-              <div className="space-y-4 bg-white/30 p-3 rounded border border-slate-100">
+              <div className="space-y-4 bg-white/30 p-3 rounded border border-border-standard">
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1 uppercase text-[10px]">Primary Focus</label>
-                  <select className="form-control p-1.5 w-full border-violet-500/50 font-bold" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
+                  <label className="block font-bold text-text-primary mb-1 uppercase text-[10px]">Primary Focus</label>
+                  <select className="form-control p-1.5 w-full border-brand-gold/50 font-bold" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1 uppercase text-[10px]">Secondary Focus (Layering)</label>
+                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Secondary Focus (Layering)</label>
                   <select className="form-control p-1.5 w-full" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
@@ -1144,13 +1144,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Audience */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-slate-800 mb-1 uppercase text-[10px]">Primary Audience</label>
+                  <label className="block font-bold text-text-primary mb-1 uppercase text-[10px]">Primary Audience</label>
                   <select className="form-control p-1.5 w-full" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-slate-600 mb-1 uppercase text-[10px]">Secondary Audience</label>
+                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Secondary Audience</label>
                   <select className="form-control p-1.5 w-full" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
                     <option value="None">None</option>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
@@ -1160,14 +1160,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
               {/* Channels */}
               <div>
-                <label className="block font-bold text-slate-500 mb-2 uppercase text-[10px]">Active Channels</label>
+                <label className="block font-bold text-text-secondary mb-2 uppercase text-[10px]">Active Channels</label>
                 <div className="flex flex-wrap gap-2">
                   {CHANNELS.map(c => (
                     <button key={c} onClick={() => {
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-violet-600 shadow-sm' : 'bg-white text-slate-800 border border-slate-200 hover:border-violet-500'}`}
+                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-brand-gold shadow-sm' : 'bg-white text-text-primary border border-border-strong hover:border-brand-gold'}`}
                     >
                       {c}
                     </button>
@@ -1177,13 +1177,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {showAdvancedSettings && (
-              <div className="mt-4 p-4 border border-slate-100 rounded bg-white">
-                <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-3">Channel Audience Map</h4>
-                <p className="text-xs text-slate-500 mb-4">Override the primary audience on specific active channels.</p>
+              <div className="mt-4 p-4 border border-border-standard rounded bg-white">
+                <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">Channel Audience Map</h4>
+                <p className="text-xs text-text-secondary mb-4">Override the primary audience on specific active channels.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cycle.activeChannels.map(c => (
-                    <div key={c} className="flex items-center gap-3 bg-white p-2 rounded border border-slate-100 shadow-sm">
-                      <div className="w-24 text-xs font-semibold text-slate-800 shrink-0">{c}</div>
+                    <div key={c} className="flex items-center gap-3 bg-white p-2 rounded border border-border-standard shadow-sm">
+                      <div className="w-24 text-xs font-semibold text-text-primary shrink-0">{c}</div>
                       <select className="form-control p-1 text-xs w-full" 
                         value={cycle.channelAudienceMap[c]?.primary || cycle.primaryAudience}
                         onChange={(e) => {
@@ -1204,13 +1204,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-slate-100">
-              <div className="flex items-center border border-slate-200 rounded overflow-hidden shadow-sm">
-                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-slate-100 px-6 py-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-border-standard">
+              <div className="flex items-center border border-border-strong rounded overflow-hidden shadow-sm">
+                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-border-standard px-6 py-2.5">
                   <RefreshCw size={16} className="mr-2 inline" /> {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 <select 
-                  className="bg-slate-900 text-coh-cream text-xs font-semibold px-3 py-2 outline-none cursor-pointer hover:bg-slate-900/90 transition-colors"
+                  className="bg-slate-900 text-coh-cream text-xs font-semibold px-3 py-2 outline-none cursor-pointer hover:bg-brand-gold-hover transition-colors"
                   onChange={(e) => {
                     if (e.target.value) {
                       setCycle(prev => ({...prev, version: prev.version + 1}));
@@ -1243,28 +1243,28 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Monthly Editorial Arc */}
               {arc && items.length > 0 && (
                 <div className="bg-slate-900 text-coh-cream p-5 rounded shadow-sm shrink-0">
-                  <h3 className="font-sans text-lg font-bold text-violet-600 mb-3 flex items-center gap-2">
+                  <h3 className="font-sans text-lg font-bold text-brand-gold mb-3 flex items-center gap-2">
                     <LayoutList size={18} /> Monthly Editorial Arc
                   </h3>
                   <div className="space-y-4 text-sm font-sans">
                     <div>
-                      <h4 className="text-[10px] uppercase font-bold text-violet-600 tracking-wider mb-1">Month Thesis</h4>
+                      <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Month Thesis</h4>
                       <p className="text-coh-cream/90 font-medium">{arc.monthThesis}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <h4 className="text-[10px] uppercase font-bold text-violet-600 tracking-wider mb-1">Weekly Progression</h4>
+                        <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Weekly Progression</h4>
                         <ul className="space-y-1">
                           {arc.weeklyProgression.map((w, i) => <li key={i} className="text-coh-cream/80 text-xs">- Week {i+1}: {w}</li>)}
                         </ul>
                       </div>
                       <div className="space-y-4">
                         <div>
-                          <h4 className="text-[10px] uppercase font-bold text-violet-600 tracking-wider mb-1">Audience Movement</h4>
+                          <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Audience Movement</h4>
                           <p className="text-coh-cream/80 text-xs">{arc.mainAudienceMovement}</p>
                         </div>
                         <div>
-                          <h4 className="text-[10px] uppercase font-bold text-violet-600 tracking-wider mb-1">Key Risks</h4>
+                          <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Key Risks</h4>
                           <ul className="space-y-1">
                             {arc.keyRisks.map((r, i) => <li key={i} className="text-coh-cream/80 text-xs text-red-300">- {r}</li>)}
                           </ul>
@@ -1276,41 +1276,41 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               )}
 
               {/* Calendar Canvas */}
-              <div className="flex flex-col flex-1 bg-white border border-slate-100 rounded shadow-sm min-h-[400px]">
-                <div className="border-b border-slate-100 p-4 bg-white/30 flex justify-between items-center shrink-0">
-                  <h3 className="font-sans text-xl font-bold text-slate-800">Calendar Canvas</h3>
-                  <div className="flex gap-1 bg-white border border-slate-200 rounded p-0.5">
-                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}><LayoutList size={16} /></button>
-                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}><Calendar size={16} /></button>
+              <div className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded shadow-sm min-h-[400px]">
+                <div className="border-b border-border-standard p-4 bg-white/30 flex justify-between items-center shrink-0">
+                  <h3 className="font-sans text-xl font-bold text-text-primary">Calendar Canvas</h3>
+                  <div className="flex gap-1 bg-white border border-border-strong rounded p-0.5">
+                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={16} /></button>
+                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={16} /></button>
                   </div>
                 </div>
 
                 <div className="p-4 flex-1 overflow-y-auto">
                   {items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                    <div className="flex flex-col items-center justify-center h-full text-text-muted">
                       <Calendar size={48} className="mb-4 opacity-50" />
                       <p>Generate a calendar to see your items.</p>
                     </div>
                   ) : viewMode === 'Month' ? renderMonthView() : (
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="bg-white border border-slate-200 rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
+                        <div key={item.id} className="bg-white border border-border-strong rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
                           <div className="flex-1 flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <div className="flex flex-col gap-1 w-full md:w-auto shrink-0 min-w-[150px]">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-slate-800 bg-white px-2 py-0.5 rounded">{item.date}</span>
-                                <span className="text-[10px] uppercase font-bold text-violet-600">{item.channel}</span>
+                                <span className="text-xs font-bold text-text-primary bg-white px-2 py-0.5 rounded">{item.date}</span>
+                                <span className="text-[10px] uppercase font-bold text-brand-gold">{item.channel}</span>
                               </div>
-                              <span className="text-sm font-semibold text-slate-800">{item.contentUnitType}</span>
+                              <span className="text-sm font-semibold text-text-primary">{item.contentUnitType}</span>
                             </div>
                             
-                            <div className="flex-1 text-xs text-slate-600 border-l border-slate-100 pl-4">
-                              <p className="font-bold mb-0.5 text-slate-800">{item.editorialThesis}</p>
-                              <p className="line-clamp-1 italic text-slate-500">{item.reasonForRecommendation}</p>
+                            <div className="flex-1 text-xs text-text-secondary border-l border-border-standard pl-4">
+                              <p className="font-bold mb-0.5 text-text-primary">{item.editorialThesis}</p>
+                              <p className="line-clamp-1 italic text-text-secondary">{item.reasonForRecommendation}</p>
                             </div>
                           </div>
 
-                          <button className="p-2 text-violet-600 hover:text-slate-800 bg-white rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
+                          <button className="p-2 text-brand-gold hover:text-text-primary bg-white rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
                             <ChevronRight size={20} />
                           </button>
                         </div>
@@ -1323,9 +1323,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
             {/* Review Panel */}
             <div className="col-span-1 lg:col-span-4 space-y-6 lg:overflow-y-auto lg:pr-2 pb-6 lg:max-h-full">
-              <div className="bg-white border border-slate-100 rounded shadow-sm p-5 sticky top-0">
-                <h3 className="font-sans text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <CheckCircle2 size={18} className="text-violet-600" /> Calendar Review
+              <div className="bg-surface-primary border border-border-standard rounded shadow-sm p-5 sticky top-0">
+                <h3 className="font-sans text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
+                  <CheckCircle2 size={18} className="text-brand-gold" /> Calendar Review
                 </h3>
                 
                 <div className="mb-6">
@@ -1344,25 +1344,25 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   {review.strengths.length > 0 && (
                     <div>
                       <h4 className="font-bold text-green-700 text-xs uppercase mb-2 flex items-center gap-1"><Plus size={12}/> Strengths</h4>
-                      <ul className="space-y-2">{review.strengths.map((s, i) => <li key={i} className="text-slate-700 text-xs pl-3 border-l-2 border-green-300">{s}</li>)}</ul>
+                      <ul className="space-y-2">{review.strengths.map((s, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-green-300">{s}</li>)}</ul>
                     </div>
                   )}
                   {review.gaps.length > 0 && (
                     <div>
                       <h4 className="font-bold text-yellow-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Gaps</h4>
-                      <ul className="space-y-2">{review.gaps.map((g, i) => <li key={i} className="text-slate-700 text-xs pl-3 border-l-2 border-yellow-300">{g}</li>)}</ul>
+                      <ul className="space-y-2">{review.gaps.map((g, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-yellow-300">{g}</li>)}</ul>
                     </div>
                   )}
                   {review.risks.length > 0 && (
                     <div>
                       <h4 className="font-bold text-red-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Risks / Repetition</h4>
-                      <ul className="space-y-2">{review.risks.map((r, i) => <li key={i} className="text-slate-700 text-xs pl-3 border-l-2 border-red-300">{r}</li>)}</ul>
+                      <ul className="space-y-2">{review.risks.map((r, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-red-300">{r}</li>)}</ul>
                     </div>
                   )}
                   {review.recommendedFixes.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-violet-600 text-xs uppercase mb-2 flex items-center gap-1"><Settings2 size={12}/> Recommendations</h4>
-                      <ul className="space-y-2">{review.recommendedFixes.map((r, i) => <li key={i} className="text-slate-700 text-xs pl-3 border-l-2 border-violet-500/50">{r}</li>)}</ul>
+                      <h4 className="font-bold text-brand-gold text-xs uppercase mb-2 flex items-center gap-1"><Settings2 size={12}/> Recommendations</h4>
+                      <ul className="space-y-2">{review.recommendedFixes.map((r, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-brand-gold/50">{r}</li>)}</ul>
                     </div>
                   )}
                 </div>
@@ -1377,11 +1377,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       {selectedItem && (
         <div className="fixed inset-0 bg-slate-900/80 z-[100] flex justify-center items-start md:items-center p-0 md:p-4 overflow-y-auto">
           <div className="bg-white w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
-            <div className="bg-slate-900 p-4 flex justify-between items-center text-slate-800 shrink-0">
+            <div className="bg-slate-900 p-4 flex justify-between items-center text-text-primary shrink-0">
               <h3 className="font-sans text-lg font-bold flex items-center gap-2">
-                <FileText size={18} className="text-violet-600"/> Calendar Item Details
+                <FileText size={18} className="text-brand-gold"/> Calendar Item Details
               </h3>
-              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="hover:text-violet-600 transition"><X size={20} /></button>
+              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="hover:text-brand-gold transition"><X size={20} /></button>
             </div>
             
             <div className="p-4 md:p-6 overflow-y-auto flex-1 text-sm space-y-6">
@@ -1413,7 +1413,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
               )}
               {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length === 0 && validationResult.qualityWarnings.length > 0 && (
-                <div className="bg-white border-l-4 border-slate-200 p-4 rounded">
+                <div className="bg-white border-l-4 border-border-strong p-4 rounded">
                   <div className="flex items-center gap-2 text-gray-800 font-bold mb-2">
                     <AlertTriangle size={16} /> Quality Warning
                   </div>
@@ -1424,47 +1424,47 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* 1. Scheduling */}
-                <div className="space-y-3 bg-white p-4 rounded border border-slate-100">
-                  <h4 className="text-xs font-bold uppercase text-slate-800">1. Scheduling</h4>
+                <div className="space-y-3 bg-white p-4 rounded border border-border-standard">
+                  <h4 className="text-xs font-bold uppercase text-text-primary">1. Scheduling</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Status</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.status} onChange={e => handleLocalDraftUpdate({status: e.target.value})}><option>Proposed</option><option>Needs Source</option><option>Needs review</option><option>Approved</option><option>Draft Handoff</option><option>Drafting</option></select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Channel</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.channel} onChange={e => handleLocalDraftUpdate({channel: e.target.value})}>{CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Format</label><input type="text" className="form-control p-1.5 w-full text-xs" value={selectedItem.format} onChange={e => handleLocalDraftUpdate({format: e.target.value})} /></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Status</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.status} onChange={e => handleLocalDraftUpdate({status: e.target.value})}><option>Proposed</option><option>Needs Source</option><option>Needs review</option><option>Approved</option><option>Draft Handoff</option><option>Drafting</option></select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Channel</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.channel} onChange={e => handleLocalDraftUpdate({channel: e.target.value})}>{CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Format</label><input type="text" className="form-control p-1.5 w-full text-xs" value={selectedItem.format} onChange={e => handleLocalDraftUpdate({format: e.target.value})} /></div>
                   </div>
                 </div>
 
                 {/* 2. Strategy */}
-                <div className="space-y-3 bg-white p-4 rounded border border-slate-100">
-                  <h4 className="text-xs font-bold uppercase text-slate-800">2. Strategy</h4>
+                <div className="space-y-3 bg-white p-4 rounded border border-border-standard">
+                  <h4 className="text-xs font-bold uppercase text-text-primary">2. Strategy</h4>
                   <div className="grid grid-cols-2 gap-4">
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Unit Type</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.contentUnitType} onChange={e => handleLocalDraftUpdate({contentUnitType: e.target.value})}>{UNIT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Pillar</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.pillar} onChange={e => handleLocalDraftUpdate({pillar: e.target.value})}>{PILLARS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Audience</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.audience} onChange={e => handleLocalDraftUpdate({audience: e.target.value})}>{AUDIENCES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
-                    <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Adoption Track</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.adoptionTrack} onChange={e => handleLocalDraftUpdate({adoptionTrack: e.target.value})}>{ADOPTION_TRACKS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Unit Type</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.contentUnitType} onChange={e => handleLocalDraftUpdate({contentUnitType: e.target.value})}>{UNIT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Pillar</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.pillar} onChange={e => handleLocalDraftUpdate({pillar: e.target.value})}>{PILLARS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Audience</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.audience} onChange={e => handleLocalDraftUpdate({audience: e.target.value})}>{AUDIENCES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
+                    <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Adoption Track</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.adoptionTrack} onChange={e => handleLocalDraftUpdate({adoptionTrack: e.target.value})}>{ADOPTION_TRACKS.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
                   </div>
                 </div>
               </div>
 
               {/* 3. Editorial Brief */}
-              <div className="space-y-3 border border-slate-100 p-4 rounded">
-                <h4 className="text-xs font-bold uppercase text-violet-600">3. Editorial Brief</h4>
-                <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${getErrorClass('title')}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
-                <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${getErrorClass('editorialThesis')}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
+              <div className="space-y-3 border border-border-standard p-4 rounded">
+                <h4 className="text-xs font-bold uppercase text-brand-gold">3. Editorial Brief</h4>
+                <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Title</label><input type="text" className={`form-control p-1.5 w-full text-xs font-bold ${getErrorClass('title')}`} value={selectedItem.title} onChange={e => handleLocalDraftUpdate({title: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Editorial Thesis</label><textarea className={`form-control p-2 w-full text-xs font-medium ${getErrorClass('editorialThesis')}`} rows={2} value={selectedItem.editorialThesis} onChange={e => handleLocalDraftUpdate({editorialThesis: e.target.value})} /></div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('coreMessage')}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('audienceInsight')}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Core Message</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('coreMessage')}`} rows={2} value={selectedItem.coreMessage} onChange={e => handleLocalDraftUpdate({coreMessage: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Audience Insight</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('audienceInsight')}`} rows={2} value={selectedItem.audienceInsight} onChange={e => handleLocalDraftUpdate({audienceInsight: e.target.value})} /></div>
                 </div>
-                <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${getErrorClass('suggestedCTA')}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
+                <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Suggested CTA</label><input type="text" className={`form-control p-1.5 w-full text-xs ${getErrorClass('suggestedCTA')}`} value={selectedItem.suggestedCTA} onChange={e => handleLocalDraftUpdate({suggestedCTA: e.target.value})} /></div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* 4. Evidence & Safety */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-violet-600 border-b border-slate-100 pb-1">4. Evidence and Safety</h4>
+                  <h4 className="text-xs font-bold uppercase text-brand-gold border-b border-border-standard pb-1">4. Evidence and Safety</h4>
                   <div>
-                    <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Source Basis</label>
-                    <select className="form-control p-1.5 w-full text-xs font-bold text-slate-800" value={selectedItem.sourceBasis} onChange={e => handleLocalDraftUpdate({sourceBasis: e.target.value})}>
+                    <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Source Basis</label>
+                    <select className="form-control p-1.5 w-full text-xs font-bold text-text-primary" value={selectedItem.sourceBasis} onChange={e => handleLocalDraftUpdate({sourceBasis: e.target.value})}>
                       <option>Operating Core-backed</option>
                       <option>Core Document-backed</option>
                       <option>Source Library-backed</option>
@@ -1474,26 +1474,26 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                       <option>Not source-ready</option>
                     </select>
                   </div>
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('proofNeeded')}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-500/10 backdrop-blur-md ${getErrorClass('riskToAvoid')}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Proof Needed</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('proofNeeded')}`} rows={2} value={selectedItem.proofNeeded} onChange={e => handleLocalDraftUpdate({proofNeeded: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Risk to Avoid</label><textarea className={`form-control p-1.5 w-full text-xs text-red-700 bg-red-500/10 backdrop-blur-md ${getErrorClass('riskToAvoid')}`} rows={2} value={selectedItem.riskToAvoid} onChange={e => handleLocalDraftUpdate({riskToAvoid: e.target.value})} /></div>
                 </div>
 
                 {/* 5. Creative Direction */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase text-violet-600 border-b border-slate-100 pb-1">5. Creative Direction</h4>
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('visualDirection')}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
-                  <div><label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('draftInstruction')}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
+                  <h4 className="text-xs font-bold uppercase text-brand-gold border-b border-border-standard pb-1">5. Creative Direction</h4>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Visual Direction</label><textarea className={`form-control p-1.5 w-full text-xs ${getErrorClass('visualDirection')}`} rows={2} value={selectedItem.visualDirection} onChange={e => handleLocalDraftUpdate({visualDirection: e.target.value})} /></div>
+                  <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Draft Instruction</label><textarea className={`form-control p-2 w-full text-xs ${getErrorClass('draftInstruction')}`} rows={3} value={selectedItem.draftInstruction} onChange={e => handleLocalDraftUpdate({draftInstruction: e.target.value})} /></div>
                 </div>
               </div>
 
               {/* 6. Recommendation Logic */}
-              <div className="bg-white/50 p-4 rounded border border-slate-100">
-                <h4 className="text-xs font-bold uppercase text-slate-800 mb-2">6. Recommendation Logic</h4>
-                <p className="text-xs text-slate-700 italic">{selectedItem.reasonForRecommendation}</p>
+              <div className="bg-white/50 p-4 rounded border border-border-standard">
+                <h4 className="text-xs font-bold uppercase text-text-primary mb-2">6. Recommendation Logic</h4>
+                <p className="text-xs text-text-primary italic">{selectedItem.reasonForRecommendation}</p>
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-100 flex flex-col md:flex-row justify-between gap-4 bg-white shrink-0">
+            <div className="p-4 border-t border-border-standard flex flex-col md:flex-row justify-between gap-4 bg-white shrink-0">
               <div className="flex gap-2">
                 <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-500/10 backdrop-blur-md border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationResult(null); }}>
                   <Trash2 size={16} className="inline mr-1"/> {items.find(i => i.id === selectedItem.id) ? 'Delete' : 'Cancel'}

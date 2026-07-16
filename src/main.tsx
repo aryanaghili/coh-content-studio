@@ -7,6 +7,10 @@ import { ErrorBoundary } from './components/ErrorBoundary.tsx'
 
 import { BrowserRouter } from 'react-router-dom';
 
+// Apply theme before render to prevent flash
+const savedTheme = localStorage.getItem('coh-theme') || 'light';
+document.documentElement.setAttribute('data-theme', savedTheme);
+
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>

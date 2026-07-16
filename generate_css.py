@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+import os
+
+css_content = """@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -234,3 +236,9 @@ h1, h2, h3, h4, h5, h6 {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
+"""
+
+with open("src/index.css", "w") as f:
+    f.write(css_content)
+
+print("Generated structured index.css")

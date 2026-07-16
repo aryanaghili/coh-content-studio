@@ -14,7 +14,7 @@ export function Card({
   ...props 
 }: CardProps) {
   
-  const baseStyles = "bg-white rounded border border-coh-gold/20 shadow-sm";
+  const baseStyles = "bg-surface-primary rounded-lg border border-border-standard shadow-level-1 overflow-hidden";
   
   const paddingStyles = {
     none: "",
@@ -24,7 +24,7 @@ export function Card({
   };
 
   const interactiveStyles = interactive 
-    ? "cursor-pointer hover:shadow-md hover:border-coh-gold/40 transition-all active:scale-[0.99]" 
+    ? "cursor-pointer hover:shadow-level-2 hover:border-brand-gold transition-all duration-150 active:scale-[0.99]" 
     : "";
 
   return (
@@ -38,9 +38,17 @@ export function Card({
 }
 
 export function CardHeader({ children, className = '' }: { children: React.ReactNode, className?: string }) {
-  return <div className={`mb-4 pb-3 border-b border-coh-gold/10 ${className}`}>{children}</div>;
+  return <div className={`mb-4 pb-3 border-b border-border-standard ${className}`}>{children}</div>;
 }
 
 export function CardTitle({ className = '', children }: { className?: string, children: React.ReactNode }) {
-  return <h3 className={`font-serif text-xl font-bold text-white ${className}`}>{children}</h3>;
+  return <h3 className={`font-sans text-[15px] leading-[22px] font-semibold text-text-primary ${className}`}>{children}</h3>;
+}
+
+export function CardContent({ children, className = '' }: { children: React.ReactNode, className?: string }) {
+  return <div className={`px-5 pb-5 ${className}`}>{children}</div>;
+}
+
+export function CardFooter({ children, className = '' }: { children: React.ReactNode, className?: string }) {
+  return <div className={`px-5 py-4 bg-surface-inset border-t border-border-standard ${className}`}>{children}</div>;
 }

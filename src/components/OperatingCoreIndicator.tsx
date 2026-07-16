@@ -29,8 +29,8 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
 
   return (
     <div className="inline-flex items-center gap-1.5 mb-2">
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-coh-cream border border-slate-100 rounded-full text-[10px] font-semibold cursor-default group relative">
-        <span className="text-violet-600">🛡️</span>
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-coh-cream border border-border-standard rounded-full text-[10px] font-semibold cursor-default group relative">
+        <span className="text-brand-gold">🛡️</span>
         <span>Protected COH Foundation</span>
         
         {/* Tooltip */}
@@ -41,8 +41,8 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
       </div>
 
       {isCoreActive && (
-        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900/5 border border-slate-100 rounded-full text-[10px] font-semibold text-slate-500 cursor-default group relative">
-          <Cpu size={12} className="text-violet-600" />
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-surface-inset border border-border-standard rounded-full text-[10px] font-semibold text-text-secondary cursor-default group relative">
+          <Cpu size={12} className="text-brand-gold" />
           <span>Operating Core Active</span>
           
           {/* Tooltip */}

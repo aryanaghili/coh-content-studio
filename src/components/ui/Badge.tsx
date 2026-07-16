@@ -2,7 +2,7 @@ import React from 'react';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   children: React.ReactNode;
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'outline' | 'ghost';
+  variant?: 'default' | 'success' | 'warning' | 'error' | 'info' | 'outline';
   size?: 'sm' | 'md';
 }
 
@@ -14,20 +14,20 @@ export function Badge({
   ...props 
 }: BadgeProps) {
   
-  const baseStyles = "inline-flex items-center justify-center font-medium rounded-full";
+  const baseStyles = "inline-flex items-center justify-center font-sans font-semibold rounded-full uppercase tracking-wider";
   
   const variants = {
-    default: "bg-coh-navy/10 text-coh-navy",
-    success: "bg-green-100 text-green-800",
-    warning: "bg-amber-100 text-amber-800",
-    error: "bg-red-100 text-red-800",
-    outline: "border border-coh-navy/20 text-coh-navy/70",
-    ghost: "bg-transparent text-coh-navy/60"
+    default: "bg-surface-secondary text-text-primary",
+    success: "bg-status-success/10 text-status-success",
+    warning: "bg-status-warning/10 text-status-warning",
+    error: "bg-status-error/10 text-status-error",
+    info: "bg-status-info/10 text-status-info",
+    outline: "border border-border-strong text-text-secondary"
   };
 
   const sizes = {
-    sm: "px-2 py-0.5 text-[10px]",
-    md: "px-2.5 py-0.5 text-xs"
+    sm: "px-2 py-0.5 text-[10px] leading-tight",
+    md: "px-2.5 py-1 text-[11px] leading-[16px]"
   };
 
   return (

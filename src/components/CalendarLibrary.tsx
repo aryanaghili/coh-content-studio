@@ -78,7 +78,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
 
   return (
     <div className="h-full flex flex-col bg-transparent">
-      <div className="bg-white border-b border-slate-100 p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-white border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
         <div>
           <h2 className="page-title">
             Calendar Library
@@ -90,16 +90,16 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {calendars.length === 0 ? (
             <div className="col-span-full flex flex-col items-center justify-center p-12 bg-white border border-dashed border-violet-300 rounded">
-              <Calendar size={48} className="text-violet-600/30 mb-4" />
-              <p className="text-slate-500 font-medium">No saved calendars yet.</p>
-              <p className="text-xs text-slate-400 mt-1">Generate and save calendars in the Studio.</p>
+              <Calendar size={48} className="text-brand-gold/30 mb-4" />
+              <p className="text-text-secondary font-medium">No saved calendars yet.</p>
+              <p className="text-xs text-text-muted mt-1">Generate and save calendars in the Studio.</p>
             </div>
           ) : (
             calendars.map(cal => (
-              <div key={cal.id} className="bg-white border border-slate-100 p-5 rounded shadow-sm hover:shadow transition flex flex-col justify-between">
+              <div key={cal.id} className="bg-surface-primary border border-border-standard p-5 rounded shadow-sm hover:shadow transition flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-bold text-slate-800 font-sans text-lg">{cal.title}</h3>
+                    <h3 className="font-bold text-text-primary font-sans text-lg">{cal.title}</h3>
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
                       cal.status === 'Approved' ? 'bg-green-100 text-green-800' :
                       cal.status === 'Archived' ? 'bg-white text-gray-600' :
@@ -108,14 +108,14 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
                       {cal.status}
                     </span>
                   </div>
-                  <div className="space-y-1 text-xs text-slate-600 mb-4">
-                    <p><span className="font-bold text-slate-800">Month:</span> {cal.planningMonth} {cal.planningYear} (v{cal.versionNumber})</p>
-                    <p><span className="font-bold text-slate-800">Primary Focus:</span> {cal.primaryStrategicFocus}</p>
-                    <p><span className="font-bold text-slate-800">Audience:</span> {cal.primaryAudience}</p>
-                    <p><span className="font-bold text-slate-800">Items:</span> {cal.calendarItems.length} ({cal.approvedItemCount} approved)</p>
+                  <div className="space-y-1 text-xs text-text-secondary mb-4">
+                    <p><span className="font-bold text-text-primary">Month:</span> {cal.planningMonth} {cal.planningYear} (v{cal.versionNumber})</p>
+                    <p><span className="font-bold text-text-primary">Primary Focus:</span> {cal.primaryStrategicFocus}</p>
+                    <p><span className="font-bold text-text-primary">Audience:</span> {cal.primaryAudience}</p>
+                    <p><span className="font-bold text-text-primary">Items:</span> {cal.calendarItems.length} ({cal.approvedItemCount} approved)</p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                <div className="flex flex-wrap gap-2 pt-4 border-t border-border-standard">
                   <Button variant="primary" onClick={() => onOpenCalendar(cal)} className="text-xs py-1 px-2 flex-1 flex justify-center">
                     <Eye size={14} className="mr-1" /> Open
                   </Button>
@@ -129,7 +129,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
                     <Trash2 size={14} />
                   </Button>
                   <select 
-                    className="flex-1 bg-white border border-slate-100 text-slate-800 text-[10px] font-semibold px-1 py-1 rounded outline-none cursor-pointer hover:border-violet-300 transition"
+                    className="flex-1 bg-surface-primary border border-border-standard text-text-primary text-[10px] font-semibold px-1 py-1 rounded outline-none cursor-pointer hover:border-violet-300 transition"
                     onChange={(e) => {
                       if (e.target.value) {
                         executeExport(e.target.value, cal.calendarItems, cal);
