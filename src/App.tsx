@@ -4,6 +4,7 @@ import { buildAdvancedBriefFromCalendarItem } from './utils/calendarHandoffUtils
 
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
+import { GuidedTour } from './components/GuidedTour';
 import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
 import { CalendarLibrary } from './components/CalendarLibrary';
 import type { SavedCalendar } from './components/CalendarLibrary';
@@ -4500,6 +4501,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Overview
             </div>
             <button
+              id="nav-command-center"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'command-center'
@@ -4515,6 +4517,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Workspaces
             </div>
             <button
+              id="nav-ideation"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'ideation-workspace'
@@ -4526,6 +4529,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Ideation Workspace
             </button>
             <button
+              id="nav-editorial"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('editorial-calendar'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'editorial-calendar'
@@ -4537,6 +4541,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Editorial Calendar Studio
             </button>
             <button
+              id="nav-content"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'content-workspace'
@@ -4548,6 +4553,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Content Workspace
             </button>
             <button
+              id="nav-visual"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded ${
                 activeTab === 'visual-studio'
@@ -4561,6 +4567,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               Visual Studio
             </button>
             <button
+              id="nav-revision"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('revision-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
                 activeTab === 'revision-studio'
@@ -8270,6 +8277,7 @@ OPENAI_MODEL=gpt-4.1`}
 
       </main>
       <div className="fixed bottom-2 right-2 text-[10px] text-coh-navy/40 pointer-events-none z-50">v1.1.0-stable</div>
+      <GuidedTour />
     </div>
   );
 }
