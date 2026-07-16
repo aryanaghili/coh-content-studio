@@ -16,15 +16,17 @@
 }
 
 :root {
-  background-color: #FAF8F5;
-  color: #0F1E36;
+  background-color: #0A1424; /* coh-navy-dark */
+  color: #FAF8F5; /* coh-cream */
 }
 
 body {
   margin: 0;
   font-family: "Plus Jakarta Sans", system-ui, sans-serif;
-  background-color: #FAF8F5;
-  color: #0F1E36;
+  background-color: #0A1424;
+  background-image: radial-gradient(circle at top right, #1E2D4A 0%, #0A1424 60%);
+  background-attachment: fixed;
+  color: #FAF8F5;
 }
 
 /* Custom scrollbar for premium editorial feel */
@@ -33,14 +35,14 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #FAF8F5;
+  background: rgba(255, 255, 255, 0.05);
 }
 ::-webkit-scrollbar-thumb {
-  background: #C5A880;
+  background: rgba(197, 168, 128, 0.5); /* coh-gold with opacity */
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9D8059;
+  background: rgba(197, 168, 128, 0.8);
 }
 
 @layer components {
@@ -127,7 +129,7 @@ body {
     @apply cursor-pointer transition-all duration-150;
   }
   .interactive-tab:not(.active-tab):hover {
-    @apply bg-coh-gold/10 text-coh-navy;
+    @apply bg-white/10 text-white;
   }
   .interactive-tab:active {
     @apply scale-[0.97];
@@ -241,48 +243,48 @@ button:disabled,
   @apply mb-8;
 }
 .page-title {
-  @apply font-serif text-3xl font-bold text-coh-navy tracking-tight;
+  @apply font-serif text-3xl font-bold text-white tracking-tight;
 }
 .page-subtitle {
-  @apply text-coh-navy/60 font-sans mt-2 text-sm leading-relaxed max-w-3xl;
+  @apply text-coh-cream/60 font-sans mt-2 text-sm leading-relaxed max-w-3xl;
 }
 
 /* 2. Cards */
 .card {
-  @apply bg-white border border-coh-gold/20 rounded-lg shadow-sm p-6 overflow-hidden;
+  @apply bg-white/5 backdrop-blur-md border border-white/10 rounded-lg shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-6 overflow-hidden;
 }
 .card-header {
-  @apply border-b border-coh-gold/10 pb-4 mb-4;
+  @apply border-b border-white/10 pb-4 mb-4;
 }
 .card-title {
-  @apply font-serif text-lg font-bold text-coh-navy;
+  @apply font-serif text-lg font-bold text-white;
 }
 
 /* 3. Form Controls */
 .form-control {
-  @apply w-full bg-coh-cream border border-coh-gold/30 rounded-md px-4 py-2.5 text-sm text-coh-navy transition-all duration-200 outline-none;
+  @apply w-full bg-black/20 border border-white/10 rounded-md px-4 py-2.5 text-sm text-white transition-all duration-200 outline-none backdrop-blur-sm;
 }
 .form-control:focus {
-  @apply ring-2 ring-coh-gold/50 border-coh-gold bg-white;
+  @apply ring-2 ring-coh-gold/50 border-coh-gold/50 bg-black/40;
 }
 .form-control::placeholder {
-  @apply text-coh-navy/40;
+  @apply text-white/40;
 }
 .form-label {
-  @apply block text-xs font-bold uppercase tracking-wider text-coh-navy/70 mb-1.5;
+  @apply block text-xs font-bold uppercase tracking-wider text-white/70 mb-1.5;
 }
 
 /* 4. Empty States */
 .empty-state {
-  @apply flex flex-col items-center justify-center p-12 text-center bg-white/50 rounded-lg border border-dashed border-coh-gold/30;
+  @apply flex flex-col items-center justify-center p-12 text-center bg-black/20 rounded-lg border border-dashed border-white/20 backdrop-blur-sm;
 }
 .empty-state-icon {
   @apply text-4xl mb-4 opacity-40;
 }
 .empty-state-title {
-  @apply font-serif text-lg font-semibold text-coh-navy mb-2;
+  @apply font-serif text-lg font-semibold text-white mb-2;
 }
 .empty-state-text {
-  @apply text-sm text-coh-navy/60 max-w-md;
+  @apply text-sm text-white/60 max-w-md;
 }
 

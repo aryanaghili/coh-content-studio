@@ -94,8 +94,8 @@ export const GuidedTour: React.FC = () => {
   // Render Step 0: Welcome Modal
   if (currentStep === 0) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-coh-navy/80 backdrop-blur-sm">
-        <div className="bg-[#1e293b] border border-coh-gold/20 rounded-2xl shadow-2xl p-8 max-w-md w-full relative">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
+        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] p-8 max-w-md w-full relative">
           <button onClick={skipTour} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
             <X size={20} />
           </button>
@@ -164,7 +164,7 @@ export const GuidedTour: React.FC = () => {
         Positioned relative to the target rect, or centered if target is hidden.
       */}
       <div 
-        className={`absolute bg-[#1e293b] border border-coh-gold/30 rounded-xl shadow-2xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
+        className={`absolute bg-white/10 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
         style={targetRect ? {
           top: Math.max(20, targetRect.top),
           left: targetRect.right + padding + 12, // Position to the right of sidebar items
