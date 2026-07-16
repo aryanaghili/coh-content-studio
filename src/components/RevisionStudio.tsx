@@ -291,7 +291,7 @@ export function RevisionStudio({
 
   return (
     <div className="page-shell">
-      <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)] flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+      <div className="bg-white border border-slate-100 p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
         <div>
           <h2 className="page-title">
             Revision Studio
@@ -313,17 +313,17 @@ export function RevisionStudio({
       <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]">
         
         {/* Left Side: Work Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white/10 backdrop-blur-sm/10 rounded border border-white/10 overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 bg-white/10 rounded border border-slate-100 overflow-hidden">
           
           {/* Top Controls */}
-          <div className="bg-white/5 backdrop-blur-md border-b border-white/10 p-4 shrink-0">
+          <div className="bg-white border-b border-slate-100 p-4 shrink-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">Channel</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Channel</label>
                 <select
                   value={state.channel}
                   onChange={(e) => updateSetting('channel', e.target.value)}
-                  className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] text-white"
+                  className="w-full bg-white border border-slate-100 p-1.5 rounded text-[11px] text-slate-800"
                 >
                   {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -331,11 +331,11 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">Format</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Format</label>
                 <select
                   value={state.format}
                   onChange={(e) => updateSetting('format', e.target.value)}
-                  className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] text-white"
+                  className="w-full bg-white border border-slate-100 p-1.5 rounded text-[11px] text-slate-800"
                 >
                   {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -343,11 +343,11 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">Language</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Language</label>
                 <select
                   value={state.targetLanguage}
                   onChange={(e) => updateSetting('targetLanguage', e.target.value)}
-                  className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] text-white"
+                  className="w-full bg-white border border-slate-100 p-1.5 rounded text-[11px] text-slate-800"
                 >
                   {LANGUAGES.map(l => (
                     <option key={l.id} value={l.label}>{l.label}</option>
@@ -355,11 +355,11 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">Tone</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Tone</label>
                 <select
                   value={state.tone}
                   onChange={(e) => updateSetting('tone', e.target.value)}
-                  className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] text-white"
+                  className="w-full bg-white border border-slate-100 p-1.5 rounded text-[11px] text-slate-800"
                 >
                   {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -367,13 +367,13 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-white/60 mb-1">Optional Context</label>
+                <label className="block text-[10px] uppercase font-bold text-slate-500 mb-1">Optional Context</label>
                 <input
                   type="text"
                   value={state.optionalContext}
                   onChange={(e) => updateSetting('optionalContext', e.target.value)}
                   placeholder="Additional context..."
-                  className="w-full bg-white/10 backdrop-blur-sm border border-white/10 p-1.5 rounded text-[11px] text-white"
+                  className="w-full bg-white border border-slate-100 p-1.5 rounded text-[11px] text-slate-800"
                 />
               </div>
             </div>
@@ -385,10 +385,10 @@ export function RevisionStudio({
                   <span>Settings changed. Generate a new revision to apply them.</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between bg-white/5 backdrop-blur-md/50 p-2 rounded">
+                  <div className="flex items-center justify-between bg-slate-50 p-2 rounded">
                     <span className="font-semibold text-yellow-900">Revise from:</span>
                     <select 
-                      className="bg-white/5 backdrop-blur-md border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
+                      className="bg-white border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
                       onChange={(e) => updateSetting('revisionSource', e.target.value)}
                       value={state.revisionSource || 'current'}
                     >
@@ -398,7 +398,7 @@ export function RevisionStudio({
                   </div>
                   <Button 
                     variant="primary" 
-                    className="w-full text-xs py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white border-none"
+                    className="w-full text-xs py-1.5 bg-yellow-600 hover:bg-yellow-700 text-slate-800 border-none"
                     onClick={() => runRevision(state.selectedAction || 'custom-instruction')}
                   >
                     Generate New Revision
@@ -417,49 +417,49 @@ export function RevisionStudio({
           {/* Split View Editors */}
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* Draft to Revise */}
-            <div className={`flex-1 flex flex-col border-r border-white/10 ${state.revisedOutput ? 'md:w-1/2' : 'w-full'}`}>
-              <div className="bg-white/5 backdrop-blur-md px-4 py-2 border-b border-white/10 flex justify-between items-center shrink-0">
-                <span className="text-[10px] uppercase font-bold text-white/50 tracking-wider">Draft to Revise</span>
-                <button onClick={handleClearDraft} className="text-[10px] text-coh-gold hover:text-coh-gold-light uppercase font-bold">Clear</button>
+            <div className={`flex-1 flex flex-col border-r border-slate-100 ${state.revisedOutput ? 'md:w-1/2' : 'w-full'}`}>
+              <div className="bg-white px-4 py-2 border-b border-slate-100 flex justify-between items-center shrink-0">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Draft to Revise</span>
+                <button onClick={handleClearDraft} className="text-[10px] text-violet-600 hover:text-violet-600-light uppercase font-bold">Clear</button>
               </div>
               <textarea
                 value={state.currentDraft}
                 onChange={(e) => updateSetting('currentDraft', e.target.value)}
                 placeholder="Paste or type content here to begin revising..."
-                className="flex-1 p-4 bg-transparent border-none resize-none focus:ring-0 text-sm text-white whitespace-pre-wrap"
+                className="flex-1 p-4 bg-transparent border-none resize-none focus:ring-0 text-sm text-slate-800 whitespace-pre-wrap"
                 dir={getLanguageDirection(state.currentDraft.slice(0, 100))}
               />
             </div>
 
             {/* Revised Output (Only shows if generated) */}
             {state.revisedOutput && (
-              <div className="flex-1 flex flex-col md:w-1/2 bg-white/5 backdrop-blur-md">
-                <div className="bg-coh-navy px-4 py-2 border-b border-coh-navy flex justify-between items-center shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-white tracking-wider flex items-center gap-2">
-                    <CheckCircle2 size={12} className="text-coh-gold" />
+              <div className="flex-1 flex flex-col md:w-1/2 bg-white">
+                <div className="bg-slate-900 px-4 py-2 border-b border-coh-navy flex justify-between items-center shrink-0">
+                  <span className="text-[10px] uppercase font-bold text-slate-800 tracking-wider flex items-center gap-2">
+                    <CheckCircle2 size={12} className="text-violet-600" />
                     Revised Output
                   </span>
                   <div className="flex items-center gap-2">
-                    <button onClick={handleUseAsCurrent} className="text-[10px] bg-coh-gold text-coh-navy px-2 py-0.5 rounded uppercase font-bold hover:bg-coh-gold-light">
+                    <button onClick={handleUseAsCurrent} className="text-[10px] bg-violet-600 text-coh-navy px-2 py-0.5 rounded uppercase font-bold hover:bg-violet-600-light">
                       Use as Draft
                     </button>
-                    <button onClick={handleCopy} className="text-[10px] text-white/70 hover:text-white uppercase font-bold flex items-center gap-1">
+                    <button onClick={handleCopy} className="text-[10px] text-slate-600 hover:text-slate-800 uppercase font-bold flex items-center gap-1">
                       {copySuccess ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="p-2 bg-white/10 backdrop-blur-sm/20 border-b border-white/10">
-                  <span className="text-[10px] text-white/60 font-mono">Applied: {state.appliedControls}</span>
+                <div className="p-2 bg-white/20 border-b border-slate-100">
+                  <span className="text-[10px] text-slate-500 font-mono">Applied: {state.appliedControls}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
                   <div 
-                    className="prose prose-sm max-w-none text-white whitespace-pre-wrap"
+                    className="prose prose-sm max-w-none text-slate-800 whitespace-pre-wrap"
                     dir={getLanguageDirection(state.targetLanguage)}
                   >
                     {state.revisedOutput}
                   </div>
                 </div>
-                <div className="p-3 bg-white/5 backdrop-blur-md border-t border-white/10 flex gap-2">
+                <div className="p-3 bg-white border-t border-slate-100 flex gap-2">
                   <Button onClick={handleSaveAsNew} variant="outline" className="flex-1 text-xs py-2">
                     <Save size={14} className="mr-2 inline" /> Save as New
                   </Button>
@@ -473,21 +473,21 @@ export function RevisionStudio({
         <div className="w-full lg:w-72 flex flex-col gap-4 overflow-y-auto pr-1">
           
           {/* Custom Instruction */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-4 rounded shadow-[0_4px_30px_rgba(0,0,0,0.1)]">
-            <label className="block text-[10px] uppercase font-bold text-white/60 mb-2">Custom Instruction</label>
+          <div className="bg-white border border-slate-100 p-4 rounded shadow-sm">
+            <label className="block text-[10px] uppercase font-bold text-slate-500 mb-2">Custom Instruction</label>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={customInstruction}
                 onChange={(e) => setCustomInstruction(e.target.value)}
                 placeholder="e.g. Make it sound like a poem"
-                className="flex-1 bg-white/10 backdrop-blur-sm border border-white/10 p-2 rounded text-xs text-white"
+                className="flex-1 bg-white border border-slate-100 p-2 rounded text-xs text-slate-800"
                 onKeyDown={(e) => e.key === 'Enter' && runRevision('custom-instruction')}
               />
               <button
                 onClick={() => runRevision('custom-instruction')}
                 disabled={!customInstruction.trim() || state.isGenerating}
-                className="bg-coh-gold text-coh-navy p-2 rounded hover:bg-coh-gold-light disabled:opacity-50"
+                className="bg-violet-600 text-coh-navy p-2 rounded hover:bg-violet-600-light disabled:opacity-50"
               >
                 <Wand2 size={14} />
               </button>
@@ -502,18 +502,18 @@ export function RevisionStudio({
               const isExpandedDefault = ['Clean & Polish', 'Translation & Localization', 'COH & Strategic Fit'].includes(group);
               
               return (
-                <details key={group} className="border border-white/10 rounded bg-white/10 backdrop-blur-sm/10 overflow-hidden" open={isExpandedDefault}>
-                  <summary className="bg-white/10 backdrop-blur-sm px-3 py-2 text-[10px] uppercase font-bold text-white/80 tracking-wider cursor-pointer select-none hover:bg-white/10 backdrop-blur-sm-dark transition flex justify-between items-center">
+                <details key={group} className="border border-slate-100 rounded bg-white/10 overflow-hidden" open={isExpandedDefault}>
+                  <summary className="bg-white px-3 py-2 text-[10px] uppercase font-bold text-slate-700 tracking-wider cursor-pointer select-none hover:bg-white-dark transition flex justify-between items-center">
                     {group}
                   </summary>
-                  <div className="p-3 space-y-1.5 bg-white/5 backdrop-blur-md">
+                  <div className="p-3 space-y-1.5 bg-white">
                     {actionsInGroup.map(actionDef => (
                       <button
                         key={actionDef.id}
                         disabled={state.isGenerating}
                         onClick={() => runRevision(actionDef.id)}
                         title={actionDef.description}
-                        className="w-full text-left px-3 py-2 rounded text-xs font-medium text-white bg-white/10 backdrop-blur-sm/30 hover:bg-coh-gold hover:text-white transition-colors border border-white/10"
+                        className="w-full text-left px-3 py-2 rounded text-xs font-medium text-slate-800 bg-white/30 hover:bg-violet-600 hover:text-slate-800 transition-colors border border-slate-100"
                       >
                         {actionDef.label}
                       </button>

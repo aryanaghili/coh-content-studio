@@ -94,19 +94,19 @@ export const GuidedTour: React.FC = () => {
   // Render Step 0: Welcome Modal
   if (currentStep === 0) {
     return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md">
-        <div className="bg-white/5 backdrop-blur-md/10 backdrop-blur-lg border border-white/20 rounded-2xl shadow-[0_8px_32px_0_rgba(0,0,0,0.4)] p-8 max-w-md w-full relative">
-          <button onClick={skipTour} className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md">
+        <div className="bg-white border border-slate-200 rounded-3xl shadow-2xl p-8 max-w-md w-full relative">
+          <button onClick={skipTour} className="absolute top-4 right-4 text-slate-400 hover:text-slate-800 transition-colors">
             <X size={20} />
           </button>
           
           <div className="flex justify-center mb-6">
-            <div className="bg-coh-gold/10 p-4 rounded-2xl">
-              <Sparkles className="text-coh-gold" size={32} />
+            <div className="bg-violet-600/10 p-4 rounded-3xl">
+              <Sparkles className="text-violet-600" size={32} />
             </div>
           </div>
           
-          <h2 className="text-2xl font-serif text-white font-bold text-center mb-4">
+          <h2 className="text-2xl font-sans text-slate-800 font-bold text-center mb-4">
             Welcome to Content Studio 👋
           </h2>
           
@@ -117,18 +117,18 @@ export const GuidedTour: React.FC = () => {
           
           <div className="flex flex-wrap justify-center gap-2 mb-8 px-4">
             {TOUR_STEPS.slice(1).map((step, i) => (
-              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-coh-navy text-coh-gold/80 px-2 py-1 rounded-full border border-white/10">
+              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-slate-900 text-violet-600/80 px-2 py-1 rounded-full border border-slate-100">
                 {step.title}
               </span>
             ))}
           </div>
 
-          <button onClick={nextStep} className="w-full bg-gradient-to-r from-coh-gold to-yellow-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
+          <button onClick={nextStep} className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold py-3 rounded-3xl flex items-center justify-center gap-2 hover:opacity-90 transition-opacity shadow-lg">
             <Sparkles size={18} />
             Start Tour
           </button>
           
-          <button onClick={skipTour} className="w-full mt-4 text-slate-400 text-sm hover:text-white transition-colors">
+          <button onClick={skipTour} className="w-full mt-4 text-slate-400 text-sm hover:text-slate-800 transition-colors">
             Skip for now
           </button>
         </div>
@@ -148,7 +148,7 @@ export const GuidedTour: React.FC = () => {
       */}
       {targetRect && (
         <div 
-          className="absolute rounded-lg transition-all duration-300 ease-in-out pointer-events-none"
+          className="absolute rounded-3xl transition-all duration-300 ease-in-out pointer-events-none"
           style={{
             top: targetRect.top - padding,
             left: targetRect.left - padding,
@@ -164,37 +164,37 @@ export const GuidedTour: React.FC = () => {
         Positioned relative to the target rect, or centered if target is hidden.
       */}
       <div 
-        className={`absolute bg-white/5 backdrop-blur-md/10 backdrop-blur-md border border-white/20 rounded-xl shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
+        className={`absolute bg-white border border-slate-200 rounded-[20px] shadow-xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
         style={targetRect ? {
           top: Math.max(20, targetRect.top),
           left: targetRect.right + padding + 12, // Position to the right of sidebar items
         } : {}}
       >
-        <button onClick={skipTour} className="absolute top-3 right-3 text-slate-400 hover:text-white">
+        <button onClick={skipTour} className="absolute top-3 right-3 text-slate-400 hover:text-slate-800">
           <X size={16} />
         </button>
         
-        <div className="bg-coh-navy text-coh-gold text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
+        <div className="bg-slate-900 text-violet-600 text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
           {currentStep} / {TOUR_STEPS.length - 1}
         </div>
         
-        <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
+        <h3 className="text-slate-800 font-bold text-lg mb-2">{step.title}</h3>
         <p className="text-slate-300 text-sm leading-relaxed mb-6">{step.content}</p>
         
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
              {TOUR_STEPS.slice(1).map((_, i) => (
-               <div key={i} className={`h-1 rounded-full transition-all ${i + 1 === currentStep ? 'w-4 bg-coh-gold' : 'w-1.5 bg-slate-600'}`} />
+               <div key={i} className={`h-1 rounded-full transition-all ${i + 1 === currentStep ? 'w-4 bg-violet-600' : 'w-1.5 bg-slate-600'}`} />
              ))}
           </div>
           
           <div className="flex gap-2">
             {currentStep > 1 && (
-              <button onClick={prevStep} className="px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-white bg-coh-navy rounded hover:bg-slate-700 transition-colors">
+              <button onClick={prevStep} className="px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-slate-800 bg-slate-900 rounded hover:bg-slate-700 transition-colors">
                 Back
               </button>
             )}
-            <button onClick={nextStep} className="px-4 py-1.5 text-sm font-semibold bg-coh-gold text-coh-navy rounded flex items-center gap-1 hover:bg-yellow-500 transition-colors shadow-lg">
+            <button onClick={nextStep} className="px-4 py-1.5 text-sm font-semibold bg-violet-600 text-coh-navy rounded flex items-center gap-1 hover:bg-yellow-500 transition-colors shadow-lg">
               {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'} <ChevronRight size={16} />
             </button>
           </div>
