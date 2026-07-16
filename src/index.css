@@ -150,6 +150,17 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+.page-shell {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
 /* Base Typographic Scale */
 h1, h2, h3, h4, h5, h6 {
   color: var(--text-primary);

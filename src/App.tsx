@@ -4735,7 +4735,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
 </ErrorBoundary>)}
                 {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
-          <div className="flex flex-col gap-6 max-w-7xl mx-auto">
+          <div className="page-shell">
             {/* Header */}
             <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-2">
               <h2 className="font-sans text-2xl font-bold text-text-primary">Ideation Workspace</h2>
@@ -5031,7 +5031,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
 </ErrorBoundary>)}
                 {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
-          <div className="flex flex-col gap-6 max-w-6xl mx-auto">
+          <div className="page-shell">
             {/* Hero Area / Quick Prompt */}
             <div className="bg-gradient-to-r from-brand-gold/10 to-brand-gold-hover/5 border border-brand-gold/20 p-8 rounded-2xl shadow-level-1 flex flex-col gap-4">
               <h2 className="font-sans text-2xl font-bold text-text-primary">What are you working on today?</h2>
@@ -7801,7 +7801,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
-          <div className="page-shell-narrow">
+          <div className="page-shell">
             <div className="card-level-1 p-6 mb-8">
               <h2 className="page-title">Settings</h2>
               <p className="page-subtitle">
@@ -7837,7 +7837,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* ── Settings Sections ─────────────────────────────────────── */}
             {settingsSection === 'ai' && (
-              <div className="space-y-8 max-w-4xl mx-auto pb-12">
+              <div className="page-shell pb-12">
                 
                 {/* 1. Provider Connection */}
                 <Card>
