@@ -746,6 +746,7 @@ export default function App() {
   const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
   const [importedIdeationContext, setImportedIdeationContext] = useState<SavedIdea | null>(null);
+  const [pendingIdeaToCopy, setPendingIdeaToCopy] = useState<SavedIdea | null>(null);
 
   // --- UI Toggles ---
   const [showContentStarters, setShowContentStarters] = useState<boolean>(false);
@@ -1629,18 +1630,7 @@ export default function App() {
     setGeneratedIdeas(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
   };
 
-  const handleCopyIdeaToWorkspace = (idea: SavedIdea) => {
-    // Check if there is existing unsaved work
-    const hasUnsavedSimple = !!simpleBrief.goal.trim();
-    const hasUnsavedQuick = !!quickBrief.goal.trim();
-    const hasUnsavedAdvanced = !!advancedBrief.topic.trim();
-    
-    if (hasUnsavedSimple || hasUnsavedQuick || hasUnsavedAdvanced) {
-      if (!window.confirm("You have unsaved input in the Content Workspace. Do you want to overwrite it with this idea?")) {
-        return;
-      }
-    }
-
+  const executeCopyIdeaToWorkspace = (idea: SavedIdea) => {
     // Preset to 'advanced' mode when pushing from Ideation to Content Workspace
     setCreationMode('advanced');
 
@@ -1676,6 +1666,20 @@ export default function App() {
 
     setImportedIdeationContext(idea);
     setActiveTab('content-workspace');
+    setPendingIdeaToCopy(null);
+  };
+
+  const handleCopyIdeaToWorkspace = (idea: SavedIdea) => {
+    // Check if there is existing unsaved work
+    const hasUnsavedSimple = !!simpleBrief.goal.trim();
+    const hasUnsavedQuick = !!quickBrief.goal.trim();
+    const hasUnsavedAdvanced = !!advancedBrief.topic.trim();
+    
+    if (hasUnsavedSimple || hasUnsavedQuick || hasUnsavedAdvanced) {
+      setPendingIdeaToCopy(idea);
+    } else {
+      executeCopyIdeaToWorkspace(idea);
+    }
   };
 
 
@@ -8276,6 +8280,36 @@ OPENAI_MODEL=gpt-4.1`}
 </ErrorBoundary>)}
 
       </main>
+
+      {/* Overwrite Confirmation Modal */}
+      {pendingIdeaToCopy && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-coh-navy/80 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl border border-coh-gold/20 p-6 max-w-sm w-full relative">
+            <button onClick={() => setPendingIdeaToCopy(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <X size={16} />
+            </button>
+            <h3 className="font-serif text-lg font-bold text-coh-navy mb-2">Overwrite Workspace?</h3>
+            <p className="text-sm text-coh-navy/70 mb-6">
+              You have unsaved input in the Content Workspace. Do you want to overwrite it with this idea?
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button 
+                onClick={() => setPendingIdeaToCopy(null)}
+                className="px-4 py-2 text-sm font-medium text-coh-navy hover:bg-slate-100 rounded transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => executeCopyIdeaToWorkspace(pendingIdeaToCopy)}
+                className="px-4 py-2 text-sm font-medium bg-coh-navy text-coh-gold rounded hover:bg-coh-navy-light transition-colors"
+              >
+                Overwrite
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="fixed bottom-2 right-2 text-[10px] text-coh-navy/40 pointer-events-none z-50">v1.1.0-stable</div>
       <GuidedTour />
     </div>
