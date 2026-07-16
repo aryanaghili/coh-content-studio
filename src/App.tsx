@@ -4519,7 +4519,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         <div>
           <div className="mb-10">
             <span className="font-sans tracking-widest text-[11px] uppercase text-brand-gold block mb-2">Climate Opera Haus</span>
-            <h1 className="font-sans text-[21px] font-semibold leading-tight tracking-tight border-b border-border-strong pb-4 text-text-on-dark">
+            <h1 className="font-sans text-[21px] font-semibold leading-tight tracking-tight border-b border-border-strong pb-4 text-white">
               Content Studio
             </h1>
           </div>
@@ -4533,7 +4533,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'command-center'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4549,7 +4549,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'ideation-workspace'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4561,19 +4561,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('editorial-calendar'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'editorial-calendar'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
               <Calendar size={16} />
-              Editorial Calendar Studio
+              Editorial Calendar
             </button>
             <button
               id="nav-content"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'content-workspace'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4585,7 +4585,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'visual-studio'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4599,7 +4599,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('revision-studio'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
                 activeTab === 'revision-studio'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4617,7 +4617,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('calendar-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'calendar-library'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4628,7 +4628,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'idea-library'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4639,7 +4639,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'content-library'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4650,7 +4650,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('source-library'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'source-library'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4665,7 +4665,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'operating-core'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
@@ -4676,7 +4676,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); }}
               className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
                 activeTab === 'settings'
-                  ? 'bg-sidebar-active text-text-on-dark font-semibold rounded-md shadow-sm'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
                   : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
               }`}
             >
