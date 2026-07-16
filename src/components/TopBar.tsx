@@ -26,12 +26,15 @@ export function TopBar({ title, theme, onThemeToggle, aiStatus }: TopBarProps) {
       
       <div className="flex items-center gap-4">
         {/* AI Status */}
-        <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-inset border border-border-standard rounded-full">
-          <div className={`w-2 h-2 rounded-full ${aiStatus === 'connected' ? 'bg-status-success' : 'bg-status-error'}`} />
-          <span className="font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider">
+        <button 
+          className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-surface-primary border border-border-strong rounded-full hover:bg-surface-hover hover:border-brand-gold transition-all shadow-sm group"
+          title={aiStatus === 'connected' ? 'AI is connected and ready' : 'AI is offline - click to configure'}
+        >
+          <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${aiStatus === 'connected' ? 'bg-status-success shadow-[0_0_8px_rgba(23,140,78,0.6)]' : 'bg-status-error shadow-[0_0_8px_rgba(200,60,60,0.6)]'}`} />
+          <span className={`font-sans text-[12px] font-bold uppercase tracking-wider ${aiStatus === 'connected' ? 'text-status-success' : 'text-status-error'}`}>
             {aiStatus === 'connected' ? 'AI Ready' : 'AI Offline'}
           </span>
-        </div>
+        </button>
 
         {/* Theme Toggle */}
         <div className="flex items-center bg-surface-inset p-1 border border-border-standard rounded-full">

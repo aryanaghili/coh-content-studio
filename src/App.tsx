@@ -7831,53 +7831,27 @@ WRITING CLEANLINESS RULES (CRITICAL):
               )}
             </div>
 
-            {/* ── AI Connection ─────────────────────────────────────── */}
+            {/* ── Settings Sections ─────────────────────────────────────── */}
             {settingsSection === 'ai' && (
-              <div className="space-y-6">
-
-
-                {/* Status Badge */}
-                <div className="flex items-center gap-3 bg-surface-primary border border-border-standard p-4 rounded">
-                  <span className={`w-3 h-3 rounded-full ${aiStatus === 'connected' ? (settingsKeyDirty ? 'bg-yellow-500' : 'bg-green-500/10 backdrop-blur-md0') : aiStatus === 'error' ? 'bg-red-500/10 backdrop-blur-md0' : aiStatus === 'testing' ? 'bg-yellow-400 animate-pulse' : 'bg-gray-300'}`} />
-                  <div className="flex-1">
-                    <span className="text-sm font-bold text-text-primary">
-                      {aiStatus === 'connected' && !settingsKeyDirty ? 'AI Generation Active' :
-                       aiStatus === 'connected' && settingsKeyDirty ? 'Settings Changed' :
-                       aiStatus === 'testing' ? 'Testing Connection...' :
-                       aiStatus === 'error' ? 'Connection Error' :
-                       settingsTestPassed ? 'Connection Verified' :
-                       aiStatus === 'needs_retest' ? 'Needs Retest' :
-                       'AI Not Connected — Prototype Mode'}
-                    </span>
-                    {(aiProvider || settingsProvider) && (
-                      <div className="text-xs text-text-secondary mt-1 space-y-0.5">
-                        <span className="block">Provider: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? aiProvider : settingsProvider}</span></span>
-                        <span className="block">Text model: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? aiTextModel : (settingsTextModel || 'N/A')}</span></span>
-                        <span className="block">Image model: <span className="font-semibold">{aiStatus === 'connected' && !settingsKeyDirty ? (aiImageModel || 'N/A') : (settingsImageModel || 'N/A')}</span></span>
+              <div className="space-y-8 max-w-4xl mx-auto pb-12">
+                
+                {/* 1. Provider Connection */}
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>1. Provider Connection</CardTitle>
+                        <p className="text-sm text-text-secondary mt-1">Connect your preferred AI model provider. An API key is required.</p>
                       </div>
-                    )}
-                    {aiLastTested && <span className="text-xs text-text-muted block mt-1">Last tested: {aiLastTested}</span>}
-                    {aiLastError && <span className="text-xs text-red-600 block mt-0.5">{aiLastError}</span>}
-                    {aiLatency > 0 && aiStatus === 'connected' && !settingsKeyDirty && <span className="text-xs text-green-700 block">Latency: {aiLatency}ms</span>}
-                    
-                    {/* Status Helper Message */}
-                    <span className="text-xs font-semibold text-text-secondary block mt-2">
-                      {aiStatus === 'connected' && !settingsKeyDirty ? 'Text and image generation are active.' :
-                       aiStatus === 'connected' && settingsKeyDirty ? 'Test the updated configuration before saving.' :
-                       settingsTestPassed ? 'Save settings to activate this configuration.' :
-                       'Configure and test connection to activate.'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Form */}
-                <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-5">
-                  <h3 className="font-sans text-lg text-text-primary font-semibold">Configure AI Provider</h3>
-                  
-                  {/* Provider */}
-                  <div>
-                    <label className="block text-sm font-semibold text-text-primary mb-1">AI Provider</label>
-                    <select
+                      <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2 border ${aiStatus === 'connected' && !settingsKeyDirty ? 'bg-status-success/10 text-status-success border-status-success/20' : 'bg-status-warning/10 text-status-warning border-status-warning/20'}`}>
+                        <div className={`w-2 h-2 rounded-full ${aiStatus === 'connected' && !settingsKeyDirty ? 'bg-status-success' : 'bg-status-warning'}`} />
+                        {aiStatus === 'connected' && !settingsKeyDirty ? 'Connected' : 'Action Required'}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-5">
+                    <Select
+                      label="AI Provider"
                       value={settingsProvider}
                       onChange={(e) => {
                         const p = e.target.value;
@@ -7898,140 +7872,87 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setSettingsTestResult('');
                         setSettingsKeyDirty(true);
                       }}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm"
-                    >
-                      <option value="openai">OpenAI</option>
-                      <option value="gemini">Google Gemini</option>
-                      <option value="anthropic">Anthropic Claude</option>
-                      <option value="mistral">Mistral</option>
-                      <option value="openrouter">OpenRouter / OpenAI-Compatible</option>
-                    </select>
-                  </div>
+                      options={[
+                        { label: 'OpenAI', value: 'openai' },
+                        { label: 'Google Gemini', value: 'gemini' },
+                        { label: 'Anthropic Claude', value: 'anthropic' },
+                        { label: 'Mistral', value: 'mistral' },
+                        { label: 'OpenRouter / OpenAI-Compatible', value: 'openrouter' },
+                      ]}
+                    />
 
-                  {/* Base URL (OpenRouter / Custom only) */}
-                  {(settingsProvider === 'openrouter') && (
-                    <div>
-                      <label className="block text-sm font-semibold text-text-primary mb-1">Base URL</label>
-                      <input
-                        type="text"
+                    {settingsProvider === 'openrouter' && (
+                      <Input
+                        label="Base URL (Optional)"
                         value={settingsBaseUrl}
                         onChange={(e) => { setSettingsBaseUrl(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); }}
                         placeholder="https://openrouter.ai/api/v1"
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm font-mono"
+                        className="font-mono text-sm"
+                        helperText="Required if using a custom OpenAI-compatible endpoint."
+                      />
+                    )}
+
+                    <div>
+                      <Input
+                        label="API Key"
+                        type="password"
+                        value={settingsApiKey}
+                        onChange={(e) => { setSettingsApiKey(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); setSettingsTestResult(''); }}
+                        placeholder={MODEL_REGISTRY.find(m => m.provider === settingsProvider)?.provider === 'openai' ? 'sk-proj-...' : 'Enter API key'}
+                        className="font-mono text-sm"
+                        autoComplete="off"
+                        helperText="API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser."
                       />
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
 
-                  {/* API Key */}
-                  <div>
-                    <label className="block text-sm font-semibold text-text-primary mb-1">API Key</label>
-                    <input
-                      type="password"
-                      value={settingsApiKey}
-                      onChange={(e) => { setSettingsApiKey(e.target.value); setSettingsTestPassed(null); setSettingsKeyDirty(true); setSettingsTestResult(''); }}
-                      placeholder={MODEL_REGISTRY.find(m => m.provider === settingsProvider)?.provider === 'openai' ? 'sk-proj-...' : 'Enter API key'}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm font-mono"
-                      autoComplete="off"
-                    />
-                    <p className="text-xs text-text-secondary font-semibold bg-surface-inset p-2 mt-2 border border-border-standard rounded">
-                      API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser.
-                    </p>
-                  </div>
-
-                  <hr className="border-border-standard" />
-
-                  {/* Text Model */}
-                  <div>
+                {/* 2. Model Preferences */}
+                <Card className={!settingsProvider ? 'opacity-50 pointer-events-none' : ''}>
+                  <CardHeader>
+                    <CardTitle>2. Model Preferences</CardTitle>
+                    <p className="text-sm text-text-secondary mt-1">Select the specific models to use for text and visual generation.</p>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
                     {fallbackWarning && (
-                      <div className="bg-amber-500/10 backdrop-blur-md text-amber-800 p-2 rounded mb-4 text-sm font-semibold border border-amber-200">
+                      <div className="bg-status-warning/10 text-status-warning p-3 rounded border border-status-warning/20 text-sm font-semibold flex items-center gap-2">
+                        <AlertTriangle size={16} />
                         {fallbackWarning}
                       </div>
                     )}
-                    <label className="block text-sm font-semibold text-text-primary mb-1 flex items-center gap-2">
-                      Text Generation Model
-                      {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.isRecommended && (
-                        <span className="bg-green-100 text-green-800 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-bold">Recommended Default</span>
-                      )}
-                    </label>
-                    <select
-                      value={settingsTextModel}
-                      onChange={(e) => { 
-                        setSettingsTextModel(e.target.value); 
-                        safeLocalStorageSet('coh_settings_text_model', e.target.value);
-                        setSettingsTestPassed(null); 
-                        setSettingsKeyDirty(true); 
-                        setFallbackWarning('');
-                      }}
-                      disabled={!settingsProvider}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm font-mono disabled:opacity-50"
-                    >
-                      {!settingsTextModel && <option value="">Select a model</option>}
-                      {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'text').map(m => (
-                        <option key={m.id} value={m.id}>{m.label}</option>
-                      ))}
-                    </select>
-                    <p className="text-xs text-text-secondary mt-1 mb-2">Controls written outputs such as drafts, ideas, revisions, and prompts.</p>
                     
-                    {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
-                      <div className="mt-2 text-xs text-text-secondary bg-surface-inset p-3 rounded flex flex-col gap-2">
-                        <div className="flex gap-4">
-                          <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
-                          <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
-                        </div>
-                        <div>
-                          <strong className="text-text-primary block mb-1">Best for:</strong>
-                          <ul className="list-disc pl-4 space-y-0.5">
-                            {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.bestUseCase.split(',').map((item, idx) => (
-                              <li key={idx}>{item.trim()}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Image Model */}
-                  {(settingsProvider === 'openai' || settingsProvider === 'openrouter') && (
                     <div>
-                      <label className="block text-sm font-semibold text-text-primary mb-1 flex items-center gap-2">
-                        Image Generation Model
-                        {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.isRecommended && (
-                          <span className="bg-green-100 text-green-800 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded font-bold">Recommended Default</span>
-                        )}
-                      </label>
-                      <select
-                        value={settingsImageModel}
+                      <Select
+                        label="Text Generation Model"
+                        value={settingsTextModel}
                         onChange={(e) => { 
-                          setSettingsImageModel(e.target.value); 
-                          safeLocalStorageSet('coh_settings_image_model', e.target.value);
+                          setSettingsTextModel(e.target.value); 
+                          safeLocalStorageSet('coh_settings_text_model', e.target.value);
                           setSettingsTestPassed(null); 
                           setSettingsKeyDirty(true); 
                           setFallbackWarning('');
                         }}
                         disabled={!settingsProvider}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm font-mono disabled:opacity-50"
-                      >
-                        {!settingsImageModel && <option value="">Select a model</option>}
-                        {MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'image').map(m => (
-                          <option key={m.id} value={m.id}>{m.label}</option>
-                        ))}
-                      </select>
-                      <p className="text-xs text-text-secondary mt-1 mb-2">
-                        Controls Visual Studio image generation. Image quality depends heavily on the selected model.
-                        {settingsImageModel === 'gpt-image-2' && <span className="block text-green-700 font-semibold mt-0.5">Recommended for highest visual quality.</span>}
-                        {settingsImageModel === 'dall-e-3' && <span className="block text-amber-600 font-semibold mt-0.5">Legacy fallback. May produce less refined visuals than GPT Image models.</span>}
-                      </p>
+                        options={[
+                          { label: 'Select a model...', value: '' },
+                          ...MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'text').map(m => ({
+                            label: `${m.label} ${m.isRecommended ? '(Recommended)' : ''}`,
+                            value: m.id
+                          }))
+                        ]}
+                        helperText="Controls written outputs such as drafts, ideas, revisions, and prompts."
+                      />
                       
-                      {settingsImageModel && MODEL_REGISTRY.find(m => m.id === settingsImageModel) && (
-                        <div className="mt-2 text-xs text-text-secondary bg-surface-inset p-3 rounded flex flex-col gap-2">
-                          <div className="flex gap-4">
-                            <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.quality}</span>
-                            <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.speed}</span>
+                      {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
+                        <div className="mt-3 text-sm text-text-secondary bg-surface-inset p-4 rounded-lg border border-border-standard flex flex-col gap-2">
+                          <div className="flex gap-6">
+                            <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
+                            <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
                           </div>
                           <div>
                             <strong className="text-text-primary block mb-1">Best for:</strong>
-                            <ul className="list-disc pl-4 space-y-0.5">
-                              {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.bestUseCase.split(',').map((item, idx) => (
+                            <ul className="list-disc pl-5 space-y-1">
+                              {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.bestUseCase.split(',').map((item, idx) => (
                                 <li key={idx}>{item.trim()}</li>
                               ))}
                             </ul>
@@ -8039,21 +7960,64 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                       )}
                     </div>
-                  )}
 
-                  <hr className="border-border-standard" />
+                    {(settingsProvider === 'openai' || settingsProvider === 'openrouter') && (
+                      <div className="pt-4 border-t border-border-standard">
+                        <Select
+                          label="Image Generation Model"
+                          value={settingsImageModel}
+                          onChange={(e) => { 
+                            setSettingsImageModel(e.target.value); 
+                            safeLocalStorageSet('coh_settings_image_model', e.target.value);
+                            setSettingsTestPassed(null); 
+                            setSettingsKeyDirty(true); 
+                            setFallbackWarning('');
+                          }}
+                          disabled={!settingsProvider}
+                          options={[
+                            { label: 'Select a model...', value: '' },
+                            ...MODEL_REGISTRY.filter(m => m.provider === settingsProvider && m.type === 'image').map(m => ({
+                              label: `${m.label} ${m.isRecommended ? '(Recommended)' : ''}`,
+                              value: m.id
+                            }))
+                          ]}
+                          helperText="Controls Visual Studio image generation. Image quality depends heavily on the selected model."
+                        />
+                        
+                        {settingsImageModel && MODEL_REGISTRY.find(m => m.id === settingsImageModel) && (
+                          <div className="mt-3 text-sm text-text-secondary bg-surface-inset p-4 rounded-lg border border-border-standard flex flex-col gap-2">
+                            <div className="flex gap-6">
+                              <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.quality}</span>
+                              <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.speed}</span>
+                            </div>
+                            <div>
+                              <strong className="text-text-primary block mb-1">Best for:</strong>
+                              <ul className="list-disc pl-5 space-y-1">
+                                {MODEL_REGISTRY.find(m => m.id === settingsImageModel)?.bestUseCase.split(',').map((item, idx) => (
+                                  <li key={idx}>{item.trim()}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
 
-                  {/* Test Connection */}
-                  <div className="pb-3">
-                    <p className="text-sm font-semibold text-text-primary mb-3">
-                      Choose provider and models, then test the connection before saving.
-                    </p>
-                    <div className="flex items-center gap-3">
-                      <button
+                {/* 3. Testing & Verification */}
+                <Card className={!settingsTextModel ? 'opacity-50 pointer-events-none' : ''}>
+                  <CardHeader>
+                    <CardTitle>3. Test & Save Connection</CardTitle>
+                    <p className="text-sm text-text-secondary mt-1">Verify your credentials work before saving the configuration.</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 bg-surface-inset p-4 rounded-lg border border-border-standard mb-6">
+                      <Button
+                        variant="secondary"
                         disabled={settingsTestCooldown > 0 || settingsTesting || !settingsApiKey.trim() || !settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)}
                         onClick={async () => {
                           setSettingsTesting(true);
-                          // Only set testing status if not currently handling a rate limit warning
                           if (aiStatus !== 'error') setAiStatus('testing');
                           
                           setSettingsTestResult('');
@@ -8072,9 +8036,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               setSettingsTestResult(errMsg);
                               
                               if (errMsg.includes('Rate limit reached')) {
-                                setSettingsTestCooldown(30); // 30 second cooldown
-                                // Do not overwrite aiStatus if it was a temporary rate limit
-                                // This prevents disconnecting a previously working setup
+                                setSettingsTestCooldown(30);
                               } else {
                                 setAiStatus('error');
                                 setAiLastError(errMsg);
@@ -8088,101 +8050,83 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             setSettingsTesting(false);
                           }
                         }}
-                        className="bg-slate-900 text-text-primary px-4 py-2 rounded text-sm font-semibold hover:bg-slate-900/80 disabled:opacity-40 transition"
                       >
                         {settingsTesting ? 'Testing...' : (settingsTestCooldown > 0 ? `Wait ${settingsTestCooldown}s` : 'Test Connection')}
-                      </button>
+                      </Button>
 
-                      <div className="flex flex-col justify-center">
-                        {settingsTestResult && (
-                          <span className={`text-sm font-semibold ${settingsTestPassed ? 'text-green-700' : 'text-red-600'}`}>
-                            {settingsTestPassed ? '✓ ' : '✗ '}{settingsTestResult}
-                          </span>
-                        )}
-
-                        {(!settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)) && (
-                          <span className="text-xs text-red-500 font-semibold mt-1">
-                            Select provider, text model, and image model before testing.
-                          </span>
+                      <div className="flex-1">
+                        {settingsTestResult ? (
+                          <div className={`flex items-center gap-2 text-sm font-semibold ${settingsTestPassed ? 'text-status-success' : 'text-status-error'}`}>
+                            {settingsTestPassed ? <Check size={16} /> : <AlertTriangle size={16} />}
+                            {settingsTestResult}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-text-muted">Click to test your current setup.</div>
                         )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Apply Provider */}
-                  <button
-                    disabled={settingsTestPassed !== true || settingsApplying || (!settingsKeyDirty && aiStatus === 'connected')}
-                    onClick={async () => {
-                      setSettingsApplying(true);
-                      try {
-                        await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined, aiLastTested);
-                        setAiStatus('connected');
-                        setAiProvider(settingsProvider);
-                        setAiTextModel(settingsTextModel);
-                        setAiImageModel(settingsImageModel);
-                        setGenerationMode('ai');
-                        setAiLastError('');
-                        setSettingsTestResult('AI settings saved. Text and image generation are active.');
-                        setSettingsKeyDirty(false);
-                      } catch {
-                        setAiStatus('error');
-                        setSettingsTestResult('Failed to apply provider. Check server logs.');
-                      } finally {
-                        setSettingsApplying(false);
-                      }
-                    }}
-                    className={`w-full text-text-primary px-4 py-2.5 rounded text-sm font-semibold transition ${(!settingsKeyDirty && aiStatus === 'connected') ? 'bg-green-600 hover:bg-green-600' : 'bg-green-700 hover:bg-green-800 disabled:opacity-40'}`}
-                  >
-                    {settingsApplying ? 'Saving...' 
-                    : (!settingsKeyDirty && aiStatus === 'connected') ? 'Settings Saved'
-                    : settingsKeyDirty && settingsTestPassed !== true ? 'Test Connection First' 
-                    : (!settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)) ? 'Select models before saving.'
-                    : aiStatus === 'connected' ? 'Update AI Settings'
-                    : 'Save AI Settings'}
-                  </button>
+                    <Button
+                      variant="primary"
+                      className="w-full py-3"
+                      disabled={settingsTestPassed !== true || settingsApplying || (!settingsKeyDirty && aiStatus === 'connected')}
+                      onClick={async () => {
+                        setSettingsApplying(true);
+                        try {
+                          await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined, aiLastTested);
+                          setAiStatus('connected');
+                          setAiProvider(settingsProvider);
+                          setAiTextModel(settingsTextModel);
+                          setAiImageModel(settingsImageModel);
+                          setGenerationMode('ai');
+                          setAiLastError('');
+                          setSettingsTestResult('AI settings saved. Text and image generation are active.');
+                          setSettingsKeyDirty(false);
+                        } catch {
+                          setAiStatus('error');
+                          setSettingsTestResult('Failed to apply provider. Check server logs.');
+                        } finally {
+                          setSettingsApplying(false);
+                        }
+                      }}
+                    >
+                      {settingsApplying ? 'Saving Configuration...' 
+                      : (!settingsKeyDirty && aiStatus === 'connected') ? '✓ Settings Up to Date'
+                      : settingsKeyDirty && settingsTestPassed !== true ? 'Test Connection First' 
+                      : 'Save and Activate AI Generation'}
+                    </Button>
+                  </CardContent>
+                </Card>
 
-
-                  {/* Generation Mode */}
-                  <div className="pt-4 border-t border-border-standard space-y-2">
-                    <h4 className="font-semibold text-sm text-text-primary">Generation Mode</h4>
-                    <p className="text-xs text-text-secondary">Controls what runs when you click Generate Drafts.</p>
-                    <div className="flex flex-col gap-2">
+                {/* 4. Generation Mode Override */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>4. Generation Mode Override</CardTitle>
+                    <p className="text-sm text-text-secondary mt-1">Force the system to use a specific generation mode, overriding the active AI Connection.</p>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
                       {([
                         ['ai', 'AI Generation', 'Use the connected AI provider to generate real content.'],
                         ['prompt_builder', 'Prompt Builder Fallback', 'Show a copyable AI prompt instead of generating directly. Use when no API key is available.'],
                         ['prototype', 'Prototype Structure Only', 'Show template structure as a starting frame. Not final copy.'],
                       ] as const).map(([val, title, desc]) => (
-                        <label key={val} className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition ${generationMode === val ? 'border-coh-navy bg-surface-primary' : 'border-border-standard hover:bg-surface-primary/60'}`}>
-                          <input type="radio" name="genMode" value={val} checked={generationMode === val} onChange={() => setGenerationMode(val)} className="mt-0.5" />
+                        <label key={val} className={`flex items-start gap-4 p-4 rounded-lg border cursor-pointer transition ${generationMode === val ? 'border-brand-gold bg-surface-inset shadow-sm' : 'border-border-standard hover:bg-surface-inset'}`}>
+                          <input type="radio" name="genMode" value={val} checked={generationMode === val} onChange={() => setGenerationMode(val)} className="mt-1" />
                           <div>
-                            <span className="font-semibold text-sm text-text-primary block">{title}</span>
-                            <span className="text-xs text-text-secondary">{desc}</span>
+                            <span className="font-semibold text-[15px] text-text-primary block">{title}</span>
+                            <span className="text-sm text-text-secondary">{desc}</span>
                           </div>
                         </label>
                       ))}
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  {/* .env instructions */}
-                  <div className="pt-4 border-t border-border-standard text-xs text-text-secondary space-y-2">
-                    <p className="font-semibold text-text-primary text-xs">Persistent Setup via .env (Recommended for development)</p>
-                    <p>Add your key to <code className="bg-surface-primary px-1 rounded">.env</code> and restart the server. The key will be loaded automatically.</p>
-                    <pre className="bg-surface-primary p-2 rounded text-[10px] font-mono overflow-x-auto">
-{`# Example .env
-AI_PROVIDER=openai
-OPENAI_API_KEY=sk-...
-OPENAI_MODEL=gpt-4.1`}
-                    </pre>
-                    <p className="text-[10px] text-text-muted">The .env file is git-ignored and stays local. Never commit API keys.</p>
-                  </div>
-                </div>
               </div>
             )}
 
-
-          </div>
-        
-</ErrorBoundary>)}
+            </ErrorBoundary>)}
 
       </main>
 
