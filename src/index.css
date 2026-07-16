@@ -42,6 +42,7 @@
   /* Semantic Colors - System */
   --color-focus-ring: var(--focus-ring);
   --color-overlay: var(--overlay);
+  --color-white: #ffffff;
   
   /* Typography */
   --font-display: "Playfair Display", "Albra Display", serif;

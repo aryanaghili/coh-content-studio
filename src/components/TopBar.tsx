@@ -6,9 +6,10 @@ interface TopBarProps {
   theme: string;
   onThemeToggle: (theme: 'light' | 'dark') => void;
   aiStatus: string;
+  onSearchClick?: () => void;
 }
 
-export function TopBar({ title, theme, onThemeToggle, aiStatus }: TopBarProps) {
+export function TopBar({ title, theme, onThemeToggle, aiStatus, onSearchClick }: TopBarProps) {
   return (
     <header className="h-[64px] bg-surface-primary border-b border-border-standard px-8 flex items-center justify-between shrink-0">
       <div className="flex items-center gap-4 flex-1">
@@ -18,8 +19,9 @@ export function TopBar({ title, theme, onThemeToggle, aiStatus }: TopBarProps) {
           <input 
             type="text" 
             placeholder="Search commands, ideas, or content..." 
-            className="w-full bg-surface-inset border border-border-standard rounded-full py-1.5 pl-9 pr-4 text-[13px] text-text-primary placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-focus-ring outline-none transition-all"
-            disabled
+            className="w-full bg-surface-inset border border-border-standard rounded-full py-1.5 pl-9 pr-4 text-[13px] text-text-primary placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-focus-ring outline-none transition-all cursor-text"
+            onFocus={onSearchClick}
+            readOnly={!!onSearchClick}
           />
         </div>
       </div>
