@@ -64,9 +64,14 @@ export const GuidedTour: React.FC = () => {
     if (step && step.selector) {
       const el = document.querySelector(step.selector);
       if (el) {
-        // Bring the element above the overlay visually if we can, 
-        // though box-shadow approach doesn't strictly require z-index on the target
-        setTargetRect(el.getBoundingClientRect());
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          setTargetRect(rect);
+        } else {
+          setTargetRect(null);
+        }
+      } else {
+        setTargetRect(null);
       }
     }
   }, [currentStep]);
@@ -156,47 +161,45 @@ export const GuidedTour: React.FC = () => {
 
       {/* 
         TOOLTIP LAYER
-        Positioned relative to the target rect.
+        Positioned relative to the target rect, or centered if target is hidden.
       */}
-      {targetRect && (
-        <div 
-          className="absolute bg-[#1e293b] border border-coh-gold/30 rounded-xl shadow-2xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out"
-          style={{
-            top: Math.max(20, targetRect.top),
-            left: targetRect.right + padding + 12, // Position to the right of sidebar items
-          }}
-        >
-          <button onClick={skipTour} className="absolute top-3 right-3 text-slate-400 hover:text-white">
-            <X size={16} />
-          </button>
-          
-          <div className="bg-coh-navy text-coh-gold text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
-            {currentStep} / {TOUR_STEPS.length - 1}
+      <div 
+        className={`absolute bg-[#1e293b] border border-coh-gold/30 rounded-xl shadow-2xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
+        style={targetRect ? {
+          top: Math.max(20, targetRect.top),
+          left: targetRect.right + padding + 12, // Position to the right of sidebar items
+        } : {}}
+      >
+        <button onClick={skipTour} className="absolute top-3 right-3 text-slate-400 hover:text-white">
+          <X size={16} />
+        </button>
+        
+        <div className="bg-coh-navy text-coh-gold text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
+          {currentStep} / {TOUR_STEPS.length - 1}
+        </div>
+        
+        <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
+        <p className="text-slate-300 text-sm leading-relaxed mb-6">{step.content}</p>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex gap-1">
+             {TOUR_STEPS.slice(1).map((_, i) => (
+               <div key={i} className={`h-1 rounded-full transition-all ${i + 1 === currentStep ? 'w-4 bg-coh-gold' : 'w-1.5 bg-slate-600'}`} />
+             ))}
           </div>
           
-          <h3 className="text-white font-bold text-lg mb-2">{step.title}</h3>
-          <p className="text-slate-300 text-sm leading-relaxed mb-6">{step.content}</p>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1">
-               {TOUR_STEPS.slice(1).map((_, i) => (
-                 <div key={i} className={`h-1 rounded-full transition-all ${i + 1 === currentStep ? 'w-4 bg-coh-gold' : 'w-1.5 bg-slate-600'}`} />
-               ))}
-            </div>
-            
-            <div className="flex gap-2">
-              {currentStep > 1 && (
-                <button onClick={prevStep} className="px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-white bg-coh-navy rounded hover:bg-slate-700 transition-colors">
-                  Back
-                </button>
-              )}
-              <button onClick={nextStep} className="px-4 py-1.5 text-sm font-semibold bg-coh-gold text-coh-navy rounded flex items-center gap-1 hover:bg-yellow-500 transition-colors shadow-lg">
-                {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'} <ChevronRight size={16} />
+          <div className="flex gap-2">
+            {currentStep > 1 && (
+              <button onClick={prevStep} className="px-3 py-1.5 text-sm font-semibold text-slate-300 hover:text-white bg-coh-navy rounded hover:bg-slate-700 transition-colors">
+                Back
               </button>
-            </div>
+            )}
+            <button onClick={nextStep} className="px-4 py-1.5 text-sm font-semibold bg-coh-gold text-coh-navy rounded flex items-center gap-1 hover:bg-yellow-500 transition-colors shadow-lg">
+              {currentStep === TOUR_STEPS.length - 1 ? 'Finish' : 'Next'} <ChevronRight size={16} />
+            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };
