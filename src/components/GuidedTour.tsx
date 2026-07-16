@@ -95,7 +95,7 @@ export const GuidedTour: React.FC = () => {
   if (currentStep === 0) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md">
-        <div className="bg-white border border-border-strong rounded-3xl shadow-2xl p-8 max-w-md w-full relative">
+        <div className="bg-surface-primary border border-border-strong rounded-3xl shadow-2xl p-8 max-w-md w-full relative">
           <button onClick={skipTour} className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors">
             <X size={20} />
           </button>
@@ -164,7 +164,7 @@ export const GuidedTour: React.FC = () => {
         Positioned relative to the target rect, or centered if target is hidden.
       */}
       <div 
-        className={`absolute bg-white border border-border-strong rounded-[20px] shadow-xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
+        className={`absolute bg-surface-primary border border-border-strong rounded-[20px] shadow-xl p-5 w-72 pointer-events-auto transition-all duration-300 ease-in-out ${!targetRect ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' : ''}`}
         style={targetRect ? {
           top: Math.max(20, targetRect.top),
           left: targetRect.right + padding + 12, // Position to the right of sidebar items

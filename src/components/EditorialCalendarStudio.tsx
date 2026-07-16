@@ -1011,7 +1011,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     const daysInMonth = new Date(year, month, 0).getDate();
     const firstDay = new Date(year, month - 1, 1).getDay();
     
-    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-slate-50 border border-border-standard rounded min-h-[120px]" />);
+    const blanks = Array.from({ length: firstDay }).map((_, i) => <div key={`blank-${i}`} className="bg-surface-inset border border-border-standard rounded min-h-[120px]" />);
     
     const days = Array.from({ length: daysInMonth }).map((_, i) => {
       const dayNum = i + 1;
@@ -1019,10 +1019,10 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       const dayItems = items.filter(item => item.date === dateStr);
       
       return (
-        <div key={dayNum} className={`bg-white border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-violet-300 shadow-sm' : 'border-border-standard'}`}>
+        <div key={dayNum} className={`bg-surface-primary border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-violet-300 shadow-sm' : 'border-border-standard'}`}>
           <span className="text-[10px] font-bold text-text-muted">{dayNum}</span>
           {dayItems.map(item => (
-            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-white p-1.5 rounded border border-border-standard cursor-pointer hover:border-brand-gold transition flex flex-col gap-0.5">
+            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-surface-primary p-1.5 rounded border border-border-standard cursor-pointer hover:border-brand-gold transition flex flex-col gap-0.5">
               <div className="text-[9px] uppercase font-bold text-brand-gold line-clamp-1">{item.channel}</div>
               <div className="text-[10px] font-semibold text-text-primary leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
             </div>
@@ -1045,7 +1045,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   return (
     <div className="h-full flex flex-col bg-transparent">
       {/* Header & Action Bar */}
-      <div className="bg-white border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-surface-primary border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
         <div>
           <h2 className="page-title">
             Editorial Calendar Studio
@@ -1118,7 +1118,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Strategic Focus */}
-              <div className="space-y-4 bg-white/30 p-3 rounded border border-border-standard">
+              <div className="space-y-4 bg-surface-inset p-3 rounded border border-border-standard">
                 <div>
                   <label className="block font-bold text-text-primary mb-1 uppercase text-[10px]">Primary Focus</label>
                   <select className="form-control p-1.5 w-full border-brand-gold/50 font-bold" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
@@ -1167,7 +1167,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-brand-gold shadow-sm' : 'bg-white text-text-primary border border-border-strong hover:border-brand-gold'}`}
+                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-brand-gold shadow-sm' : 'bg-surface-primary text-text-primary border border-border-strong hover:border-brand-gold'}`}
                     >
                       {c}
                     </button>
@@ -1177,12 +1177,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {showAdvancedSettings && (
-              <div className="mt-4 p-4 border border-border-standard rounded bg-white">
+              <div className="mt-4 p-4 border border-border-standard rounded bg-surface-primary">
                 <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">Channel Audience Map</h4>
                 <p className="text-xs text-text-secondary mb-4">Override the primary audience on specific active channels.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cycle.activeChannels.map(c => (
-                    <div key={c} className="flex items-center gap-3 bg-white p-2 rounded border border-border-standard shadow-sm">
+                    <div key={c} className="flex items-center gap-3 bg-surface-primary p-2 rounded border border-border-standard shadow-sm">
                       <div className="w-24 text-xs font-semibold text-text-primary shrink-0">{c}</div>
                       <select className="form-control p-1 text-xs w-full" 
                         value={cycle.channelAudienceMap[c]?.primary || cycle.primaryAudience}
@@ -1277,11 +1277,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
               {/* Calendar Canvas */}
               <div className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded shadow-sm min-h-[400px]">
-                <div className="border-b border-border-standard p-4 bg-white/30 flex justify-between items-center shrink-0">
+                <div className="border-b border-border-standard p-4 bg-surface-inset flex justify-between items-center shrink-0">
                   <h3 className="font-sans text-xl font-bold text-text-primary">Calendar Canvas</h3>
-                  <div className="flex gap-1 bg-white border border-border-strong rounded p-0.5">
-                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={16} /></button>
-                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-white text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={16} /></button>
+                  <div className="flex gap-1 bg-surface-primary border border-border-strong rounded p-0.5">
+                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-surface-primary text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={16} /></button>
+                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-surface-primary text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={16} /></button>
                   </div>
                 </div>
 
@@ -1294,11 +1294,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   ) : viewMode === 'Month' ? renderMonthView() : (
                     <div className="space-y-3">
                       {items.map((item) => (
-                        <div key={item.id} className="bg-white border border-border-strong rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
+                        <div key={item.id} className="bg-surface-primary border border-border-strong rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
                           <div className="flex-1 flex flex-col md:flex-row gap-4 items-start md:items-center">
                             <div className="flex flex-col gap-1 w-full md:w-auto shrink-0 min-w-[150px]">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-text-primary bg-white px-2 py-0.5 rounded">{item.date}</span>
+                                <span className="text-xs font-bold text-text-primary bg-surface-primary px-2 py-0.5 rounded">{item.date}</span>
                                 <span className="text-[10px] uppercase font-bold text-brand-gold">{item.channel}</span>
                               </div>
                               <span className="text-sm font-semibold text-text-primary">{item.contentUnitType}</span>
@@ -1310,7 +1310,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                             </div>
                           </div>
 
-                          <button className="p-2 text-brand-gold hover:text-text-primary bg-white rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
+                          <button className="p-2 text-brand-gold hover:text-text-primary bg-surface-primary rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
                             <ChevronRight size={20} />
                           </button>
                         </div>
@@ -1376,7 +1376,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       {/* EXTENDED EDITORIAL BRIEF MODAL */}
       {selectedItem && (
         <div className="fixed inset-0 bg-slate-900/80 z-[100] flex justify-center items-start md:items-center p-0 md:p-4 overflow-y-auto">
-          <div className="bg-white w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
+          <div className="bg-surface-primary w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
             <div className="bg-slate-900 p-4 flex justify-between items-center text-text-primary shrink-0">
               <h3 className="font-sans text-lg font-bold flex items-center gap-2">
                 <FileText size={18} className="text-brand-gold"/> Calendar Item Details
@@ -1413,8 +1413,8 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
               )}
               {validationResult && validationResult.hardBlockers.length === 0 && validationResult.sourceWarnings.length === 0 && validationResult.qualityWarnings.length > 0 && (
-                <div className="bg-white border-l-4 border-border-strong p-4 rounded">
-                  <div className="flex items-center gap-2 text-gray-800 font-bold mb-2">
+                <div className="bg-surface-primary border-l-4 border-border-strong p-4 rounded">
+                  <div className="flex items-center gap-2 text-text-primary font-bold mb-2">
                     <AlertTriangle size={16} /> Quality Warning
                   </div>
                   <p className="text-gray-700 text-xs mb-2">This item can be drafted, but more detail would improve the result.</p>
@@ -1424,7 +1424,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* 1. Scheduling */}
-                <div className="space-y-3 bg-white p-4 rounded border border-border-standard">
+                <div className="space-y-3 bg-surface-primary p-4 rounded border border-border-standard">
                   <h4 className="text-xs font-bold uppercase text-text-primary">1. Scheduling</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Date</label><input type="date" className={`form-control p-1.5 w-full text-xs ${getErrorClass('date')}`} value={selectedItem.date} onChange={e => handleLocalDraftUpdate({date: e.target.value})} /></div>
@@ -1435,7 +1435,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
 
                 {/* 2. Strategy */}
-                <div className="space-y-3 bg-white p-4 rounded border border-border-standard">
+                <div className="space-y-3 bg-surface-primary p-4 rounded border border-border-standard">
                   <h4 className="text-xs font-bold uppercase text-text-primary">2. Strategy</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div><label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Unit Type</label><select className="form-control p-1.5 w-full text-xs" value={selectedItem.contentUnitType} onChange={e => handleLocalDraftUpdate({contentUnitType: e.target.value})}>{UNIT_TYPES.map(c => <option key={c} value={c}>{c}</option>)}</select></div>
@@ -1487,13 +1487,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* 6. Recommendation Logic */}
-              <div className="bg-white/50 p-4 rounded border border-border-standard">
+              <div className="bg-surface-inset p-4 rounded border border-border-standard">
                 <h4 className="text-xs font-bold uppercase text-text-primary mb-2">6. Recommendation Logic</h4>
                 <p className="text-xs text-text-primary italic">{selectedItem.reasonForRecommendation}</p>
               </div>
             </div>
 
-            <div className="p-4 border-t border-border-standard flex flex-col md:flex-row justify-between gap-4 bg-white shrink-0">
+            <div className="p-4 border-t border-border-standard flex flex-col md:flex-row justify-between gap-4 bg-surface-primary shrink-0">
               <div className="flex gap-2">
                 <Button variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-500/10 backdrop-blur-md border-red-200" onClick={() => { handleRemoveItem(selectedItem.id); setSelectedItem(null); setValidationResult(null); }}>
                   <Trash2 size={16} className="inline mr-1"/> {items.find(i => i.id === selectedItem.id) ? 'Delete' : 'Cancel'}

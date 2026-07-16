@@ -4428,7 +4428,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white font-sans text-text-primary">
+      <div className="min-h-screen flex items-center justify-center bg-surface-primary font-sans text-text-primary">
         <div className="text-center space-y-4">
           <div className="w-12 h-12 border-4 border-brand-gold border-t-coh-navy rounded-full animate-spin mx-auto" />
           <p className="font-sans text-sm italic text-text-secondary">Verifying secure session...</p>
@@ -4943,7 +4943,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {savedIdeas.length > 0 ? (
               <div className="grid grid-cols-2 gap-6">
                 {savedIdeas.map(idea => (
-                  <div key={idea.id} className="bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={idea.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start gap-2 flex-wrap">
                         <div>
@@ -4965,7 +4965,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             idea.status === 'Ready for Content' ? 'bg-blue-50 text-blue-800' :
                             idea.status === 'Promising' ? 'bg-violet-600/15 text-text-primary' :
                             idea.status === 'Used' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
-                            'bg-white text-gray-800'
+                            'bg-surface-primary text-text-primary'
                           }`}
                         >
                           <option value="New">New</option>
@@ -4977,7 +4977,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-white/45 p-4 border border-border-standard rounded font-sans">
+                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded font-sans">
                         {idea.explanation}
                       </p>
 
@@ -4994,7 +4994,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="flex gap-2 items-center">
                         <button
                           onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
-                          className="bg-white text-brand-gold hover:text-brand-gold-dark border border-border-standard px-3 py-1.5 rounded font-sans font-bold text-[10px] flex items-center gap-1"
+                          className="bg-surface-primary text-brand-gold hover:text-brand-gold-dark border border-border-standard px-3 py-1.5 rounded font-sans font-bold text-[10px] flex items-center gap-1"
                         >
                           <Lightbulb size={10} /> Send Visual Direction to Visual Studio
                         </button>
@@ -5397,7 +5397,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <div className="card-level-1 p-4 border border-border-standard space-y-3">
               <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
                 <span className="font-semibold text-text-primary text-sm">Content Starters</span>
-                <span className="text-xs text-brand-gold font-semibold bg-white px-2 py-1 rounded">
+                <span className="text-xs text-brand-gold font-semibold bg-surface-primary px-2 py-1 rounded">
                   {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
                 </span>
               </div>
@@ -5411,7 +5411,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button
                           key={temp.name}
                           onClick={() => applyTemplate(temp)}
-                          className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1.5 px-3 rounded text-[11px] transition font-medium"
+                          className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1.5 px-3 rounded text-[11px] transition font-medium"
                           title={temp.desc}
                         >
                           {temp.name}
@@ -5425,37 +5425,37 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="flex gap-2 flex-wrap">
                       <button
                         onClick={() => applyExampleChip('tetralogy')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Announce Tetralogy
                       </button>
                       <button
                         onClick={() => applyExampleChip('cultural-ip')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Cultural IP & Model
                       </button>
                       <button
                         onClick={() => applyExampleChip('event-notes')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Nordic Air (Soria Moria)
                       </button>
                       <button
                         onClick={() => applyExampleChip('instagram-img')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Water Dragon Caption
                       </button>
                       <button
                         onClick={() => applyExampleChip('sponsor-facing')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Patron Pitch Paragraph
                       </button>
                       <button
                         onClick={() => applyExampleChip('newsletter-update')}
-                        className="bg-white hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
                       >
                         Earth Canon Update
                       </button>
@@ -5508,14 +5508,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <label className="block text-text-primary font-bold mb-1 text-[11px] uppercase tracking-wider">
                         Add Context (Optional)
                       </label>
-                      <div className="flex gap-1.5 bg-white/40 p-1 rounded">
+                      <div className="flex gap-1.5 bg-surface-inset p-1 rounded">
                         {(['paste', 'upload', 'link'] as const).map(mode => (
                           <button
                             key={mode}
                             type="button"
                             onClick={() => setInlineSourceType(mode)}
                             className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                              inlineSourceType === mode ? 'bg-slate-900 text-brand-gold' : 'text-text-secondary hover:bg-white'
+                              inlineSourceType === mode ? 'bg-slate-900 text-brand-gold' : 'text-text-secondary hover:bg-surface-primary'
                             }`}
                           >
                             {mode === 'link' ? 'URL' : mode}
@@ -5619,7 +5619,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <button
                             type="button"
                             onClick={() => inlineFileInputRef.current?.click()}
-                            className="w-full bg-surface-primary border border-border-standard hover:bg-white-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
+                            className="w-full bg-surface-primary border border-border-standard hover:bg-surface-primary-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
                           >
                             Upload File
                           </button>
@@ -5651,7 +5651,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       )}
                     </div>
 
-                    <div className="bg-white/30 border border-border-standard p-3 rounded">
+                    <div className="bg-surface-inset border border-border-standard p-3 rounded">
                       <p className="text-[10px] text-text-secondary italic text-center">
                         The system will infer format, audience, tone, and purpose from your request.
                       </p>
@@ -5700,7 +5700,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {quickBrief.creationScope === 'Multi-Channel Pack' ? (
                       <div>
                         <label className="block text-text-secondary font-semibold mb-1">Target Channels</label>
-                        <div className="grid grid-cols-2 gap-2 bg-white/50 p-2.5 border border-border-standard rounded max-h-32 overflow-y-auto">
+                        <div className="grid grid-cols-2 gap-2 bg-surface-inset p-2.5 border border-border-standard rounded max-h-32 overflow-y-auto">
                           {CHANNELS.map(ch => {
                             const isChecked = quickBrief.targetChannels?.includes(ch);
                             return (
@@ -5899,7 +5899,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     {advancedBrief.creationScope === 'Multi-Channel Pack' ? (
                       <div>
                         <label className="block text-text-secondary font-semibold mb-1">Target Channels</label>
-                        <div className="grid grid-cols-2 gap-2 bg-white/50 p-2 border border-border-standard rounded max-h-32 overflow-y-auto font-sans">
+                        <div className="grid grid-cols-2 gap-2 bg-surface-inset p-2 border border-border-standard rounded max-h-32 overflow-y-auto font-sans">
                           {CHANNELS.map(ch => {
                             const isChecked = advancedBrief.targetChannels?.includes(ch);
                             return (
@@ -6134,7 +6134,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
                       </label>
                       
-                      <div className="border border-border-standard p-2.5 rounded bg-white/50 max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
+                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
                         {[...selectableSources, ...workspaceLocalSources].map(src => {
                           const isSel = advancedBrief.selectedSourceIds.includes(src.id);
                           return (
@@ -6160,15 +6160,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
 
                       {/* INLINE SOURCE ADD PANEL - Add URL */}
-                      <div className="border border-border-standard p-3 rounded bg-white/5 backdrop-blur-md space-y-2">
-                        <div className="flex gap-1.5 bg-white/40 p-1 rounded">
+                      <div className="border border-border-standard p-3 rounded bg-surface-inset space-y-2">
+                        <div className="flex gap-1.5 bg-surface-inset p-1 rounded">
                           {(['paste', 'upload', 'link'] as const).map(mode => (
                             <button
                               key={mode}
                               type="button"
                               onClick={() => setInlineSourceType(mode)}
                               className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                                inlineSourceType === mode ? 'bg-slate-900 text-brand-gold' : 'text-text-secondary hover:bg-white'
+                                inlineSourceType === mode ? 'bg-slate-900 text-brand-gold' : 'text-text-secondary hover:bg-surface-primary'
                               }`}
                             >
                               {mode === 'link' ? 'URL' : mode}
@@ -6275,7 +6275,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               type="button"
                               onClick={() => inlineFileInputRef.current?.click()}
-                              className="w-full bg-surface-primary border border-border-standard hover:bg-white-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
+                              className="w-full bg-surface-primary border border-border-standard hover:bg-surface-primary-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
                             >
                               Upload File
                             </button>
@@ -6459,7 +6459,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                     <details className="text-[10px] text-text-muted cursor-pointer">
                       <summary className="interactive-link transition">Inspect Compiled Prompt</summary>
-                      <pre className="mt-2 p-3 bg-white/50 rounded border border-border-standard overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
+                      <pre className="mt-2 p-3 bg-surface-inset rounded border border-border-standard overflow-x-auto max-h-40 whitespace-pre-wrap font-mono text-[9px] select-all">
                         {compileStructuredPrompt()}
                       </pre>
                     </details>
@@ -6475,7 +6475,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="col-span-1 lg:col-span-8 bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm space-y-6">
+              <div className="col-span-1 lg:col-span-8 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
                 
                 <div className="border-b border-border-standard pb-2 flex justify-between items-center">
                   <h3 className="font-sans text-lg font-semibold text-text-primary">
@@ -6539,8 +6539,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="space-y-4">
 
                       {/* Option A card */}
-                      <div className="border border-border-standard rounded bg-white/5 backdrop-blur-md flex flex-col overflow-hidden shadow-sm">
-                        <div className="bg-white/40 p-3 border-b border-border-standard flex justify-between items-center">
+                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
+                        <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
                           <span className="font-sans text-xs font-bold text-text-primary">Option A — Direct / Institutional</span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionA) ? (
@@ -6566,7 +6566,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             {draftOptions.optionA}
                           </p>
                         </div>
-                        <div className="bg-white/15 p-3 border-t border-border-standard flex flex-wrap gap-2">
+                        <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
                           <button
                             onClick={() => {
                               setActiveDraftText(draftOptions.optionA);
@@ -6596,8 +6596,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
 
                       {/* Option B card */}
-                      <div className="border border-border-standard rounded bg-white/5 backdrop-blur-md flex flex-col overflow-hidden shadow-sm">
-                        <div className="bg-white/40 p-3 border-b border-border-standard flex justify-between items-center">
+                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
+                        <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
                           <span className="font-sans text-xs font-bold text-text-primary">Option B — Human / Narrative</span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionB) ? (
@@ -6623,7 +6623,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             {draftOptions.optionB}
                           </p>
                         </div>
-                        <div className="bg-white/15 p-3 border-t border-border-standard flex flex-wrap gap-2">
+                        <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
                           <button
                             onClick={() => {
                               setActiveDraftText(draftOptions.optionB);
@@ -6655,13 +6655,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     {/* 2. Shorter Version */}
-                    <div className="bg-white/5 backdrop-blur-md border border-border-standard p-4 rounded text-xs space-y-2">
+                    <div className="bg-surface-inset border border-border-standard p-4 rounded text-xs space-y-2">
                       <span className="font-sans font-bold text-text-primary text-xs block">Shorter Version</span>
                       <p className="text-xs text-text-primary italic leading-relaxed">{draftOptions.optionC}</p>
                     </div>
 
                     {/* 3. Visual Direction */}
-                    <div className="bg-white/55 p-4 border border-border-standard rounded text-xs space-y-2">
+                    <div className="bg-surface-inset p-4 border border-border-standard rounded text-xs space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="font-sans font-bold text-text-primary text-xs block">
                           Visual Direction <Tooltip text="Design guidance for a visual designer, carousel, post graphic, or image prompt." />
@@ -6745,7 +6745,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <select
                           value={anotherVersionStyle}
                           onChange={(e) => setAnotherVersionStyle(e.target.value)}
-                          className="bg-white/5 backdrop-blur-md border border-border-standard text-[10px] text-text-primary p-1.5 rounded font-bold"
+                          className="bg-surface-inset border border-border-standard text-[10px] text-text-primary p-1.5 rounded font-bold"
                         >
                           <option value="default">Default Variation</option>
                           <option value="More direct">More direct</option>
@@ -6768,14 +6768,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     {/* 5. Recommended Approach */}
                     {advancedBrief.directionMode === 'auto' && (
-                      <details className="text-xs border border-border-standard p-3 rounded bg-white/15 cursor-pointer">
+                      <details className="text-xs border border-border-standard p-3 rounded bg-surface-inset cursor-pointer">
                         <summary className="font-semibold text-text-primary hover:text-brand-gold font-sans">View Recommended Approaches</summary>
                         <div className="space-y-3 mt-3">
                           {getDynamicDirections().map(d => {
                             const isSel = d.title === advancedBrief.angle;
                             return (
                               <div key={d.title} className={`p-3 border rounded text-xs transition cursor-default ${
-                                isSel ? 'border-brand-gold bg-white/5 backdrop-blur-md' : 'border-border-standard bg-white/5 backdrop-blur-md/50'
+                                isSel ? 'border-brand-gold bg-surface-inset' : 'border-border-standard bg-surface-inset/50'
                               }`}>
                                 <h4 className="font-sans font-bold text-text-primary mb-1">{d.title}</h4>
                                 <p className="text-text-secondary text-[11px] mb-2">{d.strategicFrame}</p>
@@ -7027,7 +7027,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              onChange={(e) => setVsTextContent(e.target.value)}
                              rows={3}
                              placeholder="The exact quote or text to display on the card..."
-                             className="w-full bg-white/5 backdrop-blur-md border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
                            />
                          </div>
                          <div>
@@ -7037,7 +7037,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              value={vsAttribution}
                              onChange={(e) => setVsAttribution(e.target.value)}
                              placeholder="e.g. John Doe, CEO"
-                             className="w-full bg-white/5 backdrop-blur-md border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
                            />
                          </div>
                       </div>
@@ -7076,7 +7076,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm space-y-6">
+              <div className="lg:col-span-7 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
                 <div className="border-b border-border-standard pb-2 flex justify-between items-center">
                   <h3 className="font-sans text-lg font-semibold text-text-primary">
                     Results
@@ -7084,24 +7084,24 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
                 
                 {isGeneratingImage ? (
-                  <div className="bg-white p-12 rounded text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
+                  <div className="bg-surface-primary p-12 rounded text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
                     <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-text-primary font-semibold text-sm">Generating...</p>
                   </div>
                 ) : vsGeneratedImages.length === 0 ? (
-                  <div className="bg-white p-8 rounded text-center text-text-secondary italic border border-dashed border-border-strong">
+                  <div className="bg-surface-primary p-8 rounded text-center text-text-secondary italic border border-dashed border-border-strong">
                     No images generated yet.
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {vsGeneratedImages.map(img => (
-                      <div key={img.id} className="bg-white/5 backdrop-blur-md border border-border-standard rounded p-4 shadow-sm group">
+                      <div key={img.id} className="bg-surface-inset border border-border-standard rounded p-4 shadow-sm group">
                         <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-border-standard" />
                         <div className="flex gap-2 text-xs">
                           <a
                             href={img.url}
                             download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
-                            className="w-full bg-white hover:bg-violet-600 hover:text-text-primary text-text-primary border border-border-strong py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
+                            className="w-full bg-surface-primary hover:bg-violet-600 hover:text-text-primary text-text-primary border border-border-strong py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
@@ -7110,13 +7110,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         {/* Compiled Prompt Preview */}
                         {img.promptUsed && (
                           <details className="mt-4 border border-border-standard rounded overflow-hidden">
-                            <summary className="bg-white px-3 py-2 text-[10px] uppercase tracking-wider text-text-secondary font-bold cursor-pointer select-none flex justify-between">
+                            <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase tracking-wider text-text-secondary font-bold cursor-pointer select-none flex justify-between">
                               <span>Compiled Prompt Preview (Debug)</span>
                               <span className="opacity-50 font-mono">
                                 {img.generationSize || '1024x1024'} → {img.deliverySize || '1024x1024'}
                               </span>
                             </summary>
-                            <div className="p-3 bg-white/5 backdrop-blur-md text-[11px] font-mono text-text-primary whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                            <div className="p-3 bg-surface-inset text-[11px] font-mono text-text-primary whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                               <div className="mb-2 pb-2 border-b border-border-standard text-[9px] opacity-70 grid grid-cols-2 gap-2">
                                 <div>Model: {img.model || 'unknown'}</div>
                                 <div>Quality: {img.quality || 'high'}</div>
@@ -7233,7 +7233,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   setFilterPillar('All');
                   setSearchQuery('');
                 }}
-                className="px-3 py-1.5 rounded bg-surface-primary border border-border-standard text-[10px] font-bold text-text-primary uppercase hover:bg-white-dark transition"
+                className="px-3 py-1.5 rounded bg-surface-primary border border-border-standard text-[10px] font-bold text-text-primary uppercase hover:bg-surface-primary-dark transition"
               >
                 Reset
               </button>
@@ -7242,7 +7242,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {actualFilteredSaved.length > 0 ? (
               <div className="grid grid-cols-2 gap-6">
                 {actualFilteredSaved.map(item => (
-                  <div key={item.id} className="bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={item.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <div>
@@ -7267,7 +7267,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             item.status === 'Published' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
                             item.status === 'Approved' ? 'bg-blue-50 text-blue-800' :
                             item.status === 'Revised' ? 'bg-amber-500/10 backdrop-blur-md text-amber-800' :
-                            'bg-white text-gray-800'
+                            'bg-surface-primary text-text-primary'
                           }`}
                         >
                           <option value="Draft">Draft</option>
@@ -7277,7 +7277,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-white/45 p-4 border border-border-standard rounded">
+                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded">
                         {item.text}
                       </p>
 
@@ -7326,7 +7326,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </button>
                             </div>
                           </div>
-                          <div className="bg-white/35 p-3 border border-border-standard rounded text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
+                          <div className="bg-surface-primary/35 p-3 border border-border-standard rounded text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
                             {formatVisualDirectionForDisplay(
                               item.visualDirection || item.visualIdeation,
                               item.channel,
@@ -7393,7 +7393,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-border-standard rounded bg-white/5 backdrop-blur-md">
+              <div className="text-center py-20 border border-dashed border-border-standard rounded bg-surface-inset">
                 <p className="text-xs text-text-secondary max-w-sm mx-auto">No saved content meets the active filters.</p>
               </div>
             )}
@@ -7445,7 +7445,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             <div className="grid grid-cols-3 gap-8">
               {/* Form panel */}
-              <div className="bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm h-fit space-y-6">
+              <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm h-fit space-y-6">
                 <div>
                   <h3 className="font-sans text-lg text-text-primary-light pb-2 border-b border-border-standard">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
@@ -7573,7 +7573,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setEditingSourceId(null);
                           setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
                         }}
-                        className="bg-white text-text-primary border border-border-standard py-2 px-3 rounded hover:bg-white-dark transition text-xs"
+                        className="bg-surface-primary text-text-primary border border-border-standard py-2 px-3 rounded hover:bg-surface-primary-dark transition text-xs"
                       >
                         Cancel
                       </button>
@@ -7604,10 +7604,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
                 {false && (
-                  <div className="space-y-3 bg-white/30 p-4 border border-dashed border-border-strong rounded">
+                  <div className="space-y-3 bg-surface-inset p-4 border border-dashed border-border-strong rounded">
                     <div className="flex items-center gap-2 mb-2">
                       <h3 className="font-sans text-sm font-bold text-text-primary">Suggested Core Documents</h3>
-                      <span className="text-[9px] uppercase font-bold text-brand-gold bg-white/5 backdrop-blur-md px-1.5 py-0.5 rounded border border-border-standard">Not uploaded yet</span>
+                      <span className="text-[9px] uppercase font-bold text-brand-gold bg-surface-inset px-1.5 py-0.5 rounded border border-border-standard">Not uploaded yet</span>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-3">
@@ -7615,7 +7615,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Phase 1 Strategic Plan\n- COH Master Deck',
                         'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
                       ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
-                        <div key={title} className="bg-white/5 backdrop-blur-md p-3 border border-border-standard rounded flex justify-between items-center shadow-sm">
+                        <div key={title} className="bg-surface-inset p-3 border border-border-standard rounded flex justify-between items-center shadow-sm">
                           <span className="text-[11px] font-semibold text-text-primary">{title}</span>
                           <button 
                             onClick={() => {
@@ -7657,8 +7657,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     return filtered.map(src => {
                       const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
                       return (
-                        <div key={src.id} className={`bg-white/5 backdrop-blur-md border p-5 rounded shadow-sm flex gap-4 transition ${
-                          isSelected ? 'border-brand-gold bg-white/10' : 'border-border-standard'
+                        <div key={src.id} className={`bg-surface-inset border p-5 rounded shadow-sm flex gap-4 transition ${
+                          isSelected ? 'border-brand-gold bg-surface-inset' : 'border-border-standard'
                         }`}>
                           <div className="pt-1 select-none">
                             <input
@@ -7677,7 +7677,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </span>
                               <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
                                 src.status === 'Active' ? 'bg-green-500/10 backdrop-blur-md text-green-700' :
-                                src.status === 'Archived' ? 'bg-white text-gray-700' :
+                                src.status === 'Archived' ? 'bg-surface-primary text-gray-700' :
                                 'bg-amber-500/10 backdrop-blur-md text-amber-700'
                               }`}>
                                 {src.status}
@@ -7704,7 +7704,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                             <details className="text-[10px] text-text-muted cursor-pointer pt-1">
                               <summary className="interactive-link transition">Show Full Text</summary>
-                              <pre className="mt-2 p-3 bg-white/50 rounded border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
+                              <pre className="mt-2 p-3 bg-surface-inset rounded border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
                                 {src.content}
                               </pre>
                               {src.url && (
@@ -7730,14 +7730,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   <div className="space-y-3">
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Suggested Section</label>
-                                      <span className="text-xs bg-white/5 backdrop-blur-md border border-border-standard px-2 py-1 rounded inline-block">
+                                      <span className="text-xs bg-surface-inset border border-border-standard px-2 py-1 rounded inline-block">
                                         {false ? '' : 'Unassigned (Determine manually)'}
                                       </span>
                                     </div>
                                     <div>
                                       <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Extract Note</label>
                                       <textarea 
-                                        className="w-full bg-white/5 backdrop-blur-md border border-border-standard p-2 rounded text-xs text-text-primary" 
+                                        className="w-full bg-surface-inset border border-border-standard p-2 rounded text-xs text-text-primary" 
                                         rows={3} 
                                         placeholder="Draft the rule, claim, or insight here..."
                                         id={`extract-${src.id}`}
@@ -7752,7 +7752,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                             /* Copied handled by state */
                                           }
                                         }}
-                                        className="bg-white/5 backdrop-blur-md border border-border-strong hover:bg-violet-600/10 text-text-primary px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
+                                        className="bg-surface-inset border border-border-strong hover:bg-violet-600/10 text-text-primary px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
                                       >
                                         Copy to Clipboard
                                       </button>
@@ -7772,7 +7772,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <div className="flex flex-col gap-2 shrink-0">
                             <button
                               onClick={() => handleEditSource(src)}
-                              className="text-text-primary hover:text-brand-gold p-1 hover:bg-white rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-text-primary hover:text-brand-gold p-1 hover:bg-surface-primary rounded transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Edit3 size={12} /> Edit
                             </button>
@@ -7798,12 +7798,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="page-shell-narrow">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="card-level-1 p-6 mb-8">
               <h2 className="page-title">Settings</h2>
               <p className="page-subtitle">
                 Configure AI provider and generation mode.
               </p>
-              <p className="text-xs text-text-secondary font-sans italic bg-white/50 p-2 rounded border border-border-standard inline-block mt-2">
+              <p className="text-xs text-text-secondary font-sans italic bg-surface-inset p-2 rounded border border-border-standard inline-block mt-2">
                 Note: Content, voice, claims, audience, visual, and revision rules are managed in Operating Core. Settings is for technical configuration.
               </p>
             </div>
@@ -7871,7 +7871,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Form */}
-                <div className="bg-white/5 backdrop-blur-md border border-border-standard p-6 rounded shadow-sm space-y-5">
+                <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-5">
                   <h3 className="font-sans text-lg text-text-primary font-semibold">Configure AI Provider</h3>
                   
                   {/* Provider */}
@@ -7933,7 +7933,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-sm font-mono"
                       autoComplete="off"
                     />
-                    <p className="text-xs text-text-secondary font-semibold bg-white/40 p-2 mt-2 border border-border-standard rounded">
+                    <p className="text-xs text-text-secondary font-semibold bg-surface-inset p-2 mt-2 border border-border-standard rounded">
                       API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser.
                     </p>
                   </div>
@@ -8152,7 +8152,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         ['prompt_builder', 'Prompt Builder Fallback', 'Show a copyable AI prompt instead of generating directly. Use when no API key is available.'],
                         ['prototype', 'Prototype Structure Only', 'Show template structure as a starting frame. Not final copy.'],
                       ] as const).map(([val, title, desc]) => (
-                        <label key={val} className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition ${generationMode === val ? 'border-coh-navy bg-white' : 'border-border-standard hover:bg-white/60'}`}>
+                        <label key={val} className={`flex items-start gap-3 p-3 rounded border cursor-pointer transition ${generationMode === val ? 'border-coh-navy bg-surface-primary' : 'border-border-standard hover:bg-surface-primary/60'}`}>
                           <input type="radio" name="genMode" value={val} checked={generationMode === val} onChange={() => setGenerationMode(val)} className="mt-0.5" />
                           <div>
                             <span className="font-semibold text-sm text-text-primary block">{title}</span>
@@ -8166,8 +8166,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {/* .env instructions */}
                   <div className="pt-4 border-t border-border-standard text-xs text-text-secondary space-y-2">
                     <p className="font-semibold text-text-primary text-xs">Persistent Setup via .env (Recommended for development)</p>
-                    <p>Add your key to <code className="bg-white px-1 rounded">.env</code> and restart the server. The key will be loaded automatically.</p>
-                    <pre className="bg-white p-2 rounded text-[10px] font-mono overflow-x-auto">
+                    <p>Add your key to <code className="bg-surface-primary px-1 rounded">.env</code> and restart the server. The key will be loaded automatically.</p>
+                    <pre className="bg-surface-primary p-2 rounded text-[10px] font-mono overflow-x-auto">
 {`# Example .env
 AI_PROVIDER=openai
 OPENAI_API_KEY=sk-...
@@ -8189,7 +8189,7 @@ OPENAI_MODEL=gpt-4.1`}
       {/* Overwrite Confirmation Modal */}
       {pendingIdeaToCopy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
-          <div className="bg-white/5 backdrop-blur-md rounded-3xl shadow-xl border border-border-standard p-6 max-w-sm w-full relative">
+          <div className="bg-surface-inset rounded-3xl shadow-xl border border-border-standard p-6 max-w-sm w-full relative">
             <button onClick={() => setPendingIdeaToCopy(null)} className="absolute top-4 right-4 text-text-muted hover:text-text-secondary">
               <X size={16} />
             </button>

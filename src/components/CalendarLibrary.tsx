@@ -78,7 +78,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
 
   return (
     <div className="h-full flex flex-col bg-transparent">
-      <div className="bg-white border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-surface-primary border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
         <div>
           <h2 className="page-title">
             Calendar Library
@@ -89,7 +89,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {calendars.length === 0 ? (
-            <div className="col-span-full flex flex-col items-center justify-center p-12 bg-white border border-dashed border-violet-300 rounded">
+            <div className="col-span-full flex flex-col items-center justify-center p-12 bg-surface-primary border border-dashed border-violet-300 rounded">
               <Calendar size={48} className="text-brand-gold/30 mb-4" />
               <p className="text-text-secondary font-medium">No saved calendars yet.</p>
               <p className="text-xs text-text-muted mt-1">Generate and save calendars in the Studio.</p>
@@ -102,7 +102,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
                     <h3 className="font-bold text-text-primary font-sans text-lg">{cal.title}</h3>
                     <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${
                       cal.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                      cal.status === 'Archived' ? 'bg-white text-gray-600' :
+                      cal.status === 'Archived' ? 'bg-surface-primary text-text-secondary' :
                       'bg-yellow-100 text-yellow-800'
                     }`}>
                       {cal.status}

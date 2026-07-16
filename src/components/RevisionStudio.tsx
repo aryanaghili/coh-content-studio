@@ -313,10 +313,10 @@ export function RevisionStudio({
       <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]">
         
         {/* Left Side: Work Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-white/10 rounded border border-border-standard overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 bg-surface-inset rounded border border-border-standard overflow-hidden">
           
           {/* Top Controls */}
-          <div className="bg-white border-b border-border-standard p-4 shrink-0">
+          <div className="bg-surface-primary border-b border-border-standard p-4 shrink-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div>
                 <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Channel</label>
@@ -385,10 +385,10 @@ export function RevisionStudio({
                   <span>Settings changed. Generate a new revision to apply them.</span>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between bg-slate-50 p-2 rounded">
+                  <div className="flex items-center justify-between bg-surface-inset p-2 rounded">
                     <span className="font-semibold text-yellow-900">Revise from:</span>
                     <select 
-                      className="bg-white border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
+                      className="bg-surface-primary border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
                       onChange={(e) => updateSetting('revisionSource', e.target.value)}
                       value={state.revisionSource || 'current'}
                     >
@@ -418,7 +418,7 @@ export function RevisionStudio({
           <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
             {/* Draft to Revise */}
             <div className={`flex-1 flex flex-col border-r border-border-standard ${state.revisedOutput ? 'md:w-1/2' : 'w-full'}`}>
-              <div className="bg-white px-4 py-2 border-b border-border-standard flex justify-between items-center shrink-0">
+              <div className="bg-surface-primary px-4 py-2 border-b border-border-standard flex justify-between items-center shrink-0">
                 <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider">Draft to Revise</span>
                 <button onClick={handleClearDraft} className="text-[10px] text-brand-gold hover:text-brand-gold-light uppercase font-bold">Clear</button>
               </div>
@@ -433,7 +433,7 @@ export function RevisionStudio({
 
             {/* Revised Output (Only shows if generated) */}
             {state.revisedOutput && (
-              <div className="flex-1 flex flex-col md:w-1/2 bg-white">
+              <div className="flex-1 flex flex-col md:w-1/2 bg-surface-primary">
                 <div className="bg-slate-900 px-4 py-2 border-b border-coh-navy flex justify-between items-center shrink-0">
                   <span className="text-[10px] uppercase font-bold text-text-primary tracking-wider flex items-center gap-2">
                     <CheckCircle2 size={12} className="text-brand-gold" />
@@ -448,7 +448,7 @@ export function RevisionStudio({
                     </button>
                   </div>
                 </div>
-                <div className="p-2 bg-white/20 border-b border-border-standard">
+                <div className="p-2 bg-surface-primary/20 border-b border-border-standard">
                   <span className="text-[10px] text-text-secondary font-mono">Applied: {state.appliedControls}</span>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4">
@@ -459,7 +459,7 @@ export function RevisionStudio({
                     {state.revisedOutput}
                   </div>
                 </div>
-                <div className="p-3 bg-white border-t border-border-standard flex gap-2">
+                <div className="p-3 bg-surface-primary border-t border-border-standard flex gap-2">
                   <Button onClick={handleSaveAsNew} variant="outline" className="flex-1 text-xs py-2">
                     <Save size={14} className="mr-2 inline" /> Save as New
                   </Button>
@@ -502,18 +502,18 @@ export function RevisionStudio({
               const isExpandedDefault = ['Clean & Polish', 'Translation & Localization', 'COH & Strategic Fit'].includes(group);
               
               return (
-                <details key={group} className="border border-border-standard rounded bg-white/10 overflow-hidden" open={isExpandedDefault}>
-                  <summary className="bg-white px-3 py-2 text-[10px] uppercase font-bold text-text-primary tracking-wider cursor-pointer select-none hover:bg-white-dark transition flex justify-between items-center">
+                <details key={group} className="border border-border-standard rounded bg-surface-inset overflow-hidden" open={isExpandedDefault}>
+                  <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase font-bold text-text-primary tracking-wider cursor-pointer select-none hover:bg-surface-primary-dark transition flex justify-between items-center">
                     {group}
                   </summary>
-                  <div className="p-3 space-y-1.5 bg-white">
+                  <div className="p-3 space-y-1.5 bg-surface-primary">
                     {actionsInGroup.map(actionDef => (
                       <button
                         key={actionDef.id}
                         disabled={state.isGenerating}
                         onClick={() => runRevision(actionDef.id)}
                         title={actionDef.description}
-                        className="w-full text-left px-3 py-2 rounded text-xs font-medium text-text-primary bg-white/30 hover:bg-violet-600 hover:text-text-primary transition-colors border border-border-standard"
+                        className="w-full text-left px-3 py-2 rounded text-xs font-medium text-text-primary bg-surface-inset hover:bg-violet-600 hover:text-text-primary transition-colors border border-border-standard"
                       >
                         {actionDef.label}
                       </button>

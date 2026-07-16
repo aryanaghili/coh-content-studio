@@ -49,13 +49,13 @@ export class ErrorBoundary extends Component<Props, State> {
             </button>
             <button
               onClick={() => window.location.reload()}
-              className="px-4 py-2 bg-white text-red-700 border border-red-200 rounded text-sm font-semibold hover:bg-red-500/10 backdrop-blur-md transition"
+              className="px-4 py-2 bg-surface-primary text-red-700 border border-red-200 rounded text-sm font-semibold hover:bg-red-500/10 backdrop-blur-md transition"
             >
               Reload Entire App
             </button>
           </div>
           {import.meta.env.DEV && this.state.error && (
-            <div className="mt-6 p-4 bg-slate-50 border border-red-200 rounded text-left text-xs font-mono text-red-900 max-w-xl overflow-auto overflow-x-auto w-full">
+            <div className="mt-6 p-4 bg-surface-inset border border-red-200 rounded text-left text-xs font-mono text-red-900 max-w-xl overflow-auto overflow-x-auto w-full">
               <p className="font-bold mb-1">Developer Error:</p>
               {this.state.error.toString()}
             </div>
