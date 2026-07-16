@@ -1640,8 +1640,8 @@ export default function App() {
       }
     }
 
-    // Default to 'simple' mode unless the idea explicitly specifies advanced structures (we will use simple by default)
-    setCreationMode('simple');
+    // Preset to 'advanced' mode when pushing from Ideation to Content Workspace
+    setCreationMode('advanced');
 
     const mappedNotes = `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`;
 
@@ -1665,6 +1665,7 @@ export default function App() {
     setAdvancedBrief(prev => ({
       ...prev,
       topic: idea.title,
+      directionMode: 'Use My Own Framing',
       customDirection: mappedNotes,
       channel: idea.suggestedChannel || prev.channel,
       audience: idea.suggestedAudience || prev.audience,
@@ -7054,12 +7055,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div className="pt-2 border-t border-coh-gold/10 mt-4">
-                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage || !aiProvider || (isTextLed && !vsTextContent.trim())} variant="primary" size="lg" className="w-full">
+                    <Button onClick={handleGenerateImage} disabled={isGeneratingImage || !aiProvider} variant="primary" size="lg" className="w-full">
                       {isGeneratingImage ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
                     </Button>
                     {isTextLed && !vsTextContent.trim() && (
-                      <p className="text-[10px] text-red-500 text-center mt-1 font-semibold">Missing required Text Content for Quote Card format</p>
+                      <p className="text-[10px] text-amber-500 text-center mt-1 font-semibold">Warning: No Text Content provided. Generated image will have AI placeholder text.</p>
                     )}
                   </div>
                   {!aiProvider && <p className="text-xs text-red-500 text-center mt-2">No AI provider configured.</p>}
