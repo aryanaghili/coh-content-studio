@@ -1,34 +1,26 @@
+import os
 import re
 
-with open('src/App.tsx', 'r') as f:
-    content = f.read()
+files_to_check = []
+for root, dirs, files in os.walk('src'):
+    for file in files:
+        if file.endswith('.tsx'):
+            files_to_check.append(os.path.join(root, file))
 
-# Most buttons have "transition" or "hover:bg-coh-navy-light". We can just add interactive-button to them.
-content = re.sub(
-    r'(<button[^>]+className="[^"]*)(bg-coh-navy text-coh-gold[^"]*)(")',
-    r'\1\2 interactive-button\3',
-    content
-)
+for filepath in files_to_check:
+    with open(filepath, 'r') as f:
+        content = f.read()
 
-content = re.sub(
-    r'(<button[^>]+className="[^"]*)(bg-coh-cream border border-coh-gold/20[^"]*)(")',
-    r'\1\2 interactive-button\3',
-    content
-)
+    # Replace bg-slate-900 text-text-primary with text-white
+    content = re.sub(r'bg-slate-900 text-text-primary', r'bg-slate-900 text-white', content)
+    # Replace bg-slate-900 text-brand-gold with text-white
+    content = re.sub(r'bg-slate-900 text-brand-gold', r'bg-slate-900 text-white', content)
+    # Replace bg-black text-text-primary with bg-slate-900 text-white
+    content = re.sub(r'bg-black text-text-primary', r'bg-slate-900 text-white', content)
+    # Replace text-coh-cream with text-white
+    content = re.sub(r'text-coh-cream', r'text-white', content)
+    
+    with open(filepath, 'w') as f:
+        f.write(content)
 
-with open('src/App.tsx', 'w') as f:
-    f.write(content)
-
-with open('src/components/OperatingCoreAdmin.tsx', 'r') as f:
-    admin_content = f.read()
-
-admin_content = re.sub(
-    r'(<button[^>]+className="[^"]*)(bg-coh-navy text-coh-cream[^"]*)(")',
-    r'\1\2 interactive-button\3',
-    admin_content
-)
-
-with open('src/components/OperatingCoreAdmin.tsx', 'w') as f:
-    f.write(admin_content)
-
-print("Buttons patched")
+print("Replaced colors in tsx files")

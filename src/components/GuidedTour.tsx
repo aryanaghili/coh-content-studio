@@ -117,7 +117,7 @@ export const GuidedTour: React.FC = () => {
           
           <div className="flex flex-wrap justify-center gap-2 mb-8 px-4">
             {TOUR_STEPS.slice(1).map((step, i) => (
-              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-slate-900 text-brand-gold/80 px-2 py-1 rounded-full border border-border-standard">
+              <span key={i} className="text-[10px] uppercase tracking-wider font-semibold bg-slate-900 text-white/80 px-2 py-1 rounded-full border border-border-standard">
                 {step.title}
               </span>
             ))}
@@ -174,7 +174,7 @@ export const GuidedTour: React.FC = () => {
           <X size={16} />
         </button>
         
-        <div className="bg-slate-900 text-brand-gold text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
+        <div className="bg-slate-900 text-white text-[10px] font-bold px-2 py-1 rounded w-max mb-3 tracking-wider">
           {currentStep} / {TOUR_STEPS.length - 1}
         </div>
         

@@ -1167,7 +1167,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-brand-gold shadow-sm' : 'bg-surface-primary text-text-primary border border-border-strong hover:border-brand-gold'}`}
+                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-white shadow-sm' : 'bg-surface-primary text-text-primary border border-border-strong hover:border-brand-gold'}`}
                     >
                       {c}
                     </button>
@@ -1210,7 +1210,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   <RefreshCw size={16} className="mr-2 inline" /> {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 <select 
-                  className="bg-slate-900 text-coh-cream text-xs font-semibold px-3 py-2 outline-none cursor-pointer hover:bg-brand-gold-hover transition-colors"
+                  className="bg-slate-900 text-white text-xs font-semibold px-3 py-2 outline-none cursor-pointer hover:bg-brand-gold-hover transition-colors"
                   onChange={(e) => {
                     if (e.target.value) {
                       setCycle(prev => ({...prev, version: prev.version + 1}));
@@ -1242,31 +1242,31 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             <div className="col-span-1 lg:col-span-8 flex flex-col h-full gap-6">
               {/* Monthly Editorial Arc */}
               {arc && items.length > 0 && (
-                <div className="bg-slate-900 text-coh-cream p-5 rounded shadow-sm shrink-0">
+                <div className="bg-slate-900 text-white p-5 rounded shadow-sm shrink-0">
                   <h3 className="font-sans text-lg font-bold text-brand-gold mb-3 flex items-center gap-2">
                     <LayoutList size={18} /> Monthly Editorial Arc
                   </h3>
                   <div className="space-y-4 text-sm font-sans">
                     <div>
                       <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Month Thesis</h4>
-                      <p className="text-coh-cream/90 font-medium">{arc.monthThesis}</p>
+                      <p className="text-white/90 font-medium">{arc.monthThesis}</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Weekly Progression</h4>
                         <ul className="space-y-1">
-                          {arc.weeklyProgression.map((w, i) => <li key={i} className="text-coh-cream/80 text-xs">- Week {i+1}: {w}</li>)}
+                          {arc.weeklyProgression.map((w, i) => <li key={i} className="text-white/80 text-xs">- Week {i+1}: {w}</li>)}
                         </ul>
                       </div>
                       <div className="space-y-4">
                         <div>
                           <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Audience Movement</h4>
-                          <p className="text-coh-cream/80 text-xs">{arc.mainAudienceMovement}</p>
+                          <p className="text-white/80 text-xs">{arc.mainAudienceMovement}</p>
                         </div>
                         <div>
                           <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Key Risks</h4>
                           <ul className="space-y-1">
-                            {arc.keyRisks.map((r, i) => <li key={i} className="text-coh-cream/80 text-xs text-red-300">- {r}</li>)}
+                            {arc.keyRisks.map((r, i) => <li key={i} className="text-white/80 text-xs text-red-300">- {r}</li>)}
                           </ul>
                         </div>
                       </div>

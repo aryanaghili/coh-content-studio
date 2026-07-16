@@ -201,7 +201,7 @@ export default function OperatingCoreAdmin({
             <button 
               type="submit" 
               disabled={isVerifying}
-              className={`bg-black text-text-primary px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${isVerifying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-neutral-800'}`}
+              className={`bg-slate-900 text-white px-4 py-2 rounded-md transition-colors flex items-center justify-center gap-2 ${isVerifying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-800'}`}
             >
               <KeyRound className="w-4 h-4" />
               {isVerifying ? 'Verifying...' : 'Unlock Operating Core'}
@@ -730,7 +730,7 @@ export default function OperatingCoreAdmin({
                     createdBy: 'Superadmin'
                   });
                   */
-                }} className="text-xs bg-slate-900 text-coh-cream px-3 py-1.5 rounded hover:bg-brand-gold-hover transition font-semibold flex items-center gap-1 action-button interactive-button">
+                }} className="text-xs bg-slate-900 text-white px-3 py-1.5 rounded hover:bg-brand-gold-hover transition font-semibold flex items-center gap-1 action-button interactive-button">
                   <Plus size={12}/> Add Core Document
                 </button>
               </div>

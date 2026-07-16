@@ -29,12 +29,12 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
 
   return (
     <div className="inline-flex items-center gap-1.5 mb-2">
-      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-coh-cream border border-border-standard rounded-full text-[10px] font-semibold cursor-default group relative">
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-white border border-border-standard rounded-full text-[10px] font-semibold cursor-default group relative">
         <span className="text-brand-gold">🛡️</span>
         <span>Protected COH Foundation</span>
         
         {/* Tooltip */}
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-coh-cream rounded shadow-lg text-[9px] font-normal font-sans opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-white rounded shadow-lg text-[9px] font-normal font-sans opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
           Injecting non-negotiable Climate Opera Haus identity and guardrails. Always active.
           <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-t-coh-navy"></div>
         </div>
@@ -46,7 +46,7 @@ export default function OperatingCoreIndicator({ core, workspaceName }: Props) {
           <span>Operating Core Active</span>
           
           {/* Tooltip */}
-          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-coh-cream rounded shadow-lg text-[9px] font-normal font-sans opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
+          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-2 bg-slate-900 text-white rounded shadow-lg text-[9px] font-normal font-sans opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none text-center">
             Injecting {activeRules} strategic rules, guardrails, and voice settings for {workspaceName}.
             <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-4 border-transparent border-t-coh-navy"></div>
           </div>
