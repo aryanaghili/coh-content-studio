@@ -4421,7 +4421,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
     if (filterPillar !== 'All' && item.pillar !== filterPillar) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      return item.title.toLowerCase().includes(q) || item.text.toLowerCase().includes(q) || item.channel.toLowerCase().includes(q);
+      const textToSearch = item.text || item.finalCopy || '';
+      return (item.title?.toLowerCase() || '').includes(q) || 
+             textToSearch.toLowerCase().includes(q) || 
+             (item.channel?.toLowerCase() || '').includes(q);
     }
     return true;
   });
@@ -8126,6 +8129,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             )}
 
+            </div>
             </ErrorBoundary>)}
 
       </main>
