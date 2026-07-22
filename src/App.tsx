@@ -7288,7 +7288,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="text-[10px] text-text-muted space-y-0.5">
                         <div><strong>Target Audience:</strong> {item.audience}</div>
                         <div><strong>Content Direction:</strong> {item.angle}</div>
-                        <div className="truncate"><strong>Sources:</strong> {item.sourcesUsed.join(', ') || 'None'}</div>
+                        <div className="truncate"><strong>Sources:</strong> {item.sourcesUsed?.join(', ') || 'None'}</div>
                       </div>
 
                       {/* Visual Direction section */}
