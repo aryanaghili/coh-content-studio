@@ -1091,11 +1091,11 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div className="flex flex-col gap-6 h-full pb-20">
           
           {/* Horizontal Controls Panel */}
-          <div className="bg-surface-primary border border-border-standard p-5 rounded shadow-sm shrink-0">
-            <div className="flex justify-between items-center mb-4 border-b border-border-standard pb-3">
+          <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm shrink-0">
+            <div className="flex justify-between items-center mb-5 border-b border-border-standard pb-4">
               <h3 className="font-sans text-xl font-bold text-text-primary">Monthly Planning Parameters</h3>
-              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-text-secondary hover:text-text-primary flex items-center gap-1">
-                <Settings2 size={14} /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
+              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors">
+                <Settings2 size={15} /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
               </button>
             </div>
 
@@ -1103,12 +1103,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Timing & Intensity */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Planning Month</label>
-                  <input type="month" className="form-control p-1.5 w-full text-sm font-semibold" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Planning Month</label>
+                  <input type="month" className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Publishing Intensity</label>
-                  <select className="form-control p-1.5 w-full" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Publishing Intensity</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
                     <option value="Light: 4-6 items">Light: 4-6 items</option>
                     <option value="Moderate: 8-12 items">Moderate: 8-12 items</option>
                     <option value="High: 14-20 items">High: 14-20 items</option>
@@ -1118,23 +1118,23 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Strategic Focus */}
-              <div className="space-y-4 bg-surface-inset p-3 rounded border border-border-standard">
+              <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-text-primary mb-1 uppercase text-[10px]">Primary Focus</label>
-                  <select className="form-control p-1.5 w-full border-brand-gold/50 font-bold" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Primary Focus</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Secondary Focus (Layering)</label>
-                  <select className="form-control p-1.5 w-full" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Secondary Focus (Layering)</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-red-600/70 mb-1 uppercase text-[10px]">Avoid Focus (Strict Penalty)</label>
-                  <select className="form-control p-1.5 w-full border-red-200" value={cycle.avoidFocus} onChange={e => setCycle({...cycle, avoidFocus: e.target.value})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Avoid Focus (Strict Penalty)</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.avoidFocus} onChange={e => setCycle({...cycle, avoidFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
@@ -1144,14 +1144,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               {/* Audience */}
               <div className="space-y-4">
                 <div>
-                  <label className="block font-bold text-text-primary mb-1 uppercase text-[10px]">Primary Audience</label>
-                  <select className="form-control p-1.5 w-full" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Primary Audience</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-bold text-text-secondary mb-1 uppercase text-[10px]">Secondary Audience</label>
-                  <select className="form-control p-1.5 w-full" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
+                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Secondary Audience</label>
+                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
                     <option value="None">None</option>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
@@ -1160,14 +1160,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
               {/* Channels */}
               <div>
-                <label className="block font-bold text-text-secondary mb-2 uppercase text-[10px]">Active Channels</label>
-                <div className="flex flex-wrap gap-2">
+                <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Active Channels</label>
+                <div className="flex flex-wrap gap-1.5">
                   {CHANNELS.map(c => (
                     <button key={c} onClick={() => {
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[10px] rounded-full font-bold transition ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-white shadow-sm' : 'bg-surface-primary text-text-primary border border-border-strong hover:border-brand-gold'}`}
+                      className={`px-3 py-1.5 text-[11px] rounded-lg font-semibold cursor-pointer transition-all ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-white border border-slate-900 shadow-sm' : 'bg-surface-primary text-text-secondary border border-border-standard hover:border-border-strong hover:text-text-primary'}`}
                     >
                       {c}
                     </button>
@@ -1177,14 +1177,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {showAdvancedSettings && (
-              <div className="mt-4 p-4 border border-border-standard rounded bg-surface-primary">
-                <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-3">Channel Audience Map</h4>
-                <p className="text-xs text-text-secondary mb-4">Override the primary audience on specific active channels.</p>
+              <div className="mt-6 p-5 border border-border-standard rounded-xl bg-surface-inset">
+                <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-1">Channel Audience Map</h4>
+                <p className="text-xs text-text-muted mb-4">Override the primary audience on specific active channels.</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {cycle.activeChannels.map(c => (
-                    <div key={c} className="flex items-center gap-3 bg-surface-primary p-2 rounded border border-border-standard shadow-sm">
-                      <div className="w-24 text-xs font-semibold text-text-primary shrink-0">{c}</div>
-                      <select className="form-control p-1 text-xs w-full" 
+                    <div key={c} className="flex items-center gap-3 bg-surface-primary p-2.5 rounded-lg border border-border-standard shadow-sm">
+                      <div className="w-28 text-xs font-semibold text-text-primary shrink-0 truncate">{c}</div>
+                      <select className="p-1.5 text-xs w-full bg-surface-primary border border-border-standard rounded text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring" 
                         value={cycle.channelAudienceMap[c]?.primary || cycle.primaryAudience}
                         onChange={(e) => {
                           const newMap = {...cycle.channelAudienceMap};
@@ -1204,35 +1204,38 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-4 border-t border-border-standard">
-              <div className="flex items-center border border-border-strong rounded overflow-hidden shadow-sm">
-                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" className="rounded-none border-r border-border-standard px-6 py-2.5">
-                  <RefreshCw size={16} className="mr-2 inline" /> {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-5 border-t border-border-standard">
+              <div className="flex flex-wrap items-center gap-3">
+                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" icon={<RefreshCw size={15} />}>
+                  {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
-                <select 
-                  className="bg-slate-900 text-white text-xs font-semibold px-3 py-2 outline-none cursor-pointer hover:bg-brand-gold-hover transition-colors"
-                  onChange={(e) => {
-                    if (e.target.value) {
-                      setCycle(prev => ({...prev, version: prev.version + 1}));
-                      handleGenerate(e.target.value as any);
-                      e.target.value = '';
-                    }
-                  }}
-                  value=""
-                >
-                  <option value="" disabled>Specific Regeneration...</option>
-                  <option value="Generate New Version">Generate New Version</option>
-                  <option value="Regenerate All Items">Regenerate All Items</option>
-                  <option value="Regenerate Weak Items Only">Regenerate Weak Items Only</option>
-                  <option value="Regenerate Selected Week">Regenerate Selected Week</option>
-                  <option value="Regenerate Selected Channel">Regenerate Selected Channel</option>
-                  <option value="Generate Alternative Angle">Generate Alternative Angle</option>
-                  <option value="Preserve Approved Items and Regenerate the Rest">Preserve Approved and Manual Items</option>
-                </select>
+                
+                <div className="relative">
+                  <select 
+                    className="bg-surface-primary border border-border-standard text-text-primary text-xs font-semibold px-3 py-2.5 rounded-lg outline-none cursor-pointer hover:border-border-strong focus:ring-2 focus:ring-focus-ring transition-all shadow-sm"
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setCycle(prev => ({...prev, version: prev.version + 1}));
+                        handleGenerate(e.target.value as any);
+                        e.target.value = '';
+                      }
+                    }}
+                    value=""
+                  >
+                    <option value="" disabled>Specific Regeneration...</option>
+                    <option value="Generate New Version">Generate New Version</option>
+                    <option value="Regenerate All Items">Regenerate All Items</option>
+                    <option value="Regenerate Weak Items Only">Regenerate Weak Items Only</option>
+                    <option value="Regenerate Selected Week">Regenerate Selected Week</option>
+                    <option value="Regenerate Selected Channel">Regenerate Selected Channel</option>
+                    <option value="Generate Alternative Angle">Generate Alternative Angle</option>
+                    <option value="Preserve Approved Items and Regenerate the Rest">Preserve Approved and Manual Items</option>
+                  </select>
+                </div>
               </div>
               
-              <Button onClick={openAddManualModal} variant="outline">
-                <Plus size={16} className="mr-1 inline" /> Add Manual Item
+              <Button onClick={openAddManualModal} variant="outline" icon={<Plus size={15} />}>
+                Add Manual Item
               </Button>
             </div>
           </div>
