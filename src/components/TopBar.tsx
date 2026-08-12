@@ -38,6 +38,11 @@ export function TopBar({ title, theme, onThemeToggle, aiStatus, onSearchClick }:
           </span>
         </button>
 
+        {/* Copyright Notice */}
+        <span className="text-[12px] font-sans text-text-muted whitespace-nowrap">
+          Copyright © 2026 Aryan Aghili. All rights reserved.
+        </span>
+
         {/* Theme Toggle */}
         <div className="flex items-center bg-surface-inset p-1 border border-border-standard rounded-full">
           <button 
