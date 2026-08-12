@@ -4698,7 +4698,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
           theme={theme} 
           onThemeToggle={setTheme} 
           aiStatus={aiStatus} 
-          onSearchClick={() => setActiveTab('command-center')}
+          onNavigateTab={setActiveTab}
+          savedContent={savedContent}
+          savedIdeas={savedIdeas}
+          sources={sources}
+          onSelectContentItem={(item) => {
+            handleOpenInRevision(item);
+          }}
+          onSelectIdeaItem={(idea) => {
+            handleCopyIdeaToWorkspace(idea);
+          }}
         />
         <main className="flex-1 overflow-y-auto px-4 md:px-12 py-6 md:py-10 flex flex-col min-w-0">
         
