@@ -1,0 +1,46 @@
+{
+  "runId": "COH-CS-08",
+  "title": "Final Integrated Validation, Scope Audit, Preview Verification and Audit Archive",
+  "repository": "aryanaghili/coh-content-studio",
+  "branch": "feature/coh-content-intelligence-v2",
+  "baseCommitMain": "867a7eb88efaec68610eaae0bd7d623eb0d13874",
+  "predecessorCommit": "910ab4e1e51d73e3bffcb5f41203f9b7260225da",
+  "overallStatus": "PASS_WITH_WARNINGS",
+  "summaryCounts": {
+    "pass": 50,
+    "passWithWarnings": 0,
+    "fail": 0,
+    "notTested": 2
+  },
+  "notTestedItems": [
+    "Live OpenAI network smoke test (no API credentials in local environment)",
+    "Remote Vercel Preview deployment URL verification (branch not yet pushed to remote)"
+  ],
+  "unitAndIntegrationSuites": {
+    "command": "node --test tests/*.test.ts tests/*.test.js",
+    "suites": 7,
+    "tests": 31,
+    "passed": 31,
+    "failed": 0
+  },
+  "playwrightE2E": {
+    "script": "artifacts/coh-upgrade/verify_cs08_integrated.mjs",
+    "status": "PASS",
+    "screenshotsDir": "artifacts/coh-upgrade/runs/COH-CS-08/screenshots"
+  },
+  "safetyGates": {
+    "databaseChanges": "NONE",
+    "schemaChanges": "NONE",
+    "productionDataChanges": "NONE",
+    "vercelConfigChanges": "NONE",
+    "dependencyChanges": "NONE",
+    "protectedKernelModified": false,
+    "mergedToMain": false,
+    "deployedToProduction": false
+  },
+  "releaseGates": {
+    "readyForIndependentReview": "YES",
+    "readyToMergeToMain": "YES",
+    "readyForProduction": "NO"
+  }
+}
