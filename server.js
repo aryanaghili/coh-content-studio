@@ -453,6 +453,41 @@ app.post('/api/ai/revise', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Analyze Source (Source Intelligence) ─────────────────────────────────────
+app.post('/api/ai/analyze-source', requireAuth, async (req, res) => {
+  try {
+    const input = {
+      ...req.body,
+      mode: 'source_analysis',
+      rawInput: req.body?.rawInput || req.body?.sourceContent || ''
+    };
+    if (!input.rawInput.trim()) {
+      return res.json({
+        success: false,
+        errorType: 'VALIDATION_ERROR',
+        userMessage: 'Source content is required for analysis.'
+      });
+    }
+    if (!providerManager.isConnected()) {
+      return res.json({
+        success: false,
+        errorType: 'CONFIGURATION_ERROR',
+        userMessage: 'AI provider is not connected. Configure a provider in Settings or use local fallback analysis.'
+      });
+    }
+    const result = await providerManager.generate(input);
+    res.json(result);
+  } catch (err) {
+    console.error('[/api/ai/analyze-source]', err.message);
+    res.json({
+      success: false,
+      errorType: 'SERVER_ERROR',
+      userMessage: friendlyServerError(err),
+      debug: { message: err.message }
+    });
+  }
+});
+
 // ─── Prompt Builder ───────────────────────────────────────────────────────────
 app.post('/api/ai/prompt', requireAuth, (req, res) => {
   try {

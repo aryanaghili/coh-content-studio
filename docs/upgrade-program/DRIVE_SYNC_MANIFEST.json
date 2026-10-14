@@ -14,7 +14,8 @@
     "02 - Implementation Prompts": [
       "docs/upgrade-program/runs/COH-CS-00/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-01/PROMPT_SNAPSHOT.md",
-      "docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md"
+      "docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md",
+      "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md"
     ],
     "03 - Run Evidence": {
       "COH-CS-00": [
@@ -39,6 +40,16 @@
         "docs/upgrade-program/runs/COH-CS-02/CHANGE_MANIFEST.md",
         "docs/upgrade-program/runs/COH-CS-02/VALIDATION_REPORT.md",
         "docs/upgrade-program/runs/COH-CS-02/RUN_MANIFEST.json"
+      ],
+      "COH-CS-03": [
+        "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md",
+        "docs/upgrade-program/runs/COH-CS-03/SOURCE_CONTEXT_CONTRACT.md",
+        "docs/upgrade-program/runs/COH-CS-03/SOURCE_INTELLIGENCE_SCHEMA.md",
+        "docs/upgrade-program/runs/COH-CS-03/SOURCE_GROUNDING_TEST_MATRIX.md",
+        "docs/upgrade-program/runs/COH-CS-03/IMPLEMENTATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-03/CHANGE_MANIFEST.md",
+        "docs/upgrade-program/runs/COH-CS-03/VALIDATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-03/RUN_MANIFEST.json"
       ]
     },
     "04 - Review Reports": [],

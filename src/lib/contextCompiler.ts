@@ -6,6 +6,10 @@ import {
   type RevisionStandard
 } from './operatingCore.ts';
 import type { CoreDocument } from './coreDocumentsStorage.ts';
+import {
+  compileSourceGroundingContext,
+  type SourceIntelligenceAnalysis
+} from './sourceIntelligence.ts';
 
 export type ContextProvenance = 'EXPLICIT' | 'INHERITED' | 'RESOLVED' | 'UNRESOLVED';
 
@@ -80,6 +84,8 @@ export interface ContextCompilerInput {
   language?: string;
   communicationJob?: string;
   sourceBindings?: TaskSourceBinding[];
+  derivedSourceAnalyses?: Record<string, SourceIntelligenceAnalysis>;
+  maxTotalSourceChars?: number;
   userInstruction?: string;
   inheritedWorkContext?: Partial<WorkContext> | null;
   transformationIntent?: string;
@@ -612,62 +618,20 @@ export function compileGovernedContext(input: ContextCompilerInput): CompiledCon
 
   const operatingCoreSection = coreRuleParts.join('\n\n');
 
-  // 3. Applicable Source & Evidence Context (Level 3)
+  // 3. Applicable Source & Evidence Context (Level 3 - Role-governed & Bounded)
   const rawBindings = input.sourceBindings && input.sourceBindings.length > 0
     ? input.sourceBindings
     : inherited?.sourceBindings || [];
 
-  const manifestSources: ContextManifestSourceItem[] = [];
-  const evidenceSources: string[] = [];
-  const styleReferenceSources: string[] = [];
-  const sourceSectionParts: string[] = [];
+  const compiledSourceGrounding = compileSourceGroundingContext(rawBindings, input.workflow, {
+    derivedAnalyses: input.derivedSourceAnalyses,
+    maxTotalChars: input.maxTotalSourceChars
+  });
 
-  for (const binding of rawBindings) {
-    const role: SourceTaskRole = binding.role || inferDefaultSourceRole(binding.type);
-    const excerpts = Array.isArray(binding.selectedExcerpts) ? binding.selectedExcerpts.filter(Boolean) : [];
-    manifestSources.push({
-      id: binding.sourceId,
-      title: binding.title,
-      type: binding.type,
-      role,
-      excerptCount: excerpts.length
-    });
-
-    if (role === 'Evidence' || role === 'Must-use Material' || role === 'Quote / Language Source') {
-      evidenceSources.push(`${binding.title} (${role})`);
-    } else {
-      styleReferenceSources.push(`${binding.title} (${role})`);
-    }
-
-    const roleDirective =
-      role === 'Evidence'
-        ? 'ROLE: EVIDENCE (May support factual statements subject to COH claim safety).'
-        : role === 'Strategic Context'
-          ? 'ROLE: STRATEGIC CONTEXT (May inform framing and reasoning; do not treat unverified aspirations as confirmed fact).'
-          : role === 'Approved Example'
-            ? 'ROLE: APPROVED EXAMPLE (Use for tone, rhythm, and structural guidance only. Do NOT copy specific event facts, dates, or partner names from this example into new work unless separately verified).'
-            : role === 'Quote / Language Source'
-              ? 'ROLE: QUOTE / LANGUAGE SOURCE (Preserve exact quoted wording and attribute accurately to this source).'
-              : role === 'Visual Reference'
-                ? 'ROLE: VISUAL REFERENCE (Use for visual atmosphere and composition only; do not convert into factual text claims).'
-                : 'ROLE: MUST-USE MATERIAL (Incorporate key substance into the output while strictly obeying Protected COH Kernel and Claim Safety).';
-
-    const bodyText =
-      excerpts.length > 0
-        ? `SELECTED EXACT EXCERPTS:\n${excerpts.map((ex, i) => `[Excerpt ${i + 1}] "${ex}"`).join('\n')}`
-        : (binding.content || binding.summary || '').slice(0, 2400);
-
-    if (bodyText) {
-      sourceSectionParts.push(
-        `[SOURCE: ${binding.title} | Type: ${binding.type}]\n${roleDirective}\n${bodyText}`
-      );
-    }
-  }
-
-  const sourceEvidenceSection =
-    sourceSectionParts.length > 0
-      ? `GOVERNED SOURCE & EVIDENCE CONTEXT:\n${sourceSectionParts.join('\n\n')}`
-      : '';
+  const manifestSources = compiledSourceGrounding.manifestSources;
+  const evidenceSources = compiledSourceGrounding.evidenceSources;
+  const styleReferenceSources = compiledSourceGrounding.styleReferenceSources;
+  const sourceEvidenceSection = compiledSourceGrounding.formattedSection;
 
   // 4. Inherited Work Context (Level 4)
   const inheritedParts: string[] = [];
@@ -686,7 +650,10 @@ export function compileGovernedContext(input: ContextCompilerInput): CompiledCon
       : '';
 
   // 5. Explicit User / Task Instruction (Level 5 - governed by Levels 1-3)
-  const conflictWarnings = detectKernelConflictWarnings(input.userInstruction);
+  const conflictWarnings = [
+    ...detectKernelConflictWarnings(input.userInstruction),
+    ...compiledSourceGrounding.truncationWarnings
+  ];
   const taskInstructionParts: string[] = [];
   if (isMeaningfulValue(input.transformationIntent)) {
     taskInstructionParts.push(`Transformation Intent: ${input.transformationIntent}`);

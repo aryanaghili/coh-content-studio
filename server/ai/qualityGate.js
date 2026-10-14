@@ -10,6 +10,21 @@ export function runQualityGate(output, input) {
     return { passed: false, issues: ['No output received from provider.'] };
   }
 
+  if (input.mode === 'source_analysis') {
+    if (!Array.isArray(output.keyFacts) || !Array.isArray(output.cautionsAndAmbiguities)) {
+      issues.push('Source analysis response is missing required structured arrays.');
+    }
+    const serialized = JSON.stringify(output);
+    if (serialized.includes('—')) {
+      issues.push('Source analysis contains em dash punctuation.');
+    }
+    return { passed: issues.length === 0, issues };
+  }
+
+  if (input.mode === 'ideation' || input.mode === 'revision') {
+    return { passed: true, issues: [] };
+  }
+
   const drafts = output.drafts || [];
 
   for (const draft of drafts) {

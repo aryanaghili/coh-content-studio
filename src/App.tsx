@@ -59,9 +59,20 @@ import {
   extractWorkContextFromWorkItem,
   inferDefaultSourceRole,
   type WorkContext,
-  type TaskSourceBinding
+  type TaskSourceBinding,
+  type SourceTaskRole
 } from './lib/contextCompiler';
 import { ContextManifestPanel } from './components/ContextManifestPanel';
+import {
+  ALL_SOURCE_TASK_ROLES,
+  loadSourceIntelligenceStore,
+  upsertSourceIntelligenceRecord,
+  removeSourceIntelligenceRecord,
+  enforceSourceIntelligenceClaimDiscipline,
+  buildDeterministicSourceAnalysis,
+  type SourceIntelligenceAnalysis
+} from './lib/sourceIntelligence';
+import { SourceIntelligenceCardAddon } from './components/SourceIntelligencePanel';
 
 // --- Type Definitions ---
 
@@ -804,6 +815,14 @@ export default function App() {
   const selectableSources = sources.filter(s => !isBrainFile(s.id));
   const brainSources = sources.filter(s => isBrainFile(s.id));
 
+  // --- Source Intelligence & Task-Level Source Context State (COH-CS-03) ---
+  const [sourceIntelligenceMap, setSourceIntelligenceMap] = useState<Record<string, SourceIntelligenceAnalysis>>(() =>
+    loadSourceIntelligenceStore()
+  );
+  const [analyzingSourceIds, setAnalyzingSourceIds] = useState<Record<string, boolean>>({});
+  const [sourceAnalysisErrors, setSourceAnalysisErrors] = useState<Record<string, string>>({});
+  const [taskSourceRoleMap, setTaskSourceRoleMap] = useState<Record<string, { role: SourceTaskRole; selectedExcerpts: string[] }>>({});
+
   // --- Brief Forms States (CLEARED BY DEFAULT) ---
   const [simpleBrief, setSimpleBrief] = useState<SimpleBrief>({
     goal: '',
@@ -1113,6 +1132,19 @@ export default function App() {
         body: JSON.stringify(input),
       });
       return res.json();
+    },
+
+    async analyzeSource(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/analyze-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || data.userMessage || 'Source analysis failed.');
+      }
+      return data.data || data;
     },
   };
 
@@ -1460,13 +1492,41 @@ export default function App() {
 
     if (generationMode === 'ai' && aiStatus === 'connected') {
       try {
+        const ideationSourceBindings: TaskSourceBinding[] = advancedBrief.selectedSourceIds
+          .map(id => {
+            const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+            if (!s) return null;
+            return {
+              sourceId: s.id,
+              title: s.title || 'Untitled Source',
+              type: s.type || 'Other',
+              role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
+              selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
+              content: s.content || s.notes || s.url || '',
+              summary: s.notes || undefined
+            } as TaskSourceBinding;
+          })
+          .filter((b): b is TaskSourceBinding => Boolean(b));
+
+        const ideationContextPkg = compileGovernedContext({
+          workflow: 'Ideation Workspace',
+          operatingCore,
+          coreDocuments: operatingCoreDocs,
+          audience: ideationFilterAudience,
+          channel: ideationFilterChannel,
+          language: ideationFilterLanguage,
+          sourceBindings: ideationSourceBindings,
+          derivedSourceAnalyses: sourceIntelligenceMap,
+          userInstruction: inputVal
+        });
+
         const result = await aiService.ideate({
           rawInput: inputVal,
           language: ideationFilterLanguage,
           audience: ideationFilterAudience,
           depth: ideationFilterDepth,
           quality: ideationFilterQuality,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation Workspace', audience: ideationFilterAudience }, operatingCoreDocs)
+          operatingCoreInstructions: ideationContextPkg.compiledInstructions
         });
         const dateStr = new Date().toISOString().split('T')[0];
         const list: SavedIdea[] = [];
@@ -1839,11 +1899,224 @@ export default function App() {
   };
 
   // --- Source and List Action Helpers ---
+  const getEffectiveSourceRole = (src: { id: string; type: string }): SourceTaskRole => {
+    const fromTaskMap = taskSourceRoleMap[src.id]?.role;
+    if (fromTaskMap) return fromTaskMap;
+    const fromWorkItem = activeWorkItem?.workContext?.sourceBindings?.find(b => b.sourceId === src.id)?.role;
+    if (fromWorkItem) return fromWorkItem;
+    return inferDefaultSourceRole(src.type);
+  };
+
+  const getEffectiveSourceExcerpts = (sourceId: string): string[] => {
+    const fromTaskMap = taskSourceRoleMap[sourceId]?.selectedExcerpts;
+    if (Array.isArray(fromTaskMap)) return fromTaskMap;
+    const fromWorkItem = activeWorkItem?.workContext?.sourceBindings?.find(b => b.sourceId === sourceId)?.selectedExcerpts;
+    return Array.isArray(fromWorkItem) ? fromWorkItem : [];
+  };
+
+  const handleChangeSourceTaskRole = (sourceId: string, role: SourceTaskRole) => {
+    const src = [...sources, ...workspaceLocalSources].find(s => s.id === sourceId);
+    const currentExcerpts = getEffectiveSourceExcerpts(sourceId);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [sourceId]: {
+        role,
+        selectedExcerpts: prev[sourceId]?.selectedExcerpts || currentExcerpts
+      }
+    }));
+    setActiveWorkItem(prev => {
+      if (!prev) return prev;
+      const existingBindings = prev.workContext?.sourceBindings || [];
+      const updatedBindings = existingBindings.some(b => b.sourceId === sourceId)
+        ? existingBindings.map(b => (b.sourceId === sourceId ? { ...b, role } : b))
+        : [
+            ...existingBindings,
+            {
+              sourceId,
+              title: src?.title || 'Untitled Source',
+              type: src?.type || 'Other',
+              role,
+              selectedExcerpts: currentExcerpts,
+              content: src?.content || src?.notes || ''
+            }
+          ];
+      return {
+        ...prev,
+        workContext: {
+          ...(prev.workContext || {}),
+          sourceBindings: updatedBindings
+        }
+      };
+    });
+  };
+
+  const handleToggleSourceExcerpt = (sourceId: string, excerpt: string) => {
+    const src = [...sources, ...workspaceLocalSources].find(s => s.id === sourceId);
+    const role = src ? getEffectiveSourceRole(src) : 'Evidence';
+    const currentExcerpts = getEffectiveSourceExcerpts(sourceId);
+    const nextExcerpts = currentExcerpts.includes(excerpt)
+      ? currentExcerpts.filter(e => e !== excerpt)
+      : [...currentExcerpts, excerpt];
+
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [sourceId]: {
+        role: prev[sourceId]?.role || role,
+        selectedExcerpts: nextExcerpts
+      }
+    }));
+  };
+
   const toggleSourceSelection = (id: string) => {
-    const list = advancedBrief.selectedSourceIds.includes(id)
+    const isCurrentlySelected = advancedBrief.selectedSourceIds.includes(id);
+    const list = isCurrentlySelected
       ? advancedBrief.selectedSourceIds.filter(sId => sId !== id)
       : [...advancedBrief.selectedSourceIds, id];
     setAdvancedBrief(prev => ({ ...prev, selectedSourceIds: list }));
+
+    if (!isCurrentlySelected) {
+      const src = [...sources, ...workspaceLocalSources].find(s => s.id === id);
+      if (src && !taskSourceRoleMap[id]) {
+        setTaskSourceRoleMap(prev => ({
+          ...prev,
+          [id]: {
+            role: inferDefaultSourceRole(src.type),
+            selectedExcerpts: []
+          }
+        }));
+      }
+    }
+  };
+
+  const handleAnalyzeSource = async (src: SourceFile | { id: string; title: string; type: string; content: string; notes?: string }, forceLocalFallback = false) => {
+    setAnalyzingSourceIds(prev => ({ ...prev, [src.id]: true }));
+    setSourceAnalysisErrors(prev => {
+      const next = { ...prev };
+      delete next[src.id];
+      return next;
+    });
+
+    try {
+      if (!forceLocalFallback && generationMode === 'ai' && aiStatus === 'connected') {
+        const contextPkg = compileGovernedContext({
+          workflow: 'Source Intelligence',
+          operatingCore,
+          coreDocuments: operatingCoreDocs,
+          userInstruction: `Analyze source "${src.title}" (${src.type}) under COH claim discipline.`
+        });
+        const aiResult = await aiService.analyzeSource({
+          sourceTitle: src.title,
+          sourceType: src.type,
+          sourceNotes: src.notes || '',
+          sourceContent: src.content || src.notes || '',
+          rawInput: src.content || src.notes || '',
+          operatingCoreInstructions: contextPkg.compiledInstructions
+        });
+        const disciplined = enforceSourceIntelligenceClaimDiscipline(
+          {
+            ...aiResult,
+            sourceId: src.id,
+            sourceTitle: src.title,
+            sourceType: src.type,
+            analyzedAt: new Date().toISOString(),
+            analysisMode: 'ai'
+          },
+          src
+        );
+        setSourceIntelligenceMap(prev => upsertSourceIntelligenceRecord(prev, disciplined));
+      } else {
+        const fallbackAnalysis = buildDeterministicSourceAnalysis(src, operatingCore);
+        setSourceIntelligenceMap(prev => upsertSourceIntelligenceRecord(prev, fallbackAnalysis));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to complete AI source analysis.';
+      setSourceAnalysisErrors(prev => ({ ...prev, [src.id]: msg }));
+    } finally {
+      setAnalyzingSourceIds(prev => ({ ...prev, [src.id]: false }));
+    }
+  };
+
+  const handleAddToCurrentBrief = (src: { id: string; title: string; type: string }) => {
+    toggleSourceSelection(src.id);
+  };
+
+  const handleUseSourceInIdeation = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    if (!advancedBrief.selectedSourceIds.includes(src.id)) {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: [...prev.selectedSourceIds, src.id]
+      }));
+    }
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    const seedHint = analysis?.contentOpportunityHints?.[0] || analysis?.strategicContext || src.notes || src.title;
+    setIdeationInput(`${src.title}: ${seedHint}`);
+    if (analysis?.relevantAudiences?.[0]) {
+      setIdeationFilterAudience(analysis.relevantAudiences[0]);
+    }
+    if (analysis?.relevantChannels?.[0]) {
+      setIdeationFilterChannel(analysis.relevantChannels[0]);
+    }
+    setActiveTab('ideation-workspace');
+  };
+
+  const handleCreateContentFromSource = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    setCreationMode('advanced');
+    setAdvancedBrief(prev => {
+      const candidateChannel = analysis?.relevantChannels?.[0];
+      const nextChannel = candidateChannel && CHANNELS.includes(candidateChannel) ? candidateChannel : prev.channel;
+      const validFormats = CHANNEL_FORMATS[nextChannel] || ['Post'];
+      const nextFormat = validFormats.includes(prev.outputFormat) ? prev.outputFormat : validFormats[0];
+      return {
+        ...prev,
+        selectedSourceIds: prev.selectedSourceIds.includes(src.id)
+          ? prev.selectedSourceIds
+          : [...prev.selectedSourceIds, src.id],
+        topic: prev.topic.trim() ? prev.topic : `${src.title}: ${analysis?.strategicContext || src.notes || 'Source-grounded brief'}`,
+        channel: nextChannel,
+        outputFormat: nextFormat,
+        pillar: analysis?.relevantPillars?.[0] || prev.pillar
+      };
+    });
+    setStartedFromNote(`Source Library: ${src.title} (${role})`);
+    setActiveTab('content-workspace');
+  };
+
+  const handleUseSourceAsVisualReference = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    handleChangeSourceTaskRole(src.id, 'Visual Reference');
+    if (!advancedBrief.selectedSourceIds.includes(src.id)) {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: [...prev.selectedSourceIds, src.id]
+      }));
+    }
+    setVsSourceItem({ id: src.id, title: src.title, type: 'Library' });
+    setVsConcept(analysis?.strategicContext || src.notes || src.title);
+    setVsNotes(`Visual Reference Source: ${src.title}. ${(src.content || '').slice(0, 300)}`);
+    setActiveTab('visual-studio');
   };
 
   const handleEditSource = (src: SourceFile) => {
@@ -1859,6 +2132,11 @@ export default function App() {
 
   const handleDeleteSource = (id: string) => {
     setSources(sources.filter(s => s.id !== id));
+    setSourceIntelligenceMap(prev => removeSourceIntelligenceRecord(prev, id));
+    setAdvancedBrief(prev => ({
+      ...prev,
+      selectedSourceIds: prev.selectedSourceIds.filter(sId => sId !== id)
+    }));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -4325,13 +4603,12 @@ Revision History:
       .map(id => {
         const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
         if (!s) return null;
-        const existingBinding = inherited?.sourceBindings?.find(b => b.sourceId === id);
         return {
           sourceId: s.id,
           title: s.title || 'Untitled Source',
           type: s.type || 'Other',
-          role: existingBinding?.role || inferDefaultSourceRole(s.type),
-          selectedExcerpts: existingBinding?.selectedExcerpts,
+          role: getEffectiveSourceRole(s),
+          selectedExcerpts: getEffectiveSourceExcerpts(s.id),
           content: s.content || s.notes || s.url || '',
           summary: s.notes || undefined
         } as TaskSourceBinding;
@@ -4350,6 +4627,7 @@ Revision History:
       language: lang,
       communicationJob: purpose || topic || undefined,
       sourceBindings,
+      derivedSourceAnalyses: sourceIntelligenceMap,
       userInstruction: topic || undefined,
       inheritedWorkContext: inherited,
       explicitFields: {
@@ -4386,20 +4664,8 @@ Revision History:
     const angle = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.angle : '');
     const customDir = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.customDirection : '');
 
-    let sourceContext = '';
-    if (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) {
-      const selectedSources = [...sources, ...workspaceLocalSources].filter(s =>
-        advancedBrief.selectedSourceIds.includes(s.id)
-      );
-      if (selectedSources.length > 0) {
-        sourceContext += '\n\n' + Array.from(new Set(selectedSources.map(s => s.type))).map(t =>
-          `[Includes type: ${t}]`
-        ).join(' ');
-        selectedSources.forEach(s => {
-          sourceContext += `\n\n--- Source: ${s.title} ---\n${s.content}`;
-        });
-      }
-    }
+    const contextPkg = buildContentWorkspaceContextPackage();
+    const sourceContext = contextPkg.sections.sourceEvidenceContext;
 
     const audienceNote = getAudienceExplanation(aud);
     const audienceDirective = aud === 'Custom Audience' && custAud
@@ -6232,20 +6498,49 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
                       </label>
                       
-                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
+                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-48 overflow-y-auto space-y-2 text-[11px] mb-3" data-testid="workspace-selected-sources-list">
                         {[...selectableSources, ...workspaceLocalSources].map(src => {
                           const isSel = advancedBrief.selectedSourceIds.includes(src.id);
+                          const activeRole = getEffectiveSourceRole(src);
+                          const activeExcerpts = getEffectiveSourceExcerpts(src.id);
                           return (
-                            <div key={src.id} className="flex items-center gap-1.5">
-                              <input
-                                type="checkbox"
-                                checked={isSel}
-                                onChange={() => toggleSourceSelection(src.id)}
-                                className="rounded border-brand-gold/50 text-brand-gold scale-75"
-                              />
-                              <span className="truncate">{src.title}</span>
-                              {workspaceLocalSources.some(w => w.id === src.id) && (
-                                <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded">Local</span>
+                            <div key={src.id} className="space-y-1">
+                              <div className="flex items-center justify-between gap-1.5">
+                                <label className="flex items-center gap-1.5 min-w-0 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSel}
+                                    onChange={() => toggleSourceSelection(src.id)}
+                                    data-testid={`workspace-source-checkbox-${src.id}`}
+                                    className="rounded border-brand-gold/50 text-brand-gold scale-75 shrink-0"
+                                  />
+                                  <span className="truncate font-medium">{src.title}</span>
+                                </label>
+                                {workspaceLocalSources.some(w => w.id === src.id) && (
+                                  <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded shrink-0">Local</span>
+                                )}
+                              </div>
+                              {isSel && (
+                                <div
+                                  className="pl-5 flex flex-wrap items-center gap-1.5 text-[10px]"
+                                  data-testid={`workspace-source-role-bar-${src.id}`}
+                                >
+                                  <span className="text-text-secondary font-semibold">Role:</span>
+                                  <select
+                                    value={activeRole}
+                                    onChange={(e) => handleChangeSourceTaskRole(src.id, e.target.value as SourceTaskRole)}
+                                    data-testid={`workspace-source-role-select-${src.id}`}
+                                    aria-label={`Workspace role for ${src.title}`}
+                                    className="bg-surface-primary border border-border-standard rounded px-1.5 py-0.5 text-[10px] font-semibold text-text-primary"
+                                  >
+                                    {ALL_SOURCE_TASK_ROLES.map(r => (
+                                      <option key={r} value={r}>{r}</option>
+                                    ))}
+                                  </select>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-mono">
+                                    {activeExcerpts.length > 0 ? `${activeExcerpts.length} excerpt(s)` : 'Bounded source'}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           );
@@ -7544,7 +7839,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Form panel */}
               <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm h-fit space-y-6">
                 <div>
@@ -7684,7 +7979,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Records List Panel */}
-              <div className="col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-6">
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-2 pb-2 border-b border-border-standard">
@@ -7703,50 +7998,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   ))}
                 </div>
 
-                {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
-                {false && (
-                  <div className="space-y-3 bg-surface-inset p-4 border border-dashed border-border-strong rounded">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-sans text-sm font-bold text-text-primary">Suggested Core Documents</h3>
-                      <span className="text-[9px] uppercase font-bold text-brand-gold bg-surface-inset px-1.5 py-0.5 rounded border border-border-standard">Not uploaded yet</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Phase 1 Strategic Plan\n- COH Master Deck',
-                        'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
-                      ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
-                        <div key={title} className="bg-surface-inset p-3 border border-border-standard rounded flex justify-between items-center shadow-sm">
-                          <span className="text-[11px] font-semibold text-text-primary">{title}</span>
-                          <button 
-                            onClick={() => {
-                              setEditingSourceId(null);
-                              setNewSource({
-                                title: title,
-                                type: 'Other',
-                                status: 'Active',
-                                notes: 'Suggested document',
-                                content: '',
-                                url: '',
-                                selectable: true
-                              });
-                            }}
-                            className="text-[9px] uppercase font-bold text-text-primary interactive-link whitespace-nowrap ml-2"
-                          >
-                            Upload / Link →
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* User-Added Sources list */}
                 <div className="space-y-3">
                   {(() => {
                     let filtered = selectableSources;
                     if (sourceLibraryFilter === 'Approved Examples') {
                       filtered = selectableSources.filter(s => s.type === 'Approved Example');
+                    } else if (sourceLibraryFilter === 'Visual References') {
+                      filtered = selectableSources.filter(s => s.type === 'Visual Reference');
+                    } else if (sourceLibraryFilter === 'Partner Context') {
+                      filtered = selectableSources.filter(s => s.type === 'Partner Profile' || s.type === 'Sponsor Notes');
+                    } else if (sourceLibraryFilter === 'Task Sources') {
+                      filtered = selectableSources.filter(s => advancedBrief.selectedSourceIds.includes(s.id));
                     } else if (sourceLibraryFilter === 'Archive') {
                       filtered = selectableSources.filter(s => s.status === 'Archived');
                     }
@@ -7771,7 +8034,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             />
                           </div>
 
-                          <div className="flex-1 space-y-2">
+                          <div className="flex-1 min-w-0 space-y-2">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-violet-600/20 text-text-primary-light">
                                 {src.type}
@@ -7783,16 +8046,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               }`}>
                                 {src.status}
                               </span>
-                              {false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-text-secondary">
-                                  {''}
-                                </span>
-                              )}
-                              {false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-brand-gold text-text-inverse hover:bg-brand-gold-hover">
-                                  Supports: {''}
-                                </span>
-                              )}
                               {src.selectable === false && (
                                 <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-500/10 backdrop-blur-md">
                                   Non-Selectable
@@ -7815,6 +8068,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               )}
                             </details>
 
+                            <SourceIntelligenceCardAddon
+                              source={src}
+                              analysis={sourceIntelligenceMap[src.id] || null}
+                              isAnalyzing={Boolean(analyzingSourceIds[src.id])}
+                              analysisError={sourceAnalysisErrors[src.id] || null}
+                              isSelectedInTask={isSelected}
+                              activeTaskRole={getEffectiveSourceRole(src)}
+                              selectedExcerpts={getEffectiveSourceExcerpts(src.id)}
+                              onAnalyzeSource={handleAnalyzeSource}
+                              onChangeTaskRole={handleChangeSourceTaskRole}
+                              onToggleExcerpt={handleToggleSourceExcerpt}
+                              onAddToCurrentBrief={handleAddToCurrentBrief}
+                              onUseInIdeation={handleUseSourceInIdeation}
+                              onCreateContent={handleCreateContentFromSource}
+                              onUseAsVisualReference={handleUseSourceAsVisualReference}
+                            />
+
                             <div className="pt-2">
                               <button
                                 onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
@@ -7822,51 +8092,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               >
                                 Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                               </button>
-                              
-                              {false && (
-                                <div className="mt-3 p-4 bg-surface-primary border border-border-standard rounded animate-fadeIn">
-                                  <h5 className="font-sans font-bold text-text-primary mb-2 text-sm">Extract Insight for Operating Core</h5>
-                                  <p className="text-[10px] text-text-secondary mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.</p>
-                                  
-                                  <div className="space-y-3">
-                                    <div>
-                                      <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Suggested Section</label>
-                                      <span className="text-xs bg-surface-inset border border-border-standard px-2 py-1 rounded inline-block">
-                                        {false ? '' : 'Unassigned (Determine manually)'}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Extract Note</label>
-                                      <textarea 
-                                        className="w-full bg-surface-inset border border-border-standard p-2 rounded text-xs text-text-primary" 
-                                        rows={3} 
-                                        placeholder="Draft the rule, claim, or insight here..."
-                                        id={`extract-${src.id}`}
-                                      />
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <button 
-                                        onClick={() => {
-                                          const el = document.getElementById(`extract-${src.id}`) as HTMLTextAreaElement;
-                                          if (el && el.value) {
-                                            navigator.clipboard.writeText(el.value);
-                                            /* Copied handled by state */
-                                          }
-                                        }}
-                                        className="bg-surface-inset border border-border-strong hover:bg-violet-600/10 text-text-primary px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
-                                      >
-                                        Copy to Clipboard
-                                      </button>
-                                      <button 
-                                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
-                                        className="bg-slate-900 hover:bg-brand-gold-hover text-brand-gold px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
-                                      >
-                                        Open Operating Core
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </div>
 
