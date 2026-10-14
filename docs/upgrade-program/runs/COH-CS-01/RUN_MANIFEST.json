@@ -3,7 +3,7 @@
   "title": "Shared COH Context Compiler, Context Manifest and Strategic Authority Foundation",
   "status": "PASS",
   "baseCommit": "d4ffc000bb5018c58e6df9f31ab762eafc388b85",
-  "implementationCommit": "PENDING_EVIDENCE_COMMIT",
+  "implementationCommit": "0466227ee8581d66340ae7f4d9aec2b0e645db34",
   "branch": "feature/coh-content-intelligence-v2",
   "databaseChanged": false,
   "schemaChanged": false,
