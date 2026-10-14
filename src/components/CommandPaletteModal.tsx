@@ -3,7 +3,7 @@ import {
   Search, X, Command, Layout, FileText, Lightbulb, Database, 
   Settings, Shield, Calendar, Sparkles, Moon, Sun, ArrowRight, CornerDownLeft
 } from 'lucide-react';
-import { SavedContent, SavedIdea, SourceFile } from '../App';
+import type { SavedContent, SavedIdea, SourceFile } from '../App';
 
 interface CommandPaletteModalProps {
   isOpen: boolean;

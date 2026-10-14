@@ -1,67 +1,36 @@
-import React, { useState, useEffect } from 'react';
-import { RefreshCcw, Save, CheckCircle2, AlertTriangle, ChevronRight, Edit3, Type, Wand2, Copy, FileText, Trash2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import {
+  RefreshCcw,
+  Save,
+  CheckCircle2,
+  AlertTriangle,
+  ChevronRight,
+  Wand2,
+  Sparkles,
+  Layers,
+  Plus,
+  Check
+} from 'lucide-react';
 import { Button } from './ui/Button';
 import { LANGUAGES, getLanguageDirection } from '../lib/languages';
+import { compileGovernedContext, extractWorkContextFromWorkItem } from '../lib/contextCompiler';
+import { ContextManifestPanel } from './ContextManifestPanel';
+import {
+  REVISION_ACTIONS,
+  REVISION_GROUP_ORDER,
+  type RevisionActionDef,
+  type RevisionActionGroup
+} from '../lib/revisionActions';
+import {
+  suggestRevisionActions,
+  compileRevisionRecipe,
+  executeDeterministicRevisionRecipe,
+  validateRevisionTranslationOutput,
+  cleanTypographyArtifacts
+} from '../lib/smartBriefAndRevision';
 
-export type RevisionActionGroup = 'Clean & Polish' | 'Voice & Tone' | 'COH & Strategic Fit' | 'Translation & Localization' | 'Format & Structure' | 'Creative Actions';
-
-export interface RevisionActionDef {
-  id: string;
-  label: string;
-  group: RevisionActionGroup;
-  description?: string;
-}
-
-export const REVISION_ACTIONS: RevisionActionDef[] = [
-  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
-  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
-  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
-  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
-  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
-  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
-  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
-
-  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
-  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
-  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
-  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
-  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
-  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
-  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
-  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
-  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
-
-  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
-  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
-  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
-  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
-  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
-  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
-  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
-  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
-
-  { id: 'translate-selected', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize-selected', label: 'Localize for selected language', group: 'Translation & Localization' },
-  { id: 'preserve-meaning-improve-flow', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
-
-  { id: 'adapt-channel', label: 'Adapt for selected channel', group: 'Format & Structure' },
-  { id: 'extract-quotes', label: 'Extract key quotes', group: 'Format & Structure' },
-  { id: 'to-bullets', label: 'Convert to bullet points', group: 'Format & Structure' },
-  { id: 'add-hook', label: 'Add a stronger hook', group: 'Format & Structure' },
-  { id: 'add-cta', label: 'Add a call to action', group: 'Format & Structure' },
-  
-  { id: 'make-controversial', label: 'Make it slightly controversial', group: 'Creative Actions' },
-  { id: 'make-story', label: 'Turn into a story', group: 'Creative Actions' }
-];
-
-export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
-  'Translation & Localization',
-  'Clean & Polish',
-  'Voice & Tone',
-  'COH & Strategic Fit',
-  'Format & Structure',
-  'Creative Actions'
-];
+export { REVISION_ACTIONS, REVISION_GROUP_ORDER };
+export type { RevisionActionDef, RevisionActionGroup };
 
 export interface RevisionState {
   sourceType: 'manual' | 'contentWorkspace' | 'contentLibrary' | null;
@@ -76,7 +45,7 @@ export interface RevisionState {
   optionalContext: string;
   selectedAction: string | null;
   appliedControls: string;
-  versionHistory: Array<{version: number, text: string, timestamp: string, actionUsed: string}>;
+  versionHistory: Array<{ version: number; text: string; timestamp: string; actionUsed: string }>;
   isGenerating: boolean;
   error: string | null;
   settingsChangedAfterRevision: boolean;
@@ -108,6 +77,9 @@ interface RevisionStudioProps {
   initialSourceType?: RevisionState['sourceType'];
   initialSourceTitle?: string;
   operatingCore: any;
+  coreDocuments?: any[];
+  activeWorkItem?: any;
+  theme?: 'light' | 'dark';
   aiStatus: string;
   generationMode: string;
   aiService: any;
@@ -120,6 +92,9 @@ export function RevisionStudio({
   initialSourceType,
   initialSourceTitle,
   operatingCore,
+  coreDocuments = [],
+  activeWorkItem = null,
+  theme = 'light',
   aiStatus,
   generationMode,
   aiService,
@@ -128,8 +103,81 @@ export function RevisionStudio({
 }: RevisionStudioProps) {
   const [state, setState] = useState<RevisionState>(DEFAULT_REVISION_STATE);
   const [customInstruction, setCustomInstruction] = useState('');
+  const [selectedRecipeActions, setSelectedRecipeActions] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
   const [cleanNote, setCleanNote] = useState('');
+
+  const inheritedWorkContext = useMemo(
+    () => extractWorkContextFromWorkItem(activeWorkItem),
+    [activeWorkItem]
+  );
+
+  // Draft-dependent suggested revision actions (Part C)
+  const suggestedActions = useMemo(
+    () =>
+      suggestRevisionActions(state.currentDraft, {
+        targetLanguage: state.targetLanguage,
+        channel: state.channel !== 'General / Custom' ? state.channel : undefined,
+        hasAttachedSources: Boolean(inheritedWorkContext?.sourceBindings?.length || activeWorkItem?.sourceIds?.length)
+      }),
+    [state.currentDraft, state.targetLanguage, state.channel, inheritedWorkContext, activeWorkItem]
+  );
+
+  // Compiled multi-action Revision Recipe & conflict check (Part C & D)
+  const compiledRecipe = useMemo(
+    () =>
+      compileRevisionRecipe(selectedRecipeActions, {
+        channel: state.channel,
+        format: state.format,
+        targetLanguage: state.targetLanguage,
+        tone: state.tone,
+        optionalContext: state.optionalContext,
+        customInstruction
+      }),
+    [
+      selectedRecipeActions,
+      state.channel,
+      state.format,
+      state.targetLanguage,
+      state.tone,
+      state.optionalContext,
+      customInstruction
+    ]
+  );
+
+  const activeContextPackage = useMemo(() => {
+    const channelVal = state.channel !== 'General / Custom' ? state.channel : undefined;
+    const formatVal = state.format !== 'General / Custom' ? state.format : undefined;
+    return compileGovernedContext({
+      workflow: 'Revision Studio',
+      operatingCore,
+      coreDocuments,
+      action: selectedRecipeActions.length > 0 ? selectedRecipeActions.join(', ') : state.selectedAction || undefined,
+      channel: channelVal,
+      format: formatVal,
+      language: state.targetLanguage,
+      communicationJob: state.optionalContext || undefined,
+      userInstruction: customInstruction || state.optionalContext || undefined,
+      inheritedWorkContext,
+      explicitFields: {
+        channel: Boolean(channelVal),
+        format: Boolean(formatVal),
+        language: Boolean(state.targetLanguage),
+        communicationJob: Boolean(state.optionalContext)
+      }
+    });
+  }, [
+    operatingCore,
+    coreDocuments,
+    selectedRecipeActions,
+    state.selectedAction,
+    state.channel,
+    state.format,
+    state.targetLanguage,
+    state.optionalContext,
+    customInstruction,
+    inheritedWorkContext
+  ]);
 
   // Handle incoming props initialization
   useEffect(() => {
@@ -144,10 +192,17 @@ export function RevisionStudio({
         sourceTitle: initialSourceTitle || 'Imported Draft',
         originalDraft: initialDraft,
         currentDraft: initialDraft,
-        versionHistory: [{ version: 1, text: initialDraft, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Imported Draft' }]
+        versionHistory: [
+          {
+            version: 1,
+            text: initialDraft,
+            timestamp: new Date().toLocaleTimeString(),
+            actionUsed: 'Imported Draft'
+          }
+        ]
       }));
     }
-  }, [initialDraft]);
+  }, [initialDraft, initialSourceType, initialSourceTitle]);
 
   const updateSetting = (key: keyof RevisionState, value: any) => {
     setState(prev => ({
@@ -157,76 +212,138 @@ export function RevisionStudio({
     }));
   };
 
-  const cleanWritingArtifacts = (text: string) => {
-    if (!text) return '';
-    return text
-      .replace(/\\u200b|\\u200c|\\u200d|\\ufeff/g, '')
-      .replace(/[\\u2014]/g, '-')
-      .replace(/[\\u2018\\u2019]/g, "'")
-      .replace(/[\\u201C\\u201D]/g, '"')
-      .replace(/([.?!])\\s*\\n+/g, "$1\\n\\n")
-      .replace(/\\n{3,}/g, "\\n\\n")
-      .replace(/\\*\\*(.*?)\\*\\*/g, "$1")
-      .replace(/\\b(Note:|Disclaimer:|Here is:|Sure,|Here are:|Please note)\\b/gi, "")
-      .trim();
+  const toggleRecipeAction = (actionId: string) => {
+    setSelectedRecipeActions(prev =>
+      prev.includes(actionId) ? prev.filter(id => id !== actionId) : [...prev, actionId]
+    );
   };
 
-  const runRevision = async (action: string) => {
-    if (state.isGenerating || !state.currentDraft.trim()) return;
+  const runRevisionRecipe = async (actionIdsToRun: string[]) => {
+    const baseText = state.revisionSource === 'original' ? state.originalDraft : state.currentDraft;
+    if (state.isGenerating || !baseText.trim()) return;
 
-    setState(prev => ({ ...prev, isGenerating: true, selectedAction: action, error: null, settingsChangedAfterRevision: false }));
+    const recipe = compileRevisionRecipe(actionIdsToRun, {
+      channel: state.channel,
+      format: state.format,
+      targetLanguage: state.targetLanguage,
+      tone: state.tone,
+      optionalContext: state.optionalContext,
+      customInstruction
+    });
 
-    let revised = state.currentDraft;
-    let actionLabel = REVISION_ACTIONS.find(a => a.id === action)?.label || action;
+    if (recipe.hasBlockingConflict) {
+      const blockingMsg = recipe.conflicts.find(c => c.severity === 'blocking')?.message;
+      setState(prev => ({
+        ...prev,
+        error: blockingMsg || 'Please resolve conflicting revision actions before running.'
+      }));
+      return;
+    }
+
+    const primaryActionId = actionIdsToRun[0] || 'custom-instruction';
+    setState(prev => ({
+      ...prev,
+      isGenerating: true,
+      selectedAction: primaryActionId,
+      error: null,
+      settingsChangedAfterRevision: false
+    }));
+
+    let revised = baseText;
+    const actionLabel = recipe.summaryLabel;
 
     try {
-      if (action === 'clean-ai-punctuation') {
-        revised = cleanWritingArtifacts(revised);
+      if (actionIdsToRun.length === 1 && actionIdsToRun[0] === 'clean-ai-punctuation' && !customInstruction.trim()) {
+        revised = cleanTypographyArtifacts(baseText);
         setCleanNote('Cleaned punctuation and hidden characters.');
         setTimeout(() => setCleanNote(''), 4000);
-      } else {
-        const actionDef = REVISION_ACTIONS.find(a => a.id === action);
-        let instruction = action === 'custom-instruction' ? customInstruction : (actionDef ? actionDef.label : action);
-        
-        if (actionDef?.group === 'Translation & Localization') {
-          instruction += `. Target Language: ${state.targetLanguage}. Preserve meaning but adapt tone naturally for this language. Avoid literal machine translation. `;
-          if (state.targetLanguage.includes('Persian')) {
-            instruction += `CRITICAL: Output must be natural, readable, and spoken-friendly. Avoid formal mechanical Persian. Avoid stiff translation patterns. Keep the COH voice.`;
-          } else if (state.targetLanguage === 'English') {
-            instruction += `CRITICAL: Output should be polished, professional, and clear. Keep the COH voice.`;
-          } else {
-            instruction += `CRITICAL: Adapt to natural usage in ${state.targetLanguage}. Keep the COH voice.`;
-          }
-        }
-        
-        const result = await aiService.revise({
-          previousDraft: state.revisionSource === 'original' ? state.originalDraft : state.currentDraft,
-          rawInput: state.optionalContext,
-          channel: state.channel,
-          outputFormat: state.format,
-          audience: 'General Public',
-          purpose: state.optionalContext || 'General Revision',
+      } else if (generationMode === 'ai' && aiStatus === 'connected') {
+        const revisionContextPkg = compileGovernedContext({
+          workflow: 'Revision Studio',
+          operatingCore,
+          coreDocuments,
+          action: actionIdsToRun.join(', '),
+          channel: state.channel !== 'General / Custom' ? state.channel : undefined,
+          format: state.format !== 'General / Custom' ? state.format : undefined,
           language: state.targetLanguage,
-          tone: state.tone,
-          selectedRevisionAction: action,
-          revisionInstruction: instruction,
-          operatingCoreInstructions: JSON.stringify(operatingCore) // Simple compile 
+          communicationJob: state.optionalContext || undefined,
+          userInstruction: recipe.compiledInstruction,
+          inheritedWorkContext,
+          transformationIntent: actionLabel
         });
 
-        if (!result || !result.revisedCopy) {
-          throw new Error('AI returned an empty response. Please try again.');
-        }
+        try {
+          const result = await aiService.revise({
+            previousDraft: baseText,
+            rawInput: state.optionalContext,
+            channel: state.channel,
+            outputFormat: state.format,
+            audience: revisionContextPkg.manifest.audience.value || 'General Public',
+            purpose: state.optionalContext || 'General Revision',
+            language: state.targetLanguage,
+            tone: state.tone,
+            selectedRevisionAction: actionIdsToRun.join('+'),
+            revisionInstruction: recipe.compiledInstruction,
+            operatingCoreInstructions: revisionContextPkg.compiledInstructions
+          });
 
-        revised = result.revisedCopy;
-        actionLabel = action === 'custom-instruction' ? `Custom: ${customInstruction || 'Rewrite'}` : actionLabel;
-        
-        if (action === 'custom-instruction') {
-          setCustomInstruction('');
+          if (result && result.revisedCopy) {
+            const candidateRevised = cleanTypographyArtifacts(result.revisedCopy);
+            if (recipe.requiresAiExecution) {
+              const langCheck = validateRevisionTranslationOutput({
+                revisedCopy: candidateRevised,
+                previousDraft: baseText,
+                targetLanguage: state.targetLanguage,
+                actionIds: actionIdsToRun
+              });
+              if (!langCheck.valid) {
+                throw new Error(langCheck.reason || 'Translation validation failed.');
+              }
+            }
+            revised = candidateRevised;
+          } else {
+            if (recipe.requiresAiExecution) {
+              throw new Error(
+                `AI Translation Failed: Provider did not return valid ${state.targetLanguage} copy. Your current draft has been preserved.`
+              );
+            }
+            revised = executeDeterministicRevisionRecipe(baseText, recipe, {
+              channel: state.channel,
+              format: state.format,
+              targetLanguage: state.targetLanguage,
+              tone: state.tone,
+              customInstruction
+            });
+          }
+        } catch (aiErr: any) {
+          if (recipe.requiresAiExecution) {
+            throw aiErr;
+          }
+          revised = executeDeterministicRevisionRecipe(baseText, recipe, {
+            channel: state.channel,
+            format: state.format,
+            targetLanguage: state.targetLanguage,
+            tone: state.tone,
+            customInstruction
+          });
         }
+      } else {
+        // Deterministic local execution for deterministic-safe actions; throws if recipe.requiresAiExecution is true
+        revised = executeDeterministicRevisionRecipe(baseText, recipe, {
+          channel: state.channel,
+          format: state.format,
+          targetLanguage: state.targetLanguage,
+          tone: state.tone,
+          customInstruction
+        });
+      }
+
+      if (customInstruction.trim()) {
+        setCustomInstruction('');
       }
 
       const appliedLabel = `${actionLabel} | ${state.channel} | ${state.format} | ${state.targetLanguage}`;
-      
+
       setState(prev => ({
         ...prev,
         revisedOutput: revised,
@@ -242,13 +359,25 @@ export function RevisionStudio({
           }
         ]
       }));
-
     } catch (err: any) {
-      setState(prev => ({ ...prev, isGenerating: false, error: err.message || 'Error applying revision.' }));
+      setState(prev => ({
+        ...prev,
+        isGenerating: false,
+        error: err.message || 'Error applying revision.'
+      }));
+    }
+  };
+
+  const runRevision = async (action: string) => {
+    if (action === 'custom-instruction') {
+      await runRevisionRecipe(selectedRecipeActions);
+    } else {
+      await runRevisionRecipe([action]);
     }
   };
 
   const handleStartNew = () => {
+    setSelectedRecipeActions([]);
     setState(prev => ({
       ...DEFAULT_REVISION_STATE,
       channel: prev.channel,
@@ -259,6 +388,7 @@ export function RevisionStudio({
   };
 
   const handleClearDraft = () => {
+    setSelectedRecipeActions([]);
     setState(prev => ({ ...prev, currentDraft: '', revisedOutput: '' }));
   };
 
@@ -290,116 +420,161 @@ export function RevisionStudio({
   };
 
   return (
-    <div className="page-shell">
-      <div className="bg-surface-primary border border-border-standard p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+    <div className="page-shell space-y-4" data-testid="revision-studio-root">
+      <div className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="page-title">
-            Revision Studio
-          </h2>
+          <h2 className="page-title">Revision Studio</h2>
           <p className="page-subtitle">
-            Refine, adapt, and translate content across your ecosystem.
+            Refine, polish, combine governed revision recipes, and localize content across your ecosystem.
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleStartNew} variant="outline" className="text-xs flex items-center gap-1">
-            <RefreshCcw size={12} /> Start New Revision
+          <Button onClick={handleStartNew} variant="outline" className="text-xs flex items-center gap-1.5">
+            <RefreshCcw size={13} /> Start New Revision
           </Button>
-          <Button onClick={onNavigateToLibrary} variant="secondary" className="text-xs flex items-center gap-1">
-            Library <ChevronRight size={12} />
+          <Button onClick={onNavigateToLibrary} variant="secondary" className="text-xs flex items-center gap-1.5">
+            Library <ChevronRight size={13} />
           </Button>
         </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]">
-        
+      <ContextManifestPanel manifest={activeContextPackage.manifest} theme={theme} />
+
+      <div className="flex flex-col lg:flex-row gap-5 min-h-[calc(100vh-180px)]">
         {/* Left Side: Work Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-surface-inset rounded border border-border-standard overflow-hidden">
-          
+        <div className="flex-1 flex flex-col min-w-0 bg-surface-primary rounded-xl border border-border-standard shadow-level-1 overflow-hidden">
           {/* Top Controls */}
-          <div className="bg-surface-primary border-b border-border-standard p-4 shrink-0">
+          <div className="bg-surface-inset/70 border-b border-border-standard px-4 py-3 shrink-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Channel</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Channel</label>
                 <select
+                  data-testid="revision-channel-select"
                   value={state.channel}
-                  onChange={(e) => updateSetting('channel', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  onChange={e => updateSetting('channel', e.target.value)}
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
-                  {['General / Custom', 'LinkedIn', 'Twitter', 'Email Newsletter', 'Blog Post', 'Press Release', 'Website Copy'].map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
+                  {[
+                    'General / Custom',
+                    'LinkedIn',
+                    'Twitter',
+                    'Email Newsletter',
+                    'Blog Post',
+                    'Press Release',
+                    'Website Copy'
+                  ].map(opt => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Format</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Format</label>
                 <select
+                  data-testid="revision-format-select"
                   value={state.format}
-                  onChange={(e) => updateSetting('format', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  onChange={e => updateSetting('format', e.target.value)}
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
-                  {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
-                  ))}
+                  {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(
+                    opt => (
+                      <option key={opt} value={opt}>
+                        {opt}
+                      </option>
+                    )
+                  )}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Language</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Language</label>
                 <select
+                  data-testid="revision-language-select"
                   value={state.targetLanguage}
-                  onChange={(e) => updateSetting('targetLanguage', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  onChange={e => updateSetting('targetLanguage', e.target.value)}
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
                   {LANGUAGES.map(l => (
-                    <option key={l.id} value={l.label}>{l.label}</option>
+                    <option key={l.id} value={l.label}>
+                      {l.label}
+                    </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Tone</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Tone</label>
                 <select
+                  data-testid="revision-tone-select"
                   value={state.tone}
-                  onChange={(e) => updateSetting('tone', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  onChange={e => updateSetting('tone', e.target.value)}
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
-                  {['Balanced / COH Default', 'Professional', 'Conversational', 'Persuasive', 'Urgent', 'Inspirational'].map(opt => (
-                    <option key={opt} value={opt}>{opt}</option>
+                  {[
+                    'Balanced / COH Default',
+                    'Professional',
+                    'Conversational',
+                    'Persuasive',
+                    'Urgent',
+                    'Inspirational'
+                  ].map(opt => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Optional Context</label>
+              <div className="col-span-2 md:col-span-1">
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">
+                  Optional Context
+                </label>
                 <input
                   type="text"
                   value={state.optionalContext}
-                  onChange={(e) => updateSetting('optionalContext', e.target.value)}
+                  onChange={e => updateSetting('optionalContext', e.target.value)}
                   placeholder="Additional context..."
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 />
               </div>
             </div>
-            
+
+            {cleanNote && (
+              <div className="mt-2 text-[11px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                {cleanNote}
+              </div>
+            )}
+
             {state.settingsChangedAfterRevision && (
-              <div className="mt-3 bg-yellow-50 text-yellow-800 p-3 text-xs rounded border border-yellow-200 flex flex-col gap-3">
+              <div
+                data-testid="revision-settings-changed-banner"
+                className="mt-3 bg-amber-500/10 text-amber-800 dark:text-amber-200 p-3 text-xs rounded-lg border border-amber-500/30 flex flex-col gap-3"
+              >
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={14} />
                   <span>Settings changed. Generate a new revision to apply them.</span>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between bg-surface-inset p-2 rounded">
-                    <span className="font-semibold text-yellow-900">Revise from:</span>
-                    <select 
-                      className="bg-surface-primary border border-yellow-300 text-yellow-900 text-[11px] px-2 py-1 rounded outline-none"
-                      onChange={(e) => updateSetting('revisionSource', e.target.value)}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 bg-surface-primary px-2.5 py-1.5 rounded-lg border border-border-standard">
+                    <span className="font-semibold text-text-primary">Revise from:</span>
+                    <select
+                      data-testid="revision-source-selector"
+                      className="bg-surface-inset border border-border-standard text-text-primary text-[11px] px-2 py-0.5 rounded outline-none"
+                      onChange={e => updateSetting('revisionSource', e.target.value)}
                       value={state.revisionSource || 'current'}
                     >
                       <option value="current">Current version</option>
                       <option value="original">Original text</option>
                     </select>
                   </div>
-                  <Button 
-                    variant="primary" 
-                    className="w-full text-xs py-1.5 bg-yellow-600 hover:bg-yellow-700 text-text-primary border-none"
-                    onClick={() => runRevision(state.selectedAction || 'custom-instruction')}
+                  <Button
+                    variant="primary"
+                    className="text-xs py-1.5"
+                    onClick={() =>
+                      runRevisionRecipe(
+                        selectedRecipeActions.length > 0
+                          ? selectedRecipeActions
+                          : [state.selectedAction || 'improve-clarity']
+                      )
+                    }
                   >
                     Generate New Revision
                   </Button>
@@ -407,7 +582,10 @@ export function RevisionStudio({
               </div>
             )}
             {state.error && (
-              <div className="mt-3 bg-red-500/10 backdrop-blur-md text-red-800 p-2 text-xs rounded border border-red-200 flex items-center gap-2">
+              <div
+                data-testid="revision-error-alert"
+                className="mt-3 bg-status-error/10 text-status-error p-2.5 text-xs rounded-lg border border-status-error/30 flex items-center gap-2"
+              >
                 <AlertTriangle size={14} />
                 {state.error}
               </div>
@@ -415,53 +593,84 @@ export function RevisionStudio({
           </div>
 
           {/* Split View Editors */}
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-[420px]">
             {/* Draft to Revise */}
-            <div className={`flex-1 flex flex-col border-r border-border-standard ${state.revisedOutput ? 'md:w-1/2' : 'w-full'}`}>
-              <div className="bg-surface-primary px-4 py-2 border-b border-border-standard flex justify-between items-center shrink-0">
-                <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider">Draft to Revise</span>
-                <button onClick={handleClearDraft} className="text-[10px] text-brand-gold hover:text-brand-gold-light uppercase font-bold">Clear</button>
+            <div
+              className={`flex-1 flex flex-col border-b md:border-b-0 md:border-r border-border-standard ${
+                state.revisedOutput ? 'md:w-1/2' : 'w-full'
+              }`}
+            >
+              <div className="bg-surface-primary px-4 py-2.5 border-b border-border-standard flex justify-between items-center shrink-0">
+                <span className="text-[11px] uppercase font-semibold text-text-secondary tracking-wider">
+                  Draft to Revise
+                </span>
+                <button
+                  onClick={handleClearDraft}
+                  className="text-[11px] text-text-muted hover:text-status-error font-semibold transition-colors"
+                >
+                  Clear
+                </button>
               </div>
               <textarea
+                data-testid="revision-draft-textarea"
                 value={state.currentDraft}
-                onChange={(e) => updateSetting('currentDraft', e.target.value)}
+                onChange={e => updateSetting('currentDraft', e.target.value)}
                 placeholder="Paste or type content here to begin revising..."
-                className="flex-1 p-4 bg-transparent border-none resize-none focus:ring-0 text-sm text-text-primary whitespace-pre-wrap"
+                className="flex-1 p-5 bg-surface-primary border-none resize-none focus:ring-0 focus:outline-none text-[14px] leading-relaxed text-text-primary whitespace-pre-wrap min-h-[280px]"
                 dir={getLanguageDirection(state.currentDraft.slice(0, 100))}
               />
             </div>
 
             {/* Revised Output (Only shows if generated) */}
             {state.revisedOutput && (
-              <div className="flex-1 flex flex-col md:w-1/2 bg-surface-primary">
-                <div className="bg-slate-900 px-4 py-2 border-b border-coh-navy flex justify-between items-center shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-text-primary tracking-wider flex items-center gap-2">
-                    <CheckCircle2 size={12} className="text-brand-gold" />
+              <div
+                data-testid="revision-output-panel"
+                className="flex-1 flex flex-col md:w-1/2 bg-surface-inset/40"
+              >
+                <div className="bg-surface-inset px-4 py-2.5 border-b border-border-standard flex justify-between items-center shrink-0">
+                  <span className="text-[11px] uppercase font-semibold text-brand-gold tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 size={13} className="text-brand-gold" />
                     Revised Output
                   </span>
                   <div className="flex items-center gap-2">
-                    <button onClick={handleUseAsCurrent} className="text-[10px] bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2 py-0.5 rounded uppercase font-bold hover:bg-violet-600-light">
+                    <button
+                      data-testid="revision-use-as-draft-btn"
+                      onClick={handleUseAsCurrent}
+                      className="text-[11px] bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2.5 py-1 rounded-md font-semibold transition-colors"
+                    >
                       Use as Draft
                     </button>
-                    <button onClick={handleCopy} className="text-[10px] text-text-secondary hover:text-text-primary uppercase font-bold flex items-center gap-1">
+                    <button
+                      data-testid="revision-copy-btn"
+                      onClick={handleCopy}
+                      className="text-[11px] px-2.5 py-1 rounded-md border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary font-medium flex items-center gap-1 transition-colors"
+                    >
                       {copySuccess ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="p-2 bg-surface-primary/20 border-b border-border-standard">
-                  <span className="text-[10px] text-text-secondary font-mono">Applied: {state.appliedControls}</span>
+                <div className="px-4 py-2 bg-surface-inset/70 border-b border-border-standard">
+                  <span data-testid="revision-applied-controls" className="text-[10.5px] text-text-secondary font-mono">
+                    Applied: {state.appliedControls}
+                  </span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4">
-                  <div 
-                    className="prose prose-sm max-w-none text-text-primary whitespace-pre-wrap"
+                <div className="flex-1 overflow-y-auto p-5">
+                  <div
+                    data-testid="revision-output-text"
+                    className="prose prose-sm max-w-none text-[14px] leading-relaxed text-text-primary whitespace-pre-wrap"
                     dir={getLanguageDirection(state.targetLanguage)}
                   >
                     {state.revisedOutput}
                   </div>
                 </div>
                 <div className="p-3 bg-surface-primary border-t border-border-standard flex gap-2">
-                  <Button onClick={handleSaveAsNew} variant="outline" className="flex-1 text-xs py-2">
-                    <Save size={14} className="mr-2 inline" /> Save as New
+                  <Button
+                    data-testid="revision-save-new-btn"
+                    onClick={handleSaveAsNew}
+                    variant="outline"
+                    className="flex-1 text-xs py-2"
+                  >
+                    <Save size={14} className="mr-1.5 inline" /> Save as New
                   </Button>
                 </div>
               </div>
@@ -469,55 +678,244 @@ export function RevisionStudio({
           </div>
         </div>
 
-        {/* Right Side: Revision Actions */}
-        <div className="w-full lg:w-72 flex flex-col gap-4 overflow-y-auto pr-1">
-          
-          {/* Custom Instruction */}
-          <div className="bg-surface-primary border border-border-standard p-4 rounded shadow-sm">
-            <label className="block text-[10px] uppercase font-bold text-text-secondary mb-2">Custom Instruction</label>
+        {/* Right Side: Suggested Actions, Multi-Action Recipe Builder & Grouped Actions */}
+        <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-3.5 overflow-y-auto">
+          {/* 1. Draft-Dependent Suggested Revision Actions (Part C) */}
+          {state.currentDraft.trim() && suggestedActions.length > 0 && (
+            <div
+              data-testid="suggested-revision-actions"
+              className="bg-surface-primary border border-brand-gold/35 p-3.5 rounded-xl shadow-level-1 space-y-2.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase font-semibold tracking-wider text-brand-gold flex items-center gap-1.5">
+                  <Sparkles size={12} />
+                  Suggested for This Draft
+                </span>
+                <span className="text-[9px] text-text-muted font-mono">Max 3</span>
+              </div>
+              <div className="space-y-2">
+                {suggestedActions.map(sug => {
+                  const inRecipe = selectedRecipeActions.includes(sug.actionId);
+                  return (
+                    <div
+                      key={sug.actionId}
+                      data-testid={`suggested-action-${sug.actionId}`}
+                      className="p-2.5 rounded-lg bg-surface-inset border border-border-standard space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-text-primary">{sug.label}</span>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => toggleRecipeAction(sug.actionId)}
+                            className={`text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors ${
+                              inRecipe
+                                ? 'bg-brand-gold/20 border-brand-gold text-brand-gold'
+                                : 'bg-surface-primary border-border-standard text-text-secondary hover:text-text-primary'
+                            }`}
+                          >
+                            {inRecipe ? '✓ In Recipe' : '+ Recipe'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => runRevision(sug.actionId)}
+                            disabled={state.isGenerating}
+                            className="text-[10px] px-2.5 py-0.5 rounded-md bg-brand-gold text-text-inverse font-semibold hover:bg-brand-gold-hover transition-colors"
+                          >
+                            Run
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[10.5px] text-text-secondary leading-snug">{sug.reason}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* 2. Multi-Action Revision Recipe Builder & Conflict Detector (Part C & D) */}
+          <div
+            data-testid="revision-recipe-panel"
+            className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-level-1 space-y-3"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-text-primary flex items-center gap-1.5">
+                <Layers size={12} className="text-brand-gold" />
+                Revision Recipe ({selectedRecipeActions.length})
+              </span>
+              {selectedRecipeActions.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedRecipeActions([])}
+                  className="text-[10px] text-text-muted hover:text-status-error font-semibold"
+                >
+                  Clear Recipe
+                </button>
+              )}
+            </div>
+
+            {selectedRecipeActions.length === 0 ? (
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                Select multiple actions below (using the <strong>+</strong> toggle) to combine them into a single governed Revision Recipe ordered automatically by stage.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                <div className="text-[10px] text-text-secondary font-semibold">
+                  Governed Execution Order:
+                </div>
+                <ol className="space-y-1 text-[11px]">
+                  {compiledRecipe.orderedSteps.map((step, idx) => (
+                    <li
+                      key={step.actionId}
+                      className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md bg-surface-inset border border-border-standard"
+                    >
+                      <span className="truncate text-text-primary">
+                        <strong>{idx + 1}.</strong> {step.label}
+                        <span className="text-[9px] text-text-muted ml-1">({step.stageName})</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleRecipeAction(step.actionId)}
+                        className="text-[10px] text-text-muted hover:text-status-error"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
+
+            {/* Conflict Warnings / Blockers */}
+            {compiledRecipe.conflicts.length > 0 && (
+              <div
+                data-testid="revision-conflict-alert"
+                className="p-2.5 rounded-lg bg-status-error/10 border border-status-error/30 text-[11px] text-status-error space-y-1"
+              >
+                {compiledRecipe.conflicts.map((c, idx) => (
+                  <div key={idx} className="flex items-start gap-1.5">
+                    <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                    <span>
+                      <strong>{c.severity === 'blocking' ? 'Conflict:' : 'Advisory:'}</strong> {c.message}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Language Governance Notice (PT-EU / Persian protection) */}
+            {compiledRecipe.languageGovernanceNote && (
+              <div
+                data-testid="revision-language-governance-note"
+                className="p-2 rounded-lg bg-brand-gold/10 border border-brand-gold/30 text-[10px] text-text-secondary"
+              >
+                {compiledRecipe.languageGovernanceNote}
+              </div>
+            )}
+
+            <button
+              type="button"
+              data-testid="run-revision-recipe-btn"
+              disabled={
+                state.isGenerating ||
+                !state.currentDraft.trim() ||
+                (selectedRecipeActions.length === 0 && !customInstruction.trim()) ||
+                compiledRecipe.hasBlockingConflict
+              }
+              onClick={() => runRevisionRecipe(selectedRecipeActions)}
+              className="w-full h-9 px-3 rounded-lg bg-brand-gold text-text-inverse font-semibold text-xs hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-xs"
+            >
+              <Wand2 size={13} />
+              {state.isGenerating
+                ? 'Applying Recipe...'
+                : `Run Revision Recipe (${selectedRecipeActions.length || (customInstruction.trim() ? 1 : 0)})`}
+            </button>
+          </div>
+
+          {/* 3. Custom Instruction */}
+          <div className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-level-1">
+            <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-secondary mb-2">
+              Custom Instruction
+            </label>
             <div className="flex gap-2">
               <input
                 type="text"
+                data-testid="revision-custom-instruction-input"
                 value={customInstruction}
-                onChange={(e) => setCustomInstruction(e.target.value)}
-                placeholder="e.g. Make it sound like a poem"
-                className="flex-1 bg-surface-primary border border-border-standard p-2 rounded text-xs text-text-primary"
-                onKeyDown={(e) => e.key === 'Enter' && runRevision('custom-instruction')}
+                onChange={e => setCustomInstruction(e.target.value)}
+                placeholder="e.g. Emphasize curatorial longevity"
+                className="flex-1 bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-xs text-text-primary"
+                onKeyDown={e => e.key === 'Enter' && runRevision('custom-instruction')}
               />
               <button
+                data-testid="revision-custom-instruction-btn"
                 onClick={() => runRevision('custom-instruction')}
                 disabled={!customInstruction.trim() || state.isGenerating}
-                className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover p-2 rounded hover:bg-violet-600-light disabled:opacity-50"
+                className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2.5 py-1.5 rounded-lg disabled:opacity-50 transition-colors"
               >
                 <Wand2 size={14} />
               </button>
             </div>
           </div>
 
-          <div className={`space-y-4 ${(!state.currentDraft.trim() || state.isGenerating) ? 'opacity-50 pointer-events-none' : ''}`}>
+          {/* 4. Canonical Action Groups */}
+          <div
+            className={`space-y-2.5 ${
+              !state.currentDraft.trim() || state.isGenerating ? 'opacity-50 pointer-events-none' : ''
+            }`}
+          >
             {REVISION_GROUP_ORDER.map(group => {
               const actionsInGroup = REVISION_ACTIONS.filter(a => a.group === group);
               if (actionsInGroup.length === 0) return null;
-              
-              const isExpandedDefault = ['Clean & Polish', 'Translation & Localization', 'COH & Strategic Fit'].includes(group);
-              
+
+              const isExpandedDefault = [
+                'Clean & Polish',
+                'Translation & Localization',
+                'COH & Strategic Fit',
+                'Evidence & Claim Discipline'
+              ].includes(group);
+
               return (
-                <details key={group} className="border border-border-standard rounded bg-surface-inset overflow-hidden" open={isExpandedDefault}>
-                  <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase font-bold text-text-primary tracking-wider cursor-pointer select-none hover:bg-surface-primary-dark transition flex justify-between items-center">
+                <details
+                  key={group}
+                  className="border border-border-standard rounded-xl bg-surface-primary shadow-level-1 overflow-hidden"
+                  open={isExpandedDefault}
+                >
+                  <summary className="bg-surface-inset/70 px-3.5 py-2 text-[10.5px] uppercase font-semibold text-text-secondary tracking-wider cursor-pointer select-none hover:text-text-primary transition flex justify-between items-center">
                     {group}
                   </summary>
-                  <div className="p-3 space-y-1.5 bg-surface-primary">
-                    {actionsInGroup.map(actionDef => (
-                      <button
-                        key={actionDef.id}
-                        disabled={state.isGenerating}
-                        onClick={() => runRevision(actionDef.id)}
-                        title={actionDef.description}
-                        className="w-full text-left px-3 py-2 rounded text-xs font-medium text-text-primary bg-surface-inset hover:bg-violet-600 hover:text-text-primary transition-colors border border-border-standard"
-                      >
-                        {actionDef.label}
-                      </button>
-                    ))}
+                  <div className="p-2.5 space-y-1.5 bg-surface-primary border-t border-border-standard">
+                    {actionsInGroup.map(actionDef => {
+                      const inRecipe = selectedRecipeActions.includes(actionDef.id);
+                      return (
+                        <div key={actionDef.id} className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            data-testid={`recipe-toggle-${actionDef.id}`}
+                            onClick={() => toggleRecipeAction(actionDef.id)}
+                            title={inRecipe ? 'Remove from Recipe' : 'Add to Multi-Action Recipe'}
+                            className={`px-2 py-1.5 rounded-md text-xs font-semibold border transition-colors shrink-0 ${
+                              inRecipe
+                                ? 'bg-brand-gold text-text-inverse border-brand-gold'
+                                : 'bg-surface-inset text-text-secondary border-border-standard hover:border-brand-gold'
+                            }`}
+                          >
+                            {inRecipe ? <Check size={12} /> : <Plus size={12} />}
+                          </button>
+                          <button
+                            type="button"
+                            data-testid={`run-action-${actionDef.id}`}
+                            disabled={state.isGenerating}
+                            onClick={() => runRevision(actionDef.id)}
+                            title={actionDef.description}
+                            className="flex-1 text-left px-3 py-1.5 rounded-md text-xs font-medium text-text-primary bg-surface-inset hover:bg-brand-gold/15 hover:border-brand-gold transition-colors border border-border-standard truncate"
+                          >
+                            {actionDef.label}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </details>
               );

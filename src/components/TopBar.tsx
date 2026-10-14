@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Search, Command } from 'lucide-react';
 import { CommandPaletteModal } from './CommandPaletteModal';
-import { SavedContent, SavedIdea, SourceFile } from '../App';
+import type { SavedContent, SavedIdea, SourceFile } from '../App';
 
 interface TopBarProps {
   title: string;
@@ -60,14 +60,14 @@ export function TopBar({
 
   return (
     <>
-      <header className="h-[64px] bg-surface-primary border-b border-border-standard px-8 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-4 flex-1">
-          <h2 className="font-sans font-semibold text-[17px] text-text-primary">{title}</h2>
-          <div className="hidden md:flex items-center ml-8 max-w-md w-full relative">
-            <Search size={16} className="absolute left-3 text-text-muted pointer-events-none" />
+      <header className="h-[56px] bg-surface-primary/95 backdrop-blur-md border-b border-border-standard px-4 sm:px-6 lg:px-8 flex items-center justify-between shrink-0 sticky top-0 z-30">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <h2 className="font-sans font-semibold text-[15px] tracking-tight text-text-primary truncate">{title}</h2>
+          <div className="hidden md:flex items-center ml-4 max-w-sm w-full relative">
+            <Search size={14} className="absolute left-3 text-text-muted pointer-events-none" />
             <input 
               type="text" 
-              placeholder="Search commands, ideas, or content..." 
+              placeholder="Search studios, ideas, or content..." 
               value={searchQueryVal}
               onChange={(e) => {
                 setSearchQueryVal(e.target.value);
@@ -75,11 +75,11 @@ export function TopBar({
               }}
               onFocus={() => handleOpenSearch(searchQueryVal)}
               onClick={() => handleOpenSearch(searchQueryVal)}
-              className="w-full bg-surface-inset border border-border-standard rounded-full py-1.5 pl-9 pr-12 text-[13px] text-text-primary placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-focus-ring outline-none transition-all cursor-pointer"
+              className="w-full h-8 bg-surface-inset border border-border-standard rounded-lg py-1 pl-8 pr-12 text-[12.5px] text-text-primary placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-focus-ring outline-none transition-all cursor-pointer"
             />
             <div 
               onClick={() => handleOpenSearch('')}
-              className="absolute right-3 flex items-center gap-0.5 text-[10px] font-mono text-text-muted bg-surface-primary px-1.5 py-0.5 rounded border border-border-standard shadow-xs cursor-pointer hover:border-border-strong"
+              className="absolute right-2.5 flex items-center gap-0.5 text-[10px] font-mono text-text-muted bg-surface-primary px-1.5 py-0.5 rounded border border-border-standard cursor-pointer hover:border-border-strong"
             >
               <Command size={10} />
               <span>K</span>
@@ -87,39 +87,39 @@ export function TopBar({
           </div>
         </div>
         
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* AI Status */}
           <button 
-            className="hidden md:flex items-center gap-2 px-4 py-1.5 bg-surface-primary border border-border-strong rounded-full hover:bg-surface-hover hover:border-brand-gold transition-all shadow-sm group"
+            className="hidden sm:flex items-center gap-2 px-3 py-1 bg-surface-inset border border-border-standard rounded-full hover:border-brand-gold/60 transition-all cursor-pointer"
             title={aiStatus === 'connected' ? 'AI is connected and ready' : 'AI is offline - click to configure'}
             onClick={() => handleNavigate('settings')}
           >
-            <div className={`w-2.5 h-2.5 rounded-full shadow-sm ${aiStatus === 'connected' ? 'bg-status-success shadow-[0_0_8px_rgba(23,140,78,0.6)]' : 'bg-status-error shadow-[0_0_8px_rgba(200,60,60,0.6)]'}`} />
-            <span className={`font-sans text-[12px] font-bold uppercase tracking-wider ${aiStatus === 'connected' ? 'text-status-success' : 'text-status-error'}`}>
-              {aiStatus === 'connected' ? 'AI Ready' : 'AI Offline'}
+            <div className={`w-2 h-2 rounded-full ${aiStatus === 'connected' ? 'bg-status-success' : 'bg-status-warning'}`} />
+            <span className={`font-sans text-[11px] font-semibold tracking-wide ${aiStatus === 'connected' ? 'text-text-primary' : 'text-text-secondary'}`}>
+              {aiStatus === 'connected' ? 'AI Connected' : 'Local Engine'}
             </span>
           </button>
 
           {/* Copyright Notice */}
-          <span className="text-[12px] font-sans text-text-muted whitespace-nowrap hidden lg:inline-block">
-            Copyright © 2026 Aryan Aghili. All rights reserved.
+          <span className="text-[11px] font-sans text-text-muted whitespace-nowrap hidden xl:inline-block">
+            © 2026 Aryan Aghili
           </span>
 
           {/* Theme Toggle */}
-          <div className="flex items-center bg-surface-inset p-1 border border-border-standard rounded-full">
+          <div className="flex items-center bg-surface-inset p-0.5 border border-border-standard rounded-lg">
             <button 
               onClick={() => onThemeToggle('light')}
-              className={`p-1.5 rounded-full transition-colors ${theme === 'light' ? 'bg-surface-primary shadow-sm text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'light' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Light Mode"
             >
-              <Sun size={14} />
+              <Sun size={13} />
             </button>
             <button 
               onClick={() => onThemeToggle('dark')}
-              className={`p-1.5 rounded-full transition-colors ${theme === 'dark' ? 'bg-surface-primary shadow-sm text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
+              className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'dark' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Dark Mode"
             >
-              <Moon size={14} />
+              <Moon size={13} />
             </button>
           </div>
         </div>
@@ -145,4 +145,3 @@ export function TopBar({
     </>
   );
 }
-

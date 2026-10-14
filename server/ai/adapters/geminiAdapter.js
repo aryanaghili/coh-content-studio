@@ -68,7 +68,8 @@ export async function generate(config, input) {
 }
 
 export async function testConnection(config) {
-  const { apiKey, model } = config;
+  const { apiKey } = config;
+  const model = config.textModel || config.model;
   const start = Date.now();
   const prompt = 'Respond with exactly this JSON and nothing else: { "ok": true, "provider": "gemini", "model": "' + model + '" }';
   try {

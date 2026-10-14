@@ -75,7 +75,8 @@ export async function generate(config, input) {
 }
 
 export async function testConnection(config) {
-  const { apiKey, model, baseUrl } = config;
+  const { apiKey, baseUrl } = config;
+  const model = config.textModel || config.model;
   const start = Date.now();
   const systemPrompt = 'You are a test assistant. Return only valid JSON.';
   const userPrompt = 'Respond with exactly: { "ok": true, "provider": "openrouter", "model": "' + model + '" }';

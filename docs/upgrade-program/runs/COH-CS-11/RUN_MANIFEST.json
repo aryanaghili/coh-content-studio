@@ -1,0 +1,22 @@
+{
+  "runId": "COH-CS-11",
+  "title": "Evidence Integrity, Source Grounding and Quality-Gate Hardening",
+  "repository": "aryanaghili/coh-content-studio",
+  "branch": "feature/coh-content-intelligence-v2",
+  "predecessorRun": "COH-CS-10",
+  "predecessorCommit": "1a6a25ded0f945fdc2f2894fd6ba807e2c7f76a3",
+  "status": "PASS",
+  "testsPassed": 46,
+  "testsFailed": 0,
+  "buildPassed": true,
+  "artifacts": [
+    "EVIDENCE_GROUNDING_CONTRACT.md",
+    "SOURCE_BUDGET_STRESS_TEST.md",
+    "QUALITY_GATE_MATRIX.md",
+    "PROMPT_SNAPSHOT.md",
+    "IMPLEMENTATION_REPORT.md",
+    "CHANGE_MANIFEST.md",
+    "VALIDATION_REPORT.md",
+    "RUN_MANIFEST.json"
+  ]
+}

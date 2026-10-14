@@ -27,3 +27,6 @@ dist-ssr
 .env
 .env*.local
 
+# Upgrade program non-committed artifacts
+artifacts/coh-upgrade/
+

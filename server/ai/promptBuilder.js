@@ -4,16 +4,110 @@
 export function buildGenerationPrompt(input) {
   const isRevision = input.mode === 'revision';
   const isIdeation = input.mode === 'ideation';
+  const isSourceAnalysis = input.mode === 'source_analysis';
+  const isReframe = input.mode === 'reframe';
+
+  if (isReframe) {
+    return `You are the COH Strategic Reframing Architect for Climate Opera Haus.
+CRITICAL DISTINCTION:
+- Revision improves substantially the same communication job.
+- Reframing changes what the content is trying to become (audience, familiarity, strategic frame, channel/format architecture, or narrative perspective) while strictly preserving factual integrity.
+
+USER REFRAME INTENT ("What should this become?"):
+"${input.rawIntent || input.rawInput || ''}"
+
+RESOLVED TRANSFORMATION PLAN (Must govern the output):
+- Target Audience: ${input.targetAudience || 'General Public'}
+- Audience Familiarity: ${input.audienceFamiliarity || 'Informed Cultural / Industry Familiarity'}
+- Communication Purpose: ${input.communicationPurpose || 'Establish institutional credibility'}
+- Target Channel: ${input.targetChannel || 'LinkedIn'}
+- Target Format: ${input.targetFormat || 'Post'}
+- Strategic Frame: ${input.strategicFrame || 'Institutional Relevance'}
+- Content-Pillar Emphasis: ${input.contentPillarEmphasis || 'The Opera & Worldbuilding'}
+- Narrative Perspective: ${input.narrativePerspective || 'Measured Institutional Authority'}
+- Evidence Emphasis: ${input.evidenceEmphasis || 'Preserve confirmed source facts only'}
+- Desired Audience Response: ${input.desiredAudienceResponse || ''}
+- Protected Elements (Hard Constraints): ${Array.isArray(input.protectedElements) ? input.protectedElements.join(', ') : 'Confirmed facts, names, dates, direct quotations, COH terminology'}
+
+ORIGINAL SOURCE CONTENT TO REFRAME:
+"""
+${input.sourceContent || ''}
+"""
+
+${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
+
+NON-NEGOTIABLE REFRAMING RULES:
+1. Never invent missing evidence, numbers, partner commitments, dates, or funding milestones.
+2. If "Direct quotations (verbatim)" is in Protected Elements, any double-quoted text in ORIGINAL SOURCE CONTENT must remain word-for-word identical.
+3. Never use em dashes in any output string.
+4. Explain clearly what materially CHANGED (audience framing, opening logic, strategic emphasis, structure) and what was PRESERVED (confirmed facts, names/dates, COH positioning, verbatim quotes).
+
+OUTPUT FORMAT:
+Return a JSON object matching this exact schema:
+{
+  "reframedCopy": "The complete reframed content here",
+  "changedExplanation": ["Material shift 1", "Material shift 2"],
+  "preservedExplanation": ["Protected continuity 1", "Protected continuity 2"],
+  "evidenceWarnings": ["Any claim requested in intent that lacked source evidence and was not fabricated"]
+}`;
+  }
+
+  if (isSourceAnalysis) {
+    return `You are the COH Source Intelligence Analyst for Climate Opera Haus.
+Analyze the provided source material strictly under COH claim-safety and evidence governance.
+
+SOURCE METADATA:
+- Title: "${input.sourceTitle || 'Untitled Source'}"
+- Source Type: "${input.sourceType || 'Other'}"
+- Source Notes: "${input.sourceNotes || ''}"
+
+RAW SOURCE CONTENT:
+"""
+${input.rawInput || input.sourceContent || ''}
+"""
+
+${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
+
+CRITICAL CLAIM DISCIPLINE RULES:
+1. This output is an AI interpretation of the source, not the source itself.
+2. Never convert ambiguity, aspiration, or future plans into confirmed facts.
+3. Unsupported inferences must be placed in cautionsAndAmbiguities, never in keyFacts or supportedClaims.
+4. Missing evidence remains missing. Flag missing details in cautionsAndAmbiguities.
+5. Every item in usefulExcerpts MUST be an exact, verbatim substring copied directly from RAW SOURCE CONTENT. Never fabricate or paraphrase quotes.
+6. If Source Type is "Approved Example", keyFacts and supportedClaims MUST be empty arrays because Approved Examples guide tone and structure only, not factual claims.
+7. If Source Type is "Visual Reference", keyFacts and supportedClaims MUST be empty arrays because Visual References guide visual direction only, not factual copy.
+8. Do not use em dashes in any output string.
+
+OUTPUT FORMAT:
+Return a JSON object matching this exact schema:
+{
+  "disclaimer": "AI interpretation of the source, not the source itself.",
+  "keyFacts": ["Traceable fact 1 directly stated in the source"],
+  "supportedClaims": ["Claim that can be safely stated based on the source"],
+  "strategicContext": "Concise explanation of how this source fits COH strategic narrative",
+  "cautionsAndAmbiguities": ["Any ambiguity, unverified aspiration, missing proof, or boundary warning"],
+  "usefulExcerpts": ["Exact verbatim substring from the raw source text"],
+  "relevantAudiences": ["Matching COH audience names"],
+  "relevantChannels": ["Matching COH channel names"],
+  "relevantPillars": ["Matching COH content pillars"],
+  "contentOpportunityHints": ["Specific, actionable ways to use this source in Ideation or Creation"]
+}`;
+  }
 
   if (isIdeation) {
-    return `You are a creative strategist and ideation brain for content creation.
-Analyze the user's input: "${input.rawInput}".
+    return `You are the COH Opportunity-Led Ideation Strategist for Climate Opera Haus.
+Analyze the user's input or situation: "${input.rawInput}".
 Selected Language: ${input.language || 'English'}
 Selected Audience: ${input.audience || 'General Public'}
+Quality Filter: ${input.quality || 'Practical'}
+Depth Level: ${input.depth || 'Standard'}
 
-CLASSIFICATION TASK:
+IDEATION 2.0 MENTAL MODEL:
+Situation or Source -> Communication Opportunities -> Evidence Check -> Reuse Check -> Strong Idea -> Content Brief.
+
+CLASSIFICATION & OPPORTUNITY TASK:
 1. Classify the input into one of: keyword, question, thesis, rough idea, paragraph, campaign direction, emotional theme, educational topic, comparison, audience problem, event or promotion need, cultural argument.
-2. Formulate 9 distinct idea groups, generating exactly one creative idea card for each:
+2. Formulate distinct, non-cosmetic communication opportunities across the COH opportunity groups:
    - Strongest Directions
    - Sharp Hooks
    - Thought Leadership Angles
@@ -24,10 +118,13 @@ CLASSIFICATION TASK:
    - Campaign-Series Ideas
    - Experimental Ideas
 
-RULES FOR IDEAS:
+RULES FOR OPPORTUNITIES:
 - Respond in the selected language: ${input.language || 'English'}.
+- Never use em dashes in any text.
+- Every idea MUST define a clear COH Communication Job answering "Why should this content exist?" (e.g., Establish institutional credibility, Explain artistic logic, Create sponsor relevance, Build climate literacy, Invite public participation, Clarify a milestone, Deepen cultural meaning).
+- Separate Available Evidence (what attached sources or Protected Kernel legitimately support) from Evidence Still Required (advisory note on what would be needed before stronger claims could safely be made; never output [INSERT] or [TBD] placeholder blockers).
+- Ensure strategic diversity across communication job, audience, strategic angle, and narrative perspective without inventing non-COH customer segments.
 ${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
-- Each idea card must be fully formed with: title, shortExplanation, whyItWorks, bestChannelFit, suggestedOutputFormat, suggestedAudience, suggestedTone, possibleHook, possibleFirstPost, riskToAvoid, nextStep.
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
@@ -44,20 +141,27 @@ Return a JSON object matching this schema:
         {
           "title": "Title here",
           "category": "Strongest Directions",
-          "shortExplanation": "Explanation here",
-          "whyItWorks": "Why it works here",
-          "bestChannelFit": "LinkedIn | Instagram | Newsletter | Website | etc.",
-          "suggestedOutputFormat": "Post | Caption | Carousel | Thought Piece | etc.",
-          "suggestedAudience": "Target audience here",
+          "communicationJob": "Establish institutional credibility | Explain artistic logic | Create sponsor relevance | Build climate literacy | Invite public participation | Clarify a milestone | Deepen cultural meaning",
+          "shortExplanation": "Core idea / concept here",
+          "whyItWorks": "Why it matters strategically here",
+          "coreTension": "Core tension or audience problem addressed",
+          "desiredAudienceResponse": "Desired audience shift or response",
+          "availableEvidence": ["Traceable fact or kernel principle currently available"],
+          "evidenceStillRequired": ["Advisory note on additional evidence needed for stronger claims"],
+          "unresolvedAssumptions": ["Assumption to verify before publication"],
+          "bestChannelFit": "LinkedIn | Instagram | Newsletter | Website | Email / Direct Outreach",
+          "suggestedOutputFormat": "Post | Caption | Carousel | Thought Piece | Sponsor Pitch Paragraph",
+          "suggestedAudience": "General Public | Sponsors & Patrons | Strategic Partners",
+          "suggestedPillar": "The Opera & Worldbuilding | Science & Planetary Reality | Institutional & Sponsor Value | Behind the Creation & Craft | Cultural Participation & Ritual",
+          "strategicAngle": "Distinct strategic framing angle",
           "suggestedTone": "Suggested tone here",
           "possibleHook": "Hook line here",
           "possibleFirstPost": "Full text suggestion for the first post here",
-          "riskToAvoid": "Specific pitfalls or clichés to avoid here",
+          "riskToAvoid": "Specific pitfalls or cliches to avoid here",
           "nextStep": "Actionable next step here"
         }
       ]
-    },
-    ... (continue for all 9 groups)
+    }
   ],
   "warnings": []
 }`;

@@ -1,4 +1,4 @@
-import { Menu, X } from "lucide-react";
+import { Menu, X, RefreshCw } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { buildAdvancedBriefFromCalendarItem } from './utils/calendarHandoffUtils';
 
@@ -49,11 +49,51 @@ import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from '.
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { TopBar } from './components/TopBar';
-import { safeMergeOperatingCore } from './lib/operatingCore';
+import {
+  PROTECTED_COH_KERNEL,
+  safeMergeOperatingCore,
+  createDefaultOperatingCore,
+  compileOperatingCoreContext,
+  normalizeText,
+  getAuthoritativeAudiences,
+  type OperatingCore
+} from './lib/operatingCore';
 import { safeRead } from './lib/storage';
-import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
-import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
+import {
+  compileGovernedContext,
+  extractWorkContextFromWorkItem,
+  inferDefaultSourceRole,
+  type WorkContext,
+  type TaskSourceBinding,
+  type SourceTaskRole
+} from './lib/contextCompiler';
+import { ContextManifestPanel } from './components/ContextManifestPanel';
+import {
+  ALL_SOURCE_TASK_ROLES,
+  loadSourceIntelligenceStore,
+  upsertSourceIntelligenceRecord,
+  removeSourceIntelligenceRecord,
+  enforceSourceIntelligenceClaimDiscipline,
+  buildDeterministicSourceAnalysis,
+  type SourceIntelligenceAnalysis
+} from './lib/sourceIntelligence';
+import { SourceIntelligenceCardAddon } from './components/SourceIntelligencePanel';
+import {
+  enrichAndDiversifyOpportunities,
+  buildIdeationToContentHandoff,
+  evaluateOpportunityDiversity,
+  COH_COMMUNICATION_JOBS,
+  type ReuseOpportunity,
+  type IdeationOpportunityProposal
+} from './lib/ideationIntelligence';
+import { IdeationOpportunityCard } from './components/IdeationOpportunityCard';
+import { ReframingStudio } from './components/ReframingStudio';
+import type { ReframeOriginType } from './lib/reframingEngine';
+import {
+  CurrentWorkContextBar,
+  buildWorkContextSnapshot
+} from './components/CurrentWorkContextBar';
 
 // --- Type Definitions ---
 
@@ -125,6 +165,7 @@ export interface WorkItem {
   createdAt: string;
   updatedAt: string;
   origin?: string;
+  workContext?: WorkContext;
 }
 
 
@@ -132,146 +173,23 @@ export interface WorkItem {
 
 
 
-export type RevisionActionGroup = 
-  | 'Clean & Polish' 
-  | 'Voice & Tone' 
-  | 'COH & Strategic Fit' 
-  | 'Structure & Alternatives' 
-  | 'Evidence & Claim Discipline' 
-  | 'Translation & Localization';
+import {
+  REVISION_ACTIONS,
+  REVISION_GROUP_ORDER,
+  type RevisionActionDef,
+  type RevisionActionGroup
+} from './lib/revisionActions';
+import {
+  resolveSmartBrief,
+  type GenerationSpeedMode,
+  type ResolvedSmartBrief
+} from './lib/smartBriefAndRevision';
+import { SmartBriefPanel } from './components/SmartBriefPanel';
 
-export interface RevisionActionDef {
-  id: string;
-  label: string;
-  group: RevisionActionGroup;
-  description?: string;
-}
+export { REVISION_ACTIONS, REVISION_GROUP_ORDER, PROTECTED_COH_KERNEL };
+export type { RevisionActionDef, RevisionActionGroup };
 
-
-export const REVISION_ACTIONS: RevisionActionDef[] = [
-  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
-  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
-  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
-  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
-  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
-  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
-  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
-
-  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
-  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
-  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
-  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
-  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
-  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
-  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
-  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
-  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
-
-  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
-  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
-  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
-  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
-  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
-  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
-  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
-  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
-
-  { id: 'translate-selected', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize-selected', label: 'Localize for selected language', group: 'Translation & Localization' },
-  { id: 'preserve-meaning-flow', label: 'Preserve meaning, improve flow', group: 'Translation & Localization' },
-  { id: 'adapt-channel-lang', label: 'Adapt for selected channel', group: 'Translation & Localization' },
-
-  { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
-  { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
-  { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
-  { id: 'shorter-version', label: 'Create a shorter version', group: 'Structure & Alternatives' },
-  { id: 'longer-version', label: 'Create a longer version', group: 'Structure & Alternatives' },
-  { id: 'bullet-points', label: 'Turn into bullet points', group: 'Structure & Alternatives' },
-  { id: 'paragraph', label: 'Turn into a paragraph', group: 'Structure & Alternatives' },
-  { id: 'email', label: 'Turn into an email', group: 'Structure & Alternatives' },
-  { id: 'social-post', label: 'Turn into a social post', group: 'Structure & Alternatives' },
-
-  { id: 'remove-unsupported', label: '🛡️ Remove unsupported claims', group: 'Evidence & Claim Discipline' },
-  { id: 'flag-claims', label: 'Flag claims that need proof', group: 'Evidence & Claim Discipline' },
-  { id: 'more-careful', label: 'Make claims more careful', group: 'Evidence & Claim Discipline' },
-  { id: 'stronger-proof', label: '📊 Expand with stronger proof', group: 'Evidence & Claim Discipline' },
-  { id: 'less-exaggerated', label: 'Make it less exaggerated', group: 'Evidence & Claim Discipline' },
-  { id: 'simplify-claims', label: 'Simplify factual claims', group: 'Evidence & Claim Discipline' },
-
-  { id: 'translate', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize', label: 'Localize for natural tone', group: 'Translation & Localization' },
-  { id: 'preserve-meaning', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
-  { id: 'adapt-channel', label: 'Adapt translation for selected channel', group: 'Translation & Localization' },
-  { id: 'persian-natural', label: 'Make Persian more natural and spoken', group: 'Translation & Localization' },
-  { id: 'english-polished', label: 'Make English more polished', group: 'Translation & Localization' },
-];
-
-export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
-  'Clean & Polish',
-  'Voice & Tone',
-  'COH & Strategic Fit',
-  'Structure & Alternatives',
-  'Evidence & Claim Discipline',
-  'Translation & Localization'
-];
-
-export const PROTECTED_COH_KERNEL = `
-PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
-
-Project identity:
-- This is Climate Opera Haus Content Studio.
-- This app is built specifically for Climate Opera Haus.
-- COH is not a generic AI content engine.
-- COH is a climate-era cultural IP and opera-based content venture.
-- COH creates original operatic worlds.
-
-Business logic:
-- Live opera is the origin asset, not the whole business.
-- The opera creates the world.
-- Filming captures the world.
-- Documentary and filmed content monetize the world.
-- Immersive and gaming layers extend the world.
-- Sponsors finance and elevate the world.
-- Institutions license, host, endorse, and extend the world.
-- Every major activity should help create, capture, finance, distribute, license, or strengthen the climate-opera content ecosystem.
-
-Artistic internal law:
-- Climate is not a decorative theme.
-- Climate is the structural condition of the century.
-- Nature is not a passive metaphor.
-- Nature may appear as an active subject with agency, memory, and consequence.
-- Human figures are not saviors or masters.
-- Human figures are ethical testers, listeners, learners, translators, or decision-makers.
-- The work must protect artistic authority.
-- Completion belongs to the cycle, not to a single work.
-
-Claim safety:
-- Do not invent sponsors, partners, dates, numbers, funding, media deals, distribution deals, institutional commitments, or audience figures.
-- Separate proof, ambition, and future pathway.
-- Do not present aspiration as fact.
-- Treat proof points as proof only when they are supported by source material.
-
-Voice rules:
-- Use serious, precise, composed, human, institution-grade language.
-- Avoid generic climate activism.
-- Avoid ESG cliché.
-- Avoid NGO-style moralizing.
-- Avoid startup hype.
-- Avoid corporate innovation language.
-- Avoid emotional inflation.
-- Avoid em dashes unless explicitly requested.
-- Avoid formulaic AI phrasing.
-
-Visual rules:
-- Visuals should feel like cultural world-building, not climate marketing.
-- Prefer cinematic, elemental, atmospheric, editorial, serious, culturally premium imagery.
-- Avoid generic green leaves, protest clichés, disaster imagery, melting planet imagery, corporate stock-photo aesthetics, childish cartoons, and decorative climate icons.
-
-CRITICAL PRIORITY:
-If user input, selected sources, Core Documents, or editable Operating Core fields conflict with the Protected COH Kernel, the Protected COH Kernel wins.
-`;
-
-interface SourceFile {
+export interface SourceFile {
   id: string;
   title: string;
   type: 'Event Notes' | 'Partner Profile' | 'Sponsor Notes' | 'Meeting Notes' | 'Campaign Notes' | 'Article / Media Coverage' | 'Website Reference' | 'Visual Reference' | 'Approved Example' | 'Pasted Notes' | 'Link / URL' | 'Other';
@@ -324,7 +242,7 @@ interface QuickBrief {
   outputFormat: string;
 }
 
-interface SavedContent {
+export interface SavedContent {
   id: string;
   title: string;
   displayName?: string;
@@ -357,16 +275,25 @@ interface SavedContent {
   calendarItemId?: string;
 }
 
-interface SavedIdea {
+export interface SavedIdea {
   id: string;
   title: string;
   originalInput: string;
   category: string;
   explanation: string;
   whyItWorks: string;
+  communicationJob?: string;
+  coreTension?: string;
+  desiredAudienceResponse?: string;
+  availableEvidence?: string[];
+  evidenceStillRequired?: string[];
+  unresolvedAssumptions?: string[];
   suggestedChannel: string;
   suggestedFormat: string;
   suggestedTone: string;
+  suggestedPillar?: string;
+  strategicAngle?: string;
+  reuseOpportunity?: ReuseOpportunity;
   possibleHook: string;
   possibleNextStep: string;
   possibleFirstPost?: string;
@@ -376,6 +303,8 @@ interface SavedIdea {
   dateCreated: string;
   status: 'New' | 'Promising' | 'Ready for Content' | 'Used' | 'Archived' | 'Not Useful';
   notes?: string;
+  sourceIds?: string[];
+  sourceRoles?: Record<string, SourceTaskRole>;
   visualAssets?: { id: string; url: string; prompt: string; createdAt: string; provider: string; model: string; aspectRatio: string; sourceDirection: string }[];
 }
 
@@ -421,15 +350,19 @@ interface AIModelConfig {
   speed: string;
   usage: string;
   bestUseCase: string;
+  tierLabel?: string;
   isRecommended?: boolean;
 }
 
 const MODEL_REGISTRY: AIModelConfig[] = [
-  // OpenAI Text
-  { id: 'gpt-5.5', label: 'GPT-5.5', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content', isRecommended: true },
-  { id: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
-  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'Drafts, Ideation, Revision, Prompt generation, Daily content operations' },
-  { id: 'gpt-4o', label: 'GPT-4o (Legacy)', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
+  // OpenAI Text (Current Generation)
+  { id: 'gpt-6-luna', label: 'GPT-6 Luna - Efficient', tierLabel: 'Efficient', provider: 'openai', type: 'text', quality: 'High', speed: 'Fast', usage: 'Efficient', bestUseCase: 'Recommended for most routine Content Studio work and cost-efficient generation, Drafts, Ideation, Revision, Source analysis', isRecommended: true },
+  { id: 'gpt-6.1-sol', label: 'GPT-6.1 Sol - Advanced', tierLabel: 'Advanced', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Medium-Fast', usage: 'Advanced Reasoning', bestUseCase: 'Stronger reasoning for difficult strategic or transformation work, Complex institutional positioning, Multi-stakeholder framing' },
+  // OpenAI Text (Legacy / Compatible)
+  { id: 'gpt-5.5', label: 'GPT-5.5 (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content' },
+  { id: 'gpt-5.4', label: 'GPT-5.4 (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
+  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'Drafts, Ideation, Revision, Prompt generation, Daily content operations' },
+  { id: 'gpt-4o', label: 'GPT-4o (Legacy)', tierLabel: 'Legacy', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
   
   // OpenAI Image
   { id: 'gpt-image-2', label: 'GPT Image 2', provider: 'openai', type: 'image', quality: 'Highest', speed: 'Medium', usage: 'High', bestUseCase: 'Visual Studio, Campaign artwork, Social media graphics, Editorial illustrations', isRecommended: true },
@@ -640,9 +573,19 @@ export default function App() {
 
   const validTabs = [
     'command-center', 'ideation-workspace', 'editorial-calendar', 'content-workspace',
-    'visual-studio', 'revision-studio', 'idea-library', 'content-library', 
+    'visual-studio', 'revision-studio', 'reframing-studio', 'idea-library', 'content-library', 
     'source-library', 'operating-core', 'settings', 'calendar-library', 'prompt-builder'
   ];
+
+  const [reframingInitialOrigin, setReframingInitialOrigin] = useState<{
+    originType: ReframeOriginType;
+    originId?: string;
+    originTitle?: string;
+    sourceContent: string;
+    originChannel?: string;
+    originAudience?: string;
+    suggestedIntent?: string;
+  } | null>(null);
 
   const currentPath = location.pathname.substring(1);
   const activeTab = validTabs.includes(currentPath) ? currentPath : 'command-center';
@@ -669,6 +612,15 @@ export default function App() {
   const getPageTitle = () => {
     switch(activeTab) {
       case 'command-center': return 'Command Center';
+      case 'reframing-studio': return 'Reframing Studio';
+      case 'revision-studio': return 'Revision Studio';
+      case 'ideation-workspace': return 'Ideation Workspace';
+      case 'content-workspace': return 'Content Workspace';
+      case 'editorial-calendar': return 'Editorial Calendar';
+      case 'visual-studio': return 'Visual Studio';
+      case 'source-library': return 'Source Library';
+      case 'idea-library': return 'Idea Library';
+      case 'content-library': return 'Content Library';
       case 'create': return 'Create Content';
       case 'calendars': return 'Calendars';
       case 'library': return 'Content Library';
@@ -768,6 +720,7 @@ export default function App() {
   }, [operatingCore, dbStatus]);
 
   const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
+  const [generationSpeedMode, setGenerationSpeedMode] = useState<GenerationSpeedMode>('explore');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
   const [importedIdeationContext, setImportedIdeationContext] = useState<SavedIdea | null>(null);
   const [pendingIdeaToCopy, setPendingIdeaToCopy] = useState<SavedIdea | null>(null);
@@ -790,6 +743,14 @@ export default function App() {
   const isBrainFile = (id: string) => ['kb-facts', 'kb-context', 'kb-voice', 'kb-channels', 'kb-angles', 'kb-examples'].includes(id);
   const selectableSources = sources.filter(s => !isBrainFile(s.id));
   const brainSources = sources.filter(s => isBrainFile(s.id));
+
+  // --- Source Intelligence & Task-Level Source Context State (COH-CS-03) ---
+  const [sourceIntelligenceMap, setSourceIntelligenceMap] = useState<Record<string, SourceIntelligenceAnalysis>>(() =>
+    loadSourceIntelligenceStore()
+  );
+  const [analyzingSourceIds, setAnalyzingSourceIds] = useState<Record<string, boolean>>({});
+  const [sourceAnalysisErrors, setSourceAnalysisErrors] = useState<Record<string, string>>({});
+  const [taskSourceRoleMap, setTaskSourceRoleMap] = useState<Record<string, { role: SourceTaskRole; selectedExcerpts: string[] }>>({});
 
   // --- Brief Forms States (CLEARED BY DEFAULT) ---
   const [simpleBrief, setSimpleBrief] = useState<SimpleBrief>({
@@ -886,7 +847,7 @@ export default function App() {
 
   // Settings form fields (never persisted to localStorage, sent to backend only)
   const [settingsProvider, setSettingsProvider] = useState<string>('openai');
-  const [settingsTextModel, setSettingsTextModel] = useState<string>(() => safeLocalStorageGet('coh_settings_text_model', 'gpt-5.4-mini'));
+  const [settingsTextModel, setSettingsTextModel] = useState<string>(() => safeLocalStorageGet('coh_settings_text_model', 'gpt-6-luna'));
   const [settingsImageModel, setSettingsImageModel] = useState<string>(() => safeLocalStorageGet('coh_settings_image_model', 'gpt-image-2'));
   const [settingsApiKey, setSettingsApiKey] = useState<string>('');
   const [settingsBaseUrl, setSettingsBaseUrl] = useState<string>('');
@@ -900,13 +861,21 @@ export default function App() {
   useEffect(() => {
     let fallbackTriggered = false;
     
-    if (settingsTextModel && !MODEL_REGISTRY.some(m => m.id === settingsTextModel && m.type === 'text')) {
-      setSettingsTextModel('gpt-5.4-mini');
-      safeLocalStorageSet('coh_settings_text_model', 'gpt-5.4-mini');
+    if (
+      settingsTextModel &&
+      settingsTextModel !== aiTextModel &&
+      !MODEL_REGISTRY.some(m => m.id === settingsTextModel && m.type === 'text')
+    ) {
+      setSettingsTextModel('gpt-6-luna');
+      safeLocalStorageSet('coh_settings_text_model', 'gpt-6-luna');
       fallbackTriggered = true;
     }
     
-    if (settingsImageModel && !MODEL_REGISTRY.some(m => m.id === settingsImageModel && m.type === 'image')) {
+    if (
+      settingsImageModel &&
+      settingsImageModel !== aiImageModel &&
+      !MODEL_REGISTRY.some(m => m.id === settingsImageModel && m.type === 'image')
+    ) {
       setSettingsImageModel('gpt-image-2');
       safeLocalStorageSet('coh_settings_image_model', 'gpt-image-2');
       fallbackTriggered = true;
@@ -915,7 +884,7 @@ export default function App() {
     if (fallbackTriggered) {
       setFallbackWarning('The previously selected model is unavailable. The recommended default has been selected.');
     }
-  }, [settingsTextModel, settingsImageModel]);
+  }, [settingsTextModel, settingsImageModel, aiTextModel, aiImageModel]);
   
   // Cooldown effect
   useEffect(() => {
@@ -1092,6 +1061,19 @@ export default function App() {
         body: JSON.stringify(input),
       });
       return res.json();
+    },
+
+    async analyzeSource(input: Record<string, unknown>) {
+      const res = await fetch('/api/ai/analyze-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+      const data = await res.json();
+      if (!res.ok || data.success === false) {
+        throw new Error(data.error || data.userMessage || 'Source analysis failed.');
+      }
+      return data.data || data;
     },
   };
 
@@ -1437,30 +1419,68 @@ export default function App() {
     if (!inputVal) return;
     setIsIdeating(true);
 
+    const ideationSourceBindings: TaskSourceBinding[] = advancedBrief.selectedSourceIds
+      .map(id => {
+        const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+        if (!s) return null;
+        return {
+          sourceId: s.id,
+          title: s.title || 'Untitled Source',
+          type: s.type || 'Other',
+          role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
+          selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
+          content: s.content || s.notes || s.url || '',
+          summary: s.notes || undefined
+        } as TaskSourceBinding;
+      })
+      .filter((b): b is TaskSourceBinding => Boolean(b));
+
+    const dateStr = new Date().toISOString().split('T')[0];
+
     if (generationMode === 'ai' && aiStatus === 'connected') {
       try {
+        const ideationContextPkg = compileGovernedContext({
+          workflow: 'Ideation Workspace',
+          operatingCore,
+          coreDocuments: operatingCoreDocs,
+          audience: ideationFilterAudience,
+          channel: ideationFilterChannel,
+          language: ideationFilterLanguage,
+          sourceBindings: ideationSourceBindings,
+          derivedSourceAnalyses: sourceIntelligenceMap,
+          userInstruction: inputVal
+        });
+
         const result = await aiService.ideate({
           rawInput: inputVal,
           language: ideationFilterLanguage,
           audience: ideationFilterAudience,
           depth: ideationFilterDepth,
           quality: ideationFilterQuality,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { workspace: 'Ideation Workspace', audience: ideationFilterAudience }, operatingCoreDocs)
+          operatingCoreInstructions: ideationContextPkg.compiledInstructions
         });
-        const dateStr = new Date().toISOString().split('T')[0];
-        const list: SavedIdea[] = [];
+
+        const rawList: Partial<IdeationOpportunityProposal>[] = [];
         result.ideaGroups?.forEach((group: any) => {
           group.ideas?.forEach((idea: any, idx: number) => {
-            list.push({
+            rawList.push({
               id: `idea-ai-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               title: idea.title || 'Untitled',
               originalInput: inputVal,
               category: idea.category || group.groupTitle || 'General',
               explanation: idea.shortExplanation || idea.explanation || '',
+              communicationJob: idea.communicationJob || undefined,
               whyItWorks: idea.whyItWorks || '',
-              suggestedChannel: idea.bestChannelFit || 'LinkedIn',
+              coreTension: idea.coreTension || undefined,
+              desiredAudienceResponse: idea.desiredAudienceResponse || undefined,
+              availableEvidence: Array.isArray(idea.availableEvidence) ? idea.availableEvidence : undefined,
+              evidenceStillRequired: Array.isArray(idea.evidenceStillRequired) ? idea.evidenceStillRequired : undefined,
+              unresolvedAssumptions: Array.isArray(idea.unresolvedAssumptions) ? idea.unresolvedAssumptions : undefined,
+              suggestedChannel: idea.bestChannelFit || ideationFilterChannel || 'LinkedIn',
               suggestedFormat: idea.suggestedOutputFormat || 'Post',
               suggestedAudience: idea.suggestedAudience || ideationFilterAudience,
+              suggestedPillar: idea.suggestedPillar || undefined,
+              strategicAngle: idea.strategicAngle || group.groupTitle || undefined,
               suggestedTone: idea.suggestedTone || 'Measured / Credible',
               possibleHook: idea.possibleHook || '',
               possibleFirstPost: idea.possibleFirstPost || '',
@@ -1472,47 +1492,31 @@ export default function App() {
             });
           });
         });
-        setGeneratedIdeas(list);
+
+        if (rawList.length > 0) {
+          const enrichedList = enrichAndDiversifyOpportunities({
+            rawProposals: rawList,
+            rawInput: inputVal,
+            defaultAudience: ideationFilterAudience,
+            defaultChannel: ideationFilterChannel,
+            defaultLanguage: ideationFilterLanguage,
+            sourceBindings: ideationSourceBindings,
+            derivedSourceAnalyses: sourceIntelligenceMap,
+            savedIdeas,
+            savedContents: savedContent,
+            operatingCore
+          });
+          setGeneratedIdeas(enrichedList);
+          setIsIdeating(false);
+          return;
+        }
       } catch (err: any) {
-        setAiLastError(err.message || 'AI Ideation failed.');
-      } finally {
-        setIsIdeating(false);
+        setAiLastError(err.message || 'AI Ideation unavailable; using deterministic COH opportunity engine.');
       }
-      return;
     }
 
-    // Prototype fallback
+    // Deterministic COH Opportunity Engine fallback (works both offline and when AI returns 503)
     setTimeout(() => {
-      const inputLower = inputVal.toLowerCase();
-      const dateStr = new Date().toISOString().split('T')[0];
-
-      // 1. Input type classification
-      let detectedType = 'rough idea';
-      if (inputLower.split(' ').length <= 2) {
-        detectedType = 'keyword';
-      } else if (inputLower.includes('?')) {
-        detectedType = 'question';
-      } else if (inputLower.includes('vs') || inputLower.includes('superior to') || inputLower.includes('better than') || inputLower.includes('compared')) {
-        detectedType = 'comparison';
-      } else if (inputLower.includes('grief') || inputLower.includes('feel') || inputLower.includes('sorrow') || inputLower.includes('mourn') || inputLower.includes('hope') || inputLower.includes('ritual') || inputLower.includes('emotion')) {
-        detectedType = 'emotional theme';
-      } else if (inputLower.includes('how') || inputLower.includes('explain') || inputLower.includes('what is') || inputLower.includes('learn') || inputLower.includes('science')) {
-        detectedType = 'educational topic';
-      } else if (inputLower.includes('should') || inputLower.includes('must') || inputLower.includes('is superior') || inputLower.includes('why is') || inputLower.includes('because')) {
-        detectedType = 'thesis';
-      } else if (inputLower.includes('campaign') || inputLower.includes('launch') || inputLower.includes('outreach') || inputLower.includes('series')) {
-        detectedType = 'campaign direction';
-      } else if (inputLower.includes('how to reach') || inputLower.includes('barrier') || inputLower.includes('hesitant')) {
-        detectedType = 'audience problem';
-      } else if (inputLower.includes('ticket') || inputLower.includes('invite') || inputLower.includes('attend') || inputLower.includes('reserve') || inputLower.includes('event')) {
-        detectedType = 'event or promotion need';
-      } else if (inputLower.includes('art') || inputLower.includes('opera') || inputLower.includes('culture') || inputLower.includes('canon') || inputLower.includes('aesthetic')) {
-        detectedType = 'cultural argument';
-      } else if (inputLower.split(' ').length > 20) {
-        detectedType = 'paragraph';
-      }
-
-      // Helper functions for dynamic strings
       const getTone = (depth: string, q: string) => {
         if (depth === 'Experimental') return 'Bold / Punchy';
         if (q === 'Sponsor-facing') return 'Calm / Institutional';
@@ -1520,114 +1524,146 @@ export default function App() {
         return 'Measured / Credible';
       };
 
-      const getTitle = (cat: string) => {
-        const cleanInput = inputVal.replace(/\?$/, '');
-        if (cat === 'Strongest Directions') return `Visceral bypass vs intellectual distance for: ${cleanInput}`;
-        if (cat === 'Sharp Hooks') return `Provocative entry points for: ${cleanInput}`;
-        if (cat === 'Thought Leadership Angles') return `Strategic thesis on: ${cleanInput}`;
-        if (cat === 'Educational Angles') return `Demystifying the mechanics behind: ${cleanInput}`;
-        if (cat === 'Emotional or Reflective Angles') return `Somatic memory and resonance of: ${cleanInput}`;
-        if (cat === 'Storytelling Angles') return `Staging the transformation of: ${cleanInput}`;
-        if (cat === 'Promotional Angles') return `Action pathway: Engaging supporters for: ${cleanInput}`;
-        if (cat === 'Campaign-Series Ideas') return `Multi-part cycle: Deep dive into: ${cleanInput}`;
-        return `Unusual creative framing for: ${cleanInput}`;
-      };
+      const cleanInput = inputVal.replace(/\?$/, '');
+      const isDeep = ideationFilterDepth === 'Deep';
+      const qualityStr = ideationFilterQuality !== 'Practical' ? `Applying a focused ${ideationFilterQuality.toLowerCase()} filter, ` : '';
+      const depthStr = isDeep ? 'Detail a strategic, high-nuance concept arguing that' : 'Outline a clean direction stating that';
 
-      const getExplanation = (cat: string) => {
-        const isDeep = ideationFilterDepth === 'Deep';
-        const qualityStr = ideationFilterQuality !== 'Practical' ? `Applying a focused ${ideationFilterQuality.toLowerCase()} filter, ` : '';
-        const depthStr = isDeep ? 'Detail a strategic, high-nuance concept arguing that' : 'Outline a clean direction stating that';
-        
-        if (cat === 'Strongest Directions') {
-          return `${qualityStr}${depthStr} live somatic experiences of "${inputVal}" create a lasting impact that policy briefs fail to establish.`;
+      const opportunityTemplates = [
+        {
+          category: 'Strongest Directions',
+          communicationJob: 'Establish institutional credibility',
+          strategicAngle: 'Origin Asset & Worldbuilding Multiplier',
+          suggestedPillar: 'Climate Tetralogy & Canon',
+          title: `Visceral bypass vs intellectual distance for: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} live somatic experiences of "${inputVal}" create a lasting cultural anchor that abstract policy briefs fail to establish.`,
+          coreTension: 'Decision-makers and audiences are saturated with abstract climate statistics that rarely translate into lasting cultural commitment.',
+          desiredAudienceResponse: 'Recognize Climate Opera Haus as an enduring cultural IP venture built around live operatic worldbuilding.',
+          channel: ideationFilterChannel || 'LinkedIn',
+          format: 'Post'
+        },
+        {
+          category: 'Thought Leadership Angles',
+          communicationJob: 'Create sponsor relevance',
+          strategicAngle: 'Long-Horizon Cultural Infrastructure & Prestige',
+          suggestedPillar: 'Partnerships, Sponsorship & Institutional Value',
+          title: `Strategic thesis on: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} "${inputVal}" requires permanent, reusable cultural infrastructure rather than temporary public awareness campaigns.`,
+          coreTension: 'Sponsors and strategic partners need clear institutional prestige and multi-horizon relevance rather than short-lived event visibility.',
+          desiredAudienceResponse: 'See a clear pathway for institutional alignment and long-horizon partnership with COH.',
+          channel: 'LinkedIn',
+          format: 'Thought Piece'
+        },
+        {
+          category: 'Educational Angles',
+          communicationJob: 'Build climate literacy',
+          strategicAngle: 'Scientific Grounding & Planetary Thresholds',
+          suggestedPillar: 'Education, Community & Climate Literacy',
+          title: `Demystifying the mechanics behind: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can translate the physical and ecological reality behind "${inputVal}" into clear, jargon-free human terms.`,
+          coreTension: 'Technical climate discourse often alienates general audiences with jargon while neglecting emotional comprehension.',
+          desiredAudienceResponse: 'Grasp the core planetary insight clearly and connect it to lived human experience.',
+          channel: 'Instagram',
+          format: 'Carousel'
+        },
+        {
+          category: 'Storytelling Angles',
+          communicationJob: 'Explain artistic logic',
+          strategicAngle: 'Behind-the-Scenes Artistic Rigor & Craft',
+          suggestedPillar: 'Production & Behind the Work',
+          title: `Staging the transformation of: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can follow a specific musical, dramaturgical, or staging threshold that makes "${inputVal}" visible on stage.`,
+          coreTension: 'Audiences unfamiliar with contemporary opera wonder how planetary themes become compelling dramatic art without becoming didactic.',
+          desiredAudienceResponse: 'Appreciate the artistic discipline, musical craft, and dramatic tension driving the production.',
+          channel: 'Newsletter',
+          format: 'Post'
+        },
+        {
+          category: 'Emotional or Reflective Angles',
+          communicationJob: 'Deepen cultural meaning',
+          strategicAngle: 'Collective Cultural Ritual & Public Meaning',
+          suggestedPillar: 'Events, Convenings & Public Moments',
+          title: `Somatic memory and resonance of: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} operatic performance provides a shared civic space to process the emotional weight and collective stake of "${inputVal}".`,
+          coreTension: 'Public audiences carry unspoken ecological fatigue and lack shared cultural spaces that honor both truth and human resilience.',
+          desiredAudienceResponse: 'Feel invited into an accessible, deeply resonant cultural gathering rather than a lecture.',
+          channel: 'Instagram',
+          format: 'Caption'
+        },
+        {
+          category: 'Promotional Angles',
+          communicationJob: 'Invite public participation',
+          strategicAngle: 'Milestone Clarity & Institutional Momentum',
+          suggestedPillar: 'Documentary, Media & Cultural IP',
+          title: `Action pathway: Engaging supporters for: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can invite institutions, patrons, and cultural allies to participate in the next development phase of "${inputVal}".`,
+          coreTension: 'Interested supporters often admire the artistic vision but need a concrete, credible entry point to engage.',
+          desiredAudienceResponse: 'Take a clear, low-friction step toward conversation, partnership inquiry, or attendance.',
+          channel: 'Email / Direct Outreach',
+          format: 'Sponsor Pitch Paragraph'
         }
-        if (cat === 'Sharp Hooks') {
-          return `${qualityStr}${depthStr} we can hook public attention by questioning conventional views on "${inputVal}".`;
-        }
-        if (cat === 'Thought Leadership Angles') {
-          return `${qualityStr}${depthStr} "${inputVal}" requires permanent, reusable cultural infrastructure rather than temporary public awareness campaigns.`;
-        }
-        if (cat === 'Educational Angles') {
-          return `${qualityStr}${depthStr} we can break down the physical or structural science behind "${inputVal}" using clear, jargon-free analogies.`;
-        }
-        if (cat === 'Emotional or Reflective Angles') {
-          return `${qualityStr}${depthStr} art provides the necessary ritual space to process the grief and emotional weight of "${inputVal}".`;
-        }
-        if (cat === 'Storytelling Angles') {
-          return `${qualityStr}${depthStr} we can follow a specific scene, character, or musical threshold that makes "${inputVal}" visible.`;
-        }
-        if (cat === 'Promotional Angles') {
-          return `${qualityStr}${depthStr} we can invite sponsors and partners to back the creative development of "${inputVal}" as a prestige asset.`;
-        }
-        if (cat === 'Campaign-Series Ideas') {
-          return `${qualityStr}${depthStr} a 3-part sequential series can trace the history, immediate reality, and future potential of "${inputVal}".`;
-        }
-        return `${qualityStr}Juxtapose "${inputVal}" with acoustic resonance, planetary timelines, or staging methods to deliver a bold new creative concept.`;
-      };
-
-      const getWhyItWorks = (cat: string) => {
-        if (ideationFilterQuality === 'Sponsor-facing') return 'Directly aligns with long-term capital backing and prestige ROI.';
-        if (ideationFilterQuality === 'Emotional') return 'Triggers a strong personal connection and bypasses academic jargon.';
-        if (ideationFilterQuality === 'Bold') return 'Stands out in feeds by taking a highly provocative and visible stand.';
-        return 'Bridges the gap between raw data and somatic human experience.';
-      };
-
-      const getHook = (cat: string) => {
-        return `Why do we keep writing reports about ${inputVal.toLowerCase().replace(/\?$/, '')} when music can change how we breathe?`;
-      };
-
-      const getFirstPost = (cat: string) => {
-        return `Staging a response to ${inputVal.toLowerCase().replace(/\?$/, '')} isn't just about entertainment. It's about building a permanent cultural archive of our changing planet.`;
-      };
-
-      const getRisk = (cat: string) => {
-        return `Avoid generic activist slogans, preachy language, or over-promising concrete political changes.`;
-      };
-
-      const getNextStep = (cat: string) => {
-        return `Draft a direct output brief and send it to the Content Workspace for copy generation.`;
-      };
-
-      const categoriesList = [
-        'Strongest Directions',
-        'Sharp Hooks',
-        'Thought Leadership Angles',
-        'Educational Angles',
-        'Emotional or Reflective Angles',
-        'Storytelling Angles',
-        'Promotional Angles',
-        'Campaign-Series Ideas',
-        'Experimental Ideas'
       ];
 
-      const list: SavedIdea[] = categoriesList.map((catName, idx) => {
-        const chan = catName.includes('Promotional') ? 'Email / Direct Outreach' : (catName.includes('Hook') || catName.includes('Emotional') ? 'Instagram' : 'LinkedIn');
-        const fmt = catName.includes('Promotional') ? 'Sponsor Pitch Paragraph' : (catName.includes('Hook') ? 'Caption' : (catName.includes('Educational') ? 'Carousel' : 'Post'));
+      const rawProposals: Partial<IdeationOpportunityProposal>[] = opportunityTemplates.map((tpl, idx) => ({
+        id: `idea-gen-${idx}-${Date.now()}`,
+        title: translateText(tpl.title, ideationFilterLanguage),
+        originalInput: inputVal,
+        category: translateText(tpl.category, ideationFilterLanguage),
+        explanation: translateText(tpl.explanation, ideationFilterLanguage),
+        communicationJob: tpl.communicationJob,
+        whyItWorks: translateText(
+          ideationFilterQuality === 'Sponsor-facing'
+            ? 'Directly aligns with long-term institutional backing and cultural prestige.'
+            : ideationFilterQuality === 'Emotional'
+            ? 'Triggers a genuine human connection and bypasses academic jargon.'
+            : 'Bridges the gap between planetary reality and somatic artistic experience.',
+          ideationFilterLanguage
+        ),
+        coreTension: tpl.coreTension,
+        desiredAudienceResponse: tpl.desiredAudienceResponse,
+        suggestedChannel: tpl.channel,
+        suggestedFormat: tpl.format,
+        suggestedAudience: translateText(ideationFilterAudience, ideationFilterLanguage),
+        suggestedPillar: tpl.suggestedPillar,
+        strategicAngle: tpl.strategicAngle,
+        suggestedTone: translateText(getTone(ideationFilterDepth, ideationFilterQuality), ideationFilterLanguage),
+        possibleHook: translateText(
+          `Why do we keep writing reports about ${cleanInput.toLowerCase()} when live performance can change how a room breathes together?`,
+          ideationFilterLanguage
+        ),
+        possibleFirstPost: translateText(
+          `Staging a response to ${cleanInput.toLowerCase()} is not about temporary awareness. It is about building an enduring cultural work that makes planetary reality felt.`,
+          ideationFilterLanguage
+        ),
+        riskToAvoid: translateText(
+          'Avoid generic activist slogans, preachy language, or unverified milestone claims.',
+          ideationFilterLanguage
+        ),
+        possibleNextStep: translateText(
+          'Promote this opportunity to Content Workspace with its communication job and evidence profile attached.',
+          ideationFilterLanguage
+        ),
+        language: ideationFilterLanguage,
+        dateCreated: dateStr,
+        status: 'New'
+      }));
 
-        return {
-          id: `idea-gen-${idx}-${Date.now()}`,
-          title: translateText(getTitle(catName), ideationFilterLanguage),
-          originalInput: inputVal,
-          category: translateText(catName, ideationFilterLanguage),
-          explanation: translateText(getExplanation(catName), ideationFilterLanguage),
-          whyItWorks: translateText(getWhyItWorks(catName), ideationFilterLanguage),
-          suggestedChannel: chan,
-          suggestedFormat: fmt,
-          suggestedAudience: translateText(ideationFilterAudience, ideationFilterLanguage),
-          suggestedTone: translateText(getTone(ideationFilterDepth, ideationFilterQuality), ideationFilterLanguage),
-          possibleHook: translateText(getHook(catName), ideationFilterLanguage),
-          possibleFirstPost: translateText(getFirstPost(catName), ideationFilterLanguage),
-          riskToAvoid: translateText(getRisk(catName), ideationFilterLanguage),
-          possibleNextStep: translateText(getNextStep(catName), ideationFilterLanguage),
-          language: ideationFilterLanguage,
-          dateCreated: dateStr,
-          status: 'New'
-        };
+      const enrichedList = enrichAndDiversifyOpportunities({
+        rawProposals,
+        rawInput: inputVal,
+        defaultAudience: ideationFilterAudience,
+        defaultChannel: ideationFilterChannel,
+        defaultLanguage: ideationFilterLanguage,
+        sourceBindings: ideationSourceBindings,
+        derivedSourceAnalyses: sourceIntelligenceMap,
+        savedIdeas,
+        savedContents: savedContent,
+        operatingCore
       });
 
-      setGeneratedIdeas(list);
+      setGeneratedIdeas(enrichedList);
       setIsIdeating(false);
-    }, 800);
+    }, 350);
   };
 
   const [savingIdeaId, setSavingIdeaId] = useState<string | null>(null);
@@ -1658,34 +1694,70 @@ export default function App() {
     // Preset to 'advanced' mode when pushing from Ideation to Content Workspace
     setCreationMode('advanced');
 
-    const mappedNotes = `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`;
+    const handoff = buildIdeationToContentHandoff({
+      idea: idea as IdeationOpportunityProposal,
+      currentSelectedSourceIds: advancedBrief.selectedSourceIds,
+      currentTaskSourceRoleMap: taskSourceRoleMap
+    });
+
+    setTaskSourceRoleMap(handoff.restoredRoleMap);
 
     setSimpleBrief({
       goal: idea.title,
-      channel: idea.suggestedChannel || 'LinkedIn'
+      channel: handoff.advancedBriefPatch.channel
     });
 
     setQuickBrief({
       creationScope: 'Single Channel',
       targetChannels: ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
       goal: idea.title,
-      notes: mappedNotes,
-      channel: idea.suggestedChannel || 'LinkedIn',
-      mustInclude: '',
-      mustAvoid: '',
-      language: idea.language || 'English',
-      outputFormat: idea.suggestedFormat || 'Post'
+      notes: handoff.advancedBriefPatch.customDirection,
+      channel: handoff.advancedBriefPatch.channel,
+      mustInclude: handoff.advancedBriefPatch.mustInclude,
+      mustAvoid: handoff.advancedBriefPatch.mustAvoid,
+      language: handoff.advancedBriefPatch.language,
+      outputFormat: handoff.advancedBriefPatch.outputFormat
     });
 
     setAdvancedBrief(prev => ({
       ...prev,
-      topic: idea.title,
+      topic: handoff.advancedBriefPatch.topic,
       directionMode: 'custom',
-      customDirection: mappedNotes,
-      channel: idea.suggestedChannel || prev.channel,
-      audience: idea.suggestedAudience || prev.audience,
-      language: idea.language || prev.language,
-      outputFormat: idea.suggestedFormat || prev.outputFormat
+      customDirection: handoff.advancedBriefPatch.customDirection,
+      channel: handoff.advancedBriefPatch.channel || prev.channel,
+      audience: handoff.advancedBriefPatch.audience || prev.audience,
+      pillar: handoff.advancedBriefPatch.pillar || prev.pillar,
+      purpose: handoff.advancedBriefPatch.purpose || prev.purpose,
+      language: handoff.advancedBriefPatch.language || prev.language,
+      outputFormat: handoff.advancedBriefPatch.outputFormat || prev.outputFormat,
+      mustInclude: handoff.advancedBriefPatch.mustInclude || prev.mustInclude,
+      mustAvoid: handoff.advancedBriefPatch.mustAvoid || prev.mustAvoid,
+      selectedSourceIds: handoff.advancedBriefPatch.selectedSourceIds
+    }));
+
+    setActiveWorkItem(prev => ({
+      ...(prev || {
+        id: `work-${Date.now()}`,
+        draftVersions: [],
+        imageResults: [],
+        revisionHistory: [],
+        approved: false,
+        saved: false,
+        createdAt: new Date().toISOString()
+      }),
+      title: idea.title,
+      type: 'Content',
+      status: 'Brief',
+      ideaId: idea.id,
+      channel: handoff.advancedBriefPatch.channel,
+      outputFormat: handoff.advancedBriefPatch.outputFormat,
+      audience: handoff.advancedBriefPatch.audience,
+      purpose: handoff.advancedBriefPatch.purpose,
+      language: handoff.advancedBriefPatch.language,
+      sourceIds: handoff.advancedBriefPatch.selectedSourceIds,
+      origin: 'Ideation Workspace',
+      workContext: handoff.workContext,
+      updatedAt: new Date().toISOString()
     }));
 
     setImportedIdeationContext(idea);
@@ -1818,11 +1890,253 @@ export default function App() {
   };
 
   // --- Source and List Action Helpers ---
+  const getEffectiveSourceRole = (src: { id: string; type: string }): SourceTaskRole => {
+    const fromTaskMap = taskSourceRoleMap[src.id]?.role;
+    if (fromTaskMap) return fromTaskMap;
+    const fromWorkItem = activeWorkItem?.workContext?.sourceBindings?.find(b => b.sourceId === src.id)?.role;
+    if (fromWorkItem) return fromWorkItem;
+    return inferDefaultSourceRole(src.type);
+  };
+
+  const getEffectiveSourceExcerpts = (sourceId: string): string[] => {
+    const fromTaskMap = taskSourceRoleMap[sourceId]?.selectedExcerpts;
+    if (Array.isArray(fromTaskMap)) return fromTaskMap;
+    const fromWorkItem = activeWorkItem?.workContext?.sourceBindings?.find(b => b.sourceId === sourceId)?.selectedExcerpts;
+    return Array.isArray(fromWorkItem) ? fromWorkItem : [];
+  };
+
+  const handleChangeSourceTaskRole = (sourceId: string, role: SourceTaskRole) => {
+    const src = [...sources, ...workspaceLocalSources].find(s => s.id === sourceId);
+    const currentExcerpts = getEffectiveSourceExcerpts(sourceId);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [sourceId]: {
+        role,
+        selectedExcerpts: prev[sourceId]?.selectedExcerpts || currentExcerpts
+      }
+    }));
+    setActiveWorkItem(prev => {
+      if (!prev) return prev;
+      const existingBindings = prev.workContext?.sourceBindings || [];
+      const updatedBindings = existingBindings.some(b => b.sourceId === sourceId)
+        ? existingBindings.map(b => (b.sourceId === sourceId ? { ...b, role } : b))
+        : [
+            ...existingBindings,
+            {
+              sourceId,
+              title: src?.title || 'Untitled Source',
+              type: src?.type || 'Other',
+              role,
+              selectedExcerpts: currentExcerpts,
+              content: src?.content || src?.notes || ''
+            }
+          ];
+      return {
+        ...prev,
+        workContext: {
+          ...(prev.workContext || {}),
+          sourceBindings: updatedBindings
+        }
+      };
+    });
+  };
+
+  const handleToggleSourceExcerpt = (sourceId: string, excerpt: string) => {
+    const src = [...sources, ...workspaceLocalSources].find(s => s.id === sourceId);
+    const role = src ? getEffectiveSourceRole(src) : 'Evidence';
+    const currentExcerpts = getEffectiveSourceExcerpts(sourceId);
+    const nextExcerpts = currentExcerpts.includes(excerpt)
+      ? currentExcerpts.filter(e => e !== excerpt)
+      : [...currentExcerpts, excerpt];
+
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [sourceId]: {
+        role: prev[sourceId]?.role || role,
+        selectedExcerpts: nextExcerpts
+      }
+    }));
+  };
+
   const toggleSourceSelection = (id: string) => {
-    const list = advancedBrief.selectedSourceIds.includes(id)
+    const isCurrentlySelected = advancedBrief.selectedSourceIds.includes(id);
+    const list = isCurrentlySelected
       ? advancedBrief.selectedSourceIds.filter(sId => sId !== id)
       : [...advancedBrief.selectedSourceIds, id];
     setAdvancedBrief(prev => ({ ...prev, selectedSourceIds: list }));
+
+    if (!isCurrentlySelected) {
+      const src = [...sources, ...workspaceLocalSources].find(s => s.id === id);
+      if (src && !taskSourceRoleMap[id]) {
+        setTaskSourceRoleMap(prev => ({
+          ...prev,
+          [id]: {
+            role: inferDefaultSourceRole(src.type),
+            selectedExcerpts: []
+          }
+        }));
+      }
+    }
+  };
+
+  const handleAnalyzeSource = async (src: SourceFile | { id: string; title: string; type: string; content: string; notes?: string }, forceLocalFallback = false) => {
+    setAnalyzingSourceIds(prev => ({ ...prev, [src.id]: true }));
+    setSourceAnalysisErrors(prev => {
+      const next = { ...prev };
+      delete next[src.id];
+      return next;
+    });
+
+    try {
+      if (!forceLocalFallback && generationMode === 'ai' && aiStatus === 'connected') {
+        const contextPkg = compileGovernedContext({
+          workflow: 'Source Intelligence',
+          operatingCore,
+          coreDocuments: operatingCoreDocs,
+          userInstruction: `Analyze source "${src.title}" (${src.type}) under COH claim discipline.`
+        });
+        const aiResult = await aiService.analyzeSource({
+          sourceTitle: src.title,
+          sourceType: src.type,
+          sourceNotes: src.notes || '',
+          sourceContent: src.content || src.notes || '',
+          rawInput: src.content || src.notes || '',
+          operatingCoreInstructions: contextPkg.compiledInstructions
+        });
+        const disciplined = enforceSourceIntelligenceClaimDiscipline(
+          {
+            ...aiResult,
+            sourceId: src.id,
+            sourceTitle: src.title,
+            sourceType: src.type,
+            analyzedAt: new Date().toISOString(),
+            analysisMode: 'ai'
+          },
+          src
+        );
+        setSourceIntelligenceMap(prev => upsertSourceIntelligenceRecord(prev, disciplined));
+      } else {
+        const fallbackAnalysis = buildDeterministicSourceAnalysis(src, operatingCore);
+        setSourceIntelligenceMap(prev => upsertSourceIntelligenceRecord(prev, fallbackAnalysis));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unable to complete AI source analysis.';
+      setSourceAnalysisErrors(prev => ({ ...prev, [src.id]: msg }));
+    } finally {
+      setAnalyzingSourceIds(prev => ({ ...prev, [src.id]: false }));
+    }
+  };
+
+  const handleAddToCurrentBrief = (src: { id: string; title: string; type: string }) => {
+    toggleSourceSelection(src.id);
+  };
+
+  const handleUseSourceInIdeation = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    if (!advancedBrief.selectedSourceIds.includes(src.id)) {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: [...prev.selectedSourceIds, src.id]
+      }));
+    }
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    const seedHint = analysis?.contentOpportunityHints?.[0] || analysis?.strategicContext || src.notes || src.title;
+    setIdeationInput(`${src.title}: ${seedHint}`);
+    if (analysis?.relevantAudiences?.[0]) {
+      setIdeationFilterAudience(analysis.relevantAudiences[0]);
+    }
+    if (analysis?.relevantChannels?.[0]) {
+      setIdeationFilterChannel(analysis.relevantChannels[0]);
+    }
+    setActiveTab('ideation-workspace');
+  };
+
+  const handleCreateContentFromSource = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    setCreationMode('advanced');
+    setAdvancedBrief(prev => {
+      const candidateChannel = analysis?.relevantChannels?.[0];
+      const nextChannel = candidateChannel && CHANNELS.includes(candidateChannel) ? candidateChannel : prev.channel;
+      const validFormats = CHANNEL_FORMATS[nextChannel] || ['Post'];
+      const nextFormat = validFormats.includes(prev.outputFormat) ? prev.outputFormat : validFormats[0];
+      return {
+        ...prev,
+        selectedSourceIds: prev.selectedSourceIds.includes(src.id)
+          ? prev.selectedSourceIds
+          : [...prev.selectedSourceIds, src.id],
+        topic: prev.topic.trim() ? prev.topic : `${src.title}: ${analysis?.strategicContext || src.notes || 'Source-grounded brief'}`,
+        channel: nextChannel,
+        outputFormat: nextFormat,
+        pillar: analysis?.relevantPillars?.[0] || prev.pillar
+      };
+    });
+    setStartedFromNote(`Source Library: ${src.title} (${role})`);
+    setActiveTab('content-workspace');
+  };
+
+  const handleUseSourceAsVisualReference = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    handleChangeSourceTaskRole(src.id, 'Visual Reference');
+    if (!advancedBrief.selectedSourceIds.includes(src.id)) {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: [...prev.selectedSourceIds, src.id]
+      }));
+    }
+    setVsSourceItem({ id: src.id, title: src.title, type: 'Library' });
+    setVsConcept(analysis?.strategicContext || src.notes || src.title);
+    setVsNotes(`Visual Reference Source: ${src.title}. ${(src.content || '').slice(0, 300)}`);
+    setActiveTab('visual-studio');
+  };
+
+  const handleUseSourceInReframing = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    setAdvancedBrief(prev => ({
+      ...prev,
+      selectedSourceIds: prev.selectedSourceIds.includes(src.id)
+        ? prev.selectedSourceIds
+        : [...prev.selectedSourceIds, src.id]
+    }));
+    setReframingInitialOrigin({
+      originType: 'Source Library',
+      originId: src.id,
+      originTitle: src.title,
+      sourceContent: src.content || src.notes || analysis?.strategicContext || src.title,
+      originChannel: analysis?.relevantChannels?.[0] || 'LinkedIn',
+      originAudience: analysis?.relevantAudiences?.[0] || 'Cultural Institutions & Museums'
+    });
+    setActiveTab('reframing-studio');
   };
 
   const handleEditSource = (src: SourceFile) => {
@@ -1838,6 +2152,11 @@ export default function App() {
 
   const handleDeleteSource = (id: string) => {
     setSources(sources.filter(s => s.id !== id));
+    setSourceIntelligenceMap(prev => removeSourceIntelligenceRecord(prev, id));
+    setAdvancedBrief(prev => ({
+      ...prev,
+      selectedSourceIds: prev.selectedSourceIds.filter(sId => sId !== id)
+    }));
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -3531,12 +3850,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           mustAvoid: creationMode === 'advanced' ? advancedBrief.mustAvoid : '',
           framingMode: dirMode,
           customFraming: customDir,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { 
-            workspace: isSimple ? 'Simple Mode' : isQuick ? 'Quick Create' : 'Advanced Brief', 
-            channel, 
-            audience, 
-            format 
-          }),
+          operatingCoreInstructions: buildContentWorkspaceContextPackage().compiledInstructions,
           taskSources: (creationMode === 'advanced' ? advancedBrief.selectedSourceIds : []).map(id => {
             const s = [...workspaceLocalSources, ...sources].find((x: any) => x.id === id);
             return s ? { title: s.title, type: s.type, content: s.content || s.notes || s.url } : null;
@@ -4283,6 +4597,70 @@ Revision History:
     }
   };
 
+  // --- Shared Context Compiler Integration for Content Workspace ---
+  const buildContentWorkspaceContextPackage = () => {
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const workflow = isSimple ? 'Simple Mode' : (isQuick ? 'Quick Create' : 'Advanced Brief');
+
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? undefined : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const topic = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const aud = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.audience : undefined);
+    const custAud = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.customAudience : undefined);
+    const pillar = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.pillar : undefined);
+    const purpose = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.purpose : undefined);
+
+    const inherited = extractWorkContextFromWorkItem(activeWorkItem);
+
+    const activeSourceIds =
+      creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0
+        ? advancedBrief.selectedSourceIds
+        : activeWorkItem?.sourceIds || [];
+
+    const sourceBindings: TaskSourceBinding[] = activeSourceIds
+      .map(id => {
+        const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+        if (!s) return null;
+        return {
+          sourceId: s.id,
+          title: s.title || 'Untitled Source',
+          type: s.type || 'Other',
+          role: getEffectiveSourceRole(s),
+          selectedExcerpts: getEffectiveSourceExcerpts(s.id),
+          content: s.content || s.notes || s.url || '',
+          summary: s.notes || undefined
+        } as TaskSourceBinding;
+      })
+      .filter((b): b is TaskSourceBinding => Boolean(b));
+
+    return compileGovernedContext({
+      workflow,
+      operatingCore,
+      coreDocuments: operatingCoreDocs,
+      audience: aud,
+      customAudience: custAud,
+      channel,
+      format,
+      pillar,
+      language: lang,
+      communicationJob: purpose || topic || undefined,
+      sourceBindings,
+      derivedSourceAnalyses: sourceIntelligenceMap,
+      userInstruction: topic || undefined,
+      inheritedWorkContext: inherited,
+      explicitFields: {
+        channel: Boolean(channel),
+        format: Boolean(format),
+        audience: creationMode === 'advanced' && Boolean(aud),
+        pillar: creationMode === 'advanced' && Boolean(pillar),
+        language: !isSimple && Boolean(lang),
+        communicationJob: Boolean(purpose || topic)
+      }
+    });
+  };
+
   // --- Prompt Builder Compiler ---
   const compileStructuredPrompt = () => {
     const isSimple = creationMode === 'simple';
@@ -4292,7 +4670,6 @@ Revision History:
     const targetChannels = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
     const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
     const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
-    const topic = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
     const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
     const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
     const mustAvoid = isSimple ? '' : (isQuick ? quickBrief.mustAvoid : advancedBrief.mustAvoid);
@@ -4307,20 +4684,8 @@ Revision History:
     const angle = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.angle : '');
     const customDir = isSimple ? '' : (creationMode === 'advanced' ? advancedBrief.customDirection : '');
 
-    let sourceContext = '';
-    if (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) {
-      const selectedSources = [...sources, ...workspaceLocalSources].filter(s =>
-        advancedBrief.selectedSourceIds.includes(s.id)
-      );
-      if (selectedSources.length > 0) {
-        sourceContext += '\n\n' + Array.from(new Set(selectedSources.map(s => s.type))).map(t =>
-          `[Includes type: ${t}]`
-        ).join(' ');
-        selectedSources.forEach(s => {
-          sourceContext += `\n\n--- Source: ${s.title} ---\n${s.content}`;
-        });
-      }
-    }
+    const contextPkg = buildContentWorkspaceContextPackage();
+    const sourceContext = contextPkg.sections.sourceEvidenceContext;
 
     const audienceNote = getAudienceExplanation(aud);
     const audienceDirective = aud === 'Custom Audience' && custAud
@@ -4337,12 +4702,7 @@ Revision History:
       ? '\n\nLANGUAGE DIRECTIVE (CRITICAL): The final output must be written entirely in ' + lang + '. Do not mix English sentences with ' + lang + '. Do not use translation fragments or partial phrases. Approved proper names that must NOT be translated: Climate Opera Haus, RESONANCE 2027, The Climate Tetralogy, Soria Moria, The Golden Fountain, The Water Dragon, Roar to the Wind. All other text — headlines, body copy, CTAs, captions — must be natural, fluent ' + lang + ' as written by a native speaker. If Email / Letter format is used, write the greeting and sign-off in ' + lang + ' also.'
       : '';
 
-
-    const operatingCoreContext = compileOperatingCoreContext(operatingCore, {
-      workspace: creationMode === 'simple' ? 'Simple Mode' : (creationMode === 'quick' ? 'Quick Create' : 'Advanced Brief'),
-      channel: channel,
-      audience: aud
-    });
+    const operatingCoreContext = buildContentWorkspaceContextPackage().compiledInstructions;
 
     return `${operatingCoreContext}
 
@@ -4514,176 +4874,189 @@ WRITING CLEANLINESS RULES (CRITICAL):
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
-      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-[256px] max-w-[85vw] border-r border-border-strong bg-sidebar-bg text-text-primary flex flex-col justify-between p-6 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-[252px] max-w-[85vw] border-r border-white/10 bg-sidebar-bg text-white flex flex-col justify-between p-5 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Mobile close button */}
-        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-brand-gold hover:text-text-primary">
-          <X size={24} />
+        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-brand-gold hover:text-white">
+          <X size={22} />
         </button>
         <div>
-          <div className="mb-10">
-            <span className="font-sans tracking-widest text-[11px] uppercase text-brand-gold block mb-2">Climate Opera Haus</span>
-            <h1 className="font-sans text-[21px] font-semibold leading-tight tracking-tight border-b border-border-strong pb-4 text-white">
+          <div className="mb-7 px-2">
+            <span className="font-sans tracking-[0.12em] text-[10px] font-semibold uppercase text-brand-gold block mb-1.5">Climate Opera Haus</span>
+            <h1 className="font-sans text-[19px] font-semibold leading-tight tracking-tight border-b border-white/10 pb-3.5 text-white">
               Content Studio
             </h1>
           </div>
 
           <nav className="space-y-1">
-            <div className="pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Overview
             </div>
             <button
               id="nav-command-center"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'command-center'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <LayoutDashboard size={16} />
+              <LayoutDashboard size={15} />
               Command Center
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Workspaces
             </div>
             <button
               id="nav-ideation"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'ideation-workspace'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Lightbulb size={16} />
+              <Lightbulb size={15} />
               Ideation Workspace
             </button>
             <button
               id="nav-editorial"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('editorial-calendar'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'editorial-calendar'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Calendar size={16} />
+              <Calendar size={15} />
               Editorial Calendar
             </button>
             <button
               id="nav-content"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'content-workspace'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Cpu size={16} />
+              <Cpu size={15} />
               Content Workspace
             </button>
             <button
               id="nav-visual"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'visual-studio'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <div className="w-4 h-4 flex items-center justify-center border border-current rounded-sm">
-                <div className="w-2 h-2 rounded-full bg-current" />
+              <div className="w-3.5 h-3.5 flex items-center justify-center border border-current rounded-xs">
+                <div className="w-1.5 h-1.5 rounded-full bg-current" />
               </div>
               Visual Studio
             </button>
             <button
               id="nav-revision"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('revision-studio'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg relative ${
                 activeTab === 'revision-studio'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Sliders size={16} />
+              <Sliders size={15} />
               Revision Studio
               {activeDraftText && (
-                <span className="absolute top-2.5 right-4 w-2 h-2 rounded-full bg-violet-600" />
+                <span className="absolute top-2.5 right-3 w-2 h-2 rounded-full bg-brand-gold" />
               )}
             </button>
+            <button
+              id="nav-reframing"
+              data-testid="nav-reframing-studio"
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('reframing-studio'); }}
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg relative ${
+                activeTab === 'reframing-studio'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
+              }`}
+            >
+              <RefreshCw size={15} />
+              Reframing Studio
+            </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Libraries
             </div>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('calendar-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'calendar-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Calendar size={16} />
+              <Calendar size={15} />
               Calendar Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'idea-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <FolderHeart size={16} />
+              <FolderHeart size={15} />
               Idea Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'content-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Bookmark size={16} />
+              <Bookmark size={15} />
               Content Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('source-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'source-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <FileText size={16} />
+              <FileText size={15} />
               Source Library
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Configuration
             </div>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'operating-core'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <CpuIcon size={16} />
+              <CpuIcon size={15} />
               Operating Core
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'settings'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Settings size={16} />
+              <Settings size={15} />
               Settings
             </button>
           </nav>
@@ -4703,13 +5076,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
           savedIdeas={savedIdeas}
           sources={sources}
           onSelectContentItem={(item) => {
-            handleOpenInRevision(item);
+            setActiveDraftText(item.text);
+            setActiveDraftTitle(item.title);
+            setActiveDraftVersion(item.version || 1);
+            setActiveDraftHistory([{ version: item.version || 1, text: item.text, timestamp: item.lastEdited, actionUsed: 'Loaded from Saved Library' }]);
+            setActiveDraftSource('Content Library');
+            setActiveTab('revision-studio');
           }}
           onSelectIdeaItem={(idea) => {
             handleCopyIdeaToWorkspace(idea);
           }}
         />
-        <main className="flex-1 overflow-y-auto px-4 md:px-12 py-6 md:py-10 flex flex-col min-w-0">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6 flex flex-col min-w-0">
         
         {/* --- TAB 1: COMMAND CENTER --- */}
         
@@ -4746,11 +5124,52 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="page-shell">
             {/* Header */}
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-2">
-              <h2 className="font-sans text-2xl font-bold text-text-primary">Ideation Workspace</h2>
-              <p className="font-sans text-[15px] text-text-secondary mt-1">
-                Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
-              </p>
+            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h2 className="font-sans text-2xl font-bold text-text-primary">Ideation Workspace</h2>
+                  <p className="font-sans text-[14px] text-text-secondary mt-1">
+                    Situation or Source to Communication Opportunities, Evidence Check, Reuse Check, Strong Idea, and Content Brief.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-text-secondary bg-surface-inset px-3 py-1.5 rounded-lg border border-border-standard">
+                  <span>Library Context:</span>
+                  <span className="text-brand-gold font-bold">{savedIdeas.length} Saved Ideas</span>
+                  <span>|</span>
+                  <span className="text-brand-gold font-bold">{savedContent.length} Content Pieces</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <ContextManifestPanel
+                  manifest={
+                    compileGovernedContext({
+                      workflow: 'Ideation Workspace',
+                      operatingCore,
+                      coreDocuments: operatingCoreDocs,
+                      audience: ideationFilterAudience,
+                      channel: ideationFilterChannel,
+                      language: ideationFilterLanguage,
+                      sourceBindings: advancedBrief.selectedSourceIds
+                        .map(id => {
+                          const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+                          if (!s) return null;
+                          return {
+                            sourceId: s.id,
+                            title: s.title || 'Untitled Source',
+                            type: s.type || 'Other',
+                            role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
+                            selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
+                            content: s.content || s.notes || s.url || '',
+                            summary: s.notes || undefined
+                          } as TaskSourceBinding;
+                        })
+                        .filter((b): b is TaskSourceBinding => Boolean(b)),
+                      derivedSourceAnalyses: sourceIntelligenceMap,
+                      userInstruction: ideationInput
+                    }).manifest
+                  }
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -4763,7 +5182,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <CardContent className="pt-5 flex flex-col gap-5">
                     
                     <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[13px] font-semibold text-text-primary">What do you want to explore?</label>
+                      <label className="font-sans text-[13px] font-semibold text-text-primary">What situation, question, or source angle do you want to explore?</label>
                       <p className="font-sans text-[11px] text-text-secondary">
                         Enter a keyword, phrase, question, paragraph, theme, campaign direction, audience need, or content problem.
                       </p>
@@ -4773,6 +5192,121 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         onChange={(e) => setIdeationInput(e.target.value)}
                         placeholder="e.g. Why is climate opera superior to other forms of climate art?"
                       />
+                    </div>
+
+                    {/* Source-Grounded Ideation Panel */}
+                    <div
+                      data-testid="ideation-attached-sources-panel"
+                      className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-inset border border-border-standard"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-sans text-[12px] font-bold text-text-primary">
+                          Attached Sources ({advancedBrief.selectedSourceIds.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('source-library')}
+                          className="text-[11px] font-semibold text-brand-gold hover:underline"
+                        >
+                          Browse Source Library
+                        </button>
+                      </div>
+
+                      {advancedBrief.selectedSourceIds.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {advancedBrief.selectedSourceIds.map(srcId => {
+                            const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === srcId);
+                            if (!s) return null;
+                            const currentRole = taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type);
+                            const analysis = sourceIntelligenceMap[s.id];
+                            return (
+                              <div
+                                key={s.id}
+                                data-testid={`ideation-attached-source-${s.id}`}
+                                className="p-2.5 rounded-lg bg-surface-primary border border-border-standard flex flex-col gap-1.5"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-sans text-[12px] font-bold text-text-primary truncate">
+                                    {s.title}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setAdvancedBrief(prev => ({
+                                        ...prev,
+                                        selectedSourceIds: prev.selectedSourceIds.filter(id => id !== s.id)
+                                      }))
+                                    }
+                                    className="text-[10px] font-semibold text-status-error hover:underline"
+                                  >
+                                    Detach
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <label className="text-[10px] font-semibold text-text-secondary">Task Role:</label>
+                                  <select
+                                    data-testid={`ideation-source-role-select-${s.id}`}
+                                    value={currentRole}
+                                    onChange={e =>
+                                      handleChangeSourceTaskRole(s.id, e.target.value as SourceTaskRole)
+                                    }
+                                    className="text-[11px] font-semibold bg-surface-inset border border-border-standard rounded px-2 py-0.5 text-text-primary"
+                                  >
+                                    {ALL_SOURCE_TASK_ROLES.map(r => (
+                                      <option key={r} value={r}>
+                                        {r}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                {analysis && analysis.keyFacts.length > 0 && (
+                                  <div className="text-[10px] text-text-secondary bg-surface-inset p-1.5 rounded border border-border-standard">
+                                    <span className="font-semibold text-brand-gold">Traceable Fact: </span>
+                                    {analysis.keyFacts[0]}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="font-sans text-[11px] text-text-secondary">
+                          No source attached. Ideation will ground opportunities in the Protected COH Kernel and Operating Core, or you can attach a source below.
+                        </p>
+                      )}
+
+                      {sources.filter(s => s.selectable && !advancedBrief.selectedSourceIds.includes(s.id)).length > 0 && (
+                        <div className="pt-1">
+                          <select
+                            data-testid="ideation-attach-source-dropdown"
+                            value=""
+                            onChange={e => {
+                              const selectedId = e.target.value;
+                              if (!selectedId) return;
+                              const found = sources.find(s => s.id === selectedId);
+                              if (found && !taskSourceRoleMap[selectedId]) {
+                                handleChangeSourceTaskRole(selectedId, inferDefaultSourceRole(found.type));
+                              }
+                              setAdvancedBrief(prev => ({
+                                ...prev,
+                                selectedSourceIds: prev.selectedSourceIds.includes(selectedId)
+                                  ? prev.selectedSourceIds
+                                  : [...prev.selectedSourceIds, selectedId]
+                              }));
+                            }}
+                            className="w-full text-[11px] bg-surface-primary border border-border-standard rounded-md px-2.5 py-1.5 text-text-secondary"
+                          >
+                            <option value="">+ Attach source from Source Library...</option>
+                            {sources
+                              .filter(s => s.selectable && !advancedBrief.selectedSourceIds.includes(s.id))
+                              .map(s => (
+                                <option key={s.id} value={s.id}>
+                                  {s.title} ({s.type})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-4 pt-2">
@@ -4804,17 +5338,26 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                       <div className="flex flex-col gap-1.5">
                         <label className="font-sans text-[11px] font-semibold text-text-secondary">Target Audience</label>
-                        <Select value={ideationFilterAudience} onChange={(e) => setIdeationFilterAudience(e.target.value)} options={[{label: 'General Public', value: 'General Public'}, {label: 'Sponsors & Patrons', value: 'Sponsors & Patrons'}, {label: 'Strategic Partners', value: 'Strategic Partners'}]} />
+                        <Select
+                          value={ideationFilterAudience}
+                          onChange={(e) => setIdeationFilterAudience(e.target.value)}
+                          options={Array.from(
+                            new Set(['General Public', ...getAuthoritativeAudiences(operatingCore), ideationFilterAudience])
+                          )
+                            .filter(Boolean)
+                            .map(aud => ({ label: aud, value: aud }))}
+                        />
                       </div>
                     </div>
 
                     <Button
+                      data-testid="generate-ideas-btn"
                       onClick={handleGenerateIdeas}
-                      disabled={isIdeating || !aiProvider}
+                      disabled={isIdeating}
                       className="w-full h-11 mt-2 flex items-center justify-center gap-2 font-bold"
                     >
                       {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
-                      {isIdeating ? 'Generating...' : 'Generate Ideas'}
+                      {isIdeating ? 'Generating Opportunities...' : 'Generate Ideas'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -4823,119 +5366,98 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {/* Ideas Display (Right) */}
               <div className="col-span-1 lg:col-span-8 flex flex-col gap-6">
                 {generatedIdeas.length > 0 ? (
-                  <div className="flex flex-col gap-8">
-                    {/* Unique Categories derived from the list */}
-                    {Array.from(new Set(generatedIdeas.map(i => i.category))).map(cat => (
-                      <div key={cat} className="flex flex-col gap-4">
-                        <h3 className="font-sans text-lg font-bold text-brand-gold border-b border-border-standard pb-2 capitalize">
-                          {cat}
-                        </h3>
+                  <div className="flex flex-col gap-6">
+                    {/* Strategic Diversity & Evidence Summary Strip */}
+                    {(() => {
+                      const divStats = evaluateOpportunityDiversity(generatedIdeas as IdeationOpportunityProposal[]);
+                      const sourceMap: Record<string, string> = {};
+                      [...sources, ...workspaceLocalSources].forEach((s: any) => {
+                        sourceMap[s.id] = s.title;
+                      });
+                      return (
+                        <>
+                          <div
+                            data-testid="ideation-diversity-summary"
+                            className="bg-surface-primary border border-border-standard px-4 py-3 rounded-xl flex flex-wrap items-center justify-between gap-3 text-[12px]"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-text-primary">Opportunity Set Quality:</span>
+                              <span className="px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-semibold">
+                                {divStats.uniqueCommunicationJobs} Distinct Communication Jobs
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-surface-inset text-text-secondary border border-border-standard">
+                                {divStats.uniqueStrategicAngles} Strategic Angles
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-text-secondary">
+                              {advancedBrief.selectedSourceIds.length > 0
+                                ? `Grounded in ${advancedBrief.selectedSourceIds.length} attached source(s)`
+                                : 'Grounded in Protected COH Kernel & Operating Core'}
+                            </div>
+                          </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          {generatedIdeas.filter(idea => idea.category === cat).map(idea => (
-                            <Card key={idea.id} className="shadow-level-1 border-border-standard hover:border-brand-gold/50 transition-colors flex flex-col h-full">
-                              <CardContent className="p-5 flex-1 flex flex-col gap-3">
-                                <div className="flex justify-between items-start gap-2">
-                                  <h4 className="font-sans font-bold text-text-primary text-[15px] leading-snug">{idea.title}</h4>
-                                  <Badge variant={idea.status === 'Promising' ? 'default' : 'outline'} className="text-[9px] uppercase">
-                                    {idea.status}
-                                  </Badge>
+                          <div className="flex flex-col gap-8">
+                            {Array.from(new Set(generatedIdeas.map(i => i.category))).map(cat => (
+                              <div key={cat} className="flex flex-col gap-4">
+                                <h3 className="font-sans text-lg font-bold text-brand-gold border-b border-border-standard pb-2 capitalize">
+                                  {cat}
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                  {generatedIdeas
+                                    .filter(idea => idea.category === cat)
+                                    .map(idea => (
+                                      <IdeationOpportunityCard
+                                        key={idea.id}
+                                        idea={idea}
+                                        savingIdeaId={savingIdeaId}
+                                        sourceTitlesMap={sourceMap}
+                                        onUpdateStatus={handleUpdateIdeaStatus}
+                                        onGenerateVariation={targetIdea => {
+                                          setIsIdeating(true);
+                                          setTimeout(() => {
+                                            setIsIdeating(false);
+                                            setGeneratedIdeas(prev =>
+                                              prev.map(p =>
+                                                p.id === targetIdea.id
+                                                  ? {
+                                                      ...p,
+                                                      title: `Alternative Angle: ${p.title.replace(/^Alternative Angle:\s*/i, '')}`,
+                                                      strategicAngle: `${p.strategicAngle || 'Strategic'} (Refined Perspective)`,
+                                                      status: 'New'
+                                                    }
+                                                  : p
+                                              )
+                                            );
+                                          }, 350);
+                                        }}
+                                        onSaveToLibrary={handleSaveIdeaToLibrary}
+                                        onPromoteToWorkspace={handleCopyIdeaToWorkspace}
+                                        onInspectReuseCandidate={(itemType, _itemId) => {
+                                          if (itemType === 'idea') {
+                                            setActiveTab('idea-library');
+                                          } else {
+                                            setActiveTab('content-library');
+                                          }
+                                        }}
+                                      />
+                                    ))}
                                 </div>
-                                <p className="font-sans text-[13px] text-text-secondary leading-relaxed">{idea.explanation}</p>
-                                <p className="font-sans text-[12px] text-brand-gold font-semibold leading-relaxed">Why it works: {idea.whyItWorks}</p>
-                                
-                                {idea.possibleHook && (
-                                  <div className="bg-surface-inset p-2.5 border border-border-standard rounded-md font-sans text-[12px] italic text-text-secondary">
-                                    <span className="font-bold not-italic block mb-0.5">Hook idea:</span> "{idea.possibleHook}"
-                                  </div>
-                                )}
-
-                                {idea.possibleFirstPost && (
-                                  <div className="bg-brand-gold/5 p-2.5 border border-brand-gold/20 rounded-md font-sans text-[12px] text-text-primary">
-                                    <span className="font-bold block text-text-secondary mb-0.5">First Post Idea:</span>
-                                    "{idea.possibleFirstPost}"
-                                  </div>
-                                )}
-
-                                {idea.riskToAvoid && (
-                                  <p className="font-sans text-[12px] text-status-warning leading-relaxed mt-1">
-                                    <span className="font-bold">Risk to Avoid:</span> {idea.riskToAvoid}
-                                  </p>
-                                )}
-
-                                <p className="font-sans text-[12px] text-text-muted leading-relaxed mt-auto pt-2">
-                                  <span className="font-bold text-text-secondary">Next Step:</span> {idea.possibleNextStep}
-                                </p>
-
-                                <div className="flex gap-2 flex-wrap items-center mt-2">
-                                  <Badge variant="outline" className="text-[10px] text-text-muted border-border-strong">{idea.suggestedChannel}</Badge>
-                                  <Badge variant="outline" className="text-[10px] text-text-muted border-border-strong">{idea.suggestedFormat}</Badge>
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-4 border-t border-border-standard flex items-center justify-between gap-2 bg-surface-inset rounded-b-xl">
-                                <div className="flex gap-1.5">
-                                  <Button
-                                    variant="ghost" size="sm"
-                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Promising')}
-                                    className="h-8 text-xs text-brand-gold hover:bg-brand-gold/10"
-                                  >
-                                    Promising
-                                  </Button>
-                                  <Button
-                                    variant="ghost" size="sm"
-                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Not Useful')}
-                                    className="h-8 text-xs text-status-error hover:bg-status-error/10"
-                                  >
-                                    Not Useful
-                                  </Button>
-                                </div>
-
-                                <div className="flex gap-1.5 items-center">
-                                  <Button
-                                    variant="outline" size="sm"
-                                    onClick={() => {
-                                      setIsIdeating(true);
-                                      setTimeout(() => {
-                                        setIsIdeating(false);
-                                        setGeneratedIdeas(prev => prev.map(p => p.id === idea.id ? { ...p, title: `Alternative: ${p.title}`, status: 'New' } : p));
-                                      }, 500);
-                                    }}
-                                    className="h-8 text-xs border-border-strong text-text-secondary hover:text-text-primary"
-                                  >
-                                    Variations
-                                  </Button>
-                                  <Button
-                                    variant="outline" size="sm"
-                                    disabled={savingIdeaId === idea.id}
-                                    onClick={() => handleSaveIdeaToLibrary(idea)}
-                                    className="h-8 text-xs border-border-strong text-text-secondary hover:text-text-primary disabled:opacity-50"
-                                  >
-                                    {savingIdeaId === idea.id ? 'Saving...' : 'Save'}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCopyIdeaToWorkspace(idea)}
-                                    className="h-8 text-xs"
-                                  >
-                                    Draft
-                                  </Button>
-                                </div>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center p-16 text-center border-2 border-dashed border-border-standard rounded-2xl bg-surface-inset">
                     <div className="w-16 h-16 bg-surface-primary rounded-full flex items-center justify-center shadow-sm mb-4">
                       <Lightbulb size={28} className="text-brand-gold" />
                     </div>
-                    <h3 className="font-sans text-[18px] font-bold text-text-primary mb-2">No Ideas Generated Yet</h3>
+                    <h3 className="font-sans text-[18px] font-bold text-text-primary mb-2">No Opportunities Generated Yet</h3>
                     <p className="font-sans text-[14px] text-text-secondary max-w-md">
-                      Use the exploration panel on the left to generate fresh angles, hooks, and content directions.
+                      Use the exploration panel on the left to generate evidence-aware, reuse-checked COH communication opportunities.
                     </p>
                   </div>
                 )}
@@ -4945,7 +5467,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 mb-5">
               <h2 className="page-title">Idea Library</h2>
               <p className="page-subtitle">
                 Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
@@ -4954,31 +5476,31 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* List of saved ideas */}
             {savedIdeas.length > 0 ? (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {savedIdeas.map(idea => (
-                  <div key={idea.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={idea.id} className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start gap-2 flex-wrap">
                         <div>
-                          <div className="flex gap-2 items-center flex-wrap mb-1">
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-gold bg-slate-900 px-1.5 py-0.5 rounded">
+                          <div className="flex gap-2 items-center flex-wrap mb-1.5">
+                            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-gold bg-brand-gold/10 border border-brand-gold/25 px-2 py-0.5 rounded-md">
                               {idea.suggestedChannel}
                             </span>
-                            <span className="text-[9px] font-mono text-text-secondary uppercase font-semibold">
+                            <span className="text-[10px] font-mono text-text-secondary uppercase font-semibold">
                               {idea.category}
                             </span>
                           </div>
-                          <h4 className="font-sans text-base font-bold text-text-primary leading-snug">{idea.title}</h4>
+                          <h4 className="font-sans text-[15px] font-semibold text-text-primary leading-snug">{idea.title}</h4>
                         </div>
 
                         <select
                           value={idea.status}
                           onChange={(e) => handleUpdateIdeaStatus(idea.id, e.target.value as SavedIdea['status'])}
-                          className={`text-[10px] font-bold p-1 rounded font-mono border border-border-standard ${
-                            idea.status === 'Ready for Content' ? 'bg-blue-50 text-blue-800' :
-                            idea.status === 'Promising' ? 'bg-violet-600/15 text-text-primary' :
-                            idea.status === 'Used' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
-                            'bg-surface-primary text-text-primary'
+                          className={`text-[10.5px] font-semibold px-2.5 py-1 rounded-md border border-border-standard ${
+                            idea.status === 'Ready for Content' ? 'bg-status-info/10 text-status-info border-status-info/30' :
+                            idea.status === 'Promising' ? 'bg-brand-gold/15 text-brand-gold border-brand-gold/30' :
+                            idea.status === 'Used' ? 'bg-status-success/10 text-status-success border-status-success/30' :
+                            'bg-surface-inset text-text-primary'
                           }`}
                         >
                           <option value="New">New</option>
@@ -4990,36 +5512,36 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded font-sans">
+                      <p className="text-[13px] text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-3.5 border border-border-standard rounded-lg font-sans">
                         {idea.explanation}
                       </p>
 
-                      <div className="text-[10px] text-text-secondary space-y-1 font-sans">
-                        <div><strong>Original Input:</strong> "{idea.originalInput}"</div>
+                      <div className="text-[11px] text-text-secondary space-y-1 font-sans">
+                        <div><strong>Original Input:</strong> &ldquo;{idea.originalInput}&rdquo;</div>
                         <div><strong>Why it works:</strong> {idea.whyItWorks}</div>
-                        <div><strong>Hook idea:</strong> "{idea.possibleHook}"</div>
+                        <div><strong>Hook idea:</strong> &ldquo;{idea.possibleHook}&rdquo;</div>
                         {idea.possibleNextStep && <div><strong>Next action:</strong> {idea.possibleNextStep}</div>}
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-border-standard pt-4 text-[10px] text-text-muted font-mono">
+                    <div className="flex justify-between items-center border-t border-border-standard pt-3.5 text-[10px] text-text-muted font-mono flex-wrap gap-2">
                       <span>Saved: {idea.dateCreated}</span>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center flex-wrap">
                         <button
                           onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
-                          className="bg-surface-primary text-brand-gold hover:text-brand-gold-dark border border-border-standard px-3 py-1.5 rounded font-sans font-bold text-[10px] flex items-center gap-1"
+                          className="bg-surface-inset text-text-secondary hover:text-text-primary hover:border-brand-gold border border-border-standard px-2.5 py-1.5 rounded-lg font-sans font-medium text-[11px] flex items-center gap-1 transition-colors"
                         >
-                          <Lightbulb size={10} /> Send Visual Direction to Visual Studio
+                          <Lightbulb size={11} className="text-brand-gold" /> Send Visual Direction to Visual Studio
                         </button>
                         <button
                           onClick={() => handleCopyIdeaToWorkspace(idea)}
-                          className="bg-slate-900 text-white hover:bg-brand-gold-hover px-3 py-1.5 rounded font-sans font-bold text-[10px]"
+                          className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-3 py-1.5 rounded-lg font-sans font-semibold text-[11px] transition-colors"
                         >
                           Draft Content
                         </button>
                         <button
                           onClick={() => setSavedIdeas(prev => prev.filter(i => i.id !== idea.id))}
-                          className="text-[11px] text-red-800/70 hover:text-red-800 font-semibold"
+                          className="text-[11px] text-status-error/80 hover:text-status-error font-semibold px-1"
                         >
                           Delete
                         </button>
@@ -5042,13 +5564,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="page-shell">
             {/* Hero Area / Quick Prompt */}
-            <div className="bg-gradient-to-r from-brand-gold/10 to-brand-gold-hover/5 border border-brand-gold/20 p-8 rounded-2xl shadow-level-1 flex flex-col gap-4">
-              <h2 className="font-sans text-2xl font-bold text-text-primary">What are you working on today?</h2>
-              <div className="flex flex-col md:flex-row gap-3">
+            <div className="bg-surface-primary border border-border-standard p-6 md:p-7 rounded-xl shadow-level-1 flex flex-col gap-4">
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-gold block mb-1">Editorial Command</span>
+                <h2 className="font-sans text-xl md:text-2xl font-semibold text-text-primary tracking-tight">What are you working on today?</h2>
+              </div>
+              <div className="flex flex-col md:flex-row gap-2.5">
                 <input 
                   type="text" 
                   placeholder="e.g. 'Write a LinkedIn post about our new climate initiative...'"
-                  className="flex-1 h-12 px-4 bg-surface-primary border border-border-standard rounded-lg font-sans text-[15px] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent transition-all"
+                  className="flex-1 h-11 px-4 bg-surface-inset border border-border-standard rounded-lg font-sans text-[14px] text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent transition-all"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const id = `work-${Date.now()}`;
@@ -5071,15 +5596,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     setQuickBrief({ goal: 'Draft content from command center', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
                     setActiveTab('content-workspace');
                   }}
-                  className="h-12 px-6 bg-brand-gold text-text-inverse font-sans font-semibold rounded-lg shadow-sm hover:bg-brand-gold-hover transition-colors whitespace-nowrap flex items-center gap-2"
+                  className="h-11 px-5 bg-brand-gold text-text-inverse font-sans text-sm font-semibold rounded-lg shadow-xs hover:bg-brand-gold-hover transition-colors whitespace-nowrap flex items-center justify-center gap-2"
                 >
-                  Start Writing <ArrowRight size={16} />
+                  Start Writing <ArrowRight size={15} />
                 </button>
                 <button 
                   onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
-                  className="h-12 px-6 bg-surface-primary border border-border-strong text-text-primary font-sans font-semibold rounded-lg shadow-sm hover:bg-surface-inset transition-colors whitespace-nowrap flex items-center gap-2"
+                  className="h-11 px-5 bg-surface-primary border border-border-standard text-text-primary font-sans text-sm font-medium rounded-lg hover:bg-surface-inset transition-colors whitespace-nowrap flex items-center justify-center gap-2"
                 >
-                  Explore Ideas <Lightbulb size={16} className="text-brand-gold" />
+                  Explore Ideas <Lightbulb size={15} className="text-brand-gold" />
                 </button>
               </div>
             </div>
@@ -5287,13 +5812,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="page-shell">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
-              <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="page-title">
                       {(activeWorkItem?.title || 'Standalone Draft')}
                     </h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded status-badge">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-brand-gold/15 text-brand-gold border border-brand-gold/30 px-2 py-0.5 rounded-md status-badge">
                       {activeWorkItem.status}
                     </span>
                   </div>
@@ -5311,37 +5836,37 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
                       }
                     }}
-                    className="text-[10px] text-text-primary underline font-bold interactive-button"
+                    className="text-[11px] text-text-primary underline font-semibold interactive-button"
                   >
                     Rename Work Item
                   </button>
                   <button
                     onClick={() => setActiveWorkItem(null)}
-                    className="text-[10px] text-text-secondary hover:text-red-700 underline font-bold interactive-button mt-1"
+                    className="text-[11px] text-text-secondary hover:text-status-error underline font-semibold interactive-button mt-1"
                   >
                     Clear Workspace
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="font-sans text-2xl font-bold text-text-primary">Content Workspace</h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-surface-secondary border border-border-standard text-text-primary px-2 py-0.5 rounded-full">
+                    <h2 className="page-title">Content Workspace</h2>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-surface-inset border border-border-standard text-text-secondary px-2.5 py-0.5 rounded-full">
                       Standalone Draft
                     </span>
                   </div>
-                  <p className="font-sans text-[15px] text-text-secondary mt-1">Draft, edit, and optimize individual content assets with core guidance.</p>
+                  <p className="page-subtitle">Draft, edit, and optimize individual content assets with core guidance.</p>
                 </div>
                 
                 {/* Mode Toggle Button Group */}
                 <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard shrink-0">
                   <button
                     onClick={() => setCreationMode('simple')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'simple'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5349,9 +5874,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </button>
                   <button
                     onClick={() => setCreationMode('quick')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'quick'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5359,9 +5884,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </button>
                   <button
                     onClick={() => setCreationMode('advanced')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'advanced'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5371,9 +5896,135 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             )}
 
+            {(() => {
+              const snap = buildWorkContextSnapshot({
+                activeWorkItem,
+                fallbackOrigin: startedFromNote || (importedIdeationContext ? 'Ideation 2.0 Opportunity' : 'Content Workspace'),
+                fallbackTitle:
+                  activeWorkItem?.title ||
+                  importedIdeationContext?.title ||
+                  (creationMode === 'simple' ? simpleBrief.goal : creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic) ||
+                  'Standalone Draft',
+                audience: creationMode === 'advanced' ? advancedBrief.audience : undefined,
+                channel: creationMode === 'simple' ? simpleBrief.channel : creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel,
+                format: creationMode === 'quick' ? quickBrief.outputFormat : creationMode === 'advanced' ? advancedBrief.outputFormat : undefined,
+                pillar: creationMode === 'advanced' ? advancedBrief.pillar : undefined,
+                communicationJob: creationMode === 'advanced' ? advancedBrief.purpose : undefined,
+                sourceBindings: advancedBrief.selectedSourceIds
+                  .map(id => {
+                    const s = [...sources, ...workspaceLocalSources].find(x => x.id === id);
+                    return s
+                      ? {
+                          sourceId: s.id,
+                          title: s.title,
+                          type: s.type,
+                          role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type)
+                        }
+                      : null;
+                  })
+                  .filter(Boolean) as TaskSourceBinding[],
+                currentStudio: 'Content Workspace'
+              });
+              return (
+                <CurrentWorkContextBar
+                  currentStudio="Content Workspace"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                  onClearWorkContext={activeWorkItem ? () => setActiveWorkItem(null) : undefined}
+                />
+              );
+            })()}
+
+            <ContextManifestPanel
+              manifest={buildContentWorkspaceContextPackage().manifest}
+              theme={theme}
+            />
+
+            <SmartBriefPanel
+              smartBrief={resolveSmartBrief({
+                rawRequest:
+                  creationMode === 'simple'
+                    ? simpleBrief.goal
+                    : creationMode === 'quick'
+                      ? `${quickBrief.goal} ${quickBrief.notes}`.trim()
+                      : advancedBrief.topic,
+                explicitChannel:
+                  creationMode === 'simple'
+                    ? simpleBrief.channel
+                    : creationMode === 'quick'
+                      ? quickBrief.channel
+                      : advancedBrief.channel,
+                explicitFormat:
+                  creationMode === 'quick'
+                    ? quickBrief.outputFormat
+                    : creationMode === 'advanced'
+                      ? advancedBrief.outputFormat
+                      : undefined,
+                explicitAudience: creationMode === 'advanced' ? advancedBrief.audience : undefined,
+                explicitPurpose: creationMode === 'advanced' ? advancedBrief.purpose : undefined,
+                explicitPillar: creationMode === 'advanced' ? advancedBrief.pillar : undefined,
+                explicitLanguage:
+                  creationMode === 'quick'
+                    ? quickBrief.language
+                    : creationMode === 'advanced'
+                      ? advancedBrief.language
+                      : undefined,
+                explicitLength: creationMode === 'advanced' ? advancedBrief.desiredLength : undefined,
+                explicitDirection: creationMode === 'advanced' ? advancedBrief.customDirection : undefined,
+                selectedSourceIds: advancedBrief.selectedSourceIds,
+                inheritedWorkContext: extractWorkContextFromWorkItem(activeWorkItem),
+                operatingCore,
+                availableSources: [...selectableSources, ...workspaceLocalSources]
+              })}
+              speedMode={generationSpeedMode}
+              onChangeSpeedMode={setGenerationSpeedMode}
+              onApplySmartBrief={(resolved: ResolvedSmartBrief) => {
+                setSimpleBrief(prev => ({
+                  ...prev,
+                  goal: resolved.topic.value || prev.goal,
+                  channel: resolved.channel.value
+                }));
+                setQuickBrief(prev => ({
+                  ...prev,
+                  goal: resolved.topic.value || prev.goal,
+                  channel: resolved.channel.value,
+                  outputFormat: resolved.outputFormat.value,
+                  language: resolved.language.value
+                }));
+                setAdvancedBrief(prev => ({
+                  ...prev,
+                  topic: resolved.topic.value || prev.topic,
+                  channel: resolved.channel.value,
+                  outputFormat: resolved.outputFormat.value,
+                  audience: resolved.audience.value,
+                  purpose: resolved.purpose.value,
+                  pillar: resolved.pillar.value,
+                  language: resolved.language.value,
+                  desiredLength: resolved.desiredLength.value,
+                  customDirection: resolved.directionAngle.value
+                }));
+              }}
+              onSelectSuggestedSource={(sourceId: string) => {
+                setAdvancedBrief(prev => ({
+                  ...prev,
+                  selectedSourceIds: prev.selectedSourceIds.includes(sourceId)
+                    ? prev.selectedSourceIds
+                    : [...prev.selectedSourceIds, sourceId]
+                }));
+              }}
+            />
+
             {/* Validation warning block */}
             {validationWarning && (
-              <div className="bg-red-500/10 backdrop-blur-md border border-red-200 p-4 rounded text-xs text-red-800 font-semibold flex items-center gap-2 animate-pulse">
+              <div className="bg-status-error/10 border border-status-error/30 p-3.5 rounded-xl text-xs text-status-error font-semibold flex items-center gap-2">
                 <AlertTriangle size={15} />
                 <span>{validationWarning}</span>
               </div>
@@ -5381,12 +6032,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* Outdated generation alert banner */}
             {isBriefOutdated && (
-              <div className="bg-status-warning/10 border border-status-warning/20 p-4 rounded text-xs text-text-primary flex justify-between items-center">
+              <div className="bg-status-warning/10 border border-status-warning/25 p-3.5 rounded-xl text-xs text-text-primary flex justify-between items-center">
                 <span>Inputs changed. Regenerate to apply the latest brief.</span>
                 <button
                   disabled={isGeneratingDrafts || aiIsGenerating}
                   onClick={handleGenerateDrafts}
-                  className="bg-slate-900 text-white px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-brand-gold-hover transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
+                  className="bg-brand-gold text-text-inverse px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-xs hover:bg-brand-gold-hover transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
                 >
                   {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                 </button>
@@ -5394,13 +6045,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
             )}
 
             {/* Honest Prototype Banner */}
-            <div className="bg-amber-500/10 backdrop-blur-md/70 border border-border-strong p-4 rounded text-xs text-text-primary flex justify-between items-center gap-4 flex-wrap">
+            <div className="bg-surface-inset border border-border-standard px-4 py-3 rounded-xl text-xs text-text-secondary flex justify-between items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <AlertTriangle size={15} className="text-brand-gold shrink-0" />
+                <AlertTriangle size={14} className="text-brand-gold shrink-0" />
                 <span>Needs review: drafts are generated by local logic. For final-quality copy, use Prompt Builder or connect an AI model.</span>
               </div>
               <div className="flex gap-2">
-                <span className="bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                <span className="bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold">
                   Rules Active
                 </span>
               </div>
@@ -5409,22 +6060,22 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {/* Content Starters container */}
             <div className="card-level-1 p-4 border border-border-standard space-y-3">
               <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
-                <span className="font-semibold text-text-primary text-sm">Content Starters</span>
-                <span className="text-xs text-brand-gold font-semibold bg-surface-primary px-2 py-1 rounded">
+                <span className="font-semibold text-text-primary text-xs uppercase tracking-wider">Content Starters</span>
+                <span className="text-xs text-brand-gold font-semibold bg-surface-inset border border-border-standard px-2.5 py-1 rounded-md">
                   {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
                 </span>
               </div>
               
               {showContentStarters && (
-                <div className="space-y-4 pt-2 border-t border-border-standard">
-                  <div className="space-y-2">
+                <div className="space-y-3.5 pt-2.5 border-t border-border-standard">
+                  <div className="space-y-1.5">
                     <span className="font-medium block text-text-secondary text-xs">Templates:</span>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       {CONTENT_TEMPLATES.map(temp => (
                         <button
                           key={temp.name}
                           onClick={() => applyTemplate(temp)}
-                          className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1.5 px-3 rounded text-[11px] transition font-medium"
+                          className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1.5 px-3 rounded-md text-[11px] transition font-medium"
                           title={temp.desc}
                         >
                           {temp.name}
@@ -5433,42 +6084,42 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <span className="font-medium block text-text-secondary text-xs">Example Briefs:</span>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       <button
                         onClick={() => applyExampleChip('tetralogy')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Announce Tetralogy
                       </button>
                       <button
                         onClick={() => applyExampleChip('cultural-ip')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Cultural IP & Model
                       </button>
                       <button
                         onClick={() => applyExampleChip('event-notes')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Nordic Air (Soria Moria)
                       </button>
                       <button
                         onClick={() => applyExampleChip('instagram-img')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Water Dragon Caption
                       </button>
                       <button
                         onClick={() => applyExampleChip('sponsor-facing')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Patron Pitch Paragraph
                       </button>
                       <button
                         onClick={() => applyExampleChip('newsletter-update')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Earth Canon Update
                       </button>
@@ -6147,20 +6798,49 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
                       </label>
                       
-                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-32 overflow-y-auto space-y-1.5 text-[11px] mb-3">
+                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-48 overflow-y-auto space-y-2 text-[11px] mb-3" data-testid="workspace-selected-sources-list">
                         {[...selectableSources, ...workspaceLocalSources].map(src => {
                           const isSel = advancedBrief.selectedSourceIds.includes(src.id);
+                          const activeRole = getEffectiveSourceRole(src);
+                          const activeExcerpts = getEffectiveSourceExcerpts(src.id);
                           return (
-                            <div key={src.id} className="flex items-center gap-1.5">
-                              <input
-                                type="checkbox"
-                                checked={isSel}
-                                onChange={() => toggleSourceSelection(src.id)}
-                                className="rounded border-brand-gold/50 text-brand-gold scale-75"
-                              />
-                              <span className="truncate">{src.title}</span>
-                              {workspaceLocalSources.some(w => w.id === src.id) && (
-                                <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded">Local</span>
+                            <div key={src.id} className="space-y-1">
+                              <div className="flex items-center justify-between gap-1.5">
+                                <label className="flex items-center gap-1.5 min-w-0 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={isSel}
+                                    onChange={() => toggleSourceSelection(src.id)}
+                                    data-testid={`workspace-source-checkbox-${src.id}`}
+                                    className="rounded border-brand-gold/50 text-brand-gold scale-75 shrink-0"
+                                  />
+                                  <span className="truncate font-medium">{src.title}</span>
+                                </label>
+                                {workspaceLocalSources.some(w => w.id === src.id) && (
+                                  <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded shrink-0">Local</span>
+                                )}
+                              </div>
+                              {isSel && (
+                                <div
+                                  className="pl-5 flex flex-wrap items-center gap-1.5 text-[10px]"
+                                  data-testid={`workspace-source-role-bar-${src.id}`}
+                                >
+                                  <span className="text-text-secondary font-semibold">Role:</span>
+                                  <select
+                                    value={activeRole}
+                                    onChange={(e) => handleChangeSourceTaskRole(src.id, e.target.value as SourceTaskRole)}
+                                    data-testid={`workspace-source-role-select-${src.id}`}
+                                    aria-label={`Workspace role for ${src.title}`}
+                                    className="bg-surface-primary border border-border-standard rounded px-1.5 py-0.5 text-[10px] font-semibold text-text-primary"
+                                  >
+                                    {ALL_SOURCE_TASK_ROLES.map(r => (
+                                      <option key={r} value={r}>{r}</option>
+                                    ))}
+                                  </select>
+                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-mono">
+                                    {activeExcerpts.length > 0 ? `${activeExcerpts.length} excerpt(s)` : 'Bounded source'}
+                                  </span>
+                                </div>
                               )}
                             </div>
                           );
@@ -6552,9 +7232,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="space-y-4">
 
                       {/* Option A card */}
-                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
+                      <div
+                        data-testid="draft-option-a-card"
+                        className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm"
+                      >
                         <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
-                          <span className="font-sans text-xs font-bold text-text-primary">Option A — Direct / Institutional</span>
+                          <span className="font-sans text-xs font-bold text-text-primary">
+                            {generationSpeedMode === 'fast'
+                              ? 'Focused Primary Draft (Fast Mode)'
+                              : 'Option A — Direct / Institutional'}
+                          </span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionA) ? (
                               <button
@@ -6594,6 +7281,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             Revise This Draft
                           </button>
                           <button
+                            onClick={() => {
+                              setReframingInitialOrigin({
+                                originType: 'Content Workspace',
+                                originTitle: `${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option A`,
+                                sourceContent: draftOptions.optionA,
+                                originChannel: creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel,
+                                originAudience: creationMode === 'advanced' ? advancedBrief.audience : 'General Public'
+                              });
+                              setActiveTab('reframing-studio');
+                            }}
+                            className="bg-surface-primary border border-border-strong text-text-primary hover:border-brand-gold text-[10px] font-bold px-3 py-1.5 rounded transition"
+                          >
+                            Reframe Draft
+                          </button>
+                          <button
                             onClick={() => saveDirectDraftToLibrary(draftOptions.optionA, 'A')}
                             className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
                           >
@@ -6608,70 +7310,80 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                       </div>
 
-                      {/* Option B card */}
-                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
-                        <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
-                          <span className="font-sans text-xs font-bold text-text-primary">Option B — Human / Narrative</span>
-                          <div className="flex items-center gap-2">
-                            {detectCleanlinessIssues(draftOptions.optionB) ? (
-                              <button
-                                onClick={cleanOptionBDraft}
-                                title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
-                              >
-                                ⚠️ Needs cleanup
-                              </button>
-                            ) : (
-                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-800 border border-green-200">
-                                ✓ Clean
+                      {/* Option B card (Explore Mode only) */}
+                      {generationSpeedMode === 'explore' && (
+                        <div
+                          data-testid="draft-option-b-card"
+                          className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm"
+                        >
+                          <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
+                            <span className="font-sans text-xs font-bold text-text-primary">Option B — Human / Narrative</span>
+                            <div className="flex items-center gap-2">
+                              {detectCleanlinessIssues(draftOptions.optionB) ? (
+                                <button
+                                  onClick={cleanOptionBDraft}
+                                  title="Click to clean em dashes, curly quotes, and AI punctuation"
+                                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
+                                >
+                                  ⚠️ Needs cleanup
+                                </button>
+                              ) : (
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-800 border border-green-200">
+                                  ✓ Clean
+                                </span>
+                              )}
+                              <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-violet-600/25 text-text-primary-light flex items-center gap-1">
+                                {draftOptions.labelB} <Tooltip text="Shows how much the draft is supported by sources." />
                               </span>
-                            )}
-                            <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-violet-600/25 text-text-primary-light flex items-center gap-1">
-                              {draftOptions.labelB} <Tooltip text="Shows how much the draft is supported by sources." />
-                            </span>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <p className="text-xs text-text-primary/85 leading-relaxed whitespace-pre-wrap select-all font-sans">
+                              {draftOptions.optionB}
+                            </p>
+                          </div>
+                          <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
+                            <button
+                              onClick={() => {
+                                setActiveDraftText(draftOptions.optionB);
+                                setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option B`);
+                                setActiveDraftVersion(1);
+                                setActiveDraftHistory([{ version: 1, text: draftOptions.optionB, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
+                                setActiveDraftSource('Content Workspace');
+                                setActiveTab('revision-studio');
+                              }}
+                              className="bg-slate-900 text-white hover:bg-brand-gold-hover text-[10px] font-bold px-3 py-1.5 rounded transition"
+                            >
+                              Revise This Draft
+                            </button>
+                            <button
+                              onClick={() => saveDirectDraftToLibrary(draftOptions.optionB, 'B')}
+                              className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
+                            >
+                              Save to Library
+                            </button>
+                            <button
+                              onClick={() => handleCopyClipboard(draftOptions.optionB, 'optB')}
+                              className="text-text-secondary text-[10px] font-medium px-2 py-2 interactive-link"
+                            >
+                              {copySuccessMap['optB'] ? '✓ Copied' : 'Copy'}
+                            </button>
                           </div>
                         </div>
-                        <div className="p-4">
-                          <p className="text-xs text-text-primary/85 leading-relaxed whitespace-pre-wrap select-all font-sans">
-                            {draftOptions.optionB}
-                          </p>
-                        </div>
-                        <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
-                          <button
-                            onClick={() => {
-                              setActiveDraftText(draftOptions.optionB);
-                              setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option B`);
-                              setActiveDraftVersion(1);
-                              setActiveDraftHistory([{ version: 1, text: draftOptions.optionB, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
-                              setActiveDraftSource('Content Workspace');
-                              setActiveTab('revision-studio');
-                            }}
-                            className="bg-slate-900 text-white hover:bg-brand-gold-hover text-[10px] font-bold px-3 py-1.5 rounded transition"
-                          >
-                            Revise This Draft
-                          </button>
-                          <button
-                            onClick={() => saveDirectDraftToLibrary(draftOptions.optionB, 'B')}
-                            className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
-                          >
-                            Save to Library
-                          </button>
-                          <button
-                            onClick={() => handleCopyClipboard(draftOptions.optionB, 'optB')}
-                            className="text-text-secondary text-[10px] font-medium px-2 py-2 interactive-link"
-                          >
-                            {copySuccessMap['optB'] ? '✓ Copied' : 'Copy'}
-                          </button>
-                        </div>
+                      )}
+
+                    </div>
+
+                    {/* 2. Shorter Version (Explore Mode only) */}
+                    {generationSpeedMode === 'explore' && (
+                      <div
+                        data-testid="draft-shorter-version-card"
+                        className="bg-surface-inset border border-border-standard p-4 rounded text-xs space-y-2"
+                      >
+                        <span className="font-sans font-bold text-text-primary text-xs block">Shorter Version</span>
+                        <p className="text-xs text-text-primary italic leading-relaxed">{draftOptions.optionC}</p>
                       </div>
-
-                    </div>
-
-                    {/* 2. Shorter Version */}
-                    <div className="bg-surface-inset border border-border-standard p-4 rounded text-xs space-y-2">
-                      <span className="font-sans font-bold text-text-primary text-xs block">Shorter Version</span>
-                      <p className="text-xs text-text-primary italic leading-relaxed">{draftOptions.optionC}</p>
-                    </div>
+                    )}
 
                     {/* 3. Visual Direction */}
                     <div className="bg-surface-inset p-4 border border-border-standard rounded text-xs space-y-2">
@@ -6771,7 +7483,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="bg-violet-600 hover:bg-violet-600-dark text-text-primary px-3 py-1.5 rounded font-bold text-[10px] font-sans transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
+                          className="bg-brand-gold hover:bg-brand-gold-hover text-surface-base px-3 py-1.5 rounded-lg font-bold text-[10px] font-sans transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -6781,13 +7493,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     {/* 5. Recommended Approach */}
                     {advancedBrief.directionMode === 'auto' && (
-                      <details className="text-xs border border-border-standard p-3 rounded bg-surface-inset cursor-pointer">
+                      <details className="text-xs border border-border-standard p-3 rounded-lg bg-surface-inset cursor-pointer">
                         <summary className="font-semibold text-text-primary hover:text-brand-gold font-sans">View Recommended Approaches</summary>
                         <div className="space-y-3 mt-3">
                           {getDynamicDirections().map(d => {
                             const isSel = d.title === advancedBrief.angle;
                             return (
-                              <div key={d.title} className={`p-3 border rounded text-xs transition cursor-default ${
+                              <div key={d.title} className={`p-3 border rounded-lg text-xs transition cursor-default ${
                                 isSel ? 'border-brand-gold bg-surface-inset' : 'border-border-standard bg-surface-inset/50'
                               }`}>
                                 <h4 className="font-sans font-bold text-text-primary mb-1">{d.title}</h4>
@@ -6795,12 +7507,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 <div className="text-[10px] text-text-secondary space-y-1">
                                   <div><strong>Why this works:</strong> Visually anchors local data context.</div>
                                   <div><strong>Best use:</strong> {d.bestChannelFit}</div>
-                                  <div className="text-red-800"><strong>Risk to avoid:</strong> {d.whatNotToSay}</div>
+                                  <div className="text-status-error"><strong>Risk to avoid:</strong> {d.whatNotToSay}</div>
                                 </div>
                                 <div className="flex gap-2 mt-2">
                                   <button
                                     onClick={() => setAdvancedBrief({ ...advancedBrief, angle: d.title })}
-                                    className="bg-slate-900 text-white px-2 py-1 rounded text-[10px]"
+                                    className="bg-brand-gold text-surface-base font-bold px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Use This Approach
                                   </button>
@@ -6812,7 +7524,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         customDirection: d.whatToSay
                                       });
                                     }}
-                                    className="bg-surface-primary border border-border-standard text-text-primary px-2 py-1 rounded text-[10px]"
+                                    className="bg-surface-primary border border-border-standard text-text-primary px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Edit Approach
                                   </button>
@@ -6823,7 +7535,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         angle: 'Create From Scratch / No Direction'
                                       });
                                     }}
-                                    className="bg-red-500/10 backdrop-blur-md text-red-700 px-2 py-1 rounded text-[10px]"
+                                    className="bg-status-error/10 text-status-error px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Skip Approach
                                   </button>
@@ -6857,29 +7569,61 @@ WRITING CLEANLINESS RULES (CRITICAL):
           return (
           <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Visual Production
+              </div>
               <h2 className="page-title">Visual Studio</h2>
               <p className="page-subtitle">Create visual outputs from full visual directions or custom prompts.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {(() => {
+              const snap = buildWorkContextSnapshot({
+                activeWorkItem,
+                fallbackOrigin: vsSourceItem ? `${vsSourceItem.type} Handoff` : 'Visual Studio',
+                fallbackTitle: vsSourceItem?.title || activeWorkItem?.title || vsConcept || 'Visual Direction Brief',
+                audience: advancedBrief.audience,
+                channel: advancedBrief.channel,
+                format: vsFormat || advancedBrief.outputFormat,
+                pillar: advancedBrief.pillar,
+                communicationJob: advancedBrief.purpose,
+                currentStudio: 'Visual Studio'
+              });
+              return (
+                <CurrentWorkContextBar
+                  currentStudio="Visual Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              );
+            })()}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Column: Editor & Controls */}
-              <div className="lg:col-span-5 space-y-6">
+              <div className="lg:col-span-5 space-y-5">
                 
                 {/* Input Mode Selector */}
                 <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
-                  <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">Input Mode</h3>
+                  <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Input Mode</h3>
                   
-                  <div className="flex bg-surface-inset p-1 rounded border border-border-standard">
+                  <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard">
                     <button
                       onClick={() => setVsInputMode('Manual')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Manual' ? 'bg-slate-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 px-4 py-1.5 text-xs font-semibold rounded-md transition ${vsInputMode === 'Manual' ? 'bg-brand-gold text-surface-base shadow-sm font-bold' : 'text-text-secondary hover:text-text-primary'}`}
                     >
                       Manual Prompt
                     </button>
                     <button
                       onClick={() => setVsInputMode('Imported')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Imported' ? 'bg-slate-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 px-4 py-1.5 text-xs font-semibold rounded-md transition ${vsInputMode === 'Imported' ? 'bg-brand-gold text-surface-base shadow-sm font-bold' : 'text-text-secondary hover:text-text-primary'}`}
                     >
                       Imported Visual Direction
                     </button>
@@ -6888,25 +7632,25 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {vsInputMode === 'Imported' ? (
                     <div>
                       {vsSourceItem ? (
-                        <div className="bg-surface-inset p-3 rounded text-sm text-text-primary border border-border-standard">
+                        <div className="bg-surface-inset p-3 rounded-lg text-sm text-text-primary border border-border-standard">
                           <span className="block text-[10px] uppercase tracking-wider text-text-secondary mb-1">Imported from {vsSourceItem.type}</span>
                           <strong className="block truncate font-sans" title={vsSourceItem.title}>{vsSourceItem.title}</strong>
                         </div>
                       ) : (
-                        <div className="bg-surface-inset p-3 rounded text-sm text-text-secondary italic border border-border-standard">
+                        <div className="bg-surface-inset p-3 rounded-lg text-xs text-text-secondary italic border border-border-standard">
                           No imported visual direction selected. Send one from Content Workspace or Content Library.
                         </div>
                       )}
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-text-secondary font-semibold mb-1">Visual Prompt or Brief</label>
+                      <label className="block text-text-secondary font-semibold mb-1.5">Visual Prompt or Brief</label>
                       <textarea
                         value={vsManualPrompt}
                         onChange={(e) => setVsManualPrompt(e.target.value)}
                         placeholder="Paste a prompt, visual direction, image idea, or creative brief."
                         rows={4}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-xs font-sans"
+                        className="w-full bg-surface-primary border border-border-standard p-2.5 rounded-lg text-text-primary text-xs font-sans"
                       />
                     </div>
                   )}
@@ -6914,14 +7658,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 {/* Generation Controls */}
                 <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
-                  <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">Generation Settings</h3>
+                  <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Generation Settings</h3>
                   
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Prompt Build Mode</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Prompt Build Mode</label>
                     <select
                       value={vsPromptMode}
                       onChange={(e) => setVsPromptMode(e.target.value as any)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       {vsInputMode === 'Manual' && <option value="Manual Only">Manual Prompt Only</option>}
                       <option value="Full + AI">Full Visual Direction + AI Image Prompt</option>
@@ -6931,11 +7675,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Aspect Ratio</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Aspect Ratio</label>
                     <select
                       value={vsAspectRatio}
                       onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       {ASPECT_RATIO_GROUP_ORDER.map(group => (
                         <optgroup key={group} label={group}>
@@ -6958,22 +7702,22 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="mt-2 flex gap-2">
                         <div className="flex-1">
                           <label className="block text-[10px] text-text-secondary mb-1">Width (px)</label>
-                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded-lg" />
                         </div>
                         <div className="flex-1">
                           <label className="block text-[10px] text-text-secondary mb-1">Height (px)</label>
-                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded-lg" />
                         </div>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Visual Style</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Visual Style</label>
                     <select
                       value={vsVisualStyle}
                       onChange={(e) => setVsVisualStyle(e.target.value)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       <option value="Editorial Photomontage">Editorial Photomontage</option>
                       <option value="Cinematic Realism">Cinematic Realism</option>
@@ -6989,17 +7733,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
                     </Button>
                     {isTextLed && !vsTextContent.trim() && (
-                      <p className="text-[10px] text-amber-500 text-center mt-1 font-semibold">Warning: No Text Content provided. Generated image will have AI placeholder text.</p>
+                      <p className="text-[10px] text-status-warning text-center mt-1.5 font-semibold">Warning: No Text Content provided. Generated image will have AI placeholder text.</p>
                     )}
                   </div>
-                  {!aiProvider && <p className="text-xs text-red-500 text-center mt-2">No AI provider configured.</p>}
-                  {aiLastError && <p className="text-xs text-red-500 text-center mt-2">{aiLastError}</p>}
+                  {!aiProvider && <p className="text-xs text-status-error text-center mt-2">No AI provider configured.</p>}
+                  {aiLastError && <p className="text-xs text-status-error text-center mt-2">{aiLastError}</p>}
                 </div>
 
               {/* Structured Visual Brief Editor */}
               <div className="card-level-1 p-5 border border-border-standard space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
-                <div className="flex justify-between items-center mb-2 border-b border-border-standard pb-2">
-                  <h3 className="font-sans text-base font-bold text-text-primary">Structured Visual Brief</h3>
+                <div className="flex justify-between items-center mb-1 border-b border-border-standard pb-2">
+                  <h3 className="font-sans text-sm font-bold text-text-primary">Structured Visual Brief</h3>
                   {vsInputMode === 'Manual' && (
                     <button
                       onClick={() => setShowAdvancedBrief(!showAdvancedBrief)}
@@ -7015,15 +7759,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     
                     {/* Validation UI */}
                     {vsInputMode === 'Imported' && vsImportValidation && (
-                       <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2 flex flex-col gap-1">
+                       <div className="bg-surface-inset border border-border-standard rounded-lg p-3 mb-2 flex flex-col gap-1">
                           <div className="flex items-center justify-between">
-                             <span className="font-semibold text-blue-900">Brief Import Status</span>
-                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${vsImportValidation.recognized > 5 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                             <span className="font-semibold text-text-primary">Brief Import Status</span>
+                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${vsImportValidation.recognized > 5 ? 'bg-status-success/15 text-status-success' : 'bg-status-warning/15 text-status-warning'}`}>
                                 {vsImportValidation.recognized}/{vsImportValidation.total} Fields Parsed
                              </span>
                           </div>
                           {vsImportValidation.missing.length > 0 && (
-                            <p className="text-[10px] text-blue-700 italic">
+                            <p className="text-[10px] text-text-secondary italic">
                                Unrecognized optional fields: {vsImportValidation.missing.join(', ')}
                             </p>
                           )}
@@ -7032,15 +7776,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   
                     {/* Text-led specific fields */}
                     {isTextLed && (
-                      <div className="bg-violet-600/10 p-3 rounded border border-border-strong mb-2">
+                      <div className="bg-brand-gold/5 p-3 rounded-lg border border-brand-gold/30 mb-2">
                          <div className="mb-3">
-                           <label className="block text-text-primary font-bold mb-1 flex items-center gap-1">Text Content (Required) <span className="text-red-500">*</span></label>
+                           <label className="block text-text-primary font-bold mb-1 flex items-center gap-1">Text Content (Required) <span className="text-status-error">*</span></label>
                            <textarea
                              value={vsTextContent}
                              onChange={(e) => setVsTextContent(e.target.value)}
                              rows={3}
                              placeholder="The exact quote or text to display on the card..."
-                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                            />
                          </div>
                          <div>
@@ -7050,7 +7794,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              value={vsAttribution}
                              onChange={(e) => setVsAttribution(e.target.value)}
                              placeholder="e.g. John Doe, CEO"
-                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                            />
                          </div>
                       </div>
@@ -7075,13 +7819,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           value={field.value}
                           onChange={(e) => field.setter(e.target.value)}
                           rows={field.label === 'Visual Concept' || field.label === 'AI Image Prompt' ? 3 : 2}
-                          className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded font-sans"
+                          className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                         />
                       </div>
                     ))}
                   </div>
                 ) : (
-                   <div className="text-center py-12 text-text-muted italic text-sm">
+                   <div className="text-center py-8 text-text-muted italic text-xs">
                      Advanced brief fields are hidden in manual mode.
                    </div>
                   )}
@@ -7089,32 +7833,39 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
-                <div className="border-b border-border-standard pb-2 flex justify-between items-center">
-                  <h3 className="font-sans text-lg font-semibold text-text-primary">
-                    Results
-                  </h3>
+              <div className="lg:col-span-7 card-level-1 p-6 space-y-5">
+                <div className="border-b border-border-standard pb-3 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-sans text-base font-bold text-text-primary">
+                      Results &amp; Visual Canvas
+                    </h3>
+                    <p className="text-[11px] text-text-secondary mt-0.5">
+                      High-resolution image outputs and compiled prompt provenance.
+                    </p>
+                  </div>
                 </div>
                 
                 {isGeneratingImage ? (
-                  <div className="bg-surface-primary p-12 rounded text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
+                  <div className="bg-surface-inset p-12 rounded-xl text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
                     <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-text-primary font-semibold text-sm">Generating...</p>
                   </div>
                 ) : vsGeneratedImages.length === 0 ? (
-                  <div className="bg-surface-primary p-8 rounded text-center text-text-secondary italic border border-dashed border-border-strong">
-                    No images generated yet.
+                  <div className="bg-surface-inset p-12 rounded-xl text-center text-text-secondary border border-dashed border-border-standard">
+                    <Lightbulb size={22} className="mx-auto text-brand-gold/40 mb-2" />
+                    <p className="text-xs font-medium text-text-primary">No images generated yet.</p>
+                    <p className="text-[11px] text-text-muted mt-1">Configure your visual direction on the left and click Generate.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {vsGeneratedImages.map(img => (
-                      <div key={img.id} className="bg-surface-inset border border-border-standard rounded p-4 shadow-sm group">
-                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-border-standard" />
+                      <div key={img.id} className="bg-surface-inset border border-border-standard rounded-xl p-4 shadow-sm group">
+                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded-lg mb-3 border border-border-standard" />
                         <div className="flex gap-2 text-xs">
                           <a
                             href={img.url}
                             download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
-                            className="w-full bg-surface-primary hover:bg-violet-600 hover:text-text-primary text-text-primary border border-border-strong py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
+                            className="w-full bg-surface-primary hover:bg-brand-gold hover:text-surface-base text-text-primary border border-border-strong py-2.5 rounded-lg text-center font-bold transition flex items-center justify-center gap-1.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
@@ -7122,7 +7873,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                         {/* Compiled Prompt Preview */}
                         {img.promptUsed && (
-                          <details className="mt-4 border border-border-standard rounded overflow-hidden">
+                          <details className="mt-4 border border-border-standard rounded-lg overflow-hidden">
                             <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase tracking-wider text-text-secondary font-bold cursor-pointer select-none flex justify-between">
                               <span>Compiled Prompt Preview (Debug)</span>
                               <span className="opacity-50 font-mono">
@@ -7151,11 +7902,44 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)})()}
 
         {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
+          {(() => {
+            const snap = buildWorkContextSnapshot({
+              activeWorkItem,
+              fallbackOrigin: activeDraftSource || 'Revision Studio',
+              fallbackTitle: activeDraftTitle || activeWorkItem?.title || 'Draft in Revision',
+              audience: advancedBrief.audience,
+              channel: advancedBrief.channel,
+              format: advancedBrief.outputFormat,
+              pillar: advancedBrief.pillar,
+              communicationJob: advancedBrief.purpose,
+              currentStudio: 'Revision Studio'
+            });
+            return (
+              <div className="px-4 sm:px-6 pt-4">
+                <CurrentWorkContextBar
+                  currentStudio="Revision Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              </div>
+            );
+          })()}
           <RevisionStudio
             initialDraft={activeDraftText}
             initialSourceType={activeDraftSource === 'Content Workspace' ? 'contentWorkspace' : 'contentLibrary'}
             initialSourceTitle={activeDraftTitle}
             operatingCore={operatingCore}
+            coreDocuments={operatingCoreDocs}
+            activeWorkItem={activeWorkItem}
+            theme={theme}
             aiStatus={aiStatus}
             generationMode={generationMode}
             aiService={aiService}
@@ -7163,39 +7947,204 @@ WRITING CLEANLINESS RULES (CRITICAL):
             onNavigateToLibrary={() => setActiveTab('content-library')}
           />
         </ErrorBoundary>)}
+
+        {activeTab === 'reframing-studio' && (<ErrorBoundary fallbackTitle="Reframing Studio Error">
+          {(() => {
+            const snap = buildWorkContextSnapshot({
+              activeWorkItem,
+              fallbackOrigin: reframingInitialOrigin?.originType || 'Reframing Studio',
+              fallbackTitle: reframingInitialOrigin?.originTitle || activeWorkItem?.title || 'Strategic Reframe',
+              audience: reframingInitialOrigin?.originAudience || advancedBrief.audience,
+              channel: reframingInitialOrigin?.originChannel || advancedBrief.channel,
+              format: advancedBrief.outputFormat,
+              pillar: advancedBrief.pillar,
+              communicationJob: advancedBrief.purpose,
+              currentStudio: 'Reframing Studio'
+            });
+            return (
+              <div className="px-4 sm:px-6 pt-4">
+                <CurrentWorkContextBar
+                  currentStudio="Reframing Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              </div>
+            );
+          })()}
+          <ReframingStudio
+            operatingCore={operatingCore}
+            operatingCoreDocs={operatingCoreDocs}
+            sources={[...sources, ...workspaceLocalSources]}
+            savedContent={savedContent}
+            workspaceDraftText={draftOptions?.optionA || activeDraftText || ''}
+            workspaceTitle={advancedBrief.topic || activeWorkItem?.title || 'Workspace Draft'}
+            revisionDraftText={activeDraftText}
+            revisionTitle={activeDraftTitle || 'Revision Output'}
+            selectedSourceIds={advancedBrief.selectedSourceIds}
+            taskSourceRoleMap={taskSourceRoleMap}
+            sourceIntelligenceMap={sourceIntelligenceMap}
+            initialOrigin={reframingInitialOrigin}
+            onChangeSourceTaskRole={handleChangeSourceTaskRole}
+            onToggleAttachedSource={(srcId) => {
+              setAdvancedBrief(prev => ({
+                ...prev,
+                selectedSourceIds: prev.selectedSourceIds.includes(srcId)
+                  ? prev.selectedSourceIds.filter(id => id !== srcId)
+                  : [...prev.selectedSourceIds, srcId]
+              }));
+            }}
+            onHandoffToRevisionStudio={({ sourceText, title }) => {
+              setActiveDraftText(sourceText);
+              setActiveDraftTitle(title);
+              setActiveDraftVersion(1);
+              setActiveDraftHistory([
+                {
+                  version: 1,
+                  text: sourceText,
+                  timestamp: new Date().toISOString().split('T')[0],
+                  actionUsed: 'Routed from Reframing Studio (Revision Intent Detected)'
+                }
+              ]);
+              setActiveDraftSource('Content Workspace');
+              setActiveTab('revision-studio');
+            }}
+            onSendReframeToWorkspace={({ reframedText, title, plan, lineage }) => {
+              const dateStr = new Date().toISOString();
+              setAdvancedBrief(prev => ({
+                ...prev,
+                topic: title,
+                channel: plan.targetChannel,
+                audience: plan.targetAudience,
+                pillar: plan.contentPillarEmphasis,
+                purpose: plan.communicationPurpose,
+                outputFormat: plan.targetFormat,
+                directionMode: 'custom',
+                customDirection: `Reframed from ${lineage.originType} (${lineage.originTitle || 'Source'}): ${plan.strategicFrame}`
+              }));
+              setDraftOptions({
+                optionA: reframedText,
+                optionB: reframedText,
+                optionC: reframedText.slice(0, 220),
+                visualIdeation: `Editorial visual aligned with ${plan.strategicFrame} for ${plan.targetAudience}`,
+                editorialWarning: '',
+                labelA: `Reframed (${plan.targetAudience})`
+              });
+              setActiveDraftText(reframedText);
+              setActiveDraftTitle(title);
+              setActiveWorkItem(prev => ({
+                ...(prev || {
+                  id: `work-${Date.now()}`,
+                  draftVersions: [],
+                  imageResults: [],
+                  revisionHistory: [],
+                  approved: false,
+                  saved: false,
+                  createdAt: dateStr
+                }),
+                title,
+                channel: plan.targetChannel,
+                outputFormat: plan.targetFormat,
+                audience: plan.targetAudience,
+                purpose: plan.communicationPurpose,
+                status: 'Draft',
+                origin: 'Reframing Studio',
+                workContext: {
+                  ...(prev?.workContext || {}),
+                  origin: 'Reframing Studio',
+                  originId: lineage.originContentId,
+                  originTitle: lineage.originTitle,
+                  audience: plan.targetAudience,
+                  channel: plan.targetChannel,
+                  format: plan.targetFormat,
+                  pillar: plan.contentPillarEmphasis,
+                  communicationJob: plan.communicationPurpose,
+                  strategicAngle: plan.strategicFrame,
+                  transformationHistory: [
+                    ...(prev?.workContext?.transformationHistory || []),
+                    {
+                      step: `Reframed for ${plan.targetAudience} (${plan.targetChannel})`,
+                      studio: 'Reframing Studio',
+                      timestamp: dateStr
+                    }
+                  ]
+                },
+                updatedAt: dateStr
+              }));
+              setActiveTab('content-workspace');
+            }}
+            onSaveReframeToLibrary={({ reframedText, title, plan, lineage }) => {
+              const dateStr = new Date().toISOString().split('T')[0];
+              const newItem: SavedContent = {
+                id: `saved-reframe-${Date.now()}`,
+                title,
+                displayName: title,
+                savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                channel: plan.targetChannel,
+                outputFormat: plan.targetFormat,
+                pillar: plan.contentPillarEmphasis,
+                angle: plan.strategicFrame,
+                audience: plan.targetAudience,
+                purpose: plan.communicationPurpose,
+                status: 'Revised',
+                sourcesUsed: lineage.sourceReferences,
+                createdAt: dateStr,
+                lastEdited: dateStr,
+                text: reframedText,
+                finalCopy: reframedText,
+                notes: `Reframed from ${lineage.originType} (${lineage.originTitle || 'Source'}). Intent: ${lineage.reframeIntent}`,
+                version: 1,
+                metadata: {
+                  reframeLineage: lineage
+                }
+              };
+              setSavedContent(prev => [newItem, ...prev]);
+            }}
+          />
+        </ErrorBoundary>)}
         {/* --- TAB 6: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Editorial Repository
+              </div>
               <h2 className="page-title">Content Library</h2>
               <p className="page-subtitle">
                 Access, duplicate, and filter approved COH content assets.
               </p>
             </div>
 
-            <div className="card-level-1 p-5 border border-border-standard flex gap-4 text-xs flex-wrap items-center">
-              <div className="flex items-center gap-1 text-brand-gold shrink-0">
+            <div className="card-level-1 p-4 sm:p-5 border border-border-standard flex gap-3.5 text-xs flex-wrap items-end">
+              <div className="flex items-center gap-1.5 text-brand-gold shrink-0 pb-2">
                 <Filter size={15} />
-                <span className="font-semibold uppercase tracking-wider font-mono">Filters</span>
+                <span className="font-semibold uppercase tracking-wider font-mono text-[11px]">Filters</span>
               </div>
               
               <div className="flex-1 min-w-[200px]">
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Search Content</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Search Content</label>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search title, copy, or elements..."
-                  className="bg-surface-primary border border-border-standard p-1 rounded text-[11px] w-full text-text-primary"
+                  className="bg-surface-inset border border-border-standard px-3 py-1.5 rounded-lg text-xs w-full text-text-primary"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Channel</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Channel</label>
                 <select
                   value={filterChannel}
                   onChange={(e) => setFilterChannel(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Channels</option>
                   <option value="LinkedIn">LinkedIn</option>
@@ -7211,11 +8160,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Status</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Draft">Draft</option>
@@ -7226,11 +8175,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Pillar</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Pillar</label>
                 <select
                   value={filterPillar}
                   onChange={(e) => setFilterPillar(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Pillars</option>
                   <option value="Climate Tetralogy & Canon">Climate Tetralogy & Canon</option>
@@ -7246,41 +8195,41 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   setFilterPillar('All');
                   setSearchQuery('');
                 }}
-                className="px-3 py-1.5 rounded bg-surface-primary border border-border-standard text-[10px] font-bold text-text-primary uppercase hover:bg-surface-primary-dark transition"
+                className="px-3 py-1.5 h-[34px] rounded-lg bg-surface-inset border border-border-standard text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
               >
                 Reset
               </button>
             </div>
 
             {actualFilteredSaved.length > 0 ? (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {actualFilteredSaved.map(item => (
-                  <div key={item.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={item.id} className="card-level-1 p-5 flex flex-col justify-between gap-4 hover:border-brand-gold/35 transition-colors">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <div>
-                          <div className="flex gap-2 items-center flex-wrap mb-1">
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-gold bg-slate-900 px-1.5 py-0.5 rounded">
+                          <div className="flex gap-1.5 items-center flex-wrap mb-1.5">
+                            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-gold bg-brand-gold/10 border border-brand-gold/25 px-2 py-0.5 rounded-md">
                               {item.channel}
                             </span>
-                            <span className="text-[9px] font-mono text-text-secondary uppercase font-semibold">
+                            <span className="text-[10px] font-mono text-text-secondary uppercase font-medium px-2 py-0.5 rounded-md bg-surface-inset border border-border-standard">
                               {item.pillar}
                             </span>
-                            <span className="bg-violet-600/25 text-text-primary text-[9px] font-mono px-1 rounded font-bold">
+                            <span className="bg-surface-inset border border-border-standard text-text-secondary text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold">
                               v{item.version || 1}
                             </span>
                           </div>
-                          <h4 className="font-sans text-lg font-semibold text-text-primary leading-snug">{generateContentDisplayTitle(item)}</h4>
+                          <h4 className="font-sans text-base font-bold text-text-primary leading-snug">{generateContentDisplayTitle(item)}</h4>
                         </div>
 
                         <select
                           value={item.status}
                           onChange={(e) => handleUpdateStatus(item.id, e.target.value as SavedContent['status'])}
-                          className={`text-[10px] font-bold p-1 rounded font-mono border border-border-standard ${
-                            item.status === 'Published' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
-                            item.status === 'Approved' ? 'bg-blue-50 text-blue-800' :
-                            item.status === 'Revised' ? 'bg-amber-500/10 backdrop-blur-md text-amber-800' :
-                            'bg-surface-primary text-text-primary'
+                          className={`text-[10px] font-bold px-2 py-1 rounded-md font-mono border ${
+                            item.status === 'Published' ? 'bg-status-success/10 border-status-success/30 text-status-success' :
+                            item.status === 'Approved' ? 'bg-status-info/10 border-status-info/30 text-status-info' :
+                            item.status === 'Revised' ? 'bg-status-warning/10 border-status-warning/30 text-status-warning' :
+                            'bg-surface-inset border-border-standard text-text-primary'
                           }`}
                         >
                           <option value="Draft">Draft</option>
@@ -7290,14 +8239,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded">
+                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded-lg">
                         {item.text}
                       </p>
 
-                      <div className="text-[10px] text-text-muted space-y-0.5">
-                        <div><strong>Target Audience:</strong> {item.audience}</div>
-                        <div><strong>Content Direction:</strong> {item.angle}</div>
-                        <div className="truncate"><strong>Sources:</strong> {item.sourcesUsed?.join(', ') || 'None'}</div>
+                      <div className="text-[11px] text-text-secondary space-y-0.5">
+                        <div><strong className="text-text-primary">Target Audience:</strong> {item.audience}</div>
+                        <div><strong className="text-text-primary">Content Direction:</strong> {item.angle}</div>
+                        <div className="truncate"><strong className="text-text-primary">Sources:</strong> {item.sourcesUsed?.join(', ') || 'None'}</div>
                       </div>
 
                       {/* Visual Direction section */}
@@ -7305,7 +8254,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div className="border-t border-border-standard pt-2.5 mt-2 space-y-1.5 text-left">
                           <div className="flex justify-between items-center flex-wrap gap-1">
                             <span className="text-[10px] uppercase font-bold text-text-secondary block">Visual Direction</span>
-                            <div className="flex gap-2 text-[9px] font-semibold text-text-primary">
+                            <div className="flex gap-2 text-[10px] font-semibold text-text-primary">
                               <button
                                 onClick={() => {
                                   const formatted = formatVisualDirectionForDisplay(
@@ -7315,7 +8264,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     item.text
                                   );
                                   navigator.clipboard.writeText(formatted);
-                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -7331,7 +8279,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     item.text
                                   );
                                   navigator.clipboard.writeText(promptText);
-                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -7339,7 +8286,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </button>
                             </div>
                           </div>
-                          <div className="bg-surface-primary/35 p-3 border border-border-standard rounded text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
+                          <div className="bg-surface-inset p-3 border border-border-standard rounded-lg text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
                             {formatVisualDirectionForDisplay(
                               item.visualDirection || item.visualIdeation,
                               item.channel,
@@ -7351,18 +8298,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-border-standard pt-4 text-[10px] text-text-muted font-mono">
+                    <div className="flex justify-between items-center border-t border-border-standard pt-3.5 text-[10px] text-text-muted font-mono flex-wrap gap-2">
                       <span>Saved: {item.createdAt} | Edited: {item.lastEdited}</span>
-                      <div className="flex gap-1.5 flex-wrap items-center">
+                      <div className="flex gap-2 flex-wrap items-center font-sans">
                         <button
                           onClick={() => handleCopyClipboard(item.text, item.id)}
-                          className="text-[11px] font-semibold text-text-primary interactive-link transition"
+                          className="text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
                         >
                           {copySuccessMap[item.id] ? 'Copied!' : 'Copy'}
                         </button>
                         <button
                           onClick={() => handleDuplicateSaved(item)}
-                          className="text-[11px] font-semibold text-text-primary interactive-link transition"
+                          className="text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
                         >
                           Duplicate
                         </button>
@@ -7380,22 +8327,39 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           <Edit3 size={11} /> Edit / Revise
                         </button>
                         <button
+                          data-testid={`reframe-library-item-${item.id}`}
+                          onClick={() => {
+                            setReframingInitialOrigin({
+                              originType: 'Content Library',
+                              originId: item.id,
+                              originTitle: item.title,
+                              sourceContent: item.text,
+                              originChannel: item.channel,
+                              originAudience: item.audience
+                            });
+                            setActiveTab('reframing-studio');
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-brand-gold hover:underline font-semibold transition"
+                        >
+                          <RefreshCw size={11} /> Reframe
+                        </button>
+                        <button
                           onClick={() => handleDeleteSaved(item.id)}
-                          className="flex items-center gap-1 text-[11px] text-red-800/70 hover:text-red-800 font-semibold transition"
+                          className="flex items-center gap-1 text-[11px] text-status-error/70 hover:text-status-error font-semibold transition"
                         >
                           Delete
                         </button>
 
                         <button
                           onClick={() => handleExport(item, 'txt')}
-                          className="flex items-center gap-1 text-[11px] text-text-primary hover:text-brand-gold font-semibold transition"
+                          className="flex items-center gap-1 text-[11px] text-text-secondary hover:text-text-primary font-semibold transition"
                         >
                           Download TXT
                         </button>
                         {item.visualDirection && (
                           <button
                             onClick={() => handleSendToVisualStudio(item, item.visualDirection!, 'Library')}
-                            className="flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-gold-dark font-semibold transition"
+                            className="flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-gold-hover font-semibold transition"
                           >
                             <Lightbulb size={11} /> Send Visual Direction to Visual Studio
                           </button>
@@ -7406,7 +8370,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-border-standard rounded bg-surface-inset">
+              <div className="text-center py-20 border border-dashed border-border-standard rounded-xl bg-surface-inset">
                 <p className="text-xs text-text-secondary max-w-sm mx-auto">No saved content meets the active filters.</p>
               </div>
             )}
@@ -7417,8 +8381,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="card-level-1 p-5 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                  Evidence &amp; Grounding
+                </div>
                 <h2 className="page-title">Source Library</h2>
                 <p className="page-subtitle">
                   Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
@@ -7443,51 +8410,51 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded transition border border-border-standard flex items-center gap-1.5"
+                  className="bg-surface-inset text-text-primary hover:border-brand-gold/40 py-2 px-3.5 rounded-lg transition border border-border-standard flex items-center gap-1.5 font-semibold"
                 >
-                  <Upload size={14} /> Upload File
+                  <Upload size={14} className="text-brand-gold" /> Upload File
                 </button>
                 <button
                   onClick={() => folderInputRef.current?.click()}
-                  className="bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded transition border border-border-standard flex items-center gap-1.5"
+                  className="bg-surface-inset text-text-primary hover:border-brand-gold/40 py-2 px-3.5 rounded-lg transition border border-border-standard flex items-center gap-1.5 font-semibold"
                 >
-                  <FolderOpen size={14} /> Upload Folder
+                  <FolderOpen size={14} className="text-brand-gold" /> Upload Folder
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Form panel */}
-              <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm h-fit space-y-6">
+              <div className="card-level-1 p-5 sm:p-6 h-fit space-y-5">
                 <div>
-                  <h3 className="font-sans text-lg text-text-primary-light pb-2 border-b border-border-standard">
+                  <h3 className="font-sans text-base font-bold text-text-primary pb-2 border-b border-border-standard">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
                   </h3>
-                  <p className="text-[10px] text-text-secondary leading-relaxed mt-1">
-                    Provide verifiable facts, texts, or links to instruct the studio. Some file types may require pasted text or summary until full parsing is added.
+                  <p className="text-[11px] text-text-secondary leading-relaxed mt-1.5">
+                    Provide verifiable facts, texts, or links to instruct the studio.
                   </p>
                 </div>
 
                 <form onSubmit={handleSaveSource} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Source Title</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Source Title</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Soria Moria Funding Memo"
                       value={newSource.title}
                       onChange={(e) => setNewSource({ ...newSource, title: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2.5 rounded text-text-primary"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Source Type</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Source Type</label>
                       <select
                         value={newSource.type}
                         onChange={(e) => setNewSource({ ...newSource, type: e.target.value as SourceFile['type'] })}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                        className="w-full bg-surface-inset border border-border-standard p-2 rounded-lg text-text-primary"
                       >
                         <option value="Event Notes">Event Notes</option>
                         <option value="Partner Profile">Partner Profile</option>
@@ -7505,11 +8472,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Status</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Status</label>
                       <select
                         value={newSource.status}
                         onChange={(e) => setNewSource({ ...newSource, status: e.target.value as SourceFile['status'] })}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                        className="w-full bg-surface-inset border border-border-standard p-2 rounded-lg text-text-primary"
                       >
                         <option value="Active">Active</option>
                         <option value="Archived">Archived</option>
@@ -7518,54 +8485,49 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                  </div>
-
                   {newSource.type === 'Link / URL' && (
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Source URL</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Source URL</label>
                       <input
                         type="url"
                         placeholder="https://..."
                         value={newSource.url || ''}
                         onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
-                        className="w-full bg-surface-primary border border-border-standard p-2.5 rounded text-text-primary font-mono text-[11px]"
+                        className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
                       />
                     </div>
                   )}
 
-
-
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Short Context / Notes</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Short Context / Notes</label>
                     <textarea
                       placeholder="Reference details, key quotes, or summaries..."
                       rows={3}
                       value={newSource.notes}
                       onChange={(e) => setNewSource({ ...newSource, notes: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Content / Extracted Text or Summary</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Content / Extracted Text or Summary</label>
                     <textarea
                       placeholder="Paste text summary or markdown file copy..."
                       rows={5}
                       required
                       value={newSource.content}
                       onChange={(e) => setNewSource({ ...newSource, content: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary font-mono text-[11px]"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 pb-2">
+                  <div className="flex items-center gap-2 pt-1 pb-1">
                     <input
                       type="checkbox"
                       id="sourceSelectable"
                       checked={newSource.selectable !== false}
                       onChange={(e) => setNewSource({ ...newSource, selectable: e.target.checked })}
-                      className="rounded border-brand-gold/50 text-brand-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                      className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer"
                     />
                     <label htmlFor="sourceSelectable" className="text-text-primary font-semibold cursor-pointer select-none">
                       Selectable for generation context
@@ -7575,7 +8537,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex-1 bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded font-sans transition border border-border-standard text-xs font-semibold action-button interactive-button"
+                      className="cursor-pointer hover:opacity-95 active:scale-[0.98] transition-all flex-1 bg-brand-gold text-surface-base hover:bg-brand-gold-hover py-2.5 px-4 rounded-lg font-sans text-xs font-bold action-button interactive-button"
                     >
                       {editingSourceId ? 'Save Edits' : 'Add Source'}
                     </button>
@@ -7586,7 +8548,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setEditingSourceId(null);
                           setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
                         }}
-                        className="bg-surface-primary text-text-primary border border-border-standard py-2 px-3 rounded hover:bg-surface-primary-dark transition text-xs"
+                        className="bg-surface-inset text-text-primary border border-border-standard py-2 px-3 rounded-lg hover:bg-surface-elevated transition text-xs font-semibold"
                       >
                         Cancel
                       </button>
@@ -7596,18 +8558,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Records List Panel */}
-              <div className="col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-5">
                 
                 {/* Filters */}
-                <div className="flex flex-wrap gap-2 pb-2 border-b border-border-standard">
+                <div className="flex flex-wrap gap-1.5 pb-2 border-b border-border-standard">
                   {['All', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
                     <button
                       key={filter}
                       onClick={() => setSourceLibraryFilter(filter)}
-                      className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition ${
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition ${
                         sourceLibraryFilter === filter 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-surface-primary border border-border-standard text-text-secondary hover:bg-violet-600/10 hover:text-text-primary'
+                          ? 'bg-brand-gold text-surface-base font-bold' 
+                          : 'bg-surface-primary border border-border-standard text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {filter}
@@ -7615,50 +8577,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   ))}
                 </div>
 
-                {/* Suggested Core Documents (Only visible if All or Core Documents, and items aren't uploaded yet) */}
-                {false && (
-                  <div className="space-y-3 bg-surface-inset p-4 border border-dashed border-border-strong rounded">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-sans text-sm font-bold text-text-primary">Suggested Core Documents</h3>
-                      <span className="text-[9px] uppercase font-bold text-brand-gold bg-surface-inset px-1.5 py-0.5 rounded border border-border-standard">Not uploaded yet</span>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-3">
-                      {[
-                        'COH Business Model', 'COH Phase 1 Strategic Plan', 'COH Phase 1 Strategic Plan\n- COH Master Deck',
-                        'COH Website Copy', 'COH One-Pager and Narrative', 'COH Sponsorship or Partner Deck'
-                      ].filter(title => !selectableSources.find(s => s.title === title)).map(title => (
-                        <div key={title} className="bg-surface-inset p-3 border border-border-standard rounded flex justify-between items-center shadow-sm">
-                          <span className="text-[11px] font-semibold text-text-primary">{title}</span>
-                          <button 
-                            onClick={() => {
-                              setEditingSourceId(null);
-                              setNewSource({
-                                title: title,
-                                type: 'Other',
-                                status: 'Active',
-                                notes: 'Suggested document',
-                                content: '',
-                                url: '',
-                                selectable: true
-                              });
-                            }}
-                            className="text-[9px] uppercase font-bold text-text-primary interactive-link whitespace-nowrap ml-2"
-                          >
-                            Upload / Link →
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
                 {/* User-Added Sources list */}
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {(() => {
                     let filtered = selectableSources;
                     if (sourceLibraryFilter === 'Approved Examples') {
                       filtered = selectableSources.filter(s => s.type === 'Approved Example');
+                    } else if (sourceLibraryFilter === 'Visual References') {
+                      filtered = selectableSources.filter(s => s.type === 'Visual Reference');
+                    } else if (sourceLibraryFilter === 'Partner Context') {
+                      filtered = selectableSources.filter(s => s.type === 'Partner Profile' || s.type === 'Sponsor Notes');
+                    } else if (sourceLibraryFilter === 'Task Sources') {
+                      filtered = selectableSources.filter(s => advancedBrief.selectedSourceIds.includes(s.id));
                     } else if (sourceLibraryFilter === 'Archive') {
                       filtered = selectableSources.filter(s => s.status === 'Archived');
                     }
@@ -7670,54 +8600,44 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     return filtered.map(src => {
                       const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
                       return (
-                        <div key={src.id} className={`bg-surface-inset border p-5 rounded shadow-sm flex gap-4 transition ${
-                          isSelected ? 'border-brand-gold bg-surface-inset' : 'border-border-standard'
+                        <div key={src.id} className={`card-level-1 p-5 flex gap-4 transition ${
+                          isSelected ? 'border-brand-gold ring-1 ring-brand-gold/25' : 'border-border-standard'
                         }`}>
                           <div className="pt-1 select-none">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSourceSelection(src.id)}
-                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer"
                               title="Select for generation"
                             />
                           </div>
 
-                          <div className="flex-1 space-y-2">
+                          <div className="flex-1 min-w-0 space-y-2.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-violet-600/20 text-text-primary-light">
+                              <span className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase bg-brand-gold/10 text-brand-gold border border-brand-gold/25">
                                 {src.type}
                               </span>
-                              <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
-                                src.status === 'Active' ? 'bg-green-500/10 backdrop-blur-md text-green-700' :
-                                src.status === 'Archived' ? 'bg-surface-primary text-gray-700' :
-                                'bg-amber-500/10 backdrop-blur-md text-amber-700'
+                              <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold border ${
+                                src.status === 'Active' ? 'bg-status-success/10 border-status-success/25 text-status-success' :
+                                src.status === 'Archived' ? 'bg-surface-inset border-border-standard text-text-muted' :
+                                'bg-status-warning/10 border-status-warning/25 text-status-warning'
                               }`}>
                                 {src.status}
                               </span>
-                              {false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-coh-navy/20 text-text-secondary">
-                                  {''}
-                                </span>
-                              )}
-                              {false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-brand-gold text-text-inverse hover:bg-brand-gold-hover">
-                                  Supports: {''}
-                                </span>
-                              )}
                               {src.selectable === false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-500/10 backdrop-blur-md">
+                                <span className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase border border-status-error/30 text-status-error bg-status-error/10">
                                   Non-Selectable
                                 </span>
                               )}
                             </div>
 
-                            <h4 className="font-sans text-base font-semibold text-text-primary">{src.title}</h4>
+                            <h4 className="font-sans text-base font-bold text-text-primary">{src.title}</h4>
                             <p className="text-xs text-text-secondary leading-relaxed">{src.notes}</p>
 
-                            <details className="text-[10px] text-text-muted cursor-pointer pt-1">
-                              <summary className="interactive-link transition">Show Full Text</summary>
-                              <pre className="mt-2 p-3 bg-surface-inset rounded border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
+                            <details className="text-[11px] text-text-secondary cursor-pointer pt-1">
+                              <summary className="interactive-link transition font-semibold">Show Raw Source Text</summary>
+                              <pre className="mt-2 p-3 bg-surface-inset rounded-lg border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[11px] text-text-primary max-h-48">
                                 {src.content}
                               </pre>
                               {src.url && (
@@ -7727,71 +8647,44 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               )}
                             </details>
 
+                            <SourceIntelligenceCardAddon
+                              source={src}
+                              analysis={sourceIntelligenceMap[src.id] || null}
+                              isAnalyzing={Boolean(analyzingSourceIds[src.id])}
+                              analysisError={sourceAnalysisErrors[src.id] || null}
+                              isSelectedInTask={isSelected}
+                              activeTaskRole={getEffectiveSourceRole(src)}
+                              selectedExcerpts={getEffectiveSourceExcerpts(src.id)}
+                              onAnalyzeSource={handleAnalyzeSource}
+                              onChangeTaskRole={handleChangeSourceTaskRole}
+                              onToggleExcerpt={handleToggleSourceExcerpt}
+                              onAddToCurrentBrief={handleAddToCurrentBrief}
+                              onUseInIdeation={handleUseSourceInIdeation}
+                              onCreateContent={handleCreateContentFromSource}
+                              onUseAsVisualReference={handleUseSourceAsVisualReference}
+                              onUseInReframing={handleUseSourceInReframing}
+                            />
+
                             <div className="pt-2">
                               <button
                                 onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
-                                className="text-[9px] font-semibold text-text-secondary interactive-link transition uppercase tracking-wider"
+                                className="text-[10px] font-semibold text-text-secondary interactive-link transition uppercase tracking-wider"
                               >
                                 Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                               </button>
-                              
-                              {false && (
-                                <div className="mt-3 p-4 bg-surface-primary border border-border-standard rounded animate-fadeIn">
-                                  <h5 className="font-sans font-bold text-text-primary mb-2 text-sm">Extract Insight for Operating Core</h5>
-                                  <p className="text-[10px] text-text-secondary mb-3">This source can inform the Operating Core. Review the material, extract the relevant insight, and manually add it to the correct Operating Core section.</p>
-                                  
-                                  <div className="space-y-3">
-                                    <div>
-                                      <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Suggested Section</label>
-                                      <span className="text-xs bg-surface-inset border border-border-standard px-2 py-1 rounded inline-block">
-                                        {false ? '' : 'Unassigned (Determine manually)'}
-                                      </span>
-                                    </div>
-                                    <div>
-                                      <label className="block text-[10px] font-bold uppercase text-text-secondary mb-1">Extract Note</label>
-                                      <textarea 
-                                        className="w-full bg-surface-inset border border-border-standard p-2 rounded text-xs text-text-primary" 
-                                        rows={3} 
-                                        placeholder="Draft the rule, claim, or insight here..."
-                                        id={`extract-${src.id}`}
-                                      />
-                                    </div>
-                                    <div className="flex gap-2">
-                                      <button 
-                                        onClick={() => {
-                                          const el = document.getElementById(`extract-${src.id}`) as HTMLTextAreaElement;
-                                          if (el && el.value) {
-                                            navigator.clipboard.writeText(el.value);
-                                            /* Copied handled by state */
-                                          }
-                                        }}
-                                        className="bg-surface-inset border border-border-strong hover:bg-violet-600/10 text-text-primary px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
-                                      >
-                                        Copy to Clipboard
-                                      </button>
-                                      <button 
-                                        onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
-                                        className="bg-slate-900 hover:bg-brand-gold-hover text-brand-gold px-3 py-1.5 rounded text-[10px] font-bold uppercase transition"
-                                      >
-                                        Open Operating Core
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              )}
                             </div>
                           </div>
 
-                          <div className="flex flex-col gap-2 shrink-0">
+                          <div className="flex flex-col gap-1.5 shrink-0">
                             <button
                               onClick={() => handleEditSource(src)}
-                              className="text-text-primary hover:text-brand-gold p-1 hover:bg-surface-primary rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-text-secondary hover:text-text-primary px-2 py-1 hover:bg-surface-inset rounded-md transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Edit3 size={12} /> Edit
                             </button>
                             <button
                               onClick={() => handleDeleteSource(src.id)}
-                              className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-500/10 backdrop-blur-md rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-status-error/70 hover:text-status-error px-2 py-1 hover:bg-status-error/10 rounded-md transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Trash2 size={12} /> Delete
                             </button>
@@ -7811,12 +8704,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="page-shell">
-            <div className="card-level-1 p-6 mb-8">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Technical Configuration
+              </div>
               <h2 className="page-title">Settings</h2>
               <p className="page-subtitle">
                 Configure AI provider and generation mode.
               </p>
-              <p className="text-xs text-text-secondary font-sans italic bg-surface-inset p-2 rounded border border-border-standard inline-block mt-2">
+              <p className="text-xs text-text-secondary font-sans bg-surface-inset px-3 py-2 rounded-lg border border-border-standard inline-block mt-3">
                 Note: Content, voice, claims, audience, visual, and revision rules are managed in Operating Core. Settings is for technical configuration.
               </p>
             </div>
@@ -7828,7 +8724,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     key={key}
                     onClick={() => setSettingsSection(key)}
-                    className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-slate-900 text-white' : 'bg-surface-primary border border-border-standard text-text-primary hover:bg-violet-600/10'}`}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${settingsSection === key ? 'bg-brand-gold text-surface-base' : 'bg-surface-primary border border-border-standard text-text-primary hover:bg-surface-inset'}`}
                   >
                     {label}
                   </button>
@@ -7958,7 +8854,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       
                       {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
                         <div className="mt-3 text-sm text-text-secondary bg-surface-inset p-4 rounded-lg border border-border-standard flex flex-col gap-2">
-                          <div className="flex gap-6">
+                          <div className="flex flex-wrap items-center gap-6">
+                            {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.tierLabel && (
+                              <span><strong className="text-text-primary">Tier:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.tierLabel}</span>
+                            )}
                             <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
                             <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
                           </div>
@@ -8039,13 +8938,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined);
                             if (result.connected) {
                               setSettingsTestPassed(true);
-                              setSettingsTestResult(`Connection verified. You can now save these settings. (Latency: ${result.latency}ms)`);
+                              setSettingsTestResult(`Connection verified for ${settingsProvider} (${settingsTextModel}). Latency: ${result.latency}ms.`);
                               setAiLastTested(new Date().toLocaleString());
                               setAiLatency(result.latency);
                               setAiStatus('not_connected');
                             } else {
                               setSettingsTestPassed(false);
-                              const errMsg = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              const rawErr = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              const errMsg = `[${settingsProvider} / ${settingsTextModel}] ${rawErr}`;
                               setSettingsTestResult(errMsg);
                               
                               if (errMsg.includes('Rate limit reached')) {

@@ -46,87 +46,87 @@
   
   /* Typography */
   --font-display: "Playfair Display", "Albra Display", serif;
-  --font-sans: "Montserrat", "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Montserrat", system-ui, -apple-system, sans-serif;
   
   /* Radii */
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
-  --radius-xl: 16px;
+  --radius-xl: 18px;
   
   /* Shadows / Elevations */
   --shadow-level-1: var(--elevation-level-1);
   --shadow-level-2: var(--elevation-level-2);
 }
 
-/* Light Theme (Default) */
+/* Light Theme (Default) - Restrained Editorial Warm Ivory & Deep Navy */
 :root, [data-theme="light"] {
-  --canvas: #F6F3EE;
+  --canvas: #F7F5F0;
   --surface-primary: #FFFFFF;
-  --surface-secondary: #FBF8F3;
+  --surface-secondary: #FCFBF8;
   --surface-elevated: #FFFFFF;
-  --surface-inset: #F8F6F2;
+  --surface-inset: #F3F0EA;
   
-  --sidebar-bg: #0C1B2A;
+  --sidebar-bg: #0B1828;
   --sidebar-surface-sec: #12243A;
-  --sidebar-hover: #192E49;
-  --sidebar-active: #C6A675; /* Gold active surface */
+  --sidebar-hover: #172B44;
+  --sidebar-active: #C4A26E;
   
-  --text-primary: #10213A;
-  --text-secondary: #5F6B7C;
-  --text-muted: #8A94A3;
-  --text-inverse: #10213A;
+  --text-primary: #0F1E34;
+  --text-secondary: #526074;
+  --text-muted: #7C889B;
+  --text-inverse: #0B1626;
   --text-on-dark: #F7F4EE;
   
-  --border-standard: #E6DED3;
-  --border-strong: #D2C5B5;
+  --border-standard: #E5DFD5;
+  --border-strong: #CFC4B4;
   
-  --brand-gold: #C6A675;
-  --brand-gold-hover: #B99058;
-  --brand-gold-active: #A77C44;
+  --brand-gold: #C4A26E;
+  --brand-gold-hover: #B38E56;
+  --brand-gold-active: #9F7A43;
   
-  --brand-navy: #10213A;
-  --brand-navy-hover: #192E49;
+  --brand-navy: #0F1E34;
+  --brand-navy-hover: #182C49;
   
-  --status-success: #178C4E;
-  --status-warning: #B7791F;
-  --status-error: #C83C3C;
-  --status-info: #3267B1;
+  --status-success: #168047;
+  --status-warning: #B47118;
+  --status-error: #C53838;
+  --status-info: #2D62AC;
   
-  --focus-ring: rgba(198, 166, 117, 0.38);
-  --overlay: rgba(12, 27, 42, 0.48);
+  --focus-ring: rgba(196, 162, 110, 0.36);
+  --overlay: rgba(11, 24, 40, 0.48);
   
-  --elevation-level-1: 0 1px 2px rgba(16, 33, 58, 0.06), 0 6px 20px rgba(16, 33, 58, 0.05);
-  --elevation-level-2: 0 20px 50px rgba(16, 33, 58, 0.16);
+  --elevation-level-1: 0 1px 2px rgba(15, 30, 52, 0.04), 0 4px 14px rgba(15, 30, 52, 0.035);
+  --elevation-level-2: 0 12px 34px rgba(15, 30, 52, 0.11);
 }
 
-/* Dark Theme */
+/* Dark Theme - Restrained Deep Obsidian Navy & Warm Gold */
 [data-theme="dark"] {
-  --canvas: #090F1C;
-  --surface-primary: #111A2B;
-  --surface-secondary: #162238;
-  --surface-elevated: #1B2942;
-  --surface-inset: #0D1626;
+  --canvas: #090E18;
+  --surface-primary: #101827;
+  --surface-secondary: #152033;
+  --surface-elevated: #1A273E;
+  --surface-inset: #0C1320;
   
-  --sidebar-bg: #07111F;
-  --sidebar-surface-sec: #12213A; /* Using hover as secondary */
-  --sidebar-hover: #12213A;
-  --sidebar-active: #243754;
+  --sidebar-bg: #070C15;
+  --sidebar-surface-sec: #111D31;
+  --sidebar-hover: #142238;
+  --sidebar-active: #1E314E;
   
-  --text-primary: #F5F2EB;
-  --text-secondary: #BEC6D2;
-  --text-muted: #8893A4;
-  --text-inverse: #0B1421; /* Dark text on light backgrounds (e.g. primary buttons) */
-  --text-on-dark: #F5F2EB;
+  --text-primary: #F4F1EA;
+  --text-secondary: #B4BECE;
+  --text-muted: #7E8B9F;
+  --text-inverse: #09111E;
+  --text-on-dark: #F4F1EA;
   
-  --border-standard: #27354A;
-  --border-strong: #35465F;
+  --border-standard: #1F2C40;
+  --border-strong: #2E405B;
   
   --brand-gold: #D5B67C;
   --brand-gold-hover: #E0C58F;
   --brand-gold-active: #C59D5F;
   
-  --brand-navy: #111A2B;
+  --brand-navy: #101827;
   --brand-navy-hover: #162238;
   
   --status-success: #32B875;
@@ -134,11 +134,11 @@
   --status-error: #F06B67;
   --status-info: #63A5E8;
   
-  --focus-ring: rgba(213, 182, 124, 0.42);
-  --overlay: rgba(0, 0, 0, 0.64);
+  --focus-ring: rgba(213, 182, 124, 0.40);
+  --overlay: rgba(0, 0, 0, 0.66);
   
-  --elevation-level-1: 0 8px 24px rgba(0, 0, 0, 0.20);
-  --elevation-level-2: 0 22px 60px rgba(0, 0, 0, 0.44);
+  --elevation-level-1: 0 2px 10px rgba(0, 0, 0, 0.22);
+  --elevation-level-2: 0 18px 48px rgba(0, 0, 0, 0.45);
 }
 
 body {
@@ -146,6 +146,8 @@ body {
   font-family: var(--font-sans);
   background-color: var(--canvas);
   color: var(--text-primary);
+  line-height: 1.5;
+  text-align: start;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -158,13 +160,49 @@ body {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-/* Base Typographic Scale */
+/* Base Typographic & Form Normalization */
 @layer base {
   h1, h2, h3, h4, h5, h6 {
     color: var(--text-primary);
+    letter-spacing: -0.015em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Modernize raw HTML selects, inputs, and textareas across all studios */
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%237C889B%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.6rem center;
+    background-size: 0.95rem auto;
+    padding-right: 2rem !important;
+    border-radius: 0.5rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+
+  input[type="text"],
+  input[type="url"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="month"],
+  textarea {
+    border-radius: 0.5rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+
+  input:focus,
+  select:focus,
+  textarea:focus {
+    border-color: var(--brand-gold);
+    outline: none;
+    box-shadow: 0 0 0 2px var(--focus-ring);
   }
 }
 
@@ -190,56 +228,76 @@ body {
     @apply min-h-screen flex flex-col md:flex-row bg-canvas font-sans text-text-primary transition-colors duration-150;
   }
   .app-main {
-    @apply flex-1 flex flex-col overflow-hidden max-w-[1440px] mx-auto w-full bg-canvas;
+    @apply flex-1 flex flex-col overflow-hidden w-full bg-canvas;
   }
   .page-content {
-    @apply flex-1 overflow-y-auto px-4 md:px-8 lg:px-10 py-6 md:py-8;
+    @apply flex-1 overflow-y-auto px-4 md:px-7 lg:px-9 py-5 md:py-7;
   }
   
-  /* Elevational Components */
+  /* Coherent 4-Tier Surface System */
   .card-level-1 {
-    @apply bg-surface-primary border border-border-standard rounded-lg shadow-level-1;
+    @apply bg-surface-primary border border-border-standard rounded-xl shadow-level-1;
   }
   .card-level-2 {
-    @apply bg-surface-elevated border border-border-strong rounded-xl shadow-level-2;
+    @apply bg-surface-elevated border border-border-strong rounded-2xl shadow-level-2;
   }
   .surface-inset {
-    @apply bg-surface-inset border border-border-standard rounded-md;
+    @apply bg-surface-inset border border-border-standard rounded-lg;
+  }
+  .form-control {
+    @apply bg-surface-inset border border-border-standard rounded-lg text-text-primary focus:border-brand-gold;
   }
   
-  /* Typography Classes */
+  /* Typography Scale */
   .display-title {
-    @apply font-display font-bold text-[36px] leading-[44px] text-text-primary;
+    @apply font-display font-bold text-[32px] leading-[40px] text-text-primary tracking-tight;
   }
   .page-title {
-    @apply font-sans font-semibold text-[28px] leading-[36px] text-text-primary tracking-tight;
+    @apply font-sans font-semibold text-[22px] leading-[30px] text-text-primary tracking-tight;
+  }
+  .page-subtitle {
+    @apply font-sans font-normal text-[13.5px] leading-[21px] text-text-secondary mt-0.5;
   }
   .section-title {
-    @apply font-sans font-semibold text-[21px] leading-[29px] text-text-primary tracking-tight;
+    @apply font-sans font-semibold text-[18px] leading-[26px] text-text-primary tracking-tight;
   }
   .panel-title {
-    @apply font-sans font-semibold text-[17px] leading-[24px] text-text-primary;
-  }
-  .card-title {
     @apply font-sans font-semibold text-[15px] leading-[22px] text-text-primary;
   }
+  .card-title {
+    @apply font-sans font-semibold text-[14px] leading-[20px] text-text-primary;
+  }
   .body-text {
-    @apply font-sans font-normal text-[15px] leading-[24px] text-text-secondary;
+    @apply font-sans font-normal text-[14px] leading-[22px] text-text-secondary;
   }
   .compact-text {
-    @apply font-sans font-normal text-[14px] leading-[21px] text-text-secondary;
+    @apply font-sans font-normal text-[13px] leading-[20px] text-text-secondary;
   }
   .helper-text {
-    @apply font-sans font-normal text-[13px] leading-[19px] text-text-muted;
+    @apply font-sans font-normal text-[12px] leading-[18px] text-text-muted;
   }
   .meta-text {
-    @apply font-sans font-normal text-[12px] leading-[17px] text-text-muted;
+    @apply font-sans font-normal text-[11.5px] leading-[16px] text-text-muted;
   }
   .form-label {
-    @apply font-sans font-semibold text-[13px] leading-[18px] text-text-primary block mb-1.5;
+    @apply font-sans font-medium text-[12px] leading-[17px] text-text-secondary block mb-1.5;
   }
   .badge-text {
-    @apply font-sans font-semibold text-[11px] leading-[16px] uppercase tracking-wider;
+    @apply font-sans font-semibold text-[10.5px] leading-[15px] uppercase tracking-wider;
+  }
+
+  /* Empty States */
+  .empty-state {
+    @apply flex flex-col items-center justify-center p-12 text-center border border-dashed border-border-strong rounded-2xl bg-surface-inset/60;
+  }
+  .empty-state-icon {
+    @apply w-12 h-12 rounded-full bg-surface-primary border border-border-standard flex items-center justify-center text-xl mb-3 shadow-xs;
+  }
+  .empty-state-title {
+    @apply font-sans text-base font-semibold text-text-primary mb-1;
+  }
+  .empty-state-text {
+    @apply font-sans text-xs text-text-secondary max-w-sm;
   }
 }
 

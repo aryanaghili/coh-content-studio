@@ -37,7 +37,7 @@ export async function generate(config, input) {
   
   let rawText;
   try {
-    rawText = await callMistral(apiKey, model, baseUrl, systemPrompt, prompt, true);
+    rawText = await callMistral(apiKey, model, systemPrompt, prompt);
   } catch (err) {
     return { success: false, errorType: 'PROVIDER_ERROR', userMessage: friendlyError(err), debug: { message: err.message } };
   }
@@ -48,7 +48,7 @@ export async function generate(config, input) {
   if (parsed && parsed.success === false && parsed.errorType === 'AI_PARSE_ERROR') {
       try {
           const repairPrompt = `Repair this into valid JSON matching this schema. Do not add commentary. Raw Output: ${rawText}`;
-          const repairedText = await callMistral(apiKey, model, baseUrl, systemPrompt, repairPrompt, true);
+          const repairedText = await callMistral(apiKey, model, systemPrompt, repairPrompt);
           const repairedParsed = repairJson(repairedText);
           if (repairedParsed && repairedParsed.success !== false) {
               parsed = repairedParsed;
@@ -73,7 +73,8 @@ export async function generate(config, input) {
 }
 
 export async function testConnection(config) {
-  const { apiKey, model } = config;
+  const { apiKey } = config;
+  const model = config.textModel || config.model;
   const start = Date.now();
   const systemPrompt = 'You are a test assistant. Return only valid JSON.';
   const userPrompt = 'Respond with exactly: { "ok": true, "provider": "mistral", "model": "' + model + '" }';
