@@ -74,13 +74,13 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
   const getReuseBadgeStyle = (classification?: string) => {
     switch (classification) {
       case 'New Ground':
-        return 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
+        return 'bg-status-success/10 text-status-success border-status-success/25';
       case 'Extend Existing Idea':
-        return 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30';
+        return 'bg-status-warning/10 text-status-warning border-status-warning/25';
       case 'Reframe Existing Content':
-        return 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30';
+        return 'bg-status-info/10 text-status-info border-status-info/25';
       case 'Reuse Existing Argument':
-        return 'bg-purple-500/10 text-purple-700 dark:text-purple-300 border-purple-500/30';
+        return 'bg-brand-gold/15 text-brand-gold border-brand-gold/30';
       default:
         return 'bg-surface-inset text-text-secondary border-border-standard';
     }
@@ -89,15 +89,15 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
   return (
     <div
       data-testid={`ideation-opportunity-card-${idea.id}`}
-      className="bg-surface-primary border border-border-standard hover:border-brand-gold/50 transition-colors rounded-xl shadow-level-1 flex flex-col h-full"
+      className="bg-surface-primary border border-border-standard hover:border-brand-gold/60 transition-all rounded-xl shadow-level-1 flex flex-col h-full"
     >
-      <div className="p-5 flex-1 flex flex-col gap-3">
+      <div className="p-5 flex-1 flex flex-col gap-2.5">
         {/* Top Metadata Row: Communication Job & Status */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
           {idea.communicationJob && (
             <span
               data-testid="idea-communication-job"
-              className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-brand-gold/15 text-brand-gold border border-brand-gold/30"
+              className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold px-2.5 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold border border-brand-gold/30"
             >
               <Target size={11} />
               {idea.communicationJob}
@@ -107,7 +107,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             {reuse && (
               <span
                 data-testid="idea-reuse-badge"
-                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${getReuseBadgeStyle(
+                className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md border ${getReuseBadgeStyle(
                   reuse.classification
                 )}`}
                 title={reuse.rationale}
@@ -118,7 +118,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
               </span>
             )}
             <span
-              className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded border ${
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
                 idea.status === 'Promising'
                   ? 'bg-brand-gold text-text-inverse border-brand-gold'
                   : idea.status === 'Not Useful'
@@ -132,7 +132,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
         </div>
 
         {/* Title */}
-        <h4 className="font-sans font-bold text-text-primary text-[15px] leading-snug">
+        <h4 className="font-sans font-semibold text-text-primary text-[15px] leading-snug tracking-tight mt-0.5">
           {idea.title}
         </h4>
 
@@ -142,15 +142,16 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
         </p>
 
         {/* Why It Matters */}
-        <p className="font-sans text-[12px] text-brand-gold font-semibold leading-relaxed">
-          Why it matters: {idea.whyItWorks}
+        <p className="font-sans text-[12px] text-text-primary leading-relaxed bg-surface-inset/70 px-3 py-2 rounded-lg border border-border-standard">
+          <span className="font-semibold text-brand-gold">Why it matters: </span>
+          {idea.whyItWorks}
         </p>
 
         {/* Attached Source Traceability Pill (when source-grounded) */}
         {idea.sourceIds && idea.sourceIds.length > 0 && (
           <div
             data-testid="idea-source-grounding-badges"
-            className="flex flex-wrap items-center gap-1.5 pt-1"
+            className="flex flex-wrap items-center gap-1.5 pt-0.5"
           >
             {idea.sourceIds.map(srcId => {
               const role = idea.sourceRoles?.[srcId] || 'Evidence';
@@ -158,10 +159,10 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
               return (
                 <span
                   key={srcId}
-                  className="inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-surface-inset border border-border-standard text-text-secondary"
+                  className="inline-flex items-center gap-1 text-[10.5px] font-medium px-2 py-0.5 rounded-md bg-surface-inset border border-border-standard text-text-secondary"
                 >
                   <FileText size={10} className="text-brand-gold" />
-                  <span className="truncate max-w-[150px]">{srcTitle}</span>
+                  <span className="truncate max-w-[160px]">{srcTitle}</span>
                   <span className="text-brand-gold font-semibold">({role})</span>
                 </span>
               );
@@ -176,7 +177,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             className="p-2.5 rounded-lg bg-surface-inset border border-border-standard flex items-center justify-between gap-2 text-[11px]"
           >
             <div className="text-text-secondary leading-snug">
-              <span className="font-bold text-text-primary">{reuse.classification}: </span>
+              <span className="font-semibold text-text-primary">{reuse.classification}: </span>
               {reuse.matchedItemTitle ? `"${reuse.matchedItemTitle}"` : reuse.rationale}
               <span className="ml-1 text-[10px] text-text-muted">
                 (Confidence: {reuse.confidence})
@@ -187,7 +188,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
                 type="button"
                 data-testid="inspect-reuse-candidate-btn"
                 onClick={() => onInspectReuseCandidate(reuse.matchedItemType!, reuse.matchedItemId!)}
-                className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-primary border border-border-strong text-[10px] font-bold text-brand-gold hover:bg-brand-gold/10 transition-colors"
+                className="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-md bg-surface-primary border border-border-strong text-[10.5px] font-semibold text-brand-gold hover:bg-brand-gold/10 transition-colors cursor-pointer"
               >
                 Inspect <ExternalLink size={10} />
               </button>
@@ -196,20 +197,20 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
         )}
 
         {/* Primary Recommended Channel / Format / Audience / Pillar Badges */}
-        <div className="flex gap-1.5 flex-wrap items-center mt-auto pt-2">
-          <span className="text-[10px] px-2 py-0.5 rounded border border-border-strong text-text-secondary font-medium">
+        <div className="flex gap-1.5 flex-wrap items-center mt-auto pt-1.5">
+          <span className="text-[10.5px] px-2 py-0.5 rounded-md border border-border-strong bg-surface-secondary text-text-primary font-medium">
             {idea.suggestedChannel}
           </span>
-          <span className="text-[10px] px-2 py-0.5 rounded border border-border-strong text-text-secondary font-medium">
+          <span className="text-[10.5px] px-2 py-0.5 rounded-md border border-border-standard bg-surface-secondary text-text-secondary font-medium">
             {idea.suggestedFormat}
           </span>
           {idea.suggestedAudience && (
-            <span className="text-[10px] px-2 py-0.5 rounded border border-border-standard bg-surface-inset text-text-muted">
+            <span className="text-[10.5px] px-2 py-0.5 rounded-md border border-border-standard bg-surface-inset text-text-muted">
               {idea.suggestedAudience}
             </span>
           )}
           {idea.suggestedPillar && (
-            <span className="text-[10px] px-2 py-0.5 rounded border border-border-standard bg-surface-inset text-text-muted">
+            <span className="text-[10.5px] px-2 py-0.5 rounded-md border border-border-standard bg-surface-inset text-text-muted">
               {idea.suggestedPillar}
             </span>
           )}
@@ -220,7 +221,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
           type="button"
           data-testid="toggle-idea-details-btn"
           onClick={() => setExpanded(prev => !prev)}
-          className="mt-1 pt-2 border-t border-border-standard flex items-center justify-between text-[11px] font-semibold text-text-secondary hover:text-text-primary transition-colors"
+          className="mt-1 pt-2 border-t border-border-standard flex items-center justify-between text-[11.5px] font-medium text-text-secondary hover:text-text-primary transition-colors cursor-pointer"
         >
           <span className="inline-flex items-center gap-1.5">
             <Compass size={12} className="text-brand-gold" />
@@ -233,11 +234,11 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
         {expanded && (
           <div
             data-testid="idea-expanded-intelligence"
-            className="mt-1 pt-3 border-t border-border-standard flex flex-col gap-3 text-[12px] bg-surface-inset/60 p-3 rounded-lg"
+            className="mt-1 pt-3 border-t border-border-standard flex flex-col gap-3 text-[12px] bg-surface-inset/70 p-3 rounded-lg"
           >
             {idea.strategicAngle && (
               <div>
-                <span className="font-bold text-text-primary block text-[11px] uppercase tracking-wider mb-0.5">
+                <span className="font-semibold text-text-primary block text-[11px] mb-0.5">
                   Strategic Angle
                 </span>
                 <p className="text-text-secondary">{idea.strategicAngle}</p>
@@ -246,7 +247,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
 
             {idea.coreTension && (
               <div>
-                <span className="font-bold text-text-primary block text-[11px] uppercase tracking-wider mb-0.5">
+                <span className="font-semibold text-text-primary block text-[11px] mb-0.5">
                   Core Tension or Audience Problem
                 </span>
                 <p className="text-text-secondary">{idea.coreTension}</p>
@@ -255,7 +256,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
 
             {idea.desiredAudienceResponse && (
               <div>
-                <span className="font-bold text-text-primary block text-[11px] uppercase tracking-wider mb-0.5">
+                <span className="font-semibold text-text-primary block text-[11px] mb-0.5">
                   Desired Audience Response
                 </span>
                 <p className="text-text-secondary">{idea.desiredAudienceResponse}</p>
@@ -265,7 +266,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             {/* Available Evidence */}
             {idea.availableEvidence && idea.availableEvidence.length > 0 && (
               <div data-testid="idea-available-evidence">
-                <span className="font-bold text-emerald-700 dark:text-emerald-400 flex items-center gap-1 text-[11px] uppercase tracking-wider mb-1">
+                <span className="font-semibold text-status-success flex items-center gap-1 text-[11px] mb-1">
                   <CheckCircle2 size={12} /> Available Evidence
                 </span>
                 <ul className="list-disc pl-4 space-y-1 text-text-secondary text-[11px]">
@@ -279,7 +280,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             {/* Evidence Still Required (Advisory Signal) */}
             {idea.evidenceStillRequired && idea.evidenceStillRequired.length > 0 && (
               <div data-testid="idea-evidence-required">
-                <span className="font-bold text-amber-700 dark:text-amber-400 flex items-center gap-1 text-[11px] uppercase tracking-wider mb-1">
+                <span className="font-semibold text-status-warning flex items-center gap-1 text-[11px] mb-1">
                   <AlertCircle size={12} /> Evidence Still Required (Advisory)
                 </span>
                 <ul className="list-disc pl-4 space-y-1 text-text-secondary text-[11px]">
@@ -293,7 +294,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             {/* Unresolved Assumptions */}
             {idea.unresolvedAssumptions && idea.unresolvedAssumptions.length > 0 && (
               <div>
-                <span className="font-bold text-text-primary block text-[11px] uppercase tracking-wider mb-1">
+                <span className="font-semibold text-text-primary block text-[11px] mb-1">
                   Unresolved Assumptions
                 </span>
                 <ul className="list-disc pl-4 space-y-1 text-text-secondary text-[11px]">
@@ -307,7 +308,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             {/* Reuse Assessment Rationale */}
             {reuse && (
               <div>
-                <span className="font-bold text-text-primary block text-[11px] uppercase tracking-wider mb-0.5">
+                <span className="font-semibold text-text-primary block text-[11px] mb-0.5">
                   Reuse Assessment ({reuse.classification} - {reuse.confidence} Confidence)
                 </span>
                 <p className="text-text-secondary text-[11px]">{reuse.rationale}</p>
@@ -315,28 +316,28 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             )}
 
             {idea.possibleHook && (
-              <div className="bg-surface-primary p-2.5 border border-border-standard rounded-md text-[11px] italic text-text-secondary">
-                <span className="font-bold not-italic block text-text-primary mb-0.5">Hook idea:</span>
+              <div className="bg-surface-primary p-2.5 border border-border-standard rounded-lg text-[11px] italic text-text-secondary">
+                <span className="font-semibold not-italic block text-text-primary mb-0.5">Hook idea:</span>
                 "{idea.possibleHook}"
               </div>
             )}
 
             {idea.possibleFirstPost && (
-              <div className="bg-brand-gold/5 p-2.5 border border-brand-gold/20 rounded-md text-[11px] text-text-primary">
-                <span className="font-bold block text-text-secondary mb-0.5">First Post Idea:</span>
+              <div className="bg-brand-gold/10 p-2.5 border border-brand-gold/25 rounded-lg text-[11px] text-text-primary">
+                <span className="font-semibold block text-text-secondary mb-0.5">First Post Idea:</span>
                 "{idea.possibleFirstPost}"
               </div>
             )}
 
             {idea.riskToAvoid && (
               <p className="text-[11px] text-status-warning leading-relaxed">
-                <span className="font-bold">Risk to Avoid:</span> {idea.riskToAvoid}
+                <span className="font-semibold">Risk to Avoid:</span> {idea.riskToAvoid}
               </p>
             )}
 
             {idea.possibleNextStep && (
               <p className="text-[11px] text-text-muted leading-relaxed">
-                <span className="font-bold text-text-secondary">Next Step:</span> {idea.possibleNextStep}
+                <span className="font-semibold text-text-secondary">Next Step:</span> {idea.possibleNextStep}
               </p>
             )}
           </div>
@@ -344,19 +345,19 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
       </div>
 
       {/* Card Footer Actions (Preserving all existing Ideation buttons) */}
-      <div className="p-4 border-t border-border-standard flex items-center justify-between gap-2 bg-surface-inset rounded-b-xl flex-wrap">
-        <div className="flex gap-1.5">
+      <div className="px-4 py-3 border-t border-border-standard flex items-center justify-between gap-2 bg-surface-inset/60 rounded-b-xl flex-wrap">
+        <div className="flex gap-1">
           <button
             type="button"
             onClick={() => onUpdateStatus(idea.id, 'Promising')}
-            className="h-8 px-2.5 rounded text-xs font-semibold text-brand-gold hover:bg-brand-gold/10 transition-colors"
+            className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-brand-gold hover:bg-brand-gold/10 transition-colors cursor-pointer"
           >
             Promising
           </button>
           <button
             type="button"
             onClick={() => onUpdateStatus(idea.id, 'Not Useful')}
-            className="h-8 px-2.5 rounded text-xs font-semibold text-status-error hover:bg-status-error/10 transition-colors"
+            className="h-7 px-2.5 rounded-md text-[11.5px] font-medium text-text-muted hover:text-status-error hover:bg-status-error/10 transition-colors cursor-pointer"
           >
             Not Useful
           </button>
@@ -366,7 +367,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
           <button
             type="button"
             onClick={() => onGenerateVariation(idea)}
-            className="h-8 px-2.5 rounded text-xs font-semibold border border-border-strong bg-surface-primary text-text-secondary hover:text-text-primary transition-colors"
+            className="h-8 px-2.5 rounded-lg text-[11.5px] font-medium border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary hover:border-border-strong transition-colors cursor-pointer"
           >
             Variations
           </button>
@@ -374,7 +375,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             type="button"
             disabled={savingIdeaId === idea.id}
             onClick={() => onSaveToLibrary(idea)}
-            className="h-8 px-2.5 rounded text-xs font-semibold border border-border-strong bg-surface-primary text-text-secondary hover:text-text-primary disabled:opacity-50 transition-colors"
+            className="h-8 px-2.5 rounded-lg text-[11.5px] font-medium border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary hover:border-border-strong disabled:opacity-50 transition-colors cursor-pointer"
           >
             {savingIdeaId === idea.id ? 'Saving...' : 'Save'}
           </button>
@@ -382,7 +383,7 @@ export const IdeationOpportunityCard: React.FC<IdeationOpportunityCardProps> = (
             type="button"
             data-testid={`promote-idea-to-draft-${idea.id}`}
             onClick={() => onPromoteToWorkspace(idea)}
-            className="h-8 px-3 rounded text-xs font-bold bg-brand-gold text-text-inverse hover:bg-brand-gold-hover transition-colors inline-flex items-center gap-1"
+            className="h-8 px-3 rounded-lg text-[12px] font-semibold bg-brand-gold text-text-inverse hover:bg-brand-gold-hover transition-colors inline-flex items-center gap-1 shadow-2xs cursor-pointer"
           >
             <Sparkles size={12} />
             Draft

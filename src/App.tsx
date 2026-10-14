@@ -4874,189 +4874,189 @@ WRITING CLEANLINESS RULES (CRITICAL):
         className={`fixed inset-0 z-40 bg-black/50 transition-opacity md:hidden ${isMobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setIsMobileMenuOpen(false)}
       />
-      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-[256px] max-w-[85vw] border-r border-border-strong bg-sidebar-bg text-text-primary flex flex-col justify-between p-6 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-[252px] max-w-[85vw] border-r border-white/10 bg-sidebar-bg text-white flex flex-col justify-between p-5 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Mobile close button */}
-        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-brand-gold hover:text-text-primary">
-          <X size={24} />
+        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-brand-gold hover:text-white">
+          <X size={22} />
         </button>
         <div>
-          <div className="mb-10">
-            <span className="font-sans tracking-widest text-[11px] uppercase text-brand-gold block mb-2">Climate Opera Haus</span>
-            <h1 className="font-sans text-[21px] font-semibold leading-tight tracking-tight border-b border-border-strong pb-4 text-white">
+          <div className="mb-7 px-2">
+            <span className="font-sans tracking-[0.12em] text-[10px] font-semibold uppercase text-brand-gold block mb-1.5">Climate Opera Haus</span>
+            <h1 className="font-sans text-[19px] font-semibold leading-tight tracking-tight border-b border-white/10 pb-3.5 text-white">
               Content Studio
             </h1>
           </div>
 
           <nav className="space-y-1">
-            <div className="pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Overview
             </div>
             <button
               id="nav-command-center"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('command-center'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'command-center'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <LayoutDashboard size={16} />
+              <LayoutDashboard size={15} />
               Command Center
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Workspaces
             </div>
             <button
               id="nav-ideation"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'ideation-workspace'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Lightbulb size={16} />
+              <Lightbulb size={15} />
               Ideation Workspace
             </button>
             <button
               id="nav-editorial"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('editorial-calendar'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'editorial-calendar'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Calendar size={16} />
+              <Calendar size={15} />
               Editorial Calendar
             </button>
             <button
               id="nav-content"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-workspace'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'content-workspace'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Cpu size={16} />
+              <Cpu size={15} />
               Content Workspace
             </button>
             <button
               id="nav-visual"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('visual-studio'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'visual-studio'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <div className="w-4 h-4 flex items-center justify-center border border-current rounded-sm">
-                <div className="w-2 h-2 rounded-full bg-current" />
+              <div className="w-3.5 h-3.5 flex items-center justify-center border border-current rounded-xs">
+                <div className="w-1.5 h-1.5 rounded-full bg-current" />
               </div>
               Visual Studio
             </button>
             <button
               id="nav-revision"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('revision-studio'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg relative ${
                 activeTab === 'revision-studio'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Sliders size={16} />
+              <Sliders size={15} />
               Revision Studio
               {activeDraftText && (
-                <span className="absolute top-2.5 right-4 w-2 h-2 rounded-full bg-violet-600" />
+                <span className="absolute top-2.5 right-3 w-2 h-2 rounded-full bg-brand-gold" />
               )}
             </button>
             <button
               id="nav-reframing"
               data-testid="nav-reframing-studio"
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('reframing-studio'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg relative ${
                 activeTab === 'reframing-studio'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <RefreshCw size={16} />
+              <RefreshCw size={15} />
               Reframing Studio
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Libraries
             </div>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('calendar-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'calendar-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Calendar size={16} />
+              <Calendar size={15} />
               Calendar Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('idea-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'idea-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <FolderHeart size={16} />
+              <FolderHeart size={15} />
               Idea Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('content-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'content-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Bookmark size={16} />
+              <Bookmark size={15} />
               Content Library
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('source-library'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'source-library'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <FileText size={16} />
+              <FileText size={15} />
               Source Library
             </button>
 
-            <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+            <div className="pt-5 pb-1.5 px-3 text-[10px] font-semibold tracking-wider text-white/45 uppercase">
               Configuration
             </div>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('operating-core'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'operating-core'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <CpuIcon size={16} />
+              <CpuIcon size={15} />
               Operating Core
             </button>
             <button
               onClick={() => { setIsMobileMenuOpen(false); setActiveTab('settings'); }}
-              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded-full ${
+              className={`w-full flex items-center gap-2.5 px-3 py-2 text-[13px] font-medium transition-colors rounded-lg ${
                 activeTab === 'settings'
-                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
-                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+                  ? 'bg-sidebar-active text-text-inverse dark:text-white font-semibold shadow-xs'
+                  : 'text-white/75 hover:bg-sidebar-hover hover:text-white'
               }`}
             >
-              <Settings size={16} />
+              <Settings size={15} />
               Settings
             </button>
           </nav>
@@ -5087,7 +5087,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             handleCopyIdeaToWorkspace(idea);
           }}
         />
-        <main className="flex-1 overflow-y-auto px-4 md:px-12 py-6 md:py-10 flex flex-col min-w-0">
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6 flex flex-col min-w-0">
         
         {/* --- TAB 1: COMMAND CENTER --- */}
         
@@ -5467,7 +5467,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 mb-5">
               <h2 className="page-title">Idea Library</h2>
               <p className="page-subtitle">
                 Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
@@ -5476,31 +5476,31 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* List of saved ideas */}
             {savedIdeas.length > 0 ? (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {savedIdeas.map(idea => (
-                  <div key={idea.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={idea.id} className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col justify-between gap-4">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start gap-2 flex-wrap">
                         <div>
-                          <div className="flex gap-2 items-center flex-wrap mb-1">
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-gold bg-slate-900 px-1.5 py-0.5 rounded">
+                          <div className="flex gap-2 items-center flex-wrap mb-1.5">
+                            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-gold bg-brand-gold/10 border border-brand-gold/25 px-2 py-0.5 rounded-md">
                               {idea.suggestedChannel}
                             </span>
-                            <span className="text-[9px] font-mono text-text-secondary uppercase font-semibold">
+                            <span className="text-[10px] font-mono text-text-secondary uppercase font-semibold">
                               {idea.category}
                             </span>
                           </div>
-                          <h4 className="font-sans text-base font-bold text-text-primary leading-snug">{idea.title}</h4>
+                          <h4 className="font-sans text-[15px] font-semibold text-text-primary leading-snug">{idea.title}</h4>
                         </div>
 
                         <select
                           value={idea.status}
                           onChange={(e) => handleUpdateIdeaStatus(idea.id, e.target.value as SavedIdea['status'])}
-                          className={`text-[10px] font-bold p-1 rounded font-mono border border-border-standard ${
-                            idea.status === 'Ready for Content' ? 'bg-blue-50 text-blue-800' :
-                            idea.status === 'Promising' ? 'bg-violet-600/15 text-text-primary' :
-                            idea.status === 'Used' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
-                            'bg-surface-primary text-text-primary'
+                          className={`text-[10.5px] font-semibold px-2.5 py-1 rounded-md border border-border-standard ${
+                            idea.status === 'Ready for Content' ? 'bg-status-info/10 text-status-info border-status-info/30' :
+                            idea.status === 'Promising' ? 'bg-brand-gold/15 text-brand-gold border-brand-gold/30' :
+                            idea.status === 'Used' ? 'bg-status-success/10 text-status-success border-status-success/30' :
+                            'bg-surface-inset text-text-primary'
                           }`}
                         >
                           <option value="New">New</option>
@@ -5512,36 +5512,36 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded font-sans">
+                      <p className="text-[13px] text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-3.5 border border-border-standard rounded-lg font-sans">
                         {idea.explanation}
                       </p>
 
-                      <div className="text-[10px] text-text-secondary space-y-1 font-sans">
-                        <div><strong>Original Input:</strong> "{idea.originalInput}"</div>
+                      <div className="text-[11px] text-text-secondary space-y-1 font-sans">
+                        <div><strong>Original Input:</strong> &ldquo;{idea.originalInput}&rdquo;</div>
                         <div><strong>Why it works:</strong> {idea.whyItWorks}</div>
-                        <div><strong>Hook idea:</strong> "{idea.possibleHook}"</div>
+                        <div><strong>Hook idea:</strong> &ldquo;{idea.possibleHook}&rdquo;</div>
                         {idea.possibleNextStep && <div><strong>Next action:</strong> {idea.possibleNextStep}</div>}
                       </div>
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-border-standard pt-4 text-[10px] text-text-muted font-mono">
+                    <div className="flex justify-between items-center border-t border-border-standard pt-3.5 text-[10px] text-text-muted font-mono flex-wrap gap-2">
                       <span>Saved: {idea.dateCreated}</span>
-                      <div className="flex gap-2 items-center">
+                      <div className="flex gap-2 items-center flex-wrap">
                         <button
                           onClick={() => handleSendToVisualStudio(idea, idea.explanation, 'Idea')}
-                          className="bg-surface-primary text-brand-gold hover:text-brand-gold-dark border border-border-standard px-3 py-1.5 rounded font-sans font-bold text-[10px] flex items-center gap-1"
+                          className="bg-surface-inset text-text-secondary hover:text-text-primary hover:border-brand-gold border border-border-standard px-2.5 py-1.5 rounded-lg font-sans font-medium text-[11px] flex items-center gap-1 transition-colors"
                         >
-                          <Lightbulb size={10} /> Send Visual Direction to Visual Studio
+                          <Lightbulb size={11} className="text-brand-gold" /> Send Visual Direction to Visual Studio
                         </button>
                         <button
                           onClick={() => handleCopyIdeaToWorkspace(idea)}
-                          className="bg-slate-900 text-white hover:bg-brand-gold-hover px-3 py-1.5 rounded font-sans font-bold text-[10px]"
+                          className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-3 py-1.5 rounded-lg font-sans font-semibold text-[11px] transition-colors"
                         >
                           Draft Content
                         </button>
                         <button
                           onClick={() => setSavedIdeas(prev => prev.filter(i => i.id !== idea.id))}
-                          className="text-[11px] text-red-800/70 hover:text-red-800 font-semibold"
+                          className="text-[11px] text-status-error/80 hover:text-status-error font-semibold px-1"
                         >
                           Delete
                         </button>
@@ -5564,13 +5564,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="page-shell">
             {/* Hero Area / Quick Prompt */}
-            <div className="bg-gradient-to-r from-brand-gold/10 to-brand-gold-hover/5 border border-brand-gold/20 p-8 rounded-2xl shadow-level-1 flex flex-col gap-4">
-              <h2 className="font-sans text-2xl font-bold text-text-primary">What are you working on today?</h2>
-              <div className="flex flex-col md:flex-row gap-3">
+            <div className="bg-surface-primary border border-border-standard p-6 md:p-7 rounded-xl shadow-level-1 flex flex-col gap-4">
+              <div>
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-gold block mb-1">Editorial Command</span>
+                <h2 className="font-sans text-xl md:text-2xl font-semibold text-text-primary tracking-tight">What are you working on today?</h2>
+              </div>
+              <div className="flex flex-col md:flex-row gap-2.5">
                 <input 
                   type="text" 
                   placeholder="e.g. 'Write a LinkedIn post about our new climate initiative...'"
-                  className="flex-1 h-12 px-4 bg-surface-primary border border-border-standard rounded-lg font-sans text-[15px] shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent transition-all"
+                  className="flex-1 h-11 px-4 bg-surface-inset border border-border-standard rounded-lg font-sans text-[14px] text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:border-transparent transition-all"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       const id = `work-${Date.now()}`;
@@ -5593,15 +5596,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     setQuickBrief({ goal: 'Draft content from command center', channel: 'LinkedIn', notes: '', mustInclude: '', mustAvoid: '', language: 'English', outputFormat: 'Post' });
                     setActiveTab('content-workspace');
                   }}
-                  className="h-12 px-6 bg-brand-gold text-text-inverse font-sans font-semibold rounded-lg shadow-sm hover:bg-brand-gold-hover transition-colors whitespace-nowrap flex items-center gap-2"
+                  className="h-11 px-5 bg-brand-gold text-text-inverse font-sans text-sm font-semibold rounded-lg shadow-xs hover:bg-brand-gold-hover transition-colors whitespace-nowrap flex items-center justify-center gap-2"
                 >
-                  Start Writing <ArrowRight size={16} />
+                  Start Writing <ArrowRight size={15} />
                 </button>
                 <button 
                   onClick={() => { setIsMobileMenuOpen(false); setActiveTab('ideation-workspace'); }}
-                  className="h-12 px-6 bg-surface-primary border border-border-strong text-text-primary font-sans font-semibold rounded-lg shadow-sm hover:bg-surface-inset transition-colors whitespace-nowrap flex items-center gap-2"
+                  className="h-11 px-5 bg-surface-primary border border-border-standard text-text-primary font-sans text-sm font-medium rounded-lg hover:bg-surface-inset transition-colors whitespace-nowrap flex items-center justify-center gap-2"
                 >
-                  Explore Ideas <Lightbulb size={16} className="text-brand-gold" />
+                  Explore Ideas <Lightbulb size={15} className="text-brand-gold" />
                 </button>
               </div>
             </div>
@@ -5809,13 +5812,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
           <div className="page-shell">
             {/* Active Work Item Header (Optional) */}
             {activeWorkItem ? (
-              <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-3 mb-1">
                     <h2 className="page-title">
                       {(activeWorkItem?.title || 'Standalone Draft')}
                     </h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-slate-900 text-white px-2 py-0.5 rounded status-badge">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-brand-gold/15 text-brand-gold border border-brand-gold/30 px-2 py-0.5 rounded-md status-badge">
                       {activeWorkItem.status}
                     </span>
                   </div>
@@ -5833,37 +5836,37 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
                       }
                     }}
-                    className="text-[10px] text-text-primary underline font-bold interactive-button"
+                    className="text-[11px] text-text-primary underline font-semibold interactive-button"
                   >
                     Rename Work Item
                   </button>
                   <button
                     onClick={() => setActiveWorkItem(null)}
-                    className="text-[10px] text-text-secondary hover:text-red-700 underline font-bold interactive-button mt-1"
+                    className="text-[11px] text-text-secondary hover:text-status-error underline font-semibold interactive-button mt-1"
                   >
                     Clear Workspace
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-3">
-                    <h2 className="font-sans text-2xl font-bold text-text-primary">Content Workspace</h2>
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-surface-secondary border border-border-standard text-text-primary px-2 py-0.5 rounded-full">
+                    <h2 className="page-title">Content Workspace</h2>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider bg-surface-inset border border-border-standard text-text-secondary px-2.5 py-0.5 rounded-full">
                       Standalone Draft
                     </span>
                   </div>
-                  <p className="font-sans text-[15px] text-text-secondary mt-1">Draft, edit, and optimize individual content assets with core guidance.</p>
+                  <p className="page-subtitle">Draft, edit, and optimize individual content assets with core guidance.</p>
                 </div>
                 
                 {/* Mode Toggle Button Group */}
                 <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard shrink-0">
                   <button
                     onClick={() => setCreationMode('simple')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'simple'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5871,9 +5874,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </button>
                   <button
                     onClick={() => setCreationMode('quick')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'quick'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5881,9 +5884,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </button>
                   <button
                     onClick={() => setCreationMode('advanced')}
-                    className={`px-4 py-2 text-xs font-semibold rounded-md transition-all ${
+                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
                       creationMode === 'advanced'
-                        ? 'bg-surface-primary text-brand-gold shadow-sm border border-border-standard'
+                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
                         : 'text-text-secondary hover:text-text-primary'
                     }`}
                   >
@@ -5943,7 +5946,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <ContextManifestPanel
               manifest={buildContentWorkspaceContextPackage().manifest}
               theme={theme}
-              className="mb-4"
             />
 
             <SmartBriefPanel
@@ -6022,7 +6024,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* Validation warning block */}
             {validationWarning && (
-              <div className="bg-red-500/10 backdrop-blur-md border border-red-200 p-4 rounded text-xs text-red-800 font-semibold flex items-center gap-2 animate-pulse">
+              <div className="bg-status-error/10 border border-status-error/30 p-3.5 rounded-xl text-xs text-status-error font-semibold flex items-center gap-2">
                 <AlertTriangle size={15} />
                 <span>{validationWarning}</span>
               </div>
@@ -6030,12 +6032,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* Outdated generation alert banner */}
             {isBriefOutdated && (
-              <div className="bg-status-warning/10 border border-status-warning/20 p-4 rounded text-xs text-text-primary flex justify-between items-center">
+              <div className="bg-status-warning/10 border border-status-warning/25 p-3.5 rounded-xl text-xs text-text-primary flex justify-between items-center">
                 <span>Inputs changed. Regenerate to apply the latest brief.</span>
                 <button
                   disabled={isGeneratingDrafts || aiIsGenerating}
                   onClick={handleGenerateDrafts}
-                  className="bg-slate-900 text-white px-3 py-1.5 rounded text-[11px] font-bold shadow-md hover:bg-brand-gold-hover transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
+                  className="bg-brand-gold text-text-inverse px-3 py-1.5 rounded-lg text-[11px] font-semibold shadow-xs hover:bg-brand-gold-hover transition disabled:opacity-50 disabled:cursor-not-allowed action-button interactive-button"
                 >
                   {isGeneratingDrafts ? 'Generating...' : 'Generate Again'}
                 </button>
@@ -6043,13 +6045,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
             )}
 
             {/* Honest Prototype Banner */}
-            <div className="bg-amber-500/10 backdrop-blur-md/70 border border-border-strong p-4 rounded text-xs text-text-primary flex justify-between items-center gap-4 flex-wrap">
+            <div className="bg-surface-inset border border-border-standard px-4 py-3 rounded-xl text-xs text-text-secondary flex justify-between items-center gap-4 flex-wrap">
               <div className="flex items-center gap-2">
-                <AlertTriangle size={15} className="text-brand-gold shrink-0" />
+                <AlertTriangle size={14} className="text-brand-gold shrink-0" />
                 <span>Needs review: drafts are generated by local logic. For final-quality copy, use Prompt Builder or connect an AI model.</span>
               </div>
               <div className="flex gap-2">
-                <span className="bg-slate-900 text-white text-[9px] px-1.5 py-0.5 rounded font-mono font-bold">
+                <span className="bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold">
                   Rules Active
                 </span>
               </div>
@@ -6058,22 +6060,22 @@ WRITING CLEANLINESS RULES (CRITICAL):
             {/* Content Starters container */}
             <div className="card-level-1 p-4 border border-border-standard space-y-3">
               <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
-                <span className="font-semibold text-text-primary text-sm">Content Starters</span>
-                <span className="text-xs text-brand-gold font-semibold bg-surface-primary px-2 py-1 rounded">
+                <span className="font-semibold text-text-primary text-xs uppercase tracking-wider">Content Starters</span>
+                <span className="text-xs text-brand-gold font-semibold bg-surface-inset border border-border-standard px-2.5 py-1 rounded-md">
                   {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
                 </span>
               </div>
               
               {showContentStarters && (
-                <div className="space-y-4 pt-2 border-t border-border-standard">
-                  <div className="space-y-2">
+                <div className="space-y-3.5 pt-2.5 border-t border-border-standard">
+                  <div className="space-y-1.5">
                     <span className="font-medium block text-text-secondary text-xs">Templates:</span>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       {CONTENT_TEMPLATES.map(temp => (
                         <button
                           key={temp.name}
                           onClick={() => applyTemplate(temp)}
-                          className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1.5 px-3 rounded text-[11px] transition font-medium"
+                          className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1.5 px-3 rounded-md text-[11px] transition font-medium"
                           title={temp.desc}
                         >
                           {temp.name}
@@ -6082,42 +6084,42 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <span className="font-medium block text-text-secondary text-xs">Example Briefs:</span>
-                    <div className="flex gap-2 flex-wrap">
+                    <div className="flex gap-1.5 flex-wrap">
                       <button
                         onClick={() => applyExampleChip('tetralogy')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Announce Tetralogy
                       </button>
                       <button
                         onClick={() => applyExampleChip('cultural-ip')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Cultural IP & Model
                       </button>
                       <button
                         onClick={() => applyExampleChip('event-notes')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Nordic Air (Soria Moria)
                       </button>
                       <button
                         onClick={() => applyExampleChip('instagram-img')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Water Dragon Caption
                       </button>
                       <button
                         onClick={() => applyExampleChip('sponsor-facing')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Patron Pitch Paragraph
                       </button>
                       <button
                         onClick={() => applyExampleChip('newsletter-update')}
-                        className="bg-surface-primary hover:bg-violet-600/25 text-text-primary border border-border-standard py-1 px-2.5 rounded text-[10px] transition font-medium"
+                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
                       >
                         Earth Canon Update
                       </button>
@@ -7481,7 +7483,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <button 
                           onClick={handleGenerateDrafts} 
                           disabled={isGeneratingDrafts}
-                          className="bg-violet-600 hover:bg-violet-600-dark text-text-primary px-3 py-1.5 rounded font-bold text-[10px] font-sans transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
+                          className="bg-brand-gold hover:bg-brand-gold-hover text-surface-base px-3 py-1.5 rounded-lg font-bold text-[10px] font-sans transition flex items-center justify-center gap-1 disabled:opacity-50 action-button interactive-btn"
                         >
                           {isGeneratingDrafts ? <div className="w-3 h-3 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={12} />}
                           {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -7491,13 +7493,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     {/* 5. Recommended Approach */}
                     {advancedBrief.directionMode === 'auto' && (
-                      <details className="text-xs border border-border-standard p-3 rounded bg-surface-inset cursor-pointer">
+                      <details className="text-xs border border-border-standard p-3 rounded-lg bg-surface-inset cursor-pointer">
                         <summary className="font-semibold text-text-primary hover:text-brand-gold font-sans">View Recommended Approaches</summary>
                         <div className="space-y-3 mt-3">
                           {getDynamicDirections().map(d => {
                             const isSel = d.title === advancedBrief.angle;
                             return (
-                              <div key={d.title} className={`p-3 border rounded text-xs transition cursor-default ${
+                              <div key={d.title} className={`p-3 border rounded-lg text-xs transition cursor-default ${
                                 isSel ? 'border-brand-gold bg-surface-inset' : 'border-border-standard bg-surface-inset/50'
                               }`}>
                                 <h4 className="font-sans font-bold text-text-primary mb-1">{d.title}</h4>
@@ -7505,12 +7507,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                 <div className="text-[10px] text-text-secondary space-y-1">
                                   <div><strong>Why this works:</strong> Visually anchors local data context.</div>
                                   <div><strong>Best use:</strong> {d.bestChannelFit}</div>
-                                  <div className="text-red-800"><strong>Risk to avoid:</strong> {d.whatNotToSay}</div>
+                                  <div className="text-status-error"><strong>Risk to avoid:</strong> {d.whatNotToSay}</div>
                                 </div>
                                 <div className="flex gap-2 mt-2">
                                   <button
                                     onClick={() => setAdvancedBrief({ ...advancedBrief, angle: d.title })}
-                                    className="bg-slate-900 text-white px-2 py-1 rounded text-[10px]"
+                                    className="bg-brand-gold text-surface-base font-bold px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Use This Approach
                                   </button>
@@ -7522,7 +7524,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         customDirection: d.whatToSay
                                       });
                                     }}
-                                    className="bg-surface-primary border border-border-standard text-text-primary px-2 py-1 rounded text-[10px]"
+                                    className="bg-surface-primary border border-border-standard text-text-primary px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Edit Approach
                                   </button>
@@ -7533,7 +7535,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                         angle: 'Create From Scratch / No Direction'
                                       });
                                     }}
-                                    className="bg-red-500/10 backdrop-blur-md text-red-700 px-2 py-1 rounded text-[10px]"
+                                    className="bg-status-error/10 text-status-error px-2.5 py-1 rounded-md text-[10px]"
                                   >
                                     Skip Approach
                                   </button>
@@ -7567,7 +7569,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
           return (
           <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-4">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Visual Production
+              </div>
               <h2 className="page-title">Visual Studio</h2>
               <p className="page-subtitle">Create visual outputs from full visual directions or custom prompts.</p>
             </div>
@@ -7601,24 +7606,24 @@ WRITING CLEANLINESS RULES (CRITICAL):
               );
             })()}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Column: Editor & Controls */}
-              <div className="lg:col-span-5 space-y-6">
+              <div className="lg:col-span-5 space-y-5">
                 
                 {/* Input Mode Selector */}
                 <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
-                  <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">Input Mode</h3>
+                  <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Input Mode</h3>
                   
-                  <div className="flex bg-surface-inset p-1 rounded border border-border-standard">
+                  <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard">
                     <button
                       onClick={() => setVsInputMode('Manual')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Manual' ? 'bg-slate-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 px-4 py-1.5 text-xs font-semibold rounded-md transition ${vsInputMode === 'Manual' ? 'bg-brand-gold text-surface-base shadow-sm font-bold' : 'text-text-secondary hover:text-text-primary'}`}
                     >
                       Manual Prompt
                     </button>
                     <button
                       onClick={() => setVsInputMode('Imported')}
-                      className={`flex-1 px-4 py-2 text-xs font-semibold rounded transition ${vsInputMode === 'Imported' ? 'bg-slate-900 text-white shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}
+                      className={`flex-1 px-4 py-1.5 text-xs font-semibold rounded-md transition ${vsInputMode === 'Imported' ? 'bg-brand-gold text-surface-base shadow-sm font-bold' : 'text-text-secondary hover:text-text-primary'}`}
                     >
                       Imported Visual Direction
                     </button>
@@ -7627,25 +7632,25 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   {vsInputMode === 'Imported' ? (
                     <div>
                       {vsSourceItem ? (
-                        <div className="bg-surface-inset p-3 rounded text-sm text-text-primary border border-border-standard">
+                        <div className="bg-surface-inset p-3 rounded-lg text-sm text-text-primary border border-border-standard">
                           <span className="block text-[10px] uppercase tracking-wider text-text-secondary mb-1">Imported from {vsSourceItem.type}</span>
                           <strong className="block truncate font-sans" title={vsSourceItem.title}>{vsSourceItem.title}</strong>
                         </div>
                       ) : (
-                        <div className="bg-surface-inset p-3 rounded text-sm text-text-secondary italic border border-border-standard">
+                        <div className="bg-surface-inset p-3 rounded-lg text-xs text-text-secondary italic border border-border-standard">
                           No imported visual direction selected. Send one from Content Workspace or Content Library.
                         </div>
                       )}
                     </div>
                   ) : (
                     <div>
-                      <label className="block text-text-secondary font-semibold mb-1">Visual Prompt or Brief</label>
+                      <label className="block text-text-secondary font-semibold mb-1.5">Visual Prompt or Brief</label>
                       <textarea
                         value={vsManualPrompt}
                         onChange={(e) => setVsManualPrompt(e.target.value)}
                         placeholder="Paste a prompt, visual direction, image idea, or creative brief."
                         rows={4}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary text-xs font-sans"
+                        className="w-full bg-surface-primary border border-border-standard p-2.5 rounded-lg text-text-primary text-xs font-sans"
                       />
                     </div>
                   )}
@@ -7653,14 +7658,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                 {/* Generation Controls */}
                 <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
-                  <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">Generation Settings</h3>
+                  <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Generation Settings</h3>
                   
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Prompt Build Mode</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Prompt Build Mode</label>
                     <select
                       value={vsPromptMode}
                       onChange={(e) => setVsPromptMode(e.target.value as any)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       {vsInputMode === 'Manual' && <option value="Manual Only">Manual Prompt Only</option>}
                       <option value="Full + AI">Full Visual Direction + AI Image Prompt</option>
@@ -7670,11 +7675,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Aspect Ratio</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Aspect Ratio</label>
                     <select
                       value={vsAspectRatio}
                       onChange={(e) => setVsAspectRatio(e.target.value)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       {ASPECT_RATIO_GROUP_ORDER.map(group => (
                         <optgroup key={group} label={group}>
@@ -7697,22 +7702,22 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       <div className="mt-2 flex gap-2">
                         <div className="flex-1">
                           <label className="block text-[10px] text-text-secondary mb-1">Width (px)</label>
-                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomWidth} onChange={e => setVsCustomWidth(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded-lg" />
                         </div>
                         <div className="flex-1">
                           <label className="block text-[10px] text-text-secondary mb-1">Height (px)</label>
-                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded" />
+                          <input type="number" value={vsCustomHeight} onChange={e => setVsCustomHeight(parseInt(e.target.value)||0)} step="16" className="w-full bg-surface-primary border border-border-standard p-1.5 text-xs rounded-lg" />
                         </div>
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary font-semibold mb-1">Visual Style</label>
+                    <label className="block text-text-secondary font-semibold mb-1.5">Visual Style</label>
                     <select
                       value={vsVisualStyle}
                       onChange={(e) => setVsVisualStyle(e.target.value)}
-                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded"
+                      className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg"
                     >
                       <option value="Editorial Photomontage">Editorial Photomontage</option>
                       <option value="Cinematic Realism">Cinematic Realism</option>
@@ -7728,17 +7733,17 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       {isGeneratingImage ? 'Generating...' : 'Generate'}
                     </Button>
                     {isTextLed && !vsTextContent.trim() && (
-                      <p className="text-[10px] text-amber-500 text-center mt-1 font-semibold">Warning: No Text Content provided. Generated image will have AI placeholder text.</p>
+                      <p className="text-[10px] text-status-warning text-center mt-1.5 font-semibold">Warning: No Text Content provided. Generated image will have AI placeholder text.</p>
                     )}
                   </div>
-                  {!aiProvider && <p className="text-xs text-red-500 text-center mt-2">No AI provider configured.</p>}
-                  {aiLastError && <p className="text-xs text-red-500 text-center mt-2">{aiLastError}</p>}
+                  {!aiProvider && <p className="text-xs text-status-error text-center mt-2">No AI provider configured.</p>}
+                  {aiLastError && <p className="text-xs text-status-error text-center mt-2">{aiLastError}</p>}
                 </div>
 
               {/* Structured Visual Brief Editor */}
               <div className="card-level-1 p-5 border border-border-standard space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
-                <div className="flex justify-between items-center mb-2 border-b border-border-standard pb-2">
-                  <h3 className="font-sans text-base font-bold text-text-primary">Structured Visual Brief</h3>
+                <div className="flex justify-between items-center mb-1 border-b border-border-standard pb-2">
+                  <h3 className="font-sans text-sm font-bold text-text-primary">Structured Visual Brief</h3>
                   {vsInputMode === 'Manual' && (
                     <button
                       onClick={() => setShowAdvancedBrief(!showAdvancedBrief)}
@@ -7754,15 +7759,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     
                     {/* Validation UI */}
                     {vsInputMode === 'Imported' && vsImportValidation && (
-                       <div className="bg-blue-50 border border-blue-200 rounded p-3 mb-2 flex flex-col gap-1">
+                       <div className="bg-surface-inset border border-border-standard rounded-lg p-3 mb-2 flex flex-col gap-1">
                           <div className="flex items-center justify-between">
-                             <span className="font-semibold text-blue-900">Brief Import Status</span>
-                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${vsImportValidation.recognized > 5 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
+                             <span className="font-semibold text-text-primary">Brief Import Status</span>
+                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${vsImportValidation.recognized > 5 ? 'bg-status-success/15 text-status-success' : 'bg-status-warning/15 text-status-warning'}`}>
                                 {vsImportValidation.recognized}/{vsImportValidation.total} Fields Parsed
                              </span>
                           </div>
                           {vsImportValidation.missing.length > 0 && (
-                            <p className="text-[10px] text-blue-700 italic">
+                            <p className="text-[10px] text-text-secondary italic">
                                Unrecognized optional fields: {vsImportValidation.missing.join(', ')}
                             </p>
                           )}
@@ -7771,15 +7776,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   
                     {/* Text-led specific fields */}
                     {isTextLed && (
-                      <div className="bg-violet-600/10 p-3 rounded border border-border-strong mb-2">
+                      <div className="bg-brand-gold/5 p-3 rounded-lg border border-brand-gold/30 mb-2">
                          <div className="mb-3">
-                           <label className="block text-text-primary font-bold mb-1 flex items-center gap-1">Text Content (Required) <span className="text-red-500">*</span></label>
+                           <label className="block text-text-primary font-bold mb-1 flex items-center gap-1">Text Content (Required) <span className="text-status-error">*</span></label>
                            <textarea
                              value={vsTextContent}
                              onChange={(e) => setVsTextContent(e.target.value)}
                              rows={3}
                              placeholder="The exact quote or text to display on the card..."
-                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                            />
                          </div>
                          <div>
@@ -7789,7 +7794,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                              value={vsAttribution}
                              onChange={(e) => setVsAttribution(e.target.value)}
                              placeholder="e.g. John Doe, CEO"
-                             className="w-full bg-surface-inset border border-violet-300 p-2 text-xs text-text-primary rounded font-sans"
+                             className="w-full bg-surface-inset border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                            />
                          </div>
                       </div>
@@ -7814,13 +7819,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           value={field.value}
                           onChange={(e) => field.setter(e.target.value)}
                           rows={field.label === 'Visual Concept' || field.label === 'AI Image Prompt' ? 3 : 2}
-                          className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded font-sans"
+                          className="w-full bg-surface-primary border border-border-standard p-2 text-xs text-text-primary rounded-lg font-sans"
                         />
                       </div>
                     ))}
                   </div>
                 ) : (
-                   <div className="text-center py-12 text-text-muted italic text-sm">
+                   <div className="text-center py-8 text-text-muted italic text-xs">
                      Advanced brief fields are hidden in manual mode.
                    </div>
                   )}
@@ -7828,32 +7833,39 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
-                <div className="border-b border-border-standard pb-2 flex justify-between items-center">
-                  <h3 className="font-sans text-lg font-semibold text-text-primary">
-                    Results
-                  </h3>
+              <div className="lg:col-span-7 card-level-1 p-6 space-y-5">
+                <div className="border-b border-border-standard pb-3 flex justify-between items-center">
+                  <div>
+                    <h3 className="font-sans text-base font-bold text-text-primary">
+                      Results &amp; Visual Canvas
+                    </h3>
+                    <p className="text-[11px] text-text-secondary mt-0.5">
+                      High-resolution image outputs and compiled prompt provenance.
+                    </p>
+                  </div>
                 </div>
                 
                 {isGeneratingImage ? (
-                  <div className="bg-surface-primary p-12 rounded text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
+                  <div className="bg-surface-inset p-12 rounded-xl text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
                     <div className="w-8 h-8 border-4 border-brand-gold border-t-transparent rounded-full animate-spin"></div>
                     <p className="text-text-primary font-semibold text-sm">Generating...</p>
                   </div>
                 ) : vsGeneratedImages.length === 0 ? (
-                  <div className="bg-surface-primary p-8 rounded text-center text-text-secondary italic border border-dashed border-border-strong">
-                    No images generated yet.
+                  <div className="bg-surface-inset p-12 rounded-xl text-center text-text-secondary border border-dashed border-border-standard">
+                    <Lightbulb size={22} className="mx-auto text-brand-gold/40 mb-2" />
+                    <p className="text-xs font-medium text-text-primary">No images generated yet.</p>
+                    <p className="text-[11px] text-text-muted mt-1">Configure your visual direction on the left and click Generate.</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 gap-4">
                     {vsGeneratedImages.map(img => (
-                      <div key={img.id} className="bg-surface-inset border border-border-standard rounded p-4 shadow-sm group">
-                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded mb-3 border border-border-standard" />
+                      <div key={img.id} className="bg-surface-inset border border-border-standard rounded-xl p-4 shadow-sm group">
+                        <img src={img.url} alt="Generated Visual" className="w-full h-auto max-h-[70vh] object-contain rounded-lg mb-3 border border-border-standard" />
                         <div className="flex gap-2 text-xs">
                           <a
                             href={img.url}
                             download={`coh-visual-${(vsSourceItem?.title || 'manual').replace(/[^a-z0-9]/gi, '-').toLowerCase()}-${new Date().toISOString().split('T')[0]}.png`}
-                            className="w-full bg-surface-primary hover:bg-violet-600 hover:text-text-primary text-text-primary border border-border-strong py-2.5 rounded text-center font-bold transition flex items-center justify-center gap-1.5"
+                            className="w-full bg-surface-primary hover:bg-brand-gold hover:text-surface-base text-text-primary border border-border-strong py-2.5 rounded-lg text-center font-bold transition flex items-center justify-center gap-1.5"
                           >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                             Download
@@ -7861,7 +7873,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                         {/* Compiled Prompt Preview */}
                         {img.promptUsed && (
-                          <details className="mt-4 border border-border-standard rounded overflow-hidden">
+                          <details className="mt-4 border border-border-standard rounded-lg overflow-hidden">
                             <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase tracking-wider text-text-secondary font-bold cursor-pointer select-none flex justify-between">
                               <span>Compiled Prompt Preview (Debug)</span>
                               <span className="opacity-50 font-mono">
@@ -8100,36 +8112,39 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Editorial Repository
+              </div>
               <h2 className="page-title">Content Library</h2>
               <p className="page-subtitle">
                 Access, duplicate, and filter approved COH content assets.
               </p>
             </div>
 
-            <div className="card-level-1 p-5 border border-border-standard flex gap-4 text-xs flex-wrap items-center">
-              <div className="flex items-center gap-1 text-brand-gold shrink-0">
+            <div className="card-level-1 p-4 sm:p-5 border border-border-standard flex gap-3.5 text-xs flex-wrap items-end">
+              <div className="flex items-center gap-1.5 text-brand-gold shrink-0 pb-2">
                 <Filter size={15} />
-                <span className="font-semibold uppercase tracking-wider font-mono">Filters</span>
+                <span className="font-semibold uppercase tracking-wider font-mono text-[11px]">Filters</span>
               </div>
               
               <div className="flex-1 min-w-[200px]">
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Search Content</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Search Content</label>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search title, copy, or elements..."
-                  className="bg-surface-primary border border-border-standard p-1 rounded text-[11px] w-full text-text-primary"
+                  className="bg-surface-inset border border-border-standard px-3 py-1.5 rounded-lg text-xs w-full text-text-primary"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Channel</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Channel</label>
                 <select
                   value={filterChannel}
                   onChange={(e) => setFilterChannel(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Channels</option>
                   <option value="LinkedIn">LinkedIn</option>
@@ -8145,11 +8160,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Status</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Status</label>
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Statuses</option>
                   <option value="Draft">Draft</option>
@@ -8160,11 +8175,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               <div>
-                <label className="text-[10px] uppercase text-text-secondary block mb-1">Filter Pillar</label>
+                <label className="text-[10px] uppercase tracking-wider font-semibold text-text-secondary block mb-1">Filter Pillar</label>
                 <select
                   value={filterPillar}
                   onChange={(e) => setFilterPillar(e.target.value)}
-                  className="bg-surface-primary border border-border-standard p-1.5 rounded text-text-primary text-[11px]"
+                  className="bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-text-primary text-xs"
                 >
                   <option value="All">All Pillars</option>
                   <option value="Climate Tetralogy & Canon">Climate Tetralogy & Canon</option>
@@ -8180,41 +8195,41 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   setFilterPillar('All');
                   setSearchQuery('');
                 }}
-                className="px-3 py-1.5 rounded bg-surface-primary border border-border-standard text-[10px] font-bold text-text-primary uppercase hover:bg-surface-primary-dark transition"
+                className="px-3 py-1.5 h-[34px] rounded-lg bg-surface-inset border border-border-standard text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
               >
                 Reset
               </button>
             </div>
 
             {actualFilteredSaved.length > 0 ? (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {actualFilteredSaved.map(item => (
-                  <div key={item.id} className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm flex flex-col justify-between gap-4">
+                  <div key={item.id} className="card-level-1 p-5 flex flex-col justify-between gap-4 hover:border-brand-gold/35 transition-colors">
                     <div className="space-y-3">
                       <div className="flex justify-between items-start flex-wrap gap-2">
                         <div>
-                          <div className="flex gap-2 items-center flex-wrap mb-1">
-                            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-brand-gold bg-slate-900 px-1.5 py-0.5 rounded">
+                          <div className="flex gap-1.5 items-center flex-wrap mb-1.5">
+                            <span className="text-[10px] font-mono font-semibold uppercase tracking-wider text-brand-gold bg-brand-gold/10 border border-brand-gold/25 px-2 py-0.5 rounded-md">
                               {item.channel}
                             </span>
-                            <span className="text-[9px] font-mono text-text-secondary uppercase font-semibold">
+                            <span className="text-[10px] font-mono text-text-secondary uppercase font-medium px-2 py-0.5 rounded-md bg-surface-inset border border-border-standard">
                               {item.pillar}
                             </span>
-                            <span className="bg-violet-600/25 text-text-primary text-[9px] font-mono px-1 rounded font-bold">
+                            <span className="bg-surface-inset border border-border-standard text-text-secondary text-[10px] font-mono px-1.5 py-0.5 rounded-md font-semibold">
                               v{item.version || 1}
                             </span>
                           </div>
-                          <h4 className="font-sans text-lg font-semibold text-text-primary leading-snug">{generateContentDisplayTitle(item)}</h4>
+                          <h4 className="font-sans text-base font-bold text-text-primary leading-snug">{generateContentDisplayTitle(item)}</h4>
                         </div>
 
                         <select
                           value={item.status}
                           onChange={(e) => handleUpdateStatus(item.id, e.target.value as SavedContent['status'])}
-                          className={`text-[10px] font-bold p-1 rounded font-mono border border-border-standard ${
-                            item.status === 'Published' ? 'bg-green-500/10 backdrop-blur-md text-green-800' :
-                            item.status === 'Approved' ? 'bg-blue-50 text-blue-800' :
-                            item.status === 'Revised' ? 'bg-amber-500/10 backdrop-blur-md text-amber-800' :
-                            'bg-surface-primary text-text-primary'
+                          className={`text-[10px] font-bold px-2 py-1 rounded-md font-mono border ${
+                            item.status === 'Published' ? 'bg-status-success/10 border-status-success/30 text-status-success' :
+                            item.status === 'Approved' ? 'bg-status-info/10 border-status-info/30 text-status-info' :
+                            item.status === 'Revised' ? 'bg-status-warning/10 border-status-warning/30 text-status-warning' :
+                            'bg-surface-inset border-border-standard text-text-primary'
                           }`}
                         >
                           <option value="Draft">Draft</option>
@@ -8224,14 +8239,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </select>
                       </div>
 
-                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded">
+                      <p className="text-xs text-text-primary whitespace-pre-wrap leading-relaxed bg-surface-inset p-4 border border-border-standard rounded-lg">
                         {item.text}
                       </p>
 
-                      <div className="text-[10px] text-text-muted space-y-0.5">
-                        <div><strong>Target Audience:</strong> {item.audience}</div>
-                        <div><strong>Content Direction:</strong> {item.angle}</div>
-                        <div className="truncate"><strong>Sources:</strong> {item.sourcesUsed?.join(', ') || 'None'}</div>
+                      <div className="text-[11px] text-text-secondary space-y-0.5">
+                        <div><strong className="text-text-primary">Target Audience:</strong> {item.audience}</div>
+                        <div><strong className="text-text-primary">Content Direction:</strong> {item.angle}</div>
+                        <div className="truncate"><strong className="text-text-primary">Sources:</strong> {item.sourcesUsed?.join(', ') || 'None'}</div>
                       </div>
 
                       {/* Visual Direction section */}
@@ -8239,7 +8254,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <div className="border-t border-border-standard pt-2.5 mt-2 space-y-1.5 text-left">
                           <div className="flex justify-between items-center flex-wrap gap-1">
                             <span className="text-[10px] uppercase font-bold text-text-secondary block">Visual Direction</span>
-                            <div className="flex gap-2 text-[9px] font-semibold text-text-primary">
+                            <div className="flex gap-2 text-[10px] font-semibold text-text-primary">
                               <button
                                 onClick={() => {
                                   const formatted = formatVisualDirectionForDisplay(
@@ -8249,7 +8264,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     item.text
                                   );
                                   navigator.clipboard.writeText(formatted);
-                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -8265,7 +8279,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                     item.text
                                   );
                                   navigator.clipboard.writeText(promptText);
-                                  /* Copied handled by state */
                                 }}
                                 className="interactive-link transition"
                               >
@@ -8273,7 +8286,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               </button>
                             </div>
                           </div>
-                          <div className="bg-surface-primary/35 p-3 border border-border-standard rounded text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
+                          <div className="bg-surface-inset p-3 border border-border-standard rounded-lg text-[11px] text-text-primary whitespace-pre-wrap font-sans leading-relaxed">
                             {formatVisualDirectionForDisplay(
                               item.visualDirection || item.visualIdeation,
                               item.channel,
@@ -8285,18 +8298,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       )}
                     </div>
 
-                    <div className="flex justify-between items-center border-t border-border-standard pt-4 text-[10px] text-text-muted font-mono">
+                    <div className="flex justify-between items-center border-t border-border-standard pt-3.5 text-[10px] text-text-muted font-mono flex-wrap gap-2">
                       <span>Saved: {item.createdAt} | Edited: {item.lastEdited}</span>
-                      <div className="flex gap-1.5 flex-wrap items-center">
+                      <div className="flex gap-2 flex-wrap items-center font-sans">
                         <button
                           onClick={() => handleCopyClipboard(item.text, item.id)}
-                          className="text-[11px] font-semibold text-text-primary interactive-link transition"
+                          className="text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
                         >
                           {copySuccessMap[item.id] ? 'Copied!' : 'Copy'}
                         </button>
                         <button
                           onClick={() => handleDuplicateSaved(item)}
-                          className="text-[11px] font-semibold text-text-primary interactive-link transition"
+                          className="text-[11px] font-semibold text-text-secondary hover:text-text-primary transition"
                         >
                           Duplicate
                         </button>
@@ -8332,21 +8345,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </button>
                         <button
                           onClick={() => handleDeleteSaved(item.id)}
-                          className="flex items-center gap-1 text-[11px] text-red-800/70 hover:text-red-800 font-semibold transition"
+                          className="flex items-center gap-1 text-[11px] text-status-error/70 hover:text-status-error font-semibold transition"
                         >
                           Delete
                         </button>
 
                         <button
                           onClick={() => handleExport(item, 'txt')}
-                          className="flex items-center gap-1 text-[11px] text-text-primary hover:text-brand-gold font-semibold transition"
+                          className="flex items-center gap-1 text-[11px] text-text-secondary hover:text-text-primary font-semibold transition"
                         >
                           Download TXT
                         </button>
                         {item.visualDirection && (
                           <button
                             onClick={() => handleSendToVisualStudio(item, item.visualDirection!, 'Library')}
-                            className="flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-gold-dark font-semibold transition"
+                            className="flex items-center gap-1 text-[11px] text-brand-gold hover:text-brand-gold-hover font-semibold transition"
                           >
                             <Lightbulb size={11} /> Send Visual Direction to Visual Studio
                           </button>
@@ -8357,7 +8370,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-border-standard rounded bg-surface-inset">
+              <div className="text-center py-20 border border-dashed border-border-standard rounded-xl bg-surface-inset">
                 <p className="text-xs text-text-secondary max-w-sm mx-auto">No saved content meets the active filters.</p>
               </div>
             )}
@@ -8368,8 +8381,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div className="card-level-1 p-5 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
+                <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                  Evidence &amp; Grounding
+                </div>
                 <h2 className="page-title">Source Library</h2>
                 <p className="page-subtitle">
                   Store and manage all documents, links, notes, examples, partner context, visual references, and source materials for task-specific generation.
@@ -8394,51 +8410,51 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded transition border border-border-standard flex items-center gap-1.5"
+                  className="bg-surface-inset text-text-primary hover:border-brand-gold/40 py-2 px-3.5 rounded-lg transition border border-border-standard flex items-center gap-1.5 font-semibold"
                 >
-                  <Upload size={14} /> Upload File
+                  <Upload size={14} className="text-brand-gold" /> Upload File
                 </button>
                 <button
                   onClick={() => folderInputRef.current?.click()}
-                  className="bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded transition border border-border-standard flex items-center gap-1.5"
+                  className="bg-surface-inset text-text-primary hover:border-brand-gold/40 py-2 px-3.5 rounded-lg transition border border-border-standard flex items-center gap-1.5 font-semibold"
                 >
-                  <FolderOpen size={14} /> Upload Folder
+                  <FolderOpen size={14} className="text-brand-gold" /> Upload Folder
                 </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Form panel */}
-              <div className="bg-surface-inset border border-border-standard p-6 rounded shadow-sm h-fit space-y-6">
+              <div className="card-level-1 p-5 sm:p-6 h-fit space-y-5">
                 <div>
-                  <h3 className="font-sans text-lg text-text-primary-light pb-2 border-b border-border-standard">
+                  <h3 className="font-sans text-base font-bold text-text-primary pb-2 border-b border-border-standard">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
                   </h3>
-                  <p className="text-[10px] text-text-secondary leading-relaxed mt-1">
-                    Provide verifiable facts, texts, or links to instruct the studio. Some file types may require pasted text or summary until full parsing is added.
+                  <p className="text-[11px] text-text-secondary leading-relaxed mt-1.5">
+                    Provide verifiable facts, texts, or links to instruct the studio.
                   </p>
                 </div>
 
                 <form onSubmit={handleSaveSource} className="space-y-4 text-xs">
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Source Title</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Source Title</label>
                     <input
                       type="text"
                       required
                       placeholder="e.g. Soria Moria Funding Memo"
                       value={newSource.title}
                       onChange={(e) => setNewSource({ ...newSource, title: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2.5 rounded text-text-primary"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Source Type</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Source Type</label>
                       <select
                         value={newSource.type}
                         onChange={(e) => setNewSource({ ...newSource, type: e.target.value as SourceFile['type'] })}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                        className="w-full bg-surface-inset border border-border-standard p-2 rounded-lg text-text-primary"
                       >
                         <option value="Event Notes">Event Notes</option>
                         <option value="Partner Profile">Partner Profile</option>
@@ -8456,11 +8472,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Status</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Status</label>
                       <select
                         value={newSource.status}
                         onChange={(e) => setNewSource({ ...newSource, status: e.target.value as SourceFile['status'] })}
-                        className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                        className="w-full bg-surface-inset border border-border-standard p-2 rounded-lg text-text-primary"
                       >
                         <option value="Active">Active</option>
                         <option value="Archived">Archived</option>
@@ -8469,54 +8485,49 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
-                  </div>
-
                   {newSource.type === 'Link / URL' && (
                     <div>
-                      <label className="block text-text-secondary mb-1 font-medium">Source URL</label>
+                      <label className="block text-text-secondary mb-1 font-semibold">Source URL</label>
                       <input
                         type="url"
                         placeholder="https://..."
                         value={newSource.url || ''}
                         onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
-                        className="w-full bg-surface-primary border border-border-standard p-2.5 rounded text-text-primary font-mono text-[11px]"
+                        className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
                       />
                     </div>
                   )}
 
-
-
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Short Context / Notes</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Short Context / Notes</label>
                     <textarea
                       placeholder="Reference details, key quotes, or summaries..."
                       rows={3}
                       value={newSource.notes}
                       onChange={(e) => setNewSource({ ...newSource, notes: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-text-secondary mb-1 font-medium">Content / Extracted Text or Summary</label>
+                    <label className="block text-text-secondary mb-1 font-semibold">Content / Extracted Text or Summary</label>
                     <textarea
                       placeholder="Paste text summary or markdown file copy..."
                       rows={5}
                       required
                       value={newSource.content}
                       onChange={(e) => setNewSource({ ...newSource, content: e.target.value })}
-                      className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary font-mono text-[11px]"
+                      className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
                     />
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 pb-2">
+                  <div className="flex items-center gap-2 pt-1 pb-1">
                     <input
                       type="checkbox"
                       id="sourceSelectable"
                       checked={newSource.selectable !== false}
                       onChange={(e) => setNewSource({ ...newSource, selectable: e.target.checked })}
-                      className="rounded border-brand-gold/50 text-brand-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                      className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer"
                     />
                     <label htmlFor="sourceSelectable" className="text-text-primary font-semibold cursor-pointer select-none">
                       Selectable for generation context
@@ -8526,7 +8537,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all flex-1 bg-slate-900 text-white hover:bg-brand-gold-hover py-2 px-4 rounded font-sans transition border border-border-standard text-xs font-semibold action-button interactive-button"
+                      className="cursor-pointer hover:opacity-95 active:scale-[0.98] transition-all flex-1 bg-brand-gold text-surface-base hover:bg-brand-gold-hover py-2.5 px-4 rounded-lg font-sans text-xs font-bold action-button interactive-button"
                     >
                       {editingSourceId ? 'Save Edits' : 'Add Source'}
                     </button>
@@ -8537,7 +8548,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setEditingSourceId(null);
                           setNewSource({ title: '', type: 'Other', status: 'Active',    notes: '', content: '', url: '', selectable: true });
                         }}
-                        className="bg-surface-primary text-text-primary border border-border-standard py-2 px-3 rounded hover:bg-surface-primary-dark transition text-xs"
+                        className="bg-surface-inset text-text-primary border border-border-standard py-2 px-3 rounded-lg hover:bg-surface-elevated transition text-xs font-semibold"
                       >
                         Cancel
                       </button>
@@ -8547,18 +8558,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Records List Panel */}
-              <div className="lg:col-span-2 space-y-6">
+              <div className="lg:col-span-2 space-y-5">
                 
                 {/* Filters */}
-                <div className="flex flex-wrap gap-2 pb-2 border-b border-border-standard">
+                <div className="flex flex-wrap gap-1.5 pb-2 border-b border-border-standard">
                   {['All', 'Task Sources', 'Approved Examples', 'Partner Context', 'Visual References', 'Archive'].map(filter => (
                     <button
                       key={filter}
                       onClick={() => setSourceLibraryFilter(filter)}
-                      className={`text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition ${
+                      className={`text-[11px] font-semibold px-3 py-1.5 rounded-lg transition ${
                         sourceLibraryFilter === filter 
-                          ? 'bg-slate-900 text-white' 
-                          : 'bg-surface-primary border border-border-standard text-text-secondary hover:bg-violet-600/10 hover:text-text-primary'
+                          ? 'bg-brand-gold text-surface-base font-bold' 
+                          : 'bg-surface-primary border border-border-standard text-text-secondary hover:text-text-primary'
                       }`}
                     >
                       {filter}
@@ -8567,7 +8578,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* User-Added Sources list */}
-                <div className="space-y-3">
+                <div className="space-y-3.5">
                   {(() => {
                     let filtered = selectableSources;
                     if (sourceLibraryFilter === 'Approved Examples') {
@@ -8589,44 +8600,44 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     return filtered.map(src => {
                       const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
                       return (
-                        <div key={src.id} className={`bg-surface-inset border p-5 rounded shadow-sm flex gap-4 transition ${
-                          isSelected ? 'border-brand-gold bg-surface-inset' : 'border-border-standard'
+                        <div key={src.id} className={`card-level-1 p-5 flex gap-4 transition ${
+                          isSelected ? 'border-brand-gold ring-1 ring-brand-gold/25' : 'border-border-standard'
                         }`}>
                           <div className="pt-1 select-none">
                             <input
                               type="checkbox"
                               checked={isSelected}
                               onChange={() => toggleSourceSelection(src.id)}
-                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-coh-gold w-4 h-4 cursor-pointer"
+                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer"
                               title="Select for generation"
                             />
                           </div>
 
-                          <div className="flex-1 min-w-0 space-y-2">
+                          <div className="flex-1 min-w-0 space-y-2.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase bg-violet-600/20 text-text-primary-light">
+                              <span className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase bg-brand-gold/10 text-brand-gold border border-brand-gold/25">
                                 {src.type}
                               </span>
-                              <span className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold ${
-                                src.status === 'Active' ? 'bg-green-500/10 backdrop-blur-md text-green-700' :
-                                src.status === 'Archived' ? 'bg-surface-primary text-gray-700' :
-                                'bg-amber-500/10 backdrop-blur-md text-amber-700'
+                              <span className={`text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold border ${
+                                src.status === 'Active' ? 'bg-status-success/10 border-status-success/25 text-status-success' :
+                                src.status === 'Archived' ? 'bg-surface-inset border-border-standard text-text-muted' :
+                                'bg-status-warning/10 border-status-warning/25 text-status-warning'
                               }`}>
                                 {src.status}
                               </span>
                               {src.selectable === false && (
-                                <span className="text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase border border-red-200 text-red-700 bg-red-500/10 backdrop-blur-md">
+                                <span className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase border border-status-error/30 text-status-error bg-status-error/10">
                                   Non-Selectable
                                 </span>
                               )}
                             </div>
 
-                            <h4 className="font-sans text-base font-semibold text-text-primary">{src.title}</h4>
+                            <h4 className="font-sans text-base font-bold text-text-primary">{src.title}</h4>
                             <p className="text-xs text-text-secondary leading-relaxed">{src.notes}</p>
 
-                            <details className="text-[10px] text-text-muted cursor-pointer pt-1">
-                              <summary className="interactive-link transition">Show Full Text</summary>
-                              <pre className="mt-2 p-3 bg-surface-inset rounded border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[10px] max-h-48">
+                            <details className="text-[11px] text-text-secondary cursor-pointer pt-1">
+                              <summary className="interactive-link transition font-semibold">Show Raw Source Text</summary>
+                              <pre className="mt-2 p-3 bg-surface-inset rounded-lg border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[11px] text-text-primary max-h-48">
                                 {src.content}
                               </pre>
                               {src.url && (
@@ -8657,23 +8668,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <div className="pt-2">
                               <button
                                 onClick={() => setExtractingInsightFor(extractingInsightFor === src.id ? null : src.id)}
-                                className="text-[9px] font-semibold text-text-secondary interactive-link transition uppercase tracking-wider"
+                                className="text-[10px] font-semibold text-text-secondary interactive-link transition uppercase tracking-wider"
                               >
                                 Use to update Operating Core {extractingInsightFor === src.id ? '↓' : '→'}
                               </button>
                             </div>
                           </div>
 
-                          <div className="flex flex-col gap-2 shrink-0">
+                          <div className="flex flex-col gap-1.5 shrink-0">
                             <button
                               onClick={() => handleEditSource(src)}
-                              className="text-text-primary hover:text-brand-gold p-1 hover:bg-surface-primary rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-text-secondary hover:text-text-primary px-2 py-1 hover:bg-surface-inset rounded-md transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Edit3 size={12} /> Edit
                             </button>
                             <button
                               onClick={() => handleDeleteSource(src.id)}
-                              className="text-red-800/60 hover:text-red-800 p-1 hover:bg-red-500/10 backdrop-blur-md rounded transition text-[11px] font-semibold flex items-center gap-1"
+                              className="text-status-error/70 hover:text-status-error px-2 py-1 hover:bg-status-error/10 rounded-md transition text-[11px] font-semibold flex items-center gap-1"
                             >
                               <Trash2 size={12} /> Delete
                             </button>
@@ -8693,12 +8704,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 6: SETTINGS / COH BRAIN --- */}
         {activeTab === 'settings' && (<ErrorBoundary fallbackTitle="Settings Error">
           <div className="page-shell">
-            <div className="card-level-1 p-6 mb-8">
+            <div className="card-level-1 p-5 sm:p-6">
+              <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
+                Technical Configuration
+              </div>
               <h2 className="page-title">Settings</h2>
               <p className="page-subtitle">
                 Configure AI provider and generation mode.
               </p>
-              <p className="text-xs text-text-secondary font-sans italic bg-surface-inset p-2 rounded border border-border-standard inline-block mt-2">
+              <p className="text-xs text-text-secondary font-sans bg-surface-inset px-3 py-2 rounded-lg border border-border-standard inline-block mt-3">
                 Note: Content, voice, claims, audience, visual, and revision rules are managed in Operating Core. Settings is for technical configuration.
               </p>
             </div>
@@ -8710,7 +8724,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <button
                     key={key}
                     onClick={() => setSettingsSection(key)}
-                    className={`px-4 py-1.5 rounded text-sm font-semibold transition ${settingsSection === key ? 'bg-slate-900 text-white' : 'bg-surface-primary border border-border-standard text-text-primary hover:bg-violet-600/10'}`}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition ${settingsSection === key ? 'bg-brand-gold text-surface-base' : 'bg-surface-primary border border-border-standard text-text-primary hover:bg-surface-inset'}`}
                   >
                     {label}
                   </button>

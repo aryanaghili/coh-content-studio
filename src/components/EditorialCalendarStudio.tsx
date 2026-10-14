@@ -1019,12 +1019,12 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
       const dayItems = items.filter(item => item.date === dateStr);
       
       return (
-        <div key={dayNum} className={`bg-surface-primary border p-2 min-h-[120px] flex flex-col gap-1 rounded ${dayItems.length > 0 ? 'border-violet-300 shadow-sm' : 'border-border-standard'}`}>
-          <span className="text-[10px] font-bold text-text-muted">{dayNum}</span>
+        <div key={dayNum} className={`bg-surface-primary border p-2 min-h-[120px] flex flex-col gap-1.5 rounded-lg ${dayItems.length > 0 ? 'border-brand-gold/45 shadow-xs' : 'border-border-standard'}`}>
+          <span className="text-[10px] font-semibold text-text-muted">{dayNum}</span>
           {dayItems.map(item => (
-            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-surface-primary p-1.5 rounded border border-border-standard cursor-pointer hover:border-brand-gold transition flex flex-col gap-0.5">
-              <div className="text-[9px] uppercase font-bold text-brand-gold line-clamp-1">{item.channel}</div>
-              <div className="text-[10px] font-semibold text-text-primary leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
+            <div key={item.id} onClick={() => { setSelectedItem(item); setValidationResult(null); }} className="bg-surface-inset p-1.5 rounded-md border border-border-standard cursor-pointer hover:border-brand-gold transition flex flex-col gap-0.5">
+              <div className="text-[9px] uppercase font-semibold text-brand-gold line-clamp-1">{item.channel}</div>
+              <div className="text-[10.5px] font-medium text-text-primary leading-tight line-clamp-2" title={item.contentUnitType}>{item.contentUnitType}</div>
             </div>
           ))}
         </div>
@@ -1034,7 +1034,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     return (
       <div className="grid grid-cols-7 gap-2">
         {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(d => (
-          <div key={d} className="text-[10px] font-bold text-text-secondary text-center uppercase py-2">{d}</div>
+          <div key={d} className="text-[10px] font-semibold text-text-secondary text-center uppercase py-2">{d}</div>
         ))}
         {blanks}
         {days}
@@ -1045,7 +1045,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   return (
     <div className="h-full flex flex-col bg-transparent">
       {/* Header & Action Bar */}
-      <div className="bg-surface-primary border-b border-border-standard p-6 shrink-0 flex justify-between items-center">
+      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-level-1 mb-5">
         <div>
           <h2 className="page-title">
             Editorial Calendar Studio
@@ -1053,21 +1053,21 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
           <p className="page-subtitle">Strategic content engine powered by Operating Core constraints.</p>
         </div>
         <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider px-2.5 py-1 rounded-md bg-surface-inset border border-border-standard">
               Status: <span className="text-text-primary">{items.filter(i => i.status === 'Approved').length > 0 ? 'Approved' : 'Draft'}</span>
             </span>
-            <Button onClick={onOpenLibrary} variant="outline" className="text-xs py-1.5 px-3">
-              <Archive size={16} className="mr-1" /> Open Library
+            <Button onClick={onOpenLibrary} variant="outline" className="text-xs">
+              <Archive size={15} className="mr-1.5" /> Open Library
             </Button>
-            <Button onClick={handleSaveCalendar} variant="secondary" className={`text-xs py-1.5 px-3 transition-colors ${saveSuccess ? 'bg-green-600 text-text-primary border-green-600 hover:bg-green-700' : ''}`}>
-              {saveSuccess ? <><CheckCircle2 size={16} className="mr-1" /> Saved to Library</> : <><Save size={16} className="mr-1" /> Save Calendar</>}
+            <Button onClick={handleSaveCalendar} variant="secondary" className={`text-xs transition-colors ${saveSuccess ? 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700' : ''}`}>
+              {saveSuccess ? <><CheckCircle2 size={15} className="mr-1.5" /> Saved to Library</> : <><Save size={15} className="mr-1.5" /> Save Calendar</>}
             </Button>
           </div>
           {items.length > 0 && (
             <div className="flex items-center gap-2">
               <select 
-                className="bg-surface-primary border border-border-standard text-text-primary text-xs font-semibold px-2 py-1 rounded outline-none cursor-pointer hover:border-violet-300 transition"
+                className="bg-surface-primary border border-border-standard text-text-primary text-xs font-medium px-2.5 py-1.5 rounded-lg outline-none cursor-pointer hover:border-brand-gold transition"
                 onChange={(e) => {
                   if (e.target.value) {
                     handleExport(e.target.value);
@@ -1087,28 +1087,28 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 md:p-8">
-        <div className="flex flex-col gap-6 h-full pb-20">
+      <div className="flex-1 overflow-y-auto">
+        <div className="flex flex-col gap-5 h-full pb-12">
           
           {/* Horizontal Controls Panel */}
-          <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm shrink-0">
-            <div className="flex justify-between items-center mb-5 border-b border-border-standard pb-4">
-              <h3 className="font-sans text-xl font-bold text-text-primary">Monthly Planning Parameters</h3>
-              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-semibold text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors">
-                <Settings2 size={15} /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
+          <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 shrink-0">
+            <div className="flex justify-between items-center mb-5 border-b border-border-standard pb-3.5">
+              <h3 className="font-sans text-base font-semibold text-text-primary">Monthly Planning Parameters</h3>
+              <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-medium text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors">
+                <Settings2 size={14} className="text-brand-gold" /> {showAdvancedSettings ? 'Hide Advanced Settings' : 'Advanced Strategy Settings'}
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
               {/* Timing & Intensity */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Planning Month</label>
-                  <input type="month" className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Planning Month</label>
+                  <input type="month" className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.planningMonth} onChange={e => setCycle({...cycle, planningMonth: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Publishing Intensity</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Publishing Intensity</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.intensity} onChange={e => setCycle({...cycle, intensity: e.target.value as any})}>
                     <option value="Light: 4-6 items">Light: 4-6 items</option>
                     <option value="Moderate: 8-12 items">Moderate: 8-12 items</option>
                     <option value="High: 14-20 items">High: 14-20 items</option>
@@ -1118,23 +1118,23 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Strategic Focus */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Primary Focus</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Primary Focus</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.primaryStrategicFocus} onChange={e => setCycle({...cycle, primaryStrategicFocus: e.target.value})}>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Secondary Focus (Layering)</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Secondary Focus (Layering)</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.secondaryStrategicFocus} onChange={e => setCycle({...cycle, secondaryStrategicFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Avoid Focus (Strict Penalty)</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.avoidFocus} onChange={e => setCycle({...cycle, avoidFocus: e.target.value})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Avoid Focus (Strict Penalty)</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.avoidFocus} onChange={e => setCycle({...cycle, avoidFocus: e.target.value})}>
                     <option value="None">None</option>
                     {STRATEGIC_FOCUSES.map(f => <option key={f} value={f}>{f}</option>)}
                   </select>
@@ -1142,16 +1142,16 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
 
               {/* Audience */}
-              <div className="space-y-4">
+              <div className="space-y-3.5">
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Primary Audience</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Primary Audience</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.primaryAudience} onChange={e => setCycle({...cycle, primaryAudience: e.target.value})}>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1.5">Secondary Audience</label>
-                  <select className="w-full p-2 bg-surface-primary border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all shadow-sm" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
+                  <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-1">Secondary Audience</label>
+                  <select className="w-full p-2 bg-surface-inset border border-border-standard rounded-lg text-xs font-medium text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring focus:border-transparent transition-all" value={cycle.secondaryAudience} onChange={e => setCycle({...cycle, secondaryAudience: e.target.value})}>
                     <option value="None">None</option>
                     {AUDIENCES.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
@@ -1160,14 +1160,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
               {/* Channels */}
               <div>
-                <label className="block font-mono text-[10px] font-bold text-text-muted uppercase tracking-wider mb-2">Active Channels</label>
+                <label className="block font-sans text-[11px] font-semibold text-text-secondary uppercase tracking-wider mb-2">Active Channels</label>
                 <div className="flex flex-wrap gap-1.5">
                   {CHANNELS.map(c => (
                     <button key={c} onClick={() => {
                         const newChannels = cycle.activeChannels.includes(c) ? cycle.activeChannels.filter(x => x !== c) : [...cycle.activeChannels, c];
                         setCycle({...cycle, activeChannels: newChannels});
                       }}
-                      className={`px-3 py-1.5 text-[11px] rounded-lg font-semibold cursor-pointer transition-all ${cycle.activeChannels.includes(c) ? 'bg-slate-900 text-white border border-slate-900 shadow-sm' : 'bg-surface-primary text-text-secondary border border-border-standard hover:border-border-strong hover:text-text-primary'}`}
+                      className={`px-2.5 py-1 text-[11px] rounded-md font-medium cursor-pointer transition-all ${cycle.activeChannels.includes(c) ? 'bg-brand-gold text-text-inverse border border-brand-gold font-semibold shadow-xs' : 'bg-surface-inset text-text-secondary border border-border-standard hover:border-border-strong hover:text-text-primary'}`}
                     >
                       {c}
                     </button>
@@ -1177,14 +1177,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {showAdvancedSettings && (
-              <div className="mt-6 p-5 border border-border-standard rounded-xl bg-surface-inset">
-                <h4 className="text-xs font-bold text-text-primary uppercase tracking-wider mb-1">Channel Audience Map</h4>
-                <p className="text-xs text-text-muted mb-4">Override the primary audience on specific active channels.</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="mt-5 p-4 border border-border-standard rounded-xl bg-surface-inset">
+                <h4 className="text-xs font-semibold text-text-primary uppercase tracking-wider mb-1">Channel Audience Map</h4>
+                <p className="text-xs text-text-muted mb-3">Override the primary audience on specific active channels.</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {cycle.activeChannels.map(c => (
-                    <div key={c} className="flex items-center gap-3 bg-surface-primary p-2.5 rounded-lg border border-border-standard shadow-sm">
+                    <div key={c} className="flex items-center gap-3 bg-surface-primary p-2.5 rounded-lg border border-border-standard">
                       <div className="w-28 text-xs font-semibold text-text-primary shrink-0 truncate">{c}</div>
-                      <select className="p-1.5 text-xs w-full bg-surface-primary border border-border-standard rounded text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring" 
+                      <select className="p-1.5 text-xs w-full bg-surface-inset border border-border-standard rounded-md text-text-primary focus:outline-none focus:ring-1 focus:ring-focus-ring" 
                         value={cycle.channelAudienceMap[c]?.primary || cycle.primaryAudience}
                         onChange={(e) => {
                           const newMap = {...cycle.channelAudienceMap};
@@ -1204,15 +1204,15 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-6 pt-5 border-t border-border-standard">
+            <div className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-border-standard">
               <div className="flex flex-wrap items-center gap-3">
-                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" icon={<RefreshCw size={15} />}>
+                <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" icon={<RefreshCw size={14} />}>
                   {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 
                 <div className="relative">
                   <select 
-                    className="bg-surface-primary border border-border-standard text-text-primary text-xs font-semibold px-3 py-2.5 rounded-lg outline-none cursor-pointer hover:border-border-strong focus:ring-2 focus:ring-focus-ring transition-all shadow-sm"
+                    className="h-9 bg-surface-inset border border-border-standard text-text-primary text-xs font-medium px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-border-strong focus:ring-2 focus:ring-focus-ring transition-all"
                     onChange={(e) => {
                       if (e.target.value) {
                         setCycle(prev => ({...prev, version: prev.version + 1}));
@@ -1234,42 +1234,42 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 </div>
               </div>
               
-              <Button onClick={openAddManualModal} variant="outline" icon={<Plus size={15} />}>
+              <Button onClick={openAddManualModal} variant="outline" icon={<Plus size={14} />}>
                 Add Manual Item
               </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start flex-1 min-h-0">
             {/* Calendar Canvas Panel */}
-            <div className="col-span-1 lg:col-span-8 flex flex-col h-full gap-6">
+            <div className="col-span-1 lg:col-span-8 flex flex-col h-full gap-5">
               {/* Monthly Editorial Arc */}
               {arc && items.length > 0 && (
-                <div className="bg-slate-900 text-white p-5 rounded shadow-sm shrink-0">
-                  <h3 className="font-sans text-lg font-bold text-brand-gold mb-3 flex items-center gap-2">
-                    <LayoutList size={18} /> Monthly Editorial Arc
+                <div className="bg-surface-primary border border-brand-gold/35 p-5 rounded-xl shadow-level-1 shrink-0">
+                  <h3 className="font-sans text-base font-semibold text-brand-gold mb-3 flex items-center gap-2">
+                    <LayoutList size={17} /> Monthly Editorial Arc
                   </h3>
                   <div className="space-y-4 text-sm font-sans">
                     <div>
-                      <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Month Thesis</h4>
-                      <p className="text-white/90 font-medium">{arc.monthThesis}</p>
+                      <h4 className="text-[10px] uppercase font-semibold text-brand-gold tracking-wider mb-1">Month Thesis</h4>
+                      <p className="text-text-primary font-medium leading-relaxed">{arc.monthThesis}</p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-border-standard">
                       <div>
-                        <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Weekly Progression</h4>
+                        <h4 className="text-[10px] uppercase font-semibold text-text-secondary tracking-wider mb-1.5">Weekly Progression</h4>
                         <ul className="space-y-1">
-                          {arc.weeklyProgression.map((w, i) => <li key={i} className="text-white/80 text-xs">- Week {i+1}: {w}</li>)}
+                          {arc.weeklyProgression.map((w, i) => <li key={i} className="text-text-secondary text-xs leading-relaxed">• <strong className="text-text-primary">Week {i+1}:</strong> {w}</li>)}
                         </ul>
                       </div>
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         <div>
-                          <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Audience Movement</h4>
-                          <p className="text-white/80 text-xs">{arc.mainAudienceMovement}</p>
+                          <h4 className="text-[10px] uppercase font-semibold text-text-secondary tracking-wider mb-1">Audience Movement</h4>
+                          <p className="text-text-secondary text-xs leading-relaxed">{arc.mainAudienceMovement}</p>
                         </div>
                         <div>
-                          <h4 className="text-[10px] uppercase font-bold text-brand-gold tracking-wider mb-1">Key Risks</h4>
+                          <h4 className="text-[10px] uppercase font-semibold text-status-error tracking-wider mb-1">Key Risks</h4>
                           <ul className="space-y-1">
-                            {arc.keyRisks.map((r, i) => <li key={i} className="text-white/80 text-xs text-red-300">- {r}</li>)}
+                            {arc.keyRisks.map((r, i) => <li key={i} className="text-status-error text-xs">• {r}</li>)}
                           </ul>
                         </div>
                       </div>
@@ -1279,42 +1279,50 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               )}
 
               {/* Calendar Canvas */}
-              <div className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded shadow-sm min-h-[400px]">
-                <div className="border-b border-border-standard p-4 bg-surface-inset flex justify-between items-center shrink-0">
-                  <h3 className="font-sans text-xl font-bold text-text-primary">Calendar Canvas</h3>
-                  <div className="flex gap-1 bg-surface-primary border border-border-strong rounded p-0.5">
-                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded transition-colors ${viewMode === 'List' ? 'bg-surface-primary text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={16} /></button>
-                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded transition-colors ${viewMode === 'Month' ? 'bg-surface-primary text-text-primary shadow-sm' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={16} /></button>
+              <div className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded-xl shadow-level-1 min-h-[400px] overflow-hidden">
+                <div className="border-b border-border-standard px-5 py-3.5 bg-surface-inset/70 flex justify-between items-center shrink-0">
+                  <h3 className="font-sans text-base font-semibold text-text-primary">Calendar Canvas</h3>
+                  <div className="flex gap-1 bg-surface-primary border border-border-standard rounded-lg p-0.5">
+                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'List' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={15} /></button>
+                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'Month' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={15} /></button>
                   </div>
                 </div>
 
-                <div className="p-4 flex-1 overflow-y-auto">
+                <div className="p-4 md:p-5 flex-1 overflow-y-auto">
                   {items.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-full text-text-muted">
-                      <Calendar size={48} className="mb-4 opacity-50" />
-                      <p>Generate a calendar to see your items.</p>
+                    <div className="flex flex-col items-center justify-center h-full py-12 text-text-muted">
+                      <Calendar size={40} className="mb-3 opacity-40 text-brand-gold" />
+                      <p className="text-xs">Generate a calendar to see your items.</p>
                     </div>
                   ) : viewMode === 'Month' ? renderMonthView() : (
-                    <div className="space-y-3">
+                    <div className="space-y-2.5">
                       {items.map((item) => (
-                        <div key={item.id} className="bg-surface-primary border border-border-strong rounded p-4 flex gap-4 items-center shadow-sm hover:shadow transition group">
-                          <div className="flex-1 flex flex-col md:flex-row gap-4 items-start md:items-center">
-                            <div className="flex flex-col gap-1 w-full md:w-auto shrink-0 min-w-[150px]">
+                        <div
+                          key={item.id}
+                          onClick={() => { setSelectedItem(item); setValidationResult(null); }}
+                          className={`bg-surface-primary border rounded-xl p-4 flex gap-4 items-center transition cursor-pointer group ${
+                            selectedItem?.id === item.id
+                              ? 'border-brand-gold ring-1 ring-brand-gold/30 shadow-level-2'
+                              : 'border-border-standard hover:border-brand-gold/50 shadow-level-1'
+                          }`}
+                        >
+                          <div className="flex-1 flex flex-col md:flex-row gap-3 md:gap-4 items-start md:items-center">
+                            <div className="flex flex-col gap-1 w-full md:w-auto shrink-0 min-w-[160px]">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-text-primary bg-surface-primary px-2 py-0.5 rounded">{item.date}</span>
-                                <span className="text-[10px] uppercase font-bold text-brand-gold">{item.channel}</span>
+                                <span className="text-[11px] font-semibold text-text-primary bg-surface-inset border border-border-standard px-2 py-0.5 rounded-md">{item.date}</span>
+                                <span className="text-[10px] uppercase font-semibold text-brand-gold">{item.channel}</span>
                               </div>
-                              <span className="text-sm font-semibold text-text-primary">{item.contentUnitType}</span>
+                              <span className="text-[13px] font-semibold text-text-primary">{item.contentUnitType}</span>
                             </div>
                             
-                            <div className="flex-1 text-xs text-text-secondary border-l border-border-standard pl-4">
-                              <p className="font-bold mb-0.5 text-text-primary">{item.editorialThesis}</p>
-                              <p className="line-clamp-1 italic text-text-secondary">{item.reasonForRecommendation}</p>
+                            <div className="flex-1 text-xs text-text-secondary md:border-l border-border-standard md:pl-4">
+                              <p className="font-medium mb-0.5 text-text-primary leading-snug">{item.editorialThesis}</p>
+                              <p className="line-clamp-1 text-[11px] text-text-muted">{item.reasonForRecommendation}</p>
                             </div>
                           </div>
 
-                          <button className="p-2 text-brand-gold hover:text-text-primary bg-surface-primary rounded transition" onClick={() => { setSelectedItem(item); setValidationResult(null); }}>
-                            <ChevronRight size={20} />
+                          <button className="p-1.5 text-text-muted group-hover:text-brand-gold bg-surface-inset rounded-lg transition" onClick={(e) => { e.stopPropagation(); setSelectedItem(item); setValidationResult(null); }}>
+                            <ChevronRight size={18} />
                           </button>
                         </div>
                       ))}
@@ -1325,17 +1333,17 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {/* Review Panel */}
-            <div className="col-span-1 lg:col-span-4 space-y-6 lg:overflow-y-auto lg:pr-2 pb-6 lg:max-h-full">
-              <div className="bg-surface-primary border border-border-standard rounded shadow-sm p-5 sticky top-0">
-                <h3 className="font-sans text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-                  <CheckCircle2 size={18} className="text-brand-gold" /> Calendar Review
+            <div className="col-span-1 lg:col-span-4 space-y-5 lg:overflow-y-auto pb-6 lg:max-h-full">
+              <div className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-5 sticky top-0">
+                <h3 className="font-sans text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
+                  <CheckCircle2 size={17} className="text-brand-gold" /> Calendar Review
                 </h3>
                 
-                <div className="mb-6">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-bold w-full justify-center border ${
-                    review.status === 'Strong' ? 'bg-green-500/10 backdrop-blur-md text-green-700 border-green-200' : 
-                    review.status === 'Needs improvement' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
-                    'bg-red-500/10 backdrop-blur-md text-red-700 border-red-200'
+                <div className="mb-5">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold w-full justify-center border ${
+                    review.status === 'Strong' ? 'bg-status-success/10 text-status-success border-status-success/30' : 
+                    review.status === 'Needs improvement' ? 'bg-status-warning/10 text-status-warning border-status-warning/30' : 
+                    'bg-status-error/10 text-status-error border-status-error/30'
                   }`}>
                     {review.status === 'Strong' && <CheckCircle2 size={14}/>}
                     {review.status !== 'Strong' && <AlertTriangle size={14}/>}
@@ -1343,29 +1351,29 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   </span>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-5">
                   {review.strengths.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-green-700 text-xs uppercase mb-2 flex items-center gap-1"><Plus size={12}/> Strengths</h4>
-                      <ul className="space-y-2">{review.strengths.map((s, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-green-300">{s}</li>)}</ul>
+                      <h4 className="font-semibold text-status-success text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1"><Plus size={12}/> Strengths</h4>
+                      <ul className="space-y-1.5">{review.strengths.map((s, i) => <li key={i} className="text-text-secondary text-xs pl-3 border-l-2 border-status-success/40">{s}</li>)}</ul>
                     </div>
                   )}
                   {review.gaps.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-yellow-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Gaps</h4>
-                      <ul className="space-y-2">{review.gaps.map((g, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-yellow-300">{g}</li>)}</ul>
+                      <h4 className="font-semibold text-status-warning text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Gaps</h4>
+                      <ul className="space-y-1.5">{review.gaps.map((g, i) => <li key={i} className="text-text-secondary text-xs pl-3 border-l-2 border-status-warning/40">{g}</li>)}</ul>
                     </div>
                   )}
                   {review.risks.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-red-600 text-xs uppercase mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Risks / Repetition</h4>
-                      <ul className="space-y-2">{review.risks.map((r, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-red-300">{r}</li>)}</ul>
+                      <h4 className="font-semibold text-status-error text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1"><AlertTriangle size={12}/> Risks / Repetition</h4>
+                      <ul className="space-y-1.5">{review.risks.map((r, i) => <li key={i} className="text-text-secondary text-xs pl-3 border-l-2 border-status-error/40">{r}</li>)}</ul>
                     </div>
                   )}
                   {review.recommendedFixes.length > 0 && (
                     <div>
-                      <h4 className="font-bold text-brand-gold text-xs uppercase mb-2 flex items-center gap-1"><Settings2 size={12}/> Recommendations</h4>
-                      <ul className="space-y-2">{review.recommendedFixes.map((r, i) => <li key={i} className="text-text-primary text-xs pl-3 border-l-2 border-brand-gold/50">{r}</li>)}</ul>
+                      <h4 className="font-semibold text-brand-gold text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1"><Settings2 size={12}/> Recommendations</h4>
+                      <ul className="space-y-1.5">{review.recommendedFixes.map((r, i) => <li key={i} className="text-text-secondary text-xs pl-3 border-l-2 border-brand-gold/50">{r}</li>)}</ul>
                     </div>
                   )}
                 </div>
@@ -1378,13 +1386,13 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
 
       {/* EXTENDED EDITORIAL BRIEF MODAL */}
       {selectedItem && (
-        <div className="fixed inset-0 bg-slate-900/80 z-[100] flex justify-center items-start md:items-center p-0 md:p-4 overflow-y-auto">
-          <div className="bg-surface-primary w-full h-full md:h-auto md:max-w-4xl md:rounded-3xl shadow-xl overflow-hidden flex flex-col md:max-h-[95vh]">
-            <div className="bg-slate-900 p-4 flex justify-between items-center text-text-primary shrink-0">
-              <h3 className="font-sans text-lg font-bold flex items-center gap-2">
-                <FileText size={18} className="text-brand-gold"/> Calendar Item Details
+        <div className="fixed inset-0 bg-slate-900/75 backdrop-blur-xs z-[100] flex justify-center items-start md:items-center p-0 md:p-4 overflow-y-auto">
+          <div className="bg-surface-primary border border-border-standard w-full h-full md:h-auto md:max-w-4xl md:rounded-2xl shadow-level-3 overflow-hidden flex flex-col md:max-h-[95vh]">
+            <div className="bg-surface-inset border-b border-border-standard px-5 py-3.5 flex justify-between items-center text-text-primary shrink-0">
+              <h3 className="font-sans text-base font-semibold flex items-center gap-2">
+                <FileText size={17} className="text-brand-gold"/> Calendar Item Details
               </h3>
-              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="hover:text-brand-gold transition"><X size={20} /></button>
+              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="text-text-secondary hover:text-text-primary transition"><X size={18} /></button>
             </div>
             
             <div className="p-4 md:p-6 overflow-y-auto flex-1 text-sm space-y-6">

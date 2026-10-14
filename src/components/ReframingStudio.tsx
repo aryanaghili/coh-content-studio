@@ -406,16 +406,16 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
   };
 
   return (
-    <div className="page-shell space-y-6" data-testid="reframing-studio-root">
+    <div className="page-shell space-y-5" data-testid="reframing-studio-root">
       {/* Studio Header & Distinction Banner */}
-      <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm">
+      <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <Compass size={22} className="text-brand-gold" />
-              <h2 className="font-sans text-2xl font-bold text-text-primary">Reframing Studio</h2>
+              <Compass size={20} className="text-brand-gold" />
+              <h2 className="page-title">Reframing Studio</h2>
             </div>
-            <p className="font-sans text-[14px] text-text-secondary mt-1">
+            <p className="page-subtitle">
               Change what the content is trying to become while preserving factual integrity.
             </p>
           </div>
@@ -425,7 +425,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               type="button"
               data-testid="start-new-reframe-btn"
               onClick={handleStartNewReframeKeepSource}
-              className="px-3 py-1.5 rounded-lg border border-border-standard bg-surface-inset text-xs font-semibold text-text-secondary hover:text-text-primary transition-colors inline-flex items-center gap-1.5"
+              className="h-9 px-3.5 rounded-lg border border-border-standard bg-surface-primary text-xs font-medium text-text-secondary hover:text-text-primary hover:bg-surface-inset transition-colors inline-flex items-center gap-1.5"
             >
               <RefreshCw size={13} />
               Start New Reframe
@@ -434,7 +434,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               type="button"
               data-testid="reframe-reset-btn"
               onClick={handleResetAll}
-              className="px-3 py-1.5 rounded-lg border border-border-standard bg-surface-inset text-xs font-semibold text-status-error hover:bg-status-error/10 transition-colors inline-flex items-center gap-1.5"
+              className="h-9 px-3.5 rounded-lg border border-border-standard bg-surface-primary text-xs font-medium text-status-error hover:bg-status-error/10 transition-colors inline-flex items-center gap-1.5"
             >
               <RotateCcw size={13} />
               Clear / Reset
@@ -443,44 +443,46 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
         </div>
 
         {/* Distinction Callout */}
-        <div className="mt-4 p-3 rounded-xl bg-surface-inset border border-border-standard grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
-          <div>
-            <span className="font-bold text-brand-gold uppercase tracking-wider text-[10px] block">
+        <div className="mt-4 p-3 rounded-lg bg-surface-inset border border-border-standard grid grid-cols-1 md:grid-cols-2 gap-3 text-[12px]">
+          <div className="flex flex-col gap-0.5">
+            <span className="font-semibold text-brand-gold uppercase tracking-wider text-[10px]">
               When to use Reframing Studio (Here)
             </span>
-            <span className="text-text-secondary">
+            <span className="text-text-secondary leading-relaxed">
               Shift an existing piece to a new audience, familiarity level, strategic frame, or channel architecture while locking confirmed facts and quotes.
             </span>
           </div>
-          <div>
-            <span className="font-bold text-text-primary uppercase tracking-wider text-[10px] block">
+          <div className="flex flex-col gap-0.5 md:border-l md:border-border-standard md:pl-3">
+            <span className="font-semibold text-text-primary uppercase tracking-wider text-[10px]">
               When to use Revision Studio Instead
             </span>
-            <span className="text-text-secondary">
+            <span className="text-text-secondary leading-relaxed">
               Keep the same communication job and improve clarity, shorten, polish grammar, remove repetition, or translate.
             </span>
           </div>
         </div>
 
-        <div className="mt-4">
+        <div className="mt-3">
           <ContextManifestPanel manifest={contextPackage.manifest} />
         </div>
       </div>
 
       {/* Main Two-Column Reframing Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column: 1. Source Origin & Content + 2. Intent & Resolved Plan */}
         <div className="col-span-1 lg:col-span-5 flex flex-col gap-5">
           {/* Step 1: Source Input & Origin */}
-          <div className="bg-surface-primary border border-border-standard rounded-2xl p-5 shadow-level-1 space-y-4">
+          <div className="bg-surface-primary border border-border-standard rounded-xl p-5 shadow-level-1 space-y-4">
             <div className="flex items-center justify-between gap-2 border-b border-border-standard pb-3">
-              <h3 className="font-sans text-[15px] font-bold text-text-primary flex items-center gap-2">
-                <Layers size={16} className="text-brand-gold" />
-                1. Source Content & Origin
+              <h3 className="font-sans text-[15px] font-semibold text-text-primary flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-brand-gold/15 text-brand-gold text-[11px] font-bold inline-flex items-center justify-center">
+                  1
+                </span>
+                Source Content & Origin
               </h3>
               <span
                 data-testid="reframe-origin-badge"
-                className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold border border-brand-gold/30"
+                className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-md bg-brand-gold/10 text-brand-gold border border-brand-gold/25"
               >
                 Origin: {originType}
               </span>
@@ -502,9 +504,9 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   type="button"
                   data-testid={`reframe-origin-tab-${type}`}
                   onClick={() => handleSelectOriginSource(type)}
-                  className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border transition-colors ${
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium border transition-colors ${
                     originType === type
-                      ? 'bg-brand-gold text-text-inverse border-brand-gold'
+                      ? 'bg-brand-gold text-text-inverse border-brand-gold font-semibold shadow-xs'
                       : 'bg-surface-inset text-text-secondary border-border-standard hover:text-text-primary'
                   }`}
                 >
@@ -549,14 +551,14 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                 value={sourceContent}
                 onChange={e => setSourceContent(e.target.value)}
                 placeholder="Paste or load the existing content you want to reframe..."
-                className="w-full rounded-xl bg-surface-inset border border-border-standard p-3 text-[13px] text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-gold"
+                className="w-full rounded-lg bg-surface-inset border border-border-standard p-3 text-[13px] leading-relaxed text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring"
               />
             </div>
 
             {/* Contextual Source Library Grounding */}
-            <div className="p-3 rounded-xl bg-surface-inset border border-border-standard space-y-2">
+            <div className="p-3 rounded-lg bg-surface-inset border border-border-standard space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-bold text-text-primary flex items-center gap-1">
+                <span className="text-[11px] font-semibold text-text-primary flex items-center gap-1.5">
                   <FileText size={12} className="text-brand-gold" />
                   Attached Contextual Sources ({selectedSourceIds.length})
                 </span>
@@ -570,9 +572,9 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                     return (
                       <div
                         key={id}
-                        className="flex items-center justify-between gap-2 text-[11px] bg-surface-primary px-2.5 py-1.5 rounded border border-border-standard"
+                        className="flex items-center justify-between gap-2 text-[11px] bg-surface-primary px-2.5 py-1.5 rounded-md border border-border-standard"
                       >
-                        <span className="font-semibold text-text-primary truncate">{s.title}</span>
+                        <span className="font-medium text-text-primary truncate">{s.title}</span>
                         <div className="flex items-center gap-1.5">
                           <select
                             value={role}
@@ -604,7 +606,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   onChange={e => {
                     if (e.target.value) onToggleAttachedSource(e.target.value);
                   }}
-                  className="w-full text-[11px] bg-surface-primary border border-border-standard rounded px-2 py-1 text-text-secondary"
+                  className="w-full text-[11px] bg-surface-primary border border-border-standard rounded-md px-2.5 py-1.5 text-text-secondary"
                 >
                   <option value="">+ Attach supporting source from Source Library...</option>
                   {sources
@@ -620,13 +622,16 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
           </div>
 
           {/* Step 2: Core Interaction - "What should this become?" */}
-          <div className="bg-surface-primary border border-border-standard rounded-2xl p-5 shadow-level-1 space-y-4">
-            <h3 className="font-sans text-[15px] font-bold text-text-primary border-b border-border-standard pb-3">
-              2. What should this become?
+          <div className="bg-surface-primary border border-border-standard rounded-xl p-5 shadow-level-1 space-y-4">
+            <h3 className="font-sans text-[15px] font-semibold text-text-primary border-b border-border-standard pb-3 flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-brand-gold/15 text-brand-gold text-[11px] font-bold inline-flex items-center justify-center">
+                2
+              </span>
+              What should this become?
             </h3>
 
             <div className="flex flex-col gap-2">
-              <p className="text-[11px] text-text-secondary">
+              <p className="text-[12px] text-text-secondary">
                 Describe in natural language how this piece should be reframed (audience, familiarity, channel, or strategic perspective).
               </p>
               <textarea
@@ -635,7 +640,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                 value={rawIntent}
                 onChange={e => setRawIntent(e.target.value)}
                 placeholder="e.g. Make this useful to a cultural institution that knows little about COH and needs to understand why this belongs in its programming strategy."
-                className="w-full rounded-xl bg-surface-inset border border-border-standard p-3 text-[13px] text-text-primary focus:outline-none focus:ring-2 focus:ring-brand-gold"
+                className="w-full rounded-lg bg-surface-inset border border-border-standard p-3 text-[13px] leading-relaxed text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring"
               />
             </div>
 
@@ -663,7 +668,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   key={i}
                   type="button"
                   onClick={() => setRawIntent(preset.text)}
-                  className="text-[10px] px-2 py-1 rounded bg-surface-inset border border-border-standard text-text-secondary hover:border-brand-gold hover:text-text-primary transition-colors"
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-surface-inset border border-border-standard text-text-secondary hover:border-brand-gold hover:text-text-primary transition-colors"
                 >
                   {preset.label}
                 </button>
@@ -675,9 +680,9 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               data-testid="resolve-reframe-intent-btn"
               disabled={!sourceContent.trim() || !rawIntent.trim()}
               onClick={handleResolveIntent}
-              className="w-full h-10 rounded-xl bg-slate-900 text-white dark:bg-surface-inset dark:border dark:border-brand-gold/40 font-sans text-xs font-bold hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-9 rounded-lg bg-surface-inset border border-border-strong text-text-primary hover:border-brand-gold hover:text-brand-gold font-sans text-xs font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              <Compass size={14} />
+              <Compass size={14} className="text-brand-gold" />
               Resolve Transformation Plan
             </button>
 
@@ -690,7 +695,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                 <div className="flex items-start gap-2">
                   <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <div className="text-xs">
-                    <span className="font-bold text-text-primary block">
+                    <span className="font-semibold text-text-primary block">
                       Recommended Route: Revision Studio (Reframe Generation Paused)
                     </span>
                     <p className="text-text-secondary mt-0.5 leading-relaxed">
@@ -710,7 +715,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                         instructionNote: rawIntent
                       })
                     }
-                    className="w-full py-2 px-3 rounded-lg bg-brand-gold text-text-inverse font-bold text-xs inline-flex items-center justify-center gap-1.5 hover:bg-brand-gold-hover transition-colors"
+                    className="w-full h-9 px-3 rounded-lg bg-brand-gold text-text-inverse font-semibold text-xs inline-flex items-center justify-center gap-1.5 hover:bg-brand-gold-hover transition-colors"
                   >
                     Open in Revision Studio <ArrowRight size={13} />
                   </button>
@@ -722,14 +727,14 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                         setRouteOverrideConfirmed(true);
                         setGenerationError(null);
                       }}
-                      className="w-full sm:w-auto shrink-0 py-2 px-3 rounded-lg border border-border-standard bg-surface-inset text-text-secondary hover:text-text-primary font-semibold text-[11px] transition-colors"
+                      className="w-full sm:w-auto shrink-0 h-9 px-3 rounded-lg border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary font-medium text-[11px] transition-colors"
                     >
                       Override - continue as Reframe
                     </button>
                   ) : (
                     <span
                       data-testid="override-reframe-confirmed-badge"
-                      className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded bg-surface-inset border border-brand-gold/40 text-brand-gold"
+                      className="shrink-0 text-[10px] font-semibold px-2.5 py-1.5 rounded-md bg-surface-inset border border-brand-gold/40 text-brand-gold"
                     >
                       Override Active
                     </span>
@@ -742,13 +747,16 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
             {resolvedPlan && (
               <div
                 data-testid="resolved-reframe-plan"
-                className="pt-3 border-t border-border-standard space-y-3.5"
+                className="pt-4 border-t border-border-standard space-y-3.5"
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-wider text-brand-gold">
-                    3. Review & Edit Transformation Plan
+                  <span className="text-xs font-semibold uppercase tracking-wider text-brand-gold flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-brand-gold/15 text-brand-gold text-[11px] font-bold inline-flex items-center justify-center">
+                      3
+                    </span>
+                    Review & Edit Transformation Plan
                   </span>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-surface-inset border border-border-standard text-text-secondary">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-surface-inset border border-border-standard text-text-secondary">
                     Route: {resolvedPlan.recommendedRoute}
                   </span>
                 </div>
@@ -879,16 +887,16 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                 </div>
 
                 {/* Non-Negotiable Factual Integrity Governance (Always Locked) */}
-                <div className="p-2.5 rounded-lg bg-surface-inset border border-border-standard space-y-1.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1">
+                <div className="p-3 rounded-lg bg-surface-inset border border-border-standard space-y-1.5">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-brand-gold flex items-center gap-1.5">
                     <ShieldCheck size={12} />
                     Non-Negotiable Factual Integrity (Always Enforced)
                   </span>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1.5">
                     {NON_NEGOTIABLE_FACTUAL_INTEGRITY_RULES.map(rule => (
                       <span
                         key={rule}
-                        className="text-[9px] px-2 py-0.5 rounded bg-surface-primary border border-border-standard text-text-secondary font-medium"
+                        className="text-[10px] px-2 py-0.5 rounded bg-surface-primary border border-border-standard text-text-secondary font-medium"
                       >
                         Locked: {rule}
                       </span>
@@ -898,7 +906,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
 
                 {/* Optional Preservation Preferences (Toggleable) */}
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
+                  <label className="text-[10px] font-semibold uppercase tracking-wider text-text-secondary flex items-center gap-1.5">
                     <ShieldCheck size={12} className="text-brand-gold" />
                     Optional Preservation Preferences (Toggle Retention)
                   </label>
@@ -910,7 +918,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                           key={elem}
                           type="button"
                           onClick={() => handleToggleProtectedElement(elem)}
-                          className={`text-[10px] px-2 py-1 rounded-md border font-medium transition-colors ${
+                          className={`text-[10px] px-2.5 py-1 rounded-md border font-medium transition-colors ${
                             active
                               ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-700 dark:text-emerald-300'
                               : 'bg-surface-inset border-border-standard text-text-muted'
@@ -948,7 +956,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                     (resolvedPlan.recommendedRoute === 'REVISION' && !routeOverrideConfirmed)
                   }
                   onClick={() => handleGenerateReframe()}
-                  className="w-full h-11 rounded-xl bg-brand-gold text-text-inverse font-sans text-xs font-bold hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full h-10 rounded-lg bg-brand-gold text-text-inverse font-sans text-xs font-semibold hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-xs"
                 >
                   {isGenerating ? (
                     <>
@@ -978,17 +986,17 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
           {generationError && (
             <div
               data-testid="reframe-error-banner"
-              className="p-4 rounded-2xl bg-status-error/10 border border-status-error/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              className="p-4 rounded-xl bg-status-error/10 border border-status-error/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
             >
               <div className="text-xs text-status-error">
-                <span className="font-bold block">Reframing Generation Error</span>
+                <span className="font-semibold block">Reframing Generation Error</span>
                 <span>{generationError}</span>
               </div>
               <button
                 type="button"
                 data-testid="retry-reframe-btn"
                 onClick={() => handleGenerateReframe()}
-                className="shrink-0 px-3 py-1.5 rounded-lg bg-status-error text-white text-xs font-bold hover:opacity-90 transition-opacity"
+                className="shrink-0 h-8 px-3 rounded-lg bg-status-error text-white text-xs font-semibold hover:opacity-90 transition-opacity"
               >
                 Retry Generation
               </button>
@@ -1000,36 +1008,36 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               {/* Side-by-Side Comparison: Source Content vs Proposed Reframe */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Original Source Content Card */}
-                <div className="bg-surface-primary border border-border-standard rounded-2xl p-5 flex flex-col gap-3">
+                <div className="bg-surface-primary border border-border-standard rounded-xl p-5 flex flex-col gap-3 shadow-level-1">
                   <div className="flex items-center justify-between border-b border-border-standard pb-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-text-secondary">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-text-secondary">
                       Source Content ({originType})
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-surface-inset text-text-muted border border-border-standard">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-surface-inset text-text-muted border border-border-standard">
                       Untouched Original
                     </span>
                   </div>
                   <div
                     data-testid="reframe-comparison-source"
-                    className="text-[13px] text-text-secondary whitespace-pre-wrap leading-relaxed font-sans flex-1"
+                    className="text-[13.5px] text-text-secondary whitespace-pre-wrap leading-relaxed font-sans flex-1"
                   >
                     {sourceContent}
                   </div>
                 </div>
 
                 {/* Proposed Reframe Card */}
-                <div className="bg-surface-primary border-2 border-brand-gold/60 rounded-2xl p-5 flex flex-col gap-3 shadow-level-1">
+                <div className="bg-surface-primary border-2 border-brand-gold/60 rounded-xl p-5 flex flex-col gap-3 shadow-level-2">
                   <div className="flex items-center justify-between border-b border-border-standard pb-2.5">
-                    <span className="text-xs font-bold uppercase tracking-wider text-brand-gold">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-brand-gold">
                       Proposed Reframe ({resolvedPlan.targetChannel} / {resolvedPlan.targetFormat})
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-semibold">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-brand-gold/15 text-brand-gold font-semibold">
                       {resolvedPlan.targetAudience}
                     </span>
                   </div>
                   <div
                     data-testid="reframe-proposed-output"
-                    className="text-[13px] text-text-primary whitespace-pre-wrap leading-relaxed font-sans flex-1"
+                    className="text-[14px] text-text-primary whitespace-pre-wrap leading-relaxed font-sans flex-1"
                   >
                     {reframeResult.reframedCopy}
                   </div>
@@ -1040,12 +1048,12 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div
                   data-testid="reframe-changed-explanation"
-                  className="bg-surface-primary border border-border-standard rounded-2xl p-4 space-y-2"
+                  className="bg-surface-primary border border-border-standard rounded-xl p-4 space-y-2 shadow-level-1"
                 >
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-brand-gold">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-brand-gold">
                     Changed (Material Shifts)
                   </h4>
-                  <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-secondary">
+                  <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-secondary leading-relaxed">
                     {reframeResult.changedExplanation.map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
@@ -1054,12 +1062,12 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
 
                 <div
                   data-testid="reframe-preserved-explanation"
-                  className="bg-surface-primary border border-border-standard rounded-2xl p-4 space-y-2"
+                  className="bg-surface-primary border border-border-standard rounded-xl p-4 space-y-2 shadow-level-1"
                 >
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
                     Preserved (Protected Continuity)
                   </h4>
-                  <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-secondary">
+                  <ul className="list-disc pl-4 space-y-1.5 text-xs text-text-secondary leading-relaxed">
                     {reframeResult.preservedExplanation.map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))}
@@ -1073,7 +1081,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   data-testid="reframe-evidence-warnings"
                   className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-800 dark:text-amber-300 space-y-1"
                 >
-                  <span className="font-bold block">Evidence Discipline Notice:</span>
+                  <span className="font-semibold block">Evidence Discipline Notice:</span>
                   {reframeResult.evidenceWarnings.map((w, idx) => (
                     <div key={idx}>{w}</div>
                   ))}
@@ -1081,7 +1089,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               )}
 
               {/* Action Bar: Copy, Use as Current / Send to Workspace, Save as New Version */}
-              <div className="bg-surface-primary border border-border-standard rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="bg-surface-primary border border-border-standard rounded-xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-level-1">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
@@ -1091,7 +1099,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                       setCopied(true);
                       setTimeout(() => setCopied(false), 2000);
                     }}
-                    className="px-3.5 py-2 rounded-lg border border-border-strong bg-surface-inset text-xs font-semibold text-text-primary hover:border-brand-gold transition-colors inline-flex items-center gap-1.5"
+                    className="h-9 px-3.5 rounded-lg border border-border-standard bg-surface-inset text-xs font-medium text-text-primary hover:border-brand-gold transition-colors inline-flex items-center gap-1.5"
                   >
                     {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
                     {copied ? 'Copied' : 'Copy'}
@@ -1119,7 +1127,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                       setSavedNotice(true);
                       setTimeout(() => setSavedNotice(false), 2500);
                     }}
-                    className="px-3.5 py-2 rounded-lg border border-border-strong bg-surface-primary text-xs font-bold text-text-primary hover:border-brand-gold transition-colors inline-flex items-center gap-1.5"
+                    className="h-9 px-3.5 rounded-lg border border-border-standard bg-surface-primary text-xs font-semibold text-text-primary hover:border-brand-gold transition-colors inline-flex items-center gap-1.5"
                   >
                     <BookmarkPlus size={14} className="text-brand-gold" />
                     {savedNotice ? 'Saved as New Version!' : 'Save as New Version'}
@@ -1143,7 +1151,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                         lineage
                       });
                     }}
-                    className="px-4 py-2 rounded-lg bg-brand-gold text-text-inverse text-xs font-bold hover:bg-brand-gold-hover transition-colors inline-flex items-center gap-1.5"
+                    className="h-9 px-4 rounded-lg bg-brand-gold text-text-inverse text-xs font-semibold hover:bg-brand-gold-hover transition-colors inline-flex items-center gap-1.5 shadow-xs"
                   >
                     <Send size={14} />
                     Use as Current / Send to Workspace
@@ -1152,15 +1160,15 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               </div>
             </div>
           ) : (
-            <div className="bg-surface-inset border-2 border-dashed border-border-standard rounded-2xl p-14 text-center flex flex-col items-center justify-center gap-3">
-              <div className="w-14 h-14 rounded-full bg-surface-primary flex items-center justify-center shadow-sm">
-                <Compass size={26} className="text-brand-gold" />
+            <div className="bg-surface-inset/70 border border-dashed border-border-strong rounded-xl p-12 md:p-16 text-center flex flex-col items-center justify-center gap-3 min-h-[380px]">
+              <div className="w-12 h-12 rounded-full bg-surface-primary border border-border-standard flex items-center justify-center shadow-xs">
+                <Compass size={22} className="text-brand-gold" />
               </div>
-              <h3 className="font-sans text-lg font-bold text-text-primary">
+              <h3 className="font-sans text-base font-semibold text-text-primary">
                 Ready to Reframe Content
               </h3>
               <p className="font-sans text-xs text-text-secondary max-w-md leading-relaxed">
-                Provide or select source content on the left, answer "What should this become?", review the resolved COH transformation plan, and generate a factual-integrity-preserving reframe.
+                Provide or select source content on the left, answer &ldquo;What should this become?&rdquo;, review the resolved COH transformation plan, and generate a factual-integrity-preserving reframe.
               </p>
             </div>
           )}

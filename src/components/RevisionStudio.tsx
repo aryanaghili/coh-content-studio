@@ -420,8 +420,8 @@ export function RevisionStudio({
   };
 
   return (
-    <div className="page-shell" data-testid="revision-studio-root">
-      <div className="bg-surface-primary border border-border-standard p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
+    <div className="page-shell space-y-4" data-testid="revision-studio-root">
+      <div className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="page-title">Revision Studio</h2>
           <p className="page-subtitle">
@@ -429,30 +429,30 @@ export function RevisionStudio({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleStartNew} variant="outline" className="text-xs flex items-center gap-1">
-            <RefreshCcw size={12} /> Start New Revision
+          <Button onClick={handleStartNew} variant="outline" className="text-xs flex items-center gap-1.5">
+            <RefreshCcw size={13} /> Start New Revision
           </Button>
-          <Button onClick={onNavigateToLibrary} variant="secondary" className="text-xs flex items-center gap-1">
-            Library <ChevronRight size={12} />
+          <Button onClick={onNavigateToLibrary} variant="secondary" className="text-xs flex items-center gap-1.5">
+            Library <ChevronRight size={13} />
           </Button>
         </div>
       </div>
 
-      <ContextManifestPanel manifest={activeContextPackage.manifest} theme={theme} className="mb-4" />
+      <ContextManifestPanel manifest={activeContextPackage.manifest} theme={theme} />
 
-      <div className="flex flex-col lg:flex-row gap-6 min-h-[calc(100vh-160px)]">
+      <div className="flex flex-col lg:flex-row gap-5 min-h-[calc(100vh-180px)]">
         {/* Left Side: Work Area */}
-        <div className="flex-1 flex flex-col min-w-0 bg-surface-inset rounded border border-border-standard overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 bg-surface-primary rounded-xl border border-border-standard shadow-level-1 overflow-hidden">
           {/* Top Controls */}
-          <div className="bg-surface-primary border-b border-border-standard p-4 shrink-0">
+          <div className="bg-surface-inset/70 border-b border-border-standard px-4 py-3 shrink-0">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Channel</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Channel</label>
                 <select
                   data-testid="revision-channel-select"
                   value={state.channel}
                   onChange={e => updateSetting('channel', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
                   {[
                     'General / Custom',
@@ -470,12 +470,12 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Format</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Format</label>
                 <select
                   data-testid="revision-format-select"
                   value={state.format}
                   onChange={e => updateSetting('format', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
                   {['General / Custom', 'Paragraphs', 'Bullet Points', 'Executive Summary', 'Action Items'].map(
                     opt => (
@@ -487,12 +487,12 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Language</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Language</label>
                 <select
                   data-testid="revision-language-select"
                   value={state.targetLanguage}
                   onChange={e => updateSetting('targetLanguage', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
                   {LANGUAGES.map(l => (
                     <option key={l.id} value={l.label}>
@@ -502,12 +502,12 @@ export function RevisionStudio({
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Tone</label>
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">Tone</label>
                 <select
                   data-testid="revision-tone-select"
                   value={state.tone}
                   onChange={e => updateSetting('tone', e.target.value)}
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 >
                   {[
                     'Balanced / COH Default',
@@ -523,8 +523,8 @@ export function RevisionStudio({
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">
+              <div className="col-span-2 md:col-span-1">
+                <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-muted mb-1">
                   Optional Context
                 </label>
                 <input
@@ -532,7 +532,7 @@ export function RevisionStudio({
                   value={state.optionalContext}
                   onChange={e => updateSetting('optionalContext', e.target.value)}
                   placeholder="Additional context..."
-                  className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] text-text-primary"
+                  className="w-full bg-surface-primary border border-border-standard px-2.5 py-1.5 rounded-lg text-[11.5px] text-text-primary"
                 />
               </div>
             </div>
@@ -546,18 +546,18 @@ export function RevisionStudio({
             {state.settingsChangedAfterRevision && (
               <div
                 data-testid="revision-settings-changed-banner"
-                className="mt-3 bg-yellow-50 dark:bg-amber-950/30 text-yellow-800 dark:text-amber-200 p-3 text-xs rounded border border-yellow-200 dark:border-amber-700/50 flex flex-col gap-3"
+                className="mt-3 bg-amber-500/10 text-amber-800 dark:text-amber-200 p-3 text-xs rounded-lg border border-amber-500/30 flex flex-col gap-3"
               >
                 <div className="flex items-center gap-2">
                   <AlertTriangle size={14} />
                   <span>Settings changed. Generate a new revision to apply them.</span>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between bg-surface-inset p-2 rounded">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 bg-surface-primary px-2.5 py-1.5 rounded-lg border border-border-standard">
                     <span className="font-semibold text-text-primary">Revise from:</span>
                     <select
                       data-testid="revision-source-selector"
-                      className="bg-surface-primary border border-yellow-300 text-text-primary text-[11px] px-2 py-1 rounded outline-none"
+                      className="bg-surface-inset border border-border-standard text-text-primary text-[11px] px-2 py-0.5 rounded outline-none"
                       onChange={e => updateSetting('revisionSource', e.target.value)}
                       value={state.revisionSource || 'current'}
                     >
@@ -567,7 +567,7 @@ export function RevisionStudio({
                   </div>
                   <Button
                     variant="primary"
-                    className="w-full text-xs py-1.5 bg-yellow-600 hover:bg-yellow-700 text-white border-none"
+                    className="text-xs py-1.5"
                     onClick={() =>
                       runRevisionRecipe(
                         selectedRecipeActions.length > 0
@@ -584,7 +584,7 @@ export function RevisionStudio({
             {state.error && (
               <div
                 data-testid="revision-error-alert"
-                className="mt-3 bg-red-500/10 backdrop-blur-md text-red-800 dark:text-red-300 p-2.5 text-xs rounded border border-red-200 flex items-center gap-2"
+                className="mt-3 bg-status-error/10 text-status-error p-2.5 text-xs rounded-lg border border-status-error/30 flex items-center gap-2"
               >
                 <AlertTriangle size={14} />
                 {state.error}
@@ -593,20 +593,20 @@ export function RevisionStudio({
           </div>
 
           {/* Split View Editors */}
-          <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-[380px]">
+          <div className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-[420px]">
             {/* Draft to Revise */}
             <div
-              className={`flex-1 flex flex-col border-r border-border-standard ${
+              className={`flex-1 flex flex-col border-b md:border-b-0 md:border-r border-border-standard ${
                 state.revisedOutput ? 'md:w-1/2' : 'w-full'
               }`}
             >
-              <div className="bg-surface-primary px-4 py-2 border-b border-border-standard flex justify-between items-center shrink-0">
-                <span className="text-[10px] uppercase font-bold text-text-secondary tracking-wider">
+              <div className="bg-surface-primary px-4 py-2.5 border-b border-border-standard flex justify-between items-center shrink-0">
+                <span className="text-[11px] uppercase font-semibold text-text-secondary tracking-wider">
                   Draft to Revise
                 </span>
                 <button
                   onClick={handleClearDraft}
-                  className="text-[10px] text-brand-gold hover:text-brand-gold-light uppercase font-bold"
+                  className="text-[11px] text-text-muted hover:text-status-error font-semibold transition-colors"
                 >
                   Clear
                 </button>
@@ -616,7 +616,7 @@ export function RevisionStudio({
                 value={state.currentDraft}
                 onChange={e => updateSetting('currentDraft', e.target.value)}
                 placeholder="Paste or type content here to begin revising..."
-                className="flex-1 p-4 bg-transparent border-none resize-none focus:ring-0 text-sm text-text-primary whitespace-pre-wrap min-h-[260px]"
+                className="flex-1 p-5 bg-surface-primary border-none resize-none focus:ring-0 focus:outline-none text-[14px] leading-relaxed text-text-primary whitespace-pre-wrap min-h-[280px]"
                 dir={getLanguageDirection(state.currentDraft.slice(0, 100))}
               />
             </div>
@@ -625,39 +625,39 @@ export function RevisionStudio({
             {state.revisedOutput && (
               <div
                 data-testid="revision-output-panel"
-                className="flex-1 flex flex-col md:w-1/2 bg-surface-primary"
+                className="flex-1 flex flex-col md:w-1/2 bg-surface-inset/40"
               >
-                <div className="bg-slate-900 px-4 py-2 border-b border-coh-navy flex justify-between items-center shrink-0">
-                  <span className="text-[10px] uppercase font-bold text-white tracking-wider flex items-center gap-2">
-                    <CheckCircle2 size={12} className="text-brand-gold" />
+                <div className="bg-surface-inset px-4 py-2.5 border-b border-border-standard flex justify-between items-center shrink-0">
+                  <span className="text-[11px] uppercase font-semibold text-brand-gold tracking-wider flex items-center gap-1.5">
+                    <CheckCircle2 size={13} className="text-brand-gold" />
                     Revised Output
                   </span>
                   <div className="flex items-center gap-2">
                     <button
                       data-testid="revision-use-as-draft-btn"
                       onClick={handleUseAsCurrent}
-                      className="text-[10px] bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2 py-0.5 rounded uppercase font-bold"
+                      className="text-[11px] bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2.5 py-1 rounded-md font-semibold transition-colors"
                     >
                       Use as Draft
                     </button>
                     <button
                       data-testid="revision-copy-btn"
                       onClick={handleCopy}
-                      className="text-[10px] text-slate-200 hover:text-white uppercase font-bold flex items-center gap-1"
+                      className="text-[11px] px-2.5 py-1 rounded-md border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary font-medium flex items-center gap-1 transition-colors"
                     >
                       {copySuccess ? 'Copied!' : 'Copy'}
                     </button>
                   </div>
                 </div>
-                <div className="p-2 bg-surface-primary/20 border-b border-border-standard">
-                  <span data-testid="revision-applied-controls" className="text-[10px] text-text-secondary font-mono">
+                <div className="px-4 py-2 bg-surface-inset/70 border-b border-border-standard">
+                  <span data-testid="revision-applied-controls" className="text-[10.5px] text-text-secondary font-mono">
                     Applied: {state.appliedControls}
                   </span>
                 </div>
-                <div className="flex-1 overflow-y-auto p-4">
+                <div className="flex-1 overflow-y-auto p-5">
                   <div
                     data-testid="revision-output-text"
-                    className="prose prose-sm max-w-none text-text-primary whitespace-pre-wrap"
+                    className="prose prose-sm max-w-none text-[14px] leading-relaxed text-text-primary whitespace-pre-wrap"
                     dir={getLanguageDirection(state.targetLanguage)}
                   >
                     {state.revisedOutput}
@@ -670,7 +670,7 @@ export function RevisionStudio({
                     variant="outline"
                     className="flex-1 text-xs py-2"
                   >
-                    <Save size={14} className="mr-2 inline" /> Save as New
+                    <Save size={14} className="mr-1.5 inline" /> Save as New
                   </Button>
                 </div>
               </div>
@@ -679,15 +679,15 @@ export function RevisionStudio({
         </div>
 
         {/* Right Side: Suggested Actions, Multi-Action Recipe Builder & Grouped Actions */}
-        <div className="w-full lg:w-80 flex flex-col gap-4 overflow-y-auto pr-1">
+        <div className="w-full lg:w-[340px] shrink-0 flex flex-col gap-3.5 overflow-y-auto">
           {/* 1. Draft-Dependent Suggested Revision Actions (Part C) */}
           {state.currentDraft.trim() && suggestedActions.length > 0 && (
             <div
               data-testid="suggested-revision-actions"
-              className="bg-surface-primary border border-brand-gold/40 p-3.5 rounded-xl shadow-sm space-y-2.5"
+              className="bg-surface-primary border border-brand-gold/35 p-3.5 rounded-xl shadow-level-1 space-y-2.5"
             >
               <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-brand-gold flex items-center gap-1.5">
+                <span className="text-[10px] uppercase font-semibold tracking-wider text-brand-gold flex items-center gap-1.5">
                   <Sparkles size={12} />
                   Suggested for This Draft
                 </span>
@@ -703,12 +703,12 @@ export function RevisionStudio({
                       className="p-2.5 rounded-lg bg-surface-inset border border-border-standard space-y-1.5"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-text-primary">{sug.label}</span>
+                        <span className="text-xs font-semibold text-text-primary">{sug.label}</span>
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             type="button"
                             onClick={() => toggleRecipeAction(sug.actionId)}
-                            className={`text-[10px] px-2 py-0.5 rounded border font-semibold transition-colors ${
+                            className={`text-[10px] px-2 py-0.5 rounded-md border font-medium transition-colors ${
                               inRecipe
                                 ? 'bg-brand-gold/20 border-brand-gold text-brand-gold'
                                 : 'bg-surface-primary border-border-standard text-text-secondary hover:text-text-primary'
@@ -720,13 +720,13 @@ export function RevisionStudio({
                             type="button"
                             onClick={() => runRevision(sug.actionId)}
                             disabled={state.isGenerating}
-                            className="text-[10px] px-2 py-0.5 rounded bg-slate-900 text-white font-bold hover:bg-brand-gold-hover transition-colors"
+                            className="text-[10px] px-2.5 py-0.5 rounded-md bg-brand-gold text-text-inverse font-semibold hover:bg-brand-gold-hover transition-colors"
                           >
                             Run
                           </button>
                         </div>
                       </div>
-                      <p className="text-[10px] text-text-secondary leading-snug">{sug.reason}</p>
+                      <p className="text-[10.5px] text-text-secondary leading-snug">{sug.reason}</p>
                     </div>
                   );
                 })}
@@ -737,10 +737,10 @@ export function RevisionStudio({
           {/* 2. Multi-Action Revision Recipe Builder & Conflict Detector (Part C & D) */}
           <div
             data-testid="revision-recipe-panel"
-            className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-sm space-y-3"
+            className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-level-1 space-y-3"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-text-primary flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-text-primary flex items-center gap-1.5">
                 <Layers size={12} className="text-brand-gold" />
                 Revision Recipe ({selectedRecipeActions.length})
               </span>
@@ -768,7 +768,7 @@ export function RevisionStudio({
                   {compiledRecipe.orderedSteps.map((step, idx) => (
                     <li
                       key={step.actionId}
-                      className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-surface-inset border border-border-standard"
+                      className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md bg-surface-inset border border-border-standard"
                     >
                       <span className="truncate text-text-primary">
                         <strong>{idx + 1}.</strong> {step.label}
@@ -791,7 +791,7 @@ export function RevisionStudio({
             {compiledRecipe.conflicts.length > 0 && (
               <div
                 data-testid="revision-conflict-alert"
-                className="p-2.5 rounded-lg bg-red-500/10 border border-red-400/40 text-[11px] text-red-800 dark:text-red-300 space-y-1"
+                className="p-2.5 rounded-lg bg-status-error/10 border border-status-error/30 text-[11px] text-status-error space-y-1"
               >
                 {compiledRecipe.conflicts.map((c, idx) => (
                   <div key={idx} className="flex items-start gap-1.5">
@@ -808,7 +808,7 @@ export function RevisionStudio({
             {compiledRecipe.languageGovernanceNote && (
               <div
                 data-testid="revision-language-governance-note"
-                className="p-2 rounded bg-brand-gold/10 border border-brand-gold/30 text-[10px] text-text-secondary"
+                className="p-2 rounded-lg bg-brand-gold/10 border border-brand-gold/30 text-[10px] text-text-secondary"
               >
                 {compiledRecipe.languageGovernanceNote}
               </div>
@@ -824,7 +824,7 @@ export function RevisionStudio({
                 compiledRecipe.hasBlockingConflict
               }
               onClick={() => runRevisionRecipe(selectedRecipeActions)}
-              className="w-full py-2 px-3 rounded-lg bg-brand-gold text-text-inverse font-bold text-xs hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="w-full h-9 px-3 rounded-lg bg-brand-gold text-text-inverse font-semibold text-xs hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-xs"
             >
               <Wand2 size={13} />
               {state.isGenerating
@@ -834,8 +834,8 @@ export function RevisionStudio({
           </div>
 
           {/* 3. Custom Instruction */}
-          <div className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-sm">
-            <label className="block text-[10px] uppercase font-bold text-text-secondary mb-2">
+          <div className="bg-surface-primary border border-border-standard p-3.5 rounded-xl shadow-level-1">
+            <label className="block text-[10px] uppercase font-semibold tracking-wider text-text-secondary mb-2">
               Custom Instruction
             </label>
             <div className="flex gap-2">
@@ -845,14 +845,14 @@ export function RevisionStudio({
                 value={customInstruction}
                 onChange={e => setCustomInstruction(e.target.value)}
                 placeholder="e.g. Emphasize curatorial longevity"
-                className="flex-1 bg-surface-primary border border-border-standard p-2 rounded text-xs text-text-primary"
+                className="flex-1 bg-surface-inset border border-border-standard px-2.5 py-1.5 rounded-lg text-xs text-text-primary"
                 onKeyDown={e => e.key === 'Enter' && runRevision('custom-instruction')}
               />
               <button
                 data-testid="revision-custom-instruction-btn"
                 onClick={() => runRevision('custom-instruction')}
                 disabled={!customInstruction.trim() || state.isGenerating}
-                className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover p-2 rounded disabled:opacity-50"
+                className="bg-brand-gold text-text-inverse hover:bg-brand-gold-hover px-2.5 py-1.5 rounded-lg disabled:opacity-50 transition-colors"
               >
                 <Wand2 size={14} />
               </button>
@@ -861,7 +861,7 @@ export function RevisionStudio({
 
           {/* 4. Canonical Action Groups */}
           <div
-            className={`space-y-3 ${
+            className={`space-y-2.5 ${
               !state.currentDraft.trim() || state.isGenerating ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
@@ -879,13 +879,13 @@ export function RevisionStudio({
               return (
                 <details
                   key={group}
-                  className="border border-border-standard rounded-xl bg-surface-inset overflow-hidden"
+                  className="border border-border-standard rounded-xl bg-surface-primary shadow-level-1 overflow-hidden"
                   open={isExpandedDefault}
                 >
-                  <summary className="bg-surface-primary px-3 py-2 text-[10px] uppercase font-bold text-text-primary tracking-wider cursor-pointer select-none hover:bg-surface-primary-dark transition flex justify-between items-center">
+                  <summary className="bg-surface-inset/70 px-3.5 py-2 text-[10.5px] uppercase font-semibold text-text-secondary tracking-wider cursor-pointer select-none hover:text-text-primary transition flex justify-between items-center">
                     {group}
                   </summary>
-                  <div className="p-2.5 space-y-1.5 bg-surface-primary">
+                  <div className="p-2.5 space-y-1.5 bg-surface-primary border-t border-border-standard">
                     {actionsInGroup.map(actionDef => {
                       const inRecipe = selectedRecipeActions.includes(actionDef.id);
                       return (
@@ -895,7 +895,7 @@ export function RevisionStudio({
                             data-testid={`recipe-toggle-${actionDef.id}`}
                             onClick={() => toggleRecipeAction(actionDef.id)}
                             title={inRecipe ? 'Remove from Recipe' : 'Add to Multi-Action Recipe'}
-                            className={`px-2 py-2 rounded text-xs font-bold border transition-colors shrink-0 ${
+                            className={`px-2 py-1.5 rounded-md text-xs font-semibold border transition-colors shrink-0 ${
                               inRecipe
                                 ? 'bg-brand-gold text-text-inverse border-brand-gold'
                                 : 'bg-surface-inset text-text-secondary border-border-standard hover:border-brand-gold'
@@ -909,7 +909,7 @@ export function RevisionStudio({
                             disabled={state.isGenerating}
                             onClick={() => runRevision(actionDef.id)}
                             title={actionDef.description}
-                            className="flex-1 text-left px-3 py-2 rounded text-xs font-medium text-text-primary bg-surface-inset hover:bg-brand-gold/15 hover:border-brand-gold transition-colors border border-border-standard truncate"
+                            className="flex-1 text-left px-3 py-1.5 rounded-md text-xs font-medium text-text-primary bg-surface-inset hover:bg-brand-gold/15 hover:border-brand-gold transition-colors border border-border-standard truncate"
                           >
                             {actionDef.label}
                           </button>
