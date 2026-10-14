@@ -19,6 +19,8 @@ import {
   buildDeterministicReframe,
   finalizeReframeResult,
   buildReframeLineageMetadata,
+  getReframingAudienceOptions,
+  getReframingPillarOptions,
   DEFAULT_PROTECTED_ELEMENTS,
   type ReframeOriginType,
   type AudienceFamiliarityLevel,
@@ -27,9 +29,7 @@ import {
   type ReframeLineageMetadata
 } from '../lib/reframingEngine';
 import {
-  COH_COMMUNICATION_JOBS,
-  COH_VALID_AUDIENCES,
-  COH_CONTENT_PILLARS
+  COH_COMMUNICATION_JOBS
 } from '../lib/ideationIntelligence';
 import {
   compileGovernedContext,
@@ -38,7 +38,7 @@ import {
   type SourceTaskRole
 } from '../lib/contextCompiler';
 import { ALL_SOURCE_TASK_ROLES, type SourceIntelligenceAnalysis } from '../lib/sourceIntelligence';
-import type { OperatingCore } from '../lib/operatingCore';
+import { normalizeCohPillar, type OperatingCore } from '../lib/operatingCore';
 import type { CoreDocument } from '../lib/coreDocumentsStorage';
 import { ContextManifestPanel } from './ContextManifestPanel';
 
@@ -214,7 +214,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
     audience: resolvedPlan?.targetAudience || originAudience,
     channel: resolvedPlan?.targetChannel || originChannel,
     format: resolvedPlan?.targetFormat || 'Post',
-    pillar: resolvedPlan?.contentPillarEmphasis || 'The Opera & Worldbuilding',
+    pillar: normalizeCohPillar(resolvedPlan?.contentPillarEmphasis, 'Climate Tetralogy & Canon'),
     communicationJob: resolvedPlan?.communicationPurpose || 'Establish institutional credibility',
     sourceBindings: activeSourceBindings,
     derivedSourceAnalyses: sourceIntelligenceMap,
@@ -256,7 +256,8 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
       originChannel,
       originAudience,
       sourceBindings: activeSourceBindings,
-      derivedSourceAnalyses: sourceIntelligenceMap
+      derivedSourceAnalyses: sourceIntelligenceMap,
+      operatingCore
     });
     setResolvedPlan(plan);
     setGenerationError(null);
@@ -288,7 +289,8 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
         originChannel,
         originAudience,
         sourceBindings: activeSourceBindings,
-        derivedSourceAnalyses: sourceIntelligenceMap
+        derivedSourceAnalyses: sourceIntelligenceMap,
+        operatingCore
       });
     if (!resolvedPlan) {
       setResolvedPlan(activePlan);
@@ -716,7 +718,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                       onChange={e => handleUpdatePlanField('targetAudience', e.target.value)}
                       className="text-xs bg-surface-inset border border-border-standard rounded-lg px-2.5 py-1.5 text-text-primary"
                     >
-                      {COH_VALID_AUDIENCES.map(aud => (
+                      {getReframingAudienceOptions(operatingCore, resolvedPlan.targetAudience).map(aud => (
                         <option key={aud} value={aud}>
                           {aud}
                         </option>
@@ -769,7 +771,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                       onChange={e => handleUpdatePlanField('contentPillarEmphasis', e.target.value)}
                       className="text-xs bg-surface-inset border border-border-standard rounded-lg px-2.5 py-1.5 text-text-primary"
                     >
-                      {COH_CONTENT_PILLARS.map(pillar => (
+                      {getReframingPillarOptions().map(pillar => (
                         <option key={pillar} value={pillar}>
                           {pillar}
                         </option>

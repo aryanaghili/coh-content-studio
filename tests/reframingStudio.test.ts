@@ -21,7 +21,7 @@ describe('COH-CS-05 Dedicated COH Reframing Studio (Journeys A through H)', () =
     });
 
     assert.equal(plan.recommendedRoute, 'REFRAME');
-    assert.equal(plan.targetAudience, 'Cultural Institutions & Venues');
+    assert.equal(plan.targetAudience, 'Cultural institutions');
     assert.equal(plan.audienceFamiliarity, 'Low Familiarity (Needs foundational COH context)');
     assert.equal(plan.communicationPurpose, 'Establish institutional credibility');
 
@@ -31,7 +31,7 @@ describe('COH-CS-05 Dedicated COH Reframing Studio (Journeys A through H)', () =
     });
 
     assert.ok(
-      result.reframedCopy.includes('Cultural Institutions & Venues') ||
+      result.reframedCopy.includes('Cultural institutions') ||
         result.reframedCopy.includes('Institutional Programming Perspective'),
       'Output must reflect institutional programming framing'
     );
@@ -56,7 +56,7 @@ describe('COH-CS-05 Dedicated COH Reframing Studio (Journeys A through H)', () =
     assert.equal(plan.targetChannel, 'LinkedIn');
     assert.equal(plan.targetFormat, 'Post');
     assert.equal(plan.communicationPurpose, 'Build climate literacy');
-    assert.equal(plan.contentPillarEmphasis, 'Science & Planetary Reality');
+    assert.equal(plan.contentPillarEmphasis, 'Education, Community & Climate Literacy');
 
     const result = buildDeterministicReframe({
       sourceContent: samplePublicSource,

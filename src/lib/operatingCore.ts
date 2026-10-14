@@ -534,3 +534,375 @@ export function safeMergeOperatingCore(savedData: any): OperatingCore {
 
   return merged;
 }
+
+// --- Canonical Strategic Authority & Alias Normalization ---
+
+export const CANONICAL_COH_PILLARS = [
+  'Climate Tetralogy & Canon',
+  'Opera Worlds & Artistic Method',
+  'Production & Behind the Work',
+  'Documentary, Media & Cultural IP',
+  'Partnerships, Sponsorship & Institutional Value',
+  'Events, Convenings & Public Moments',
+  'Education, Community & Climate Literacy',
+  'Team, Leadership & Proof'
+] as const;
+
+export type CanonicalCohPillar = (typeof CANONICAL_COH_PILLARS)[number];
+
+export const PILLAR_ALIAS_NORMALIZATION_MAP: Record<string, CanonicalCohPillar> = {
+  // Canonical self-mappings (lowercase)
+  'climate tetralogy & canon': 'Climate Tetralogy & Canon',
+  'opera worlds & artistic method': 'Opera Worlds & Artistic Method',
+  'production & behind the work': 'Production & Behind the Work',
+  'documentary, media & cultural ip': 'Documentary, Media & Cultural IP',
+  'partnerships, sponsorship & institutional value': 'Partnerships, Sponsorship & Institutional Value',
+  'events, convenings & public moments': 'Events, Convenings & Public Moments',
+  'education, community & climate literacy': 'Education, Community & Climate Literacy',
+  'team, leadership & proof': 'Team, Leadership & Proof',
+  // Legacy / parallel module aliases normalized to canonical COH pillars
+  'the opera & worldbuilding': 'Climate Tetralogy & Canon',
+  'the tetralogy & operatic worldbuilding': 'Climate Tetralogy & Canon',
+  'cultural durability': 'Climate Tetralogy & Canon',
+  'opera production and repertoire': 'Opera Worlds & Artistic Method',
+  'artistic vision & cultural world-building': 'Opera Worlds & Artistic Method',
+  'behind the creation & craft': 'Production & Behind the Work',
+  'artistic process & craft': 'Production & Behind the Work',
+  'climate opera as cultural ip': 'Documentary, Media & Cultural IP',
+  'documentary and media': 'Documentary, Media & Cultural IP',
+  'institutional & sponsor value': 'Partnerships, Sponsorship & Institutional Value',
+  'partnerships & coalition': 'Partnerships, Sponsorship & Institutional Value',
+  'sponsorship and institutional adoption': 'Partnerships, Sponsorship & Institutional Value',
+  'strategic partners': 'Partnerships, Sponsorship & Institutional Value',
+  'cultural participation & ritual': 'Events, Convenings & Public Moments',
+  'resonance 2027 & milestones': 'Events, Convenings & Public Moments',
+  'science & planetary reality': 'Education, Community & Climate Literacy',
+  'culture as climate agency': 'Education, Community & Climate Literacy',
+  'climate literacy': 'Education, Community & Climate Literacy',
+  'education and community': 'Education, Community & Climate Literacy'
+};
+
+export function normalizeCohPillar(
+  rawPillar?: string | null,
+  fallback: CanonicalCohPillar = 'Climate Tetralogy & Canon'
+): CanonicalCohPillar {
+  if (!rawPillar || typeof rawPillar !== 'string') return fallback;
+  const trimmed = rawPillar.trim();
+  if (!trimmed || trimmed.toLowerCase() === 'general / custom') return fallback;
+
+  const exactMatch = CANONICAL_COH_PILLARS.find(p => p.toLowerCase() === trimmed.toLowerCase());
+  if (exactMatch) return exactMatch;
+
+  const mapped = PILLAR_ALIAS_NORMALIZATION_MAP[trimmed.toLowerCase()];
+  if (mapped) return mapped;
+
+  const lower = trimmed.toLowerCase();
+  if (/tetralogy|canon|soria moria|nordic air|water dragon|golden fountain|roar to the wind/.test(lower)) {
+    return 'Climate Tetralogy & Canon';
+  }
+  if (/opera world|artistic method|dramaturg|worldbuilding/.test(lower)) {
+    return 'Opera Worlds & Artistic Method';
+  }
+  if (/production|behind|craft|rehearsal|process/.test(lower)) {
+    return 'Production & Behind the Work';
+  }
+  if (/documentary|cultural ip|media|licensing|ip/.test(lower)) {
+    return 'Documentary, Media & Cultural IP';
+  }
+  if (/sponsor|partner|institutional|coalition|patron/.test(lower)) {
+    return 'Partnerships, Sponsorship & Institutional Value';
+  }
+  if (/event|convening|public moment|ritual|milestone|resonance/.test(lower)) {
+    return 'Events, Convenings & Public Moments';
+  }
+  if (/science|planetary|climate literacy|education|community|agency|ecological/.test(lower)) {
+    return 'Education, Community & Climate Literacy';
+  }
+  if (/team|leadership|proof/.test(lower)) {
+    return 'Team, Leadership & Proof';
+  }
+
+  return fallback;
+}
+
+export function inferPillarFromText(rawText: string): CanonicalCohPillar {
+  const raw = rawText || '';
+  if (/tetralogy|nordic air|water dragon|soria moria|golden fountain|roar to the wind|act |libretto|canon|myth/i.test(raw)) {
+    return 'Climate Tetralogy & Canon';
+  }
+  if (/behind the scenes|rehearsal|composer|craft|process|production/i.test(raw)) {
+    return 'Production & Behind the Work';
+  }
+  if (/documentary|licensing|business model|cultural ip|franchise|broadcast/i.test(raw)) {
+    return 'Documentary, Media & Cultural IP';
+  }
+  if (/sponsor|partner|patron|csr|institution|venue|touring|curatorial/i.test(raw)) {
+    return 'Partnerships, Sponsorship & Institutional Value';
+  }
+  if (/event|convening|symposium|premiere|resonance 2027|ritual|gathering/i.test(raw)) {
+    return 'Events, Convenings & Public Moments';
+  }
+  if (/climate|sustainability|ecological|planetary|science|literacy|education|community|resilience/i.test(raw)) {
+    return 'Education, Community & Climate Literacy';
+  }
+  if (/team|leadership|founder|governance|track record/i.test(raw)) {
+    return 'Team, Leadership & Proof';
+  }
+  if (/opera|artistic|stage|music|worldbuilding/i.test(raw)) {
+    return 'Opera Worlds & Artistic Method';
+  }
+  return 'Documentary, Media & Cultural IP';
+}
+
+export function getOperatingCoreAudienceProfiles(operatingCore?: OperatingCore | null): AudienceProfile[] {
+  if (operatingCore && Array.isArray(operatingCore.audiences) && operatingCore.audiences.length > 0) {
+    return operatingCore.audiences;
+  }
+  return createDefaultOperatingCore().audiences;
+}
+
+export function getAuthoritativeAudiences(operatingCore?: OperatingCore | null): string[] {
+  return getOperatingCoreAudienceProfiles(operatingCore).map(a => a.name);
+}
+
+export const AUDIENCE_ALIAS_NORMALIZATION_MAP: Record<string, string> = {
+  'sponsors & patrons': 'Sponsors and patrons',
+  'sponsors / patrons': 'Sponsors and patrons',
+  'sponsors and patrons': 'Sponsors and patrons',
+  'sponsors & corporate partners': 'Sponsors and patrons',
+  'sponsors': 'Sponsors and patrons',
+  'patrons': 'Sponsors and patrons',
+  'arts patrons': 'Sponsors and patrons',
+  'sponsor': 'Sponsors and patrons',
+  'cultural institutions': 'Cultural institutions',
+  'cultural institution': 'Cultural institutions',
+  'cultural institutions & venues': 'Cultural institutions',
+  'institutional partners': 'Cultural institutions',
+  'institutional partner': 'Cultural institutions',
+  'strategic partners': 'Cultural institutions',
+  'strategic partner': 'Cultural institutions',
+  'opera houses and festivals': 'Opera houses and festivals',
+  'cultural institutions & festivals': 'Opera houses and festivals',
+  'opera audience': 'Opera houses and festivals',
+  'art & opera community': 'Opera houses and festivals',
+  'opera house': 'Opera houses and festivals',
+  'foundations and arts councils': 'Foundations and arts councils',
+  'foundations': 'Foundations and arts councils',
+  'arts councils': 'Foundations and arts councils',
+  'climate and sustainability leaders': 'Climate and sustainability leaders',
+  'climate & sustainability leaders': 'Climate and sustainability leaders',
+  'climate, policy & philanthropy leaders': 'Climate and sustainability leaders',
+  'media and documentary partners': 'Media and documentary partners',
+  'documentary partners': 'Media and documentary partners',
+  'education and civic partners': 'Education and civic partners',
+  'education & community': 'Education and civic partners',
+  'press and journalists': 'Press and journalists',
+  'press & media': 'Press and journalists',
+  'press / media': 'Press and journalists',
+  'media / press': 'Press and journalists',
+  'media & journalists': 'Press and journalists',
+  'press & cultural journalists': 'Press and journalists',
+  'internal team': 'Internal team',
+  'general cultural audience': 'General cultural audience',
+  'cultural followers': 'General cultural audience',
+  'cultural audience': 'General cultural audience',
+  'cultural consumers': 'General cultural audience',
+  'general public & cultural citizens': 'General cultural audience',
+  'general public': 'General cultural audience',
+  'skeptics / public': 'General cultural audience'
+};
+
+const NON_COH_SEGMENT_PATTERNS = /\b(enterprise|saas|b2b|buyers|crypto|retailers|e-commerce|funnel|churn)\b/i;
+
+function resolveCanonicalTargetInProfiles(
+  canonicalName: string,
+  profiles: AudienceProfile[]
+): string {
+  const exact = profiles.find(p => p.name.toLowerCase() === canonicalName.toLowerCase());
+  if (exact) return exact.name;
+
+  // If the active OperatingCore mutated the default profile's name, match by id or keyword
+  const defaultProfiles = createDefaultOperatingCore().audiences;
+  const defaultMatch = defaultProfiles.find(d => d.name.toLowerCase() === canonicalName.toLowerCase());
+  if (defaultMatch) {
+    const byId = profiles.find(p => p.id === defaultMatch.id);
+    if (byId) return byId.name;
+  }
+
+  const lower = canonicalName.toLowerCase();
+  if (lower.includes('sponsor')) {
+    const m = profiles.find(p => /sponsor|patron/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('institution')) {
+    const m = profiles.find(p => /institution|venue|partner/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('opera')) {
+    const m = profiles.find(p => /opera|festival/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('foundation')) {
+    const m = profiles.find(p => /foundation|council/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('climate')) {
+    const m = profiles.find(p => /climate|sustainability/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('documentary')) {
+    const m = profiles.find(p => /documentary/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('education')) {
+    const m = profiles.find(p => /education|civic/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('press')) {
+    const m = profiles.find(p => /press|journalist/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('internal')) {
+    const m = profiles.find(p => /internal/i.test(p.name));
+    if (m) return m.name;
+  }
+  if (lower.includes('general')) {
+    const m = profiles.find(p => /general|cultural audience|public/i.test(p.name));
+    if (m) return m.name;
+  }
+
+  return canonicalName;
+}
+
+export function normalizeOperatingCoreAudience(
+  rawAudience?: string | null,
+  operatingCore?: OperatingCore | null,
+  options?: { preserveExplicitGeneralPublic?: boolean }
+): string | undefined {
+  if (!rawAudience || typeof rawAudience !== 'string') return undefined;
+  const trimmed = rawAudience.trim();
+  if (!trimmed) return undefined;
+
+  if (NON_COH_SEGMENT_PATTERNS.test(trimmed)) {
+    return undefined;
+  }
+
+  if (options?.preserveExplicitGeneralPublic && trimmed.toLowerCase() === 'general public') {
+    return 'General Public';
+  }
+
+  const profiles = getOperatingCoreAudienceProfiles(operatingCore);
+  const lower = trimmed.toLowerCase();
+
+  // 1. Direct match in active Operating Core audience profiles
+  const direct = profiles.find(p => p.name.toLowerCase() === lower);
+  if (direct) return direct.name;
+
+  // 2. Alias map lookup
+  const mappedCanonical = AUDIENCE_ALIAS_NORMALIZATION_MAP[lower];
+  if (mappedCanonical) {
+    return resolveCanonicalTargetInProfiles(mappedCanonical, profiles);
+  }
+
+  // 3. Substring / token match against active Operating Core profiles (including custom profiles)
+  for (const profile of profiles) {
+    const pLower = profile.name.toLowerCase();
+    if (pLower.includes(lower) || lower.includes(pLower)) {
+      return profile.name;
+    }
+    const tokens = pLower
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter(t => t.length >= 5 && !['general', 'partners', 'leaders', 'audience'].includes(t));
+    if (tokens.length > 0 && tokens.some(t => lower.includes(t))) {
+      return profile.name;
+    }
+  }
+
+  return undefined;
+}
+
+export function resolveOperatingCoreAudience(
+  rawAudience?: string | null,
+  operatingCore?: OperatingCore | null,
+  fallbackAudience: string = 'General cultural audience',
+  options?: { preserveExplicitGeneralPublic?: boolean }
+): string {
+  const normalized = normalizeOperatingCoreAudience(rawAudience, operatingCore, options);
+  if (normalized) return normalized;
+
+  const fallbackNormalized = normalizeOperatingCoreAudience(fallbackAudience, operatingCore, options);
+  if (fallbackNormalized) return fallbackNormalized;
+
+  const profiles = getOperatingCoreAudienceProfiles(operatingCore);
+  return profiles[profiles.length - 1]?.name || 'General cultural audience';
+}
+
+export function inferAudienceFromText(
+  rawText: string,
+  operatingCore?: OperatingCore | null
+): string | undefined {
+  if (!rawText || typeof rawText !== 'string') return undefined;
+  const raw = rawText.trim();
+  if (!raw) return undefined;
+  const lower = raw.toLowerCase();
+  const profiles = getOperatingCoreAudienceProfiles(operatingCore);
+
+  // 1. Check if any active Operating Core audience profile (especially custom or mutated profiles) is directly mentioned
+  for (const profile of profiles) {
+    const pLower = profile.name.toLowerCase();
+    if (lower.includes(pLower)) {
+      return profile.name;
+    }
+  }
+
+  // Check distinctive multi-token custom profiles in operatingCore
+  const defaultIds = new Set(createDefaultOperatingCore().audiences.map(a => a.id));
+  for (const profile of profiles) {
+    if (!defaultIds.has(profile.id)) {
+      const tokens = profile.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, ' ')
+        .split(/\s+/)
+        .filter(t => t.length >= 4 && !['general', 'partners', 'leaders', 'audience'].includes(t));
+      if (tokens.length > 0 && tokens.some(t => lower.includes(t))) {
+        return profile.name;
+      }
+    }
+  }
+
+  // 2. Standard natural-language intent patterns mapped to active Operating Core profiles
+  if (/opera house|festival|art & opera/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Opera houses and festivals', profiles);
+  }
+  if (/cultural institution|institutional partner|institution|venue|museum|curatorial|programming/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Cultural institutions', profiles);
+  }
+  if (/foundation|arts council|philanthrop|grantmaker/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Foundations and arts councils', profiles);
+  }
+  if (/sponsor|patron|csr|brand partner|funding|investor/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Sponsors and patrons', profiles);
+  }
+  if (/climate leader|sustainability leader|climate.*leader|policy leader/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Climate and sustainability leaders', profiles);
+  }
+  if (/documentary partner|media partner|broadcast partner|co-producer/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Media and documentary partners', profiles);
+  }
+  if (/education|school|university|civic partner|learning/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Education and civic partners', profiles);
+  }
+  if (/press|journalist|media|critic|editor/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Press and journalists', profiles);
+  }
+  if (/internal team|internal update|staff/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('Internal team', profiles);
+  }
+  if (/general public|cultural followers|cultural audience|community|citizen|broad audience|newcomer/i.test(raw)) {
+    return resolveCanonicalTargetInProfiles('General cultural audience', profiles);
+  }
+
+  return undefined;
+}
+

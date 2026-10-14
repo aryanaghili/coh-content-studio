@@ -1,5 +1,6 @@
 import {
   PROTECTED_COH_KERNEL,
+  normalizeOperatingCoreAudience,
   type OperatingCore,
   type AudienceProfile,
   type ChannelRule,
@@ -331,6 +332,11 @@ function detectKernelConflictWarnings(userInstruction?: string): string[] {
 
 function matchAudienceProfile(core: OperatingCore, audienceName?: string): AudienceProfile | undefined {
   if (!audienceName) return undefined;
+  const normalizedName = normalizeOperatingCoreAudience(audienceName, core);
+  if (normalizedName) {
+    const matched = core.audiences.find(a => a.name.toLowerCase() === normalizedName.toLowerCase());
+    if (matched) return matched;
+  }
   const target = audienceName.trim().toLowerCase();
   const direct = core.audiences.find(
     a => a.name.toLowerCase() === target || target.includes(a.name.toLowerCase()) || a.name.toLowerCase().includes(target)

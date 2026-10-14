@@ -4,6 +4,13 @@ import {
   getCanonicalRevisionAction
 } from './revisionActions.ts';
 import type { WorkContext } from './contextCompiler.ts';
+import {
+  inferAudienceFromText,
+  inferPillarFromText,
+  normalizeCohPillar,
+  resolveOperatingCoreAudience,
+  type OperatingCore
+} from './operatingCore.ts';
 
 export type SmartBriefProvenance = 'explicit' | 'inherited' | 'resolved' | 'unresolved';
 
@@ -48,6 +55,7 @@ export interface ResolveSmartBriefInput {
   explicitDirection?: string;
   selectedSourceIds?: string[];
   inheritedWorkContext?: Partial<WorkContext> | null;
+  operatingCore?: OperatingCore | null;
   availableSources?: Array<{
     id: string;
     title: string;
@@ -112,11 +120,18 @@ export function resolveSmartBrief(input: ResolveSmartBriefInput): ResolvedSmartB
   const raw = (input.rawRequest || '').trim();
   const lower = raw.toLowerCase();
   const inherited = input.inheritedWorkContext || null;
+  const operatingCore = input.operatingCore || null;
 
-  // 1. Channel resolution
+  // 1. Channel resolution (Explicit -> Inherited -> Heuristic -> Default)
   let channelVal = 'LinkedIn';
   let channelProv: SmartBriefProvenance = 'resolved';
-  if (/linkedin/i.test(raw)) {
+  if (input.explicitChannel && input.explicitChannel.trim() && input.explicitChannel !== 'General / Custom') {
+    channelVal = input.explicitChannel.trim();
+    channelProv = 'explicit';
+  } else if (inherited?.channel && inherited.channel.trim()) {
+    channelVal = inherited.channel.trim();
+    channelProv = 'inherited';
+  } else if (/linkedin/i.test(raw)) {
     channelVal = 'LinkedIn';
     channelProv = 'resolved';
   } else if (/instagram|carousel|reel/i.test(raw)) {
@@ -134,18 +149,18 @@ export function resolveSmartBrief(input: ResolveSmartBriefInput): ResolvedSmartB
   } else if (/website|landing page|web copy/i.test(raw)) {
     channelVal = 'Website';
     channelProv = 'resolved';
-  } else if (input.explicitChannel && input.explicitChannel !== 'General / Custom') {
-    channelVal = input.explicitChannel;
-    channelProv = 'explicit';
-  } else if (inherited?.channel) {
-    channelVal = inherited.channel;
-    channelProv = 'inherited';
   }
 
-  // 2. Output Format resolution
+  // 2. Output Format resolution (Explicit -> Inherited -> Heuristic -> Default)
   let formatVal = DEFAULT_CHANNEL_FORMATS[channelVal] || 'Post';
   let formatProv: SmartBriefProvenance = 'resolved';
-  if (/carousel/i.test(raw)) {
+  if (input.explicitFormat && input.explicitFormat.trim() && input.explicitFormat !== 'General / Custom') {
+    formatVal = input.explicitFormat.trim();
+    formatProv = 'explicit';
+  } else if (inherited?.format && inherited.format.trim()) {
+    formatVal = inherited.format.trim();
+    formatProv = 'inherited';
+  } else if (/carousel/i.test(raw)) {
     formatVal = 'Carousel Copy';
     formatProv = 'resolved';
   } else if (/press release/i.test(raw)) {
@@ -160,41 +175,45 @@ export function resolveSmartBrief(input: ResolveSmartBriefInput): ResolvedSmartB
   } else if (/article|essay/i.test(raw)) {
     formatVal = 'Editorial Article';
     formatProv = 'resolved';
-  } else if (input.explicitFormat && input.explicitFormat !== 'General / Custom') {
-    formatVal = input.explicitFormat;
-    formatProv = 'explicit';
-  } else if (inherited?.format) {
-    formatVal = inherited.format;
-    formatProv = 'inherited';
   }
 
-  // 3. Audience resolution
-  let audienceVal = 'Cultural Followers';
+  // 3. Audience resolution (Explicit -> Inherited -> Operating Core Heuristic -> Operating Core Default)
+  let audienceVal = resolveOperatingCoreAudience('General cultural audience', operatingCore);
   let audienceProv: SmartBriefProvenance = 'resolved';
-  if (/institution|museum|opera house|curator|theatre|venue|festival|programming/i.test(raw)) {
-    audienceVal = 'Cultural Institutions';
-    audienceProv = 'resolved';
-  } else if (/sponsor|patron|csr|philanthrop|investor|brand partner|funder/i.test(raw)) {
-    audienceVal = 'Sponsors / Patrons';
-    audienceProv = 'resolved';
-  } else if (/press|journalist|media|critic|editor/i.test(raw)) {
-    audienceVal = 'Press / Media';
-    audienceProv = 'resolved';
-  } else if (/general public|community|citizen|broad audience|newcomer/i.test(raw)) {
-    audienceVal = 'General Public';
-    audienceProv = 'resolved';
-  } else if (input.explicitAudience && input.explicitAudience !== 'General Public') {
-    audienceVal = input.explicitAudience;
+  if (input.explicitAudience && input.explicitAudience.trim() && input.explicitAudience !== 'General / Custom') {
+    audienceVal = resolveOperatingCoreAudience(
+      input.explicitAudience,
+      operatingCore,
+      input.explicitAudience.trim(),
+      { preserveExplicitGeneralPublic: true }
+    );
     audienceProv = 'explicit';
-  } else if (inherited?.audience) {
-    audienceVal = inherited.audience;
+  } else if (inherited?.audience && inherited.audience.trim()) {
+    audienceVal = resolveOperatingCoreAudience(
+      inherited.audience,
+      operatingCore,
+      inherited.audience.trim(),
+      { preserveExplicitGeneralPublic: true }
+    );
     audienceProv = 'inherited';
+  } else {
+    const inferredAudience = inferAudienceFromText(raw, operatingCore);
+    if (inferredAudience) {
+      audienceVal = inferredAudience;
+      audienceProv = 'resolved';
+    }
   }
 
-  // 4. Purpose / Communication Job resolution
+  // 4. Purpose / Communication Job resolution (Explicit -> Inherited -> Heuristic -> Default)
   let purposeVal = 'Build cultural authority';
   let purposeProv: SmartBriefProvenance = 'resolved';
-  if (/programming|institution|curatorial|credibility|belong/i.test(raw)) {
+  if (input.explicitPurpose && input.explicitPurpose.trim() && input.explicitPurpose !== 'General / Open') {
+    purposeVal = input.explicitPurpose.trim();
+    purposeProv = 'explicit';
+  } else if (inherited?.communicationJob && inherited.communicationJob.trim()) {
+    purposeVal = inherited.communicationJob.trim();
+    purposeProv = 'inherited';
+  } else if (/programming|institution|curatorial|credibility|belong/i.test(raw)) {
     purposeVal = 'Establish institutional credibility and curatorial relevance';
     purposeProv = 'resolved';
   } else if (/sponsor|partner|patron|csr|align/i.test(raw)) {
@@ -206,41 +225,32 @@ export function resolveSmartBrief(input: ResolveSmartBriefInput): ResolvedSmartB
   } else if (/explain|clarify|literacy|understand|what is/i.test(raw)) {
     purposeVal = 'Explain COH clearly to new audiences';
     purposeProv = 'resolved';
-  } else if (input.explicitPurpose && input.explicitPurpose !== 'General / Open') {
-    purposeVal = input.explicitPurpose;
-    purposeProv = 'explicit';
-  } else if (inherited?.communicationJob) {
-    purposeVal = inherited.communicationJob;
-    purposeProv = 'inherited';
   }
 
-  // 5. Content Pillar resolution
-  let pillarVal = 'Climate Opera as Cultural IP';
+  // 5. Content Pillar resolution (Explicit -> Inherited -> Canonical COH Heuristic -> Canonical Default)
+  let pillarVal: string = 'Documentary, Media & Cultural IP';
   let pillarProv: SmartBriefProvenance = 'resolved';
-  if (/tetralogy|nordic air|water dragon|soria moria|act |libretto|canon|myth/i.test(raw)) {
-    pillarVal = 'The Tetralogy & Operatic Worldbuilding';
-    pillarProv = 'resolved';
-  } else if (/institution|venue|touring|licensing|business model|ip|franchise/i.test(raw)) {
-    pillarVal = 'Climate Opera as Cultural IP';
-    pillarProv = 'resolved';
-  } else if (/climate|sustainability|ecological|emotional infrastructure|resilience/i.test(raw)) {
-    pillarVal = 'Culture as Climate Agency';
-    pillarProv = 'resolved';
-  } else if (/behind the scenes|rehearsal|composer|craft|process/i.test(raw)) {
-    pillarVal = 'Artistic Process & Craft';
-    pillarProv = 'resolved';
-  } else if (input.explicitPillar && input.explicitPillar !== 'General / Custom') {
-    pillarVal = input.explicitPillar;
+  if (input.explicitPillar && input.explicitPillar.trim() && input.explicitPillar !== 'General / Custom') {
+    pillarVal = normalizeCohPillar(input.explicitPillar);
     pillarProv = 'explicit';
-  } else if (inherited?.pillar) {
-    pillarVal = inherited.pillar;
+  } else if (inherited?.pillar && inherited.pillar.trim() && inherited.pillar !== 'General / Custom') {
+    pillarVal = normalizeCohPillar(inherited.pillar);
     pillarProv = 'inherited';
+  } else {
+    pillarVal = inferPillarFromText(raw);
+    pillarProv = 'resolved';
   }
 
-  // 6. Language resolution (including PT-EU and Persian detection)
+  // 6. Language resolution (Explicit -> Inherited -> Heuristic -> Default)
   let langVal = 'English';
   let langProv: SmartBriefProvenance = 'resolved';
-  if (/portuguese|pt-eu|português/i.test(raw)) {
+  if (input.explicitLanguage && input.explicitLanguage.trim()) {
+    langVal = input.explicitLanguage.trim();
+    langProv = 'explicit';
+  } else if (inherited?.language && inherited.language.trim()) {
+    langVal = inherited.language.trim();
+    langProv = 'inherited';
+  } else if (/portuguese|pt-eu|português/i.test(raw)) {
     langVal = 'Portuguese (European)';
     langProv = 'resolved';
   } else if (/persian|farsi|فارسی/i.test(raw)) {
@@ -255,33 +265,30 @@ export function resolveSmartBrief(input: ResolveSmartBriefInput): ResolvedSmartB
   } else if (/norwegian|norsk/i.test(raw)) {
     langVal = 'Norwegian';
     langProv = 'resolved';
-  } else if (input.explicitLanguage && input.explicitLanguage !== 'English') {
-    langVal = input.explicitLanguage;
-    langProv = 'explicit';
   }
 
-  // 7. Desired Length resolution
+  // 7. Desired Length resolution (Explicit -> Heuristic -> Default)
   let lengthVal = 'Medium: 120-180 words';
   let lengthProv: SmartBriefProvenance = 'resolved';
-  if (formatVal === 'WhatsApp Message' || /\bshort\b|\bbrief\b|caption/i.test(raw)) {
+  if (input.explicitLength && input.explicitLength.trim()) {
+    lengthVal = input.explicitLength.trim();
+    lengthProv = 'explicit';
+  } else if (formatVal === 'WhatsApp Message' || /\bshort\b|\bbrief\b|caption/i.test(raw)) {
     lengthVal = 'Short: 50-80 words';
     lengthProv = 'resolved';
   } else if (/article|long|essay|press release|deep dive/i.test(raw)) {
     lengthVal = 'Long: 250-350 words';
     lengthProv = 'resolved';
-  } else if (input.explicitLength) {
-    lengthVal = input.explicitLength;
-    lengthProv = 'explicit';
   }
 
-  // 8. Direction / Angle resolution
+  // 8. Direction / Angle resolution (Explicit -> Inherited -> Resolved)
   let directionVal = `Position COH through ${pillarVal} for ${audienceVal} on ${channelVal}.`;
   let directionProv: SmartBriefProvenance = 'resolved';
   if (input.explicitDirection && input.explicitDirection.trim()) {
     directionVal = input.explicitDirection.trim();
     directionProv = 'explicit';
-  } else if (inherited?.strategicAngle) {
-    directionVal = inherited.strategicAngle;
+  } else if (inherited?.strategicAngle && inherited.strategicAngle.trim()) {
+    directionVal = inherited.strategicAngle.trim();
     directionProv = 'inherited';
   }
 

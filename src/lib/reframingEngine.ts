@@ -8,7 +8,38 @@
  */
 
 import type { SourceTaskRole, TaskSourceBinding } from './contextCompiler.ts';
+import {
+  CANONICAL_COH_PILLARS,
+  getAuthoritativeAudiences,
+  inferAudienceFromText,
+  normalizeCohPillar,
+  resolveOperatingCoreAudience,
+  type OperatingCore
+} from './operatingCore.ts';
 import type { SourceIntelligenceAnalysis } from './sourceIntelligence.ts';
+
+export function getReframingAudienceOptions(
+  operatingCore?: OperatingCore | null,
+  currentSelection?: string
+): string[] {
+  const authoritative = getAuthoritativeAudiences(operatingCore);
+  const options = [...authoritative];
+  if (!options.some(a => a.toLowerCase() === 'general public')) {
+    options.push('General Public');
+  }
+  if (
+    currentSelection &&
+    currentSelection.trim() &&
+    !options.some(a => a.toLowerCase() === currentSelection.trim().toLowerCase())
+  ) {
+    options.push(currentSelection.trim());
+  }
+  return options;
+}
+
+export function getReframingPillarOptions(): readonly string[] {
+  return CANONICAL_COH_PILLARS;
+}
 
 export type ReframeOriginType =
   | 'Manual Input'
@@ -184,6 +215,7 @@ export function resolveReframeIntent(params: {
   originAudience?: string;
   sourceBindings?: TaskSourceBinding[];
   derivedSourceAnalyses?: Record<string, SourceIntelligenceAnalysis>;
+  operatingCore?: OperatingCore | null;
 }): ResolvedReframePlan {
   const {
     rawIntent,
@@ -191,36 +223,20 @@ export function resolveReframeIntent(params: {
     originChannel = 'Website',
     originAudience = 'General Public',
     sourceBindings = [],
-    derivedSourceAnalyses = {}
+    derivedSourceAnalyses = {},
+    operatingCore = null
   } = params;
 
   const lower = (rawIntent || '').toLowerCase();
   const routeCheck = classifyReframeVsRevisionIntent(rawIntent);
 
-  // 1. Resolve Target Audience
-  let targetAudience = originAudience || 'General Public';
-  if (
-    lower.includes('cultural institution') ||
-    lower.includes('venue') ||
-    lower.includes('programming strategy') ||
-    lower.includes('opera house') ||
-    lower.includes('institutional')
-  ) {
-    targetAudience = 'Cultural Institutions & Venues';
-  } else if (lower.includes('sponsor') || lower.includes('patron') || lower.includes('funder') || lower.includes('capital')) {
-    targetAudience = 'Sponsors & Patrons';
-  } else if (lower.includes('press') || lower.includes('journalist') || lower.includes('media')) {
-    targetAudience = 'Press & Media';
-  } else if (lower.includes('partner') || lower.includes('coalition')) {
-    targetAudience = 'Strategic Partners';
-  } else if (
-    lower.includes('public') ||
-    lower.includes('general audience') ||
-    lower.includes('everyday') ||
-    lower.includes('climate literacy')
-  ) {
-    targetAudience = 'General Public';
-  }
+  // 1. Resolve Target Audience from active Operating Core
+  const inferredAudience = inferAudienceFromText(rawIntent, operatingCore);
+  const targetAudience =
+    inferredAudience ||
+    resolveOperatingCoreAudience(originAudience, operatingCore, 'General cultural audience', {
+      preserveExplicitGeneralPublic: true
+    });
 
   // 2. Resolve Audience Familiarity
   let audienceFamiliarity: AudienceFamiliarityLevel = 'Informed Cultural / Industry Familiarity';
@@ -257,15 +273,15 @@ export function resolveReframeIntent(params: {
   } else if (lower.includes('email') || lower.includes('outreach') || lower.includes('pitch')) {
     targetChannel = 'Email / Direct Outreach';
     targetFormat = 'Institutional Pitch Note';
-  } else if (targetAudience === 'Cultural Institutions & Venues' || targetAudience === 'Strategic Partners') {
+  } else if (/institution|venue|opera house|festival|partner/i.test(targetAudience)) {
     targetChannel = 'LinkedIn';
     targetFormat = 'Institutional Brief / Post';
   }
 
-  // 4. Resolve Communication Purpose, Strategic Frame & Content Pillar
+  // 4. Resolve Communication Purpose, Strategic Frame & Canonical COH Content Pillar
   let communicationPurpose = 'Establish institutional credibility';
   let strategicFrame = 'Institutional Relevance & Repertoire Longevity';
-  let contentPillarEmphasis = 'Institutional & Sponsor Value';
+  let contentPillarEmphasis: string = 'Partnerships, Sponsorship & Institutional Value';
   let narrativePerspective = 'Measured Institutional Authority';
   let desiredAudienceResponse =
     'Recognize how Climate Opera Haus fits long-term cultural programming and institutional strategy.';
@@ -273,7 +289,7 @@ export function resolveReframeIntent(params: {
   if (lower.includes('climate literacy') || lower.includes('science') || lower.includes('ecological')) {
     communicationPurpose = 'Build climate literacy';
     strategicFrame = 'Planetary Thresholds Translated Through Operatic Drama';
-    contentPillarEmphasis = 'Science & Planetary Reality';
+    contentPillarEmphasis = 'Education, Community & Climate Literacy';
     narrativePerspective = 'Accessible Educational & Somatic Clarity';
     desiredAudienceResponse =
       'Understand the ecological insight clearly without academic jargon and feel its human stakes.';
@@ -285,32 +301,33 @@ export function resolveReframeIntent(params: {
   ) {
     communicationPurpose = 'Deepen cultural meaning';
     strategicFrame = 'Collective Cultural Ritual & Shared Civic Meaning';
-    contentPillarEmphasis = 'Cultural Participation & Ritual';
+    contentPillarEmphasis = 'Events, Convenings & Public Moments';
     narrativePerspective = 'Human & Cultural Resonance';
     desiredAudienceResponse =
       'Experience the opera as a vital shared cultural space rather than a commercial or activist message.';
   } else if (lower.includes('artistic') || lower.includes('dramaturg') || lower.includes('craft')) {
     communicationPurpose = 'Explain artistic logic';
     strategicFrame = 'Operatic Worldbuilding & Dramaturgical Rigor';
-    contentPillarEmphasis = 'The Opera & Worldbuilding';
+    contentPillarEmphasis = 'Opera Worlds & Artistic Method';
     narrativePerspective = 'Artistic & Dramaturgical Insight';
     desiredAudienceResponse =
       'Appreciate the artistic discipline and musical architecture driving the work.';
   } else if (lower.includes('sponsor') || lower.includes('patron')) {
     communicationPurpose = 'Create sponsor relevance';
     strategicFrame = 'Long-Horizon Cultural IP & Prestige Alignment';
-    contentPillarEmphasis = 'Institutional & Sponsor Value';
+    contentPillarEmphasis = 'Partnerships, Sponsorship & Institutional Value';
     narrativePerspective = 'Strategic Capital & Prestige Framing';
     desiredAudienceResponse =
       'See the long-term brand and cultural prestige value of backing COH origin assets.';
   } else if (lower.includes('press') || lower.includes('journalist')) {
     communicationPurpose = 'Clarify a milestone';
     strategicFrame = 'Press-Ready Cultural & Newsworthy Narrative';
-    contentPillarEmphasis = 'The Opera & Worldbuilding';
+    contentPillarEmphasis = 'Climate Tetralogy & Canon';
     narrativePerspective = 'Editorial & Newsworthy Clarity';
     desiredAudienceResponse =
       'Identify a clear, credible cultural story angle grounded in verified facts.';
   }
+  contentPillarEmphasis = normalizeCohPillar(contentPillarEmphasis);
 
   // 5. Evidence Emphasis & Unresolved Items Check (Journey F: Evidence protection)
   const unresolvedItems: string[] = [];
@@ -511,13 +528,13 @@ export function buildDeterministicReframe(params: {
       : `Positioned for ${plan.targetAudience} with a focus on ${plan.contentPillarEmphasis}:`;
 
   let openingFrame = '';
-  if (plan.targetAudience === 'Cultural Institutions & Venues') {
-    openingFrame = `Institutional Programming Perspective (${plan.strategicFrame}): Contemporary cultural venues need repertoire that unites artistic excellence with urgent civic relevance.`;
+  if (/institution|venue|opera house|festival/i.test(plan.targetAudience)) {
+    openingFrame = `Institutional Programming Perspective (${plan.strategicFrame} - ${plan.targetAudience}): Contemporary cultural venues need repertoire that unites artistic excellence with urgent civic relevance.`;
   } else if (plan.communicationPurpose === 'Build climate literacy') {
     openingFrame = `Climate Literacy & Human Meaning (${plan.strategicFrame}): Understanding planetary thresholds requires more than technical reports; it requires shared cultural translation.`;
   } else if (plan.communicationPurpose === 'Deepen cultural meaning') {
     openingFrame = `Public Cultural Meaning (${plan.strategicFrame}): Beyond institutional frameworks, live operatic performance creates a shared civic space where planetary reality is felt.`;
-  } else if (plan.targetAudience === 'Press & Media') {
+  } else if (/press|journalist|media/i.test(plan.targetAudience)) {
     openingFrame = `Editorial Narrative (${plan.strategicFrame}):`;
   } else {
     openingFrame = `${plan.strategicFrame} (${plan.targetAudience}):`;

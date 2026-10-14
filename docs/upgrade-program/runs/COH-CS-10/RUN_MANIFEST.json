@@ -1,0 +1,10 @@
+{
+  "prompt_id": "COH-CS-10",
+  "title": "Restore Operating Core as the Single Strategic Authority Across Ideation, Smart Brief and Reframing",
+  "repository": "aryanaghili/coh-content-studio",
+  "branch": "feature/coh-content-intelligence-v2",
+  "predecessor_head": "c5735c45c50fc6e500b5fb79d4b6edc9a948ef87",
+  "commit_sha": "392a7929c607571168e07c3df79a45fa4859ec77",
+  "status": "PASS",
+  "completed_at": "2026-10-14T16:52:12+01:00"
+}

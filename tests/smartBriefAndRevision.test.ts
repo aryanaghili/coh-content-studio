@@ -38,8 +38,8 @@ describe('COH-CS-06 Smart Brief, Fast/Explore Mode, and Revision Productivity', 
 
     assert.equal(resolved.channel.value, 'LinkedIn');
     assert.equal(resolved.channel.provenance, 'resolved');
-    assert.equal(resolved.audience.value, 'Cultural Institutions');
-    assert.equal(resolved.pillar.value, 'The Tetralogy & Operatic Worldbuilding');
+    assert.equal(resolved.audience.value, 'Cultural institutions');
+    assert.equal(resolved.pillar.value, 'Climate Tetralogy & Canon');
     assert.equal(resolved.purpose.value, 'Establish institutional credibility and curatorial relevance');
 
     // Suggested source matched by keywords ('nordic', 'programming'), NOT silently marked 'selected'

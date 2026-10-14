@@ -238,10 +238,10 @@ describe('COH-CS-04 Ideation 2.0 - Opportunity-Led, Evidence-Aware and Reuse-Awa
 
     assert.equal(handoff.advancedBriefPatch.topic, 'Institutional Value of The Golden Fountain');
     assert.equal(handoff.advancedBriefPatch.purpose, 'Establish institutional credibility');
-    assert.equal(handoff.advancedBriefPatch.audience, 'Strategic Partners');
+    assert.equal(handoff.advancedBriefPatch.audience, 'Cultural institutions');
     assert.equal(handoff.advancedBriefPatch.channel, 'LinkedIn');
     assert.equal(handoff.advancedBriefPatch.outputFormat, 'Thought Piece');
-    assert.equal(handoff.advancedBriefPatch.pillar, 'Institutional & Sponsor Value');
+    assert.equal(handoff.advancedBriefPatch.pillar, 'Partnerships, Sponsorship & Institutional Value');
     assert.deepEqual(handoff.advancedBriefPatch.selectedSourceIds, ['src-milestone-99']);
     assert.equal(handoff.restoredRoleMap['src-milestone-99'].role, 'Must-use Material');
     assert.equal(handoff.workContext.origin, 'Ideation Workspace');

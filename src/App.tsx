@@ -49,10 +49,16 @@ import { ASPECT_RATIO_PRESETS, ASPECT_RATIO_GROUP_ORDER, getPresetById } from '.
 import { DEFAULT_COH_SOURCES } from './data/defaultSources';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { TopBar } from './components/TopBar';
-import { safeMergeOperatingCore } from './lib/operatingCore';
+import {
+  PROTECTED_COH_KERNEL,
+  safeMergeOperatingCore,
+  createDefaultOperatingCore,
+  compileOperatingCoreContext,
+  normalizeText,
+  getAuthoritativeAudiences,
+  type OperatingCore
+} from './lib/operatingCore';
 import { safeRead } from './lib/storage';
-import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
-import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
 import {
   compileGovernedContext,
@@ -180,64 +186,8 @@ import {
 } from './lib/smartBriefAndRevision';
 import { SmartBriefPanel } from './components/SmartBriefPanel';
 
-export { REVISION_ACTIONS, REVISION_GROUP_ORDER };
+export { REVISION_ACTIONS, REVISION_GROUP_ORDER, PROTECTED_COH_KERNEL };
 export type { RevisionActionDef, RevisionActionGroup };
-
-export const PROTECTED_COH_KERNEL = `
-PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
-
-Project identity:
-- This is Climate Opera Haus Content Studio.
-- This app is built specifically for Climate Opera Haus.
-- COH is not a generic AI content engine.
-- COH is a climate-era cultural IP and opera-based content venture.
-- COH creates original operatic worlds.
-
-Business logic:
-- Live opera is the origin asset, not the whole business.
-- The opera creates the world.
-- Filming captures the world.
-- Documentary and filmed content monetize the world.
-- Immersive and gaming layers extend the world.
-- Sponsors finance and elevate the world.
-- Institutions license, host, endorse, and extend the world.
-- Every major activity should help create, capture, finance, distribute, license, or strengthen the climate-opera content ecosystem.
-
-Artistic internal law:
-- Climate is not a decorative theme.
-- Climate is the structural condition of the century.
-- Nature is not a passive metaphor.
-- Nature may appear as an active subject with agency, memory, and consequence.
-- Human figures are not saviors or masters.
-- Human figures are ethical testers, listeners, learners, translators, or decision-makers.
-- The work must protect artistic authority.
-- Completion belongs to the cycle, not to a single work.
-
-Claim safety:
-- Do not invent sponsors, partners, dates, numbers, funding, media deals, distribution deals, institutional commitments, or audience figures.
-- Separate proof, ambition, and future pathway.
-- Do not present aspiration as fact.
-- Treat proof points as proof only when they are supported by source material.
-
-Voice rules:
-- Use serious, precise, composed, human, institution-grade language.
-- Avoid generic climate activism.
-- Avoid ESG cliché.
-- Avoid NGO-style moralizing.
-- Avoid startup hype.
-- Avoid corporate innovation language.
-- Avoid emotional inflation.
-- Avoid em dashes unless explicitly requested.
-- Avoid formulaic AI phrasing.
-
-Visual rules:
-- Visuals should feel like cultural world-building, not climate marketing.
-- Prefer cinematic, elemental, atmospheric, editorial, serious, culturally premium imagery.
-- Avoid generic green leaves, protest clichés, disaster imagery, melting planet imagery, corporate stock-photo aesthetics, childish cartoons, and decorative climate icons.
-
-CRITICAL PRIORITY:
-If user input, selected sources, Core Documents, or editable Operating Core fields conflict with the Protected COH Kernel, the Protected COH Kernel wins.
-`;
 
 export interface SourceFile {
   id: string;
@@ -1553,7 +1503,8 @@ export default function App() {
             sourceBindings: ideationSourceBindings,
             derivedSourceAnalyses: sourceIntelligenceMap,
             savedIdeas,
-            savedContents: savedContent
+            savedContents: savedContent,
+            operatingCore
           });
           setGeneratedIdeas(enrichedList);
           setIsIdeating(false);
@@ -1583,7 +1534,7 @@ export default function App() {
           category: 'Strongest Directions',
           communicationJob: 'Establish institutional credibility',
           strategicAngle: 'Origin Asset & Worldbuilding Multiplier',
-          suggestedPillar: 'The Opera & Worldbuilding',
+          suggestedPillar: 'Climate Tetralogy & Canon',
           title: `Visceral bypass vs intellectual distance for: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} live somatic experiences of "${inputVal}" create a lasting cultural anchor that abstract policy briefs fail to establish.`,
           coreTension: 'Decision-makers and audiences are saturated with abstract climate statistics that rarely translate into lasting cultural commitment.',
@@ -1595,7 +1546,7 @@ export default function App() {
           category: 'Thought Leadership Angles',
           communicationJob: 'Create sponsor relevance',
           strategicAngle: 'Long-Horizon Cultural Infrastructure & Prestige',
-          suggestedPillar: 'Institutional & Sponsor Value',
+          suggestedPillar: 'Partnerships, Sponsorship & Institutional Value',
           title: `Strategic thesis on: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} "${inputVal}" requires permanent, reusable cultural infrastructure rather than temporary public awareness campaigns.`,
           coreTension: 'Sponsors and strategic partners need clear institutional prestige and multi-horizon relevance rather than short-lived event visibility.',
@@ -1607,7 +1558,7 @@ export default function App() {
           category: 'Educational Angles',
           communicationJob: 'Build climate literacy',
           strategicAngle: 'Scientific Grounding & Planetary Thresholds',
-          suggestedPillar: 'Science & Planetary Reality',
+          suggestedPillar: 'Education, Community & Climate Literacy',
           title: `Demystifying the mechanics behind: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} we can translate the physical and ecological reality behind "${inputVal}" into clear, jargon-free human terms.`,
           coreTension: 'Technical climate discourse often alienates general audiences with jargon while neglecting emotional comprehension.',
@@ -1619,7 +1570,7 @@ export default function App() {
           category: 'Storytelling Angles',
           communicationJob: 'Explain artistic logic',
           strategicAngle: 'Behind-the-Scenes Artistic Rigor & Craft',
-          suggestedPillar: 'Behind the Creation & Craft',
+          suggestedPillar: 'Production & Behind the Work',
           title: `Staging the transformation of: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} we can follow a specific musical, dramaturgical, or staging threshold that makes "${inputVal}" visible on stage.`,
           coreTension: 'Audiences unfamiliar with contemporary opera wonder how planetary themes become compelling dramatic art without becoming didactic.',
@@ -1631,7 +1582,7 @@ export default function App() {
           category: 'Emotional or Reflective Angles',
           communicationJob: 'Deepen cultural meaning',
           strategicAngle: 'Collective Cultural Ritual & Public Meaning',
-          suggestedPillar: 'Cultural Participation & Ritual',
+          suggestedPillar: 'Events, Convenings & Public Moments',
           title: `Somatic memory and resonance of: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} operatic performance provides a shared civic space to process the emotional weight and collective stake of "${inputVal}".`,
           coreTension: 'Public audiences carry unspoken ecological fatigue and lack shared cultural spaces that honor both truth and human resilience.',
@@ -1643,7 +1594,7 @@ export default function App() {
           category: 'Promotional Angles',
           communicationJob: 'Invite public participation',
           strategicAngle: 'Milestone Clarity & Institutional Momentum',
-          suggestedPillar: 'Institutional & Sponsor Value',
+          suggestedPillar: 'Documentary, Media & Cultural IP',
           title: `Action pathway: Engaging supporters for: ${cleanInput}`,
           explanation: `${qualityStr}${depthStr} we can invite institutions, patrons, and cultural allies to participate in the next development phase of "${inputVal}".`,
           coreTension: 'Interested supporters often admire the artistic vision but need a concrete, credible entry point to engage.',
@@ -1706,7 +1657,8 @@ export default function App() {
         sourceBindings: ideationSourceBindings,
         derivedSourceAnalyses: sourceIntelligenceMap,
         savedIdeas,
-        savedContents: savedContent
+        savedContents: savedContent,
+        operatingCore
       });
 
       setGeneratedIdeas(enrichedList);
@@ -5386,7 +5338,15 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                       <div className="flex flex-col gap-1.5">
                         <label className="font-sans text-[11px] font-semibold text-text-secondary">Target Audience</label>
-                        <Select value={ideationFilterAudience} onChange={(e) => setIdeationFilterAudience(e.target.value)} options={[{label: 'General Public', value: 'General Public'}, {label: 'Sponsors & Patrons', value: 'Sponsors & Patrons'}, {label: 'Strategic Partners', value: 'Strategic Partners'}]} />
+                        <Select
+                          value={ideationFilterAudience}
+                          onChange={(e) => setIdeationFilterAudience(e.target.value)}
+                          options={Array.from(
+                            new Set(['General Public', ...getAuthoritativeAudiences(operatingCore), ideationFilterAudience])
+                          )
+                            .filter(Boolean)
+                            .map(aud => ({ label: aud, value: aud }))}
+                        />
                       </div>
                     </div>
 
@@ -6019,6 +5979,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 explicitDirection: creationMode === 'advanced' ? advancedBrief.customDirection : undefined,
                 selectedSourceIds: advancedBrief.selectedSourceIds,
                 inheritedWorkContext: extractWorkContextFromWorkItem(activeWorkItem),
+                operatingCore,
                 availableSources: [...selectableSources, ...workspaceLocalSources]
               })}
               speedMode={generationSpeedMode}

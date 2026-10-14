@@ -10,6 +10,13 @@
  */
 
 import type { SourceTaskRole, TaskSourceBinding, WorkContext } from './contextCompiler.ts';
+import {
+  CANONICAL_COH_PILLARS,
+  getAuthoritativeAudiences,
+  normalizeCohPillar,
+  normalizeOperatingCoreAudience,
+  type OperatingCore
+} from './operatingCore.ts';
 import type { SourceIntelligenceAnalysis } from './sourceIntelligence.ts';
 
 export const COH_COMMUNICATION_JOBS = [
@@ -24,23 +31,13 @@ export const COH_COMMUNICATION_JOBS = [
 
 export type CommunicationJob = (typeof COH_COMMUNICATION_JOBS)[number] | string;
 
-export const COH_VALID_AUDIENCES = [
-  'General Public',
-  'Sponsors & Patrons',
-  'Strategic Partners',
-  'Cultural Institutions & Venues',
-  'Press & Media',
-  'Art & Opera Community',
-  'Climate & Sustainability Leaders'
-] as const;
+export const COH_VALID_AUDIENCES: readonly string[] = getAuthoritativeAudiences();
 
-export const COH_CONTENT_PILLARS = [
-  'The Opera & Worldbuilding',
-  'Science & Planetary Reality',
-  'Institutional & Sponsor Value',
-  'Behind the Creation & Craft',
-  'Cultural Participation & Ritual'
-] as const;
+export const COH_CONTENT_PILLARS = CANONICAL_COH_PILLARS;
+
+export function getValidIdeationAudiences(operatingCore?: OperatingCore | null): string[] {
+  return getAuthoritativeAudiences(operatingCore);
+}
 
 export type ReuseClassificationType =
   | 'New Ground'
@@ -484,7 +481,8 @@ export function evaluateOpportunityDiversity(proposals: IdeationOpportunityPropo
  */
 export function enforceOpportunityDiversity(
   proposals: IdeationOpportunityProposal[],
-  defaultAudience: string = 'General Public'
+  defaultAudience: string = 'General Public',
+  operatingCore?: OperatingCore | null
 ): IdeationOpportunityProposal[] {
   const usedJobs = new Set<string>();
   const strategicFrames = [
@@ -497,6 +495,10 @@ export function enforceOpportunityDiversity(
     'Milestone Clarity & Institutional Momentum'
   ];
 
+  const fallbackAudience =
+    normalizeOperatingCoreAudience(defaultAudience, operatingCore, { preserveExplicitGeneralPublic: true }) ||
+    defaultAudience;
+
   return proposals.map((proposal, idx) => {
     let job = proposal.communicationJob?.trim() || COH_COMMUNICATION_JOBS[idx % COH_COMMUNICATION_JOBS.length];
     if (usedJobs.has(job.toLowerCase()) && idx < COH_COMMUNICATION_JOBS.length) {
@@ -505,17 +507,19 @@ export function enforceOpportunityDiversity(
     }
     usedJobs.add(job.toLowerCase());
 
-    // Ensure audience is a legitimate COH audience (no Turbocharger customer segment leakage)
+    // Ensure audience is resolved from active Operating Core (no non-COH segment leakage)
     const rawAud = (proposal.suggestedAudience || defaultAudience).trim();
-    const isValidCohAudience = COH_VALID_AUDIENCES.some(
-      a => a.toLowerCase() === rawAud.toLowerCase() || rawAud.toLowerCase().includes(a.toLowerCase().split(' ')[0])
-    );
-    const safeAudience = isValidCohAudience ? rawAud : defaultAudience;
+    const normalizedAudience = normalizeOperatingCoreAudience(rawAud, operatingCore, {
+      preserveExplicitGeneralPublic: true
+    });
+    const safeAudience = normalizedAudience || fallbackAudience;
 
     const strategicAngle =
       proposal.strategicAngle?.trim() || strategicFrames[idx % strategicFrames.length];
-    const suggestedPillar =
-      proposal.suggestedPillar?.trim() || COH_CONTENT_PILLARS[idx % COH_CONTENT_PILLARS.length];
+    const suggestedPillar = normalizeCohPillar(
+      proposal.suggestedPillar,
+      CANONICAL_COH_PILLARS[idx % CANONICAL_COH_PILLARS.length]
+    );
 
     return {
       ...proposal,
@@ -603,6 +607,8 @@ export function buildIdeationToContentHandoff(params: {
       ? idea.availableEvidence.slice(0, 3).join('\n')
       : '';
 
+  const canonicalPillar = normalizeCohPillar(idea.suggestedPillar, 'Climate Tetralogy & Canon');
+
   const workContext: WorkContext = {
     origin: 'Ideation Workspace',
     originId: idea.id,
@@ -611,7 +617,7 @@ export function buildIdeationToContentHandoff(params: {
     audience: idea.suggestedAudience || 'General Public',
     channel: idea.suggestedChannel || 'LinkedIn',
     format: idea.suggestedFormat || 'Post',
-    pillar: idea.suggestedPillar || 'The Opera & Worldbuilding',
+    pillar: canonicalPillar,
     language: idea.language || 'English',
     strategicAngle: idea.strategicAngle || idea.category,
     evidenceNotes: [
@@ -640,7 +646,7 @@ export function buildIdeationToContentHandoff(params: {
       topic: idea.title,
       channel: idea.suggestedChannel || 'LinkedIn',
       audience: idea.suggestedAudience || 'General Public',
-      pillar: idea.suggestedPillar || 'The Opera & Worldbuilding',
+      pillar: canonicalPillar,
       purpose: idea.communicationJob || 'Establish institutional credibility',
       outputFormat: idea.suggestedFormat || 'Post',
       language: idea.language || 'English',
@@ -674,6 +680,7 @@ export function enrichAndDiversifyOpportunities(params: {
   derivedSourceAnalyses?: Record<string, SourceIntelligenceAnalysis>;
   savedIdeas: LibraryIdeaCandidate[];
   savedContents: LibraryContentCandidate[];
+  operatingCore?: OperatingCore | null;
 }): IdeationOpportunityProposal[] {
   const {
     rawProposals,
@@ -684,7 +691,8 @@ export function enrichAndDiversifyOpportunities(params: {
     sourceBindings,
     derivedSourceAnalyses,
     savedIdeas,
-    savedContents
+    savedContents,
+    operatingCore
   } = params;
 
   const sourceIds = sourceBindings.map(b => b.sourceId);
@@ -726,8 +734,10 @@ export function enrichAndDiversifyOpportunities(params: {
     const explanation = (item.explanation || '').replace(/\u2014/g, ' - ');
     const suggestedAudience = item.suggestedAudience || defaultAudience;
     const suggestedChannel = item.suggestedChannel || defaultChannel || 'LinkedIn';
-    const suggestedPillar =
-      item.suggestedPillar || COH_CONTENT_PILLARS[idx % COH_CONTENT_PILLARS.length];
+    const suggestedPillar = normalizeCohPillar(
+      item.suggestedPillar,
+      CANONICAL_COH_PILLARS[idx % CANONICAL_COH_PILLARS.length]
+    );
 
     const reuseOpportunity =
       item.reuseOpportunity && item.reuseOpportunity.classification
@@ -784,6 +794,6 @@ export function enrichAndDiversifyOpportunities(params: {
     };
   });
 
-  return enforceOpportunityDiversity(enriched, defaultAudience);
+  return enforceOpportunityDiversity(enriched, defaultAudience, operatingCore);
 }
 

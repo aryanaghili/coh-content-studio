@@ -1,4 +1,7 @@
-import type { OperatingCore } from './operatingCore.ts';
+import {
+  resolveOperatingCoreAudience,
+  type OperatingCore
+} from './operatingCore.ts';
 import {
   inferDefaultSourceRole,
   type ContextManifestSourceItem,
@@ -458,10 +461,15 @@ export function buildDeterministicSourceAnalysis(
     }
   }
   if (relevantAudiences.length === 0) {
-    if (source.type.includes('Sponsor')) relevantAudiences.push('Sponsors & Corporate Partners');
-    else if (source.type.includes('Partner')) relevantAudiences.push('Cultural Institutions & Venues');
-    else if (source.type.includes('Media') || source.type.includes('Article')) relevantAudiences.push('Press & Cultural Journalists');
-    else relevantAudiences.push('General Public & Cultural Citizens');
+    if (source.type.includes('Sponsor')) {
+      relevantAudiences.push(resolveOperatingCoreAudience('Sponsors and patrons', operatingCore));
+    } else if (source.type.includes('Partner')) {
+      relevantAudiences.push(resolveOperatingCoreAudience('Cultural institutions', operatingCore));
+    } else if (source.type.includes('Media') || source.type.includes('Article')) {
+      relevantAudiences.push(resolveOperatingCoreAudience('Press and journalists', operatingCore));
+    } else {
+      relevantAudiences.push(resolveOperatingCoreAudience('General cultural audience', operatingCore));
+    }
   }
 
   // Match COH Channels
@@ -488,13 +496,13 @@ export function buildDeterministicSourceAnalysis(
     relevantPillars.push('Climate Tetralogy & Canon');
   }
   if (lower.includes('resonance') || lower.includes('2027') || lower.includes('milestone') || lower.includes('event')) {
-    relevantPillars.push('RESONANCE 2027 & Milestones');
+    relevantPillars.push('Events, Convenings & Public Moments');
   }
   if (lower.includes('partner') || lower.includes('sponsor') || lower.includes('coalition') || lower.includes('institution')) {
-    relevantPillars.push('Partnerships & Coalition');
+    relevantPillars.push('Partnerships, Sponsorship & Institutional Value');
   }
   if (relevantPillars.length === 0) {
-    relevantPillars.push('Artistic Vision & Cultural World-Building');
+    relevantPillars.push('Opera Worlds & Artistic Method');
   }
 
   const strategicContext =
