@@ -488,8 +488,8 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
 
       <ContextManifestPanel manifest={contextPackage.manifest} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-        <div className="xl:col-span-5 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[440px_minmax(0,1fr)] gap-6 items-start">
+        <div className="min-w-0 space-y-4">
           <section className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
             <div className="px-4 py-3 border-b border-border-standard">
               <span className="text-[11px] font-semibold text-brand-gold">1. Source content</span>
@@ -805,7 +805,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
           </section>
         </div>
 
-        <div className="xl:col-span-7 space-y-4">
+        <div className="min-w-0 space-y-4">
           {generationError && (
             <div data-testid="reframe-error-banner" className="p-3 rounded-xl bg-status-error/10 border border-status-error/30 flex items-center justify-between gap-3">
               <div className="text-[10.5px] text-status-error"><strong>Reframing error.</strong> {generationError}</div>

@@ -107,6 +107,7 @@ export function RevisionStudio({
   const [customInstruction, setCustomInstruction] = useState('');
   const [selectedRecipeActions, setSelectedRecipeActions] = useState<string[]>([]);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [cleanNote, setCleanNote] = useState('');
 
   const inheritedWorkContext = useMemo(() => extractWorkContextFromWorkItem(activeWorkItem), [activeWorkItem]);
@@ -181,7 +182,7 @@ export function RevisionStudio({
   };
 
   const runRevisionRecipe = async (actionIdsToRun: string[]) => {
-    const baseText = state.revisionSource === 'original' ? state.originalDraft : state.currentDraft;
+    const baseText = state.revisionSource === 'original' && state.originalDraft ? state.originalDraft : state.currentDraft;
     if (state.isGenerating || !baseText.trim()) return;
 
     const recipe = compileRevisionRecipe(actionIdsToRun, {
@@ -257,13 +258,19 @@ export function RevisionStudio({
 
       if (customInstruction.trim()) setCustomInstruction('');
       const appliedLabel = `${actionLabel} | ${state.channel} | ${state.format} | ${state.targetLanguage}`;
-      setState(prev => ({
-        ...prev,
-        revisedOutput: revised,
-        appliedControls: appliedLabel,
-        isGenerating: false,
-        versionHistory: [...prev.versionHistory, { version: prev.versionHistory.length + 1, text: revised, timestamp: new Date().toLocaleTimeString(), actionUsed: appliedLabel }]
-      }));
+      setState(prev => {
+        const baseHistory = prev.versionHistory.length > 0
+          ? prev.versionHistory
+          : [{ version: 1, text: prev.originalDraft || baseText, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Original Draft' }];
+        return {
+          ...prev,
+          originalDraft: prev.originalDraft || baseText,
+          revisedOutput: revised,
+          appliedControls: appliedLabel,
+          isGenerating: false,
+          versionHistory: [...baseHistory, { version: baseHistory.length + 1, text: revised, timestamp: new Date().toLocaleTimeString(), actionUsed: appliedLabel }]
+        };
+      });
     } catch (err: any) {
       setState(prev => ({ ...prev, isGenerating: false, error: err.message || 'Error applying revision.' }));
     }
@@ -282,10 +289,38 @@ export function RevisionStudio({
   const handleClearDraft = () => { setSelectedRecipeActions([]); setState(prev => ({ ...prev, currentDraft: '', revisedOutput: '' })); };
   const handleUseAsCurrent = () => setState(prev => ({ ...prev, currentDraft: prev.revisedOutput, revisedOutput: '', settingsChangedAfterRevision: false }));
   const handleCopy = () => { navigator.clipboard.writeText(state.revisedOutput || state.currentDraft); setCopySuccess(true); setTimeout(() => setCopySuccess(false), 2000); };
-  const handleSaveAsNew = () => onSaveToLibrary({ id: `rev-${Date.now()}`, title: `${state.sourceTitle || 'Revision'} - ${new Date().toLocaleDateString()}`, type: 'Text', status: 'Draft', notes: state.appliedControls, content: state.revisedOutput || state.currentDraft, dateAdded: new Date().toISOString().split('T')[0] });
+  const handleSaveAsNew = () => {
+    const dateStr = new Date().toISOString().split('T')[0];
+    const copyText = state.revisedOutput || state.currentDraft;
+    const versionNum = Math.max(1, state.versionHistory.length);
+    const titleStr = `${state.sourceTitle || 'Revised Draft'} (v${versionNum})`;
+    onSaveToLibrary({
+      id: `rev-${Date.now()}`,
+      title: titleStr,
+      displayName: titleStr,
+      savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      channel: state.channel !== 'General / Custom' ? state.channel : (inheritedWorkContext?.channel || 'LinkedIn'),
+      outputFormat: state.format !== 'General / Custom' ? state.format : (inheritedWorkContext?.format || 'Post'),
+      pillar: inheritedWorkContext?.pillar || 'Artistic & Cultural Value',
+      angle: inheritedWorkContext?.strategicAngle || 'Editorial Revision',
+      audience: activeContextPackage.manifest.audience.value || inheritedWorkContext?.audience || 'General Public',
+      purpose: state.optionalContext || inheritedWorkContext?.communicationJob || 'Revision Studio Polish',
+      status: 'Revised',
+      sourcesUsed: inheritedWorkContext?.sourceBindings?.map((b: any) => b.sourceId) || [],
+      createdAt: dateStr,
+      lastEdited: dateStr,
+      text: copyText,
+      finalCopy: copyText,
+      notes: state.appliedControls || 'Saved from Revision Studio',
+      version: versionNum
+    });
+    setSaveSuccess(true);
+    setTimeout(() => setSaveSuccess(false), 2500);
+  };
 
   const selectedLabels = selectedRecipeActions.map(id => REVISION_ACTIONS.find(a => a.id === id)?.label || id);
   const canRun = Boolean(state.currentDraft.trim() && (selectedRecipeActions.length > 0 || customInstruction.trim()) && !compiledRecipe.hasBlockingConflict && !state.isGenerating);
+  const currentVersionNumber = Math.max(1, state.versionHistory.length);
 
   return (
     <div className="page-shell space-y-4" data-testid="revision-studio-root">
@@ -302,11 +337,22 @@ export function RevisionStudio({
 
       <ContextManifestPanel manifest={activeContextPackage.manifest} theme={theme} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-        <div className="xl:col-span-7 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">
+        <div className="min-w-0 space-y-4">
           <section className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
             <div className="px-4 py-3 border-b border-border-standard flex items-center justify-between gap-2">
-              <div><span className="text-[11px] font-semibold text-brand-gold">1. Draft</span><p className="text-[11px] text-text-muted mt-0.5">Paste, type, or use the draft carried from another workspace.</p></div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="text-[11px] font-semibold text-brand-gold">1. Draft</span>
+                {state.sourceTitle && (
+                  <span className="text-[10.5px] font-medium text-text-secondary bg-surface-inset px-2 py-0.5 rounded border border-border-standard">
+                    {state.sourceTitle}
+                  </span>
+                )}
+                <span data-testid="revision-version-badge" className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-brand-gold/10 text-brand-gold border border-brand-gold/25">
+                  v{currentVersionNumber}
+                </span>
+                <p className="text-[11px] text-text-muted w-full mt-0.5">Paste, type, or use the draft carried from another workspace.</p>
+              </div>
               <button onClick={handleClearDraft} className="text-[10.5px] text-text-muted hover:text-status-error">Clear</button>
             </div>
             <textarea data-testid="revision-draft-textarea" value={state.currentDraft} onChange={e => updateSetting('currentDraft', e.target.value)} placeholder="Paste or type content here to revise..." className="w-full min-h-[320px] p-5 bg-surface-primary border-0 resize-y focus:ring-0 focus:outline-none text-[14px] leading-relaxed text-text-primary" dir={getLanguageDirection(state.currentDraft.slice(0, 100))} />
@@ -315,19 +361,81 @@ export function RevisionStudio({
           {state.revisedOutput && (
             <section data-testid="revision-output-panel" className="bg-surface-primary border border-brand-gold/35 rounded-xl shadow-level-1 overflow-hidden">
               <div className="px-4 py-3 border-b border-border-standard flex flex-wrap items-center justify-between gap-2 bg-brand-gold/5">
-                <div><span className="text-[11px] font-semibold text-brand-gold inline-flex items-center gap-1.5"><CheckCircle2 size={13} /> 3. Revised Result</span><div data-testid="revision-applied-controls" className="text-[10px] text-text-muted mt-0.5">{state.appliedControls}</div></div>
+                <div>
+                  <span className="text-[11px] font-semibold text-brand-gold inline-flex items-center gap-1.5">
+                    <CheckCircle2 size={13} /> 3. Revised Result (v{currentVersionNumber})
+                  </span>
+                  <div data-testid="revision-applied-controls" className="text-[10px] text-text-muted mt-0.5">{state.appliedControls}</div>
+                </div>
                 <div className="flex gap-2">
                   <button data-testid="revision-copy-btn" onClick={handleCopy} className="h-8 px-2.5 rounded-lg border border-border-standard bg-surface-primary text-[10.5px] text-text-secondary inline-flex items-center gap-1"><Copy size={11} /> {copySuccess ? 'Copied' : 'Copy'}</button>
                   <button data-testid="revision-use-as-draft-btn" onClick={handleUseAsCurrent} className="h-8 px-2.5 rounded-lg bg-brand-gold text-text-inverse text-[10.5px] font-semibold">Use as Draft</button>
                 </div>
               </div>
               <div data-testid="revision-output-text" className="p-5 min-h-[220px] text-[14px] leading-relaxed text-text-primary whitespace-pre-wrap" dir={getLanguageDirection(state.targetLanguage)}>{state.revisedOutput}</div>
-              <div className="px-4 py-3 border-t border-border-standard"><Button data-testid="revision-save-new-btn" onClick={handleSaveAsNew} variant="outline" className="text-xs"><Save size={13} className="mr-1.5 inline" /> Save as New</Button></div>
+              <div className="px-4 py-3 border-t border-border-standard flex items-center justify-between gap-3">
+                <Button data-testid="revision-save-new-btn" onClick={handleSaveAsNew} variant="outline" className="text-xs">
+                  <Save size={13} className="mr-1.5 inline" /> {saveSuccess ? 'Saved to Content Library' : 'Save as New'}
+                </Button>
+                {saveSuccess && (
+                  <span data-testid="revision-save-toast" className="text-[11px] font-semibold text-status-success">
+                    Saved v{currentVersionNumber} to Content Library
+                  </span>
+                )}
+              </div>
             </section>
+          )}
+
+          {(state.originalDraft || state.versionHistory.length > 1) && (
+            <details data-testid="revision-version-history" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
+              <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-2 text-[11.5px] font-semibold text-text-primary">
+                <span>Original Draft &amp; Version History ({state.versionHistory.length} {state.versionHistory.length === 1 ? 'version' : 'versions'})</span>
+                <ChevronDown size={13} className="text-text-muted" />
+              </summary>
+              <div className="border-t border-border-standard p-4 space-y-3">
+                {state.originalDraft && (
+                  <div className="p-3 rounded-lg bg-surface-inset border border-border-standard space-y-1.5" data-testid="revision-original-draft-box">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10.5px] font-semibold text-brand-gold uppercase tracking-wider font-mono">Original Imported Draft (v1)</span>
+                      <button
+                        type="button"
+                        data-testid="restore-original-draft-btn"
+                        onClick={() => setState(prev => ({ ...prev, currentDraft: prev.originalDraft }))}
+                        className="text-[10.5px] text-brand-gold hover:underline font-medium"
+                      >
+                        Load into Editor
+                      </button>
+                    </div>
+                    <p className="text-xs text-text-secondary whitespace-pre-wrap line-clamp-4">{state.originalDraft}</p>
+                  </div>
+                )}
+                {state.versionHistory.length > 1 && (
+                  <div className="space-y-2">
+                    {state.versionHistory.map(ver => (
+                      <div key={ver.version} className="p-2.5 rounded-lg bg-surface-inset/60 border border-border-standard flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="text-[10.5px] font-semibold text-text-primary">
+                            v{ver.version} — <span className="text-text-secondary font-normal">{ver.actionUsed}</span> <span className="text-text-muted font-mono text-[9.5px]">({ver.timestamp})</span>
+                          </div>
+                          <p className="text-[11px] text-text-secondary mt-1 line-clamp-2 whitespace-pre-wrap">{ver.text}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setState(prev => ({ ...prev, currentDraft: ver.text }))}
+                          className="shrink-0 text-[10px] px-2 py-1 rounded border border-border-standard bg-surface-primary text-text-secondary hover:text-text-primary"
+                        >
+                          Use v{ver.version}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </details>
           )}
         </div>
 
-        <div className="xl:col-span-5 space-y-4">
+        <div className="min-w-0 space-y-4">
           <section className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-4 space-y-3" data-testid="revision-recipe-panel">
             <div>
               <span className="text-[11px] font-semibold text-brand-gold">2. What should change?</span>
@@ -335,7 +443,7 @@ export function RevisionStudio({
             </div>
 
             {state.currentDraft.trim() && suggestedActions.length > 0 && (
-              <div data-testid="suggested-revision-actions" className="grid grid-cols-1 sm:grid-cols-3 xl:grid-cols-1 gap-2">
+              <div data-testid="suggested-revision-actions" className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-2">
                 {suggestedActions.slice(0, 3).map(sug => {
                   const inRecipe = selectedRecipeActions.includes(sug.actionId);
                   return (
@@ -352,7 +460,7 @@ export function RevisionStudio({
               <label className="text-[10.5px] font-semibold text-text-secondary">Or describe the revision</label>
               <div className="mt-1.5 flex gap-2">
                 <input data-testid="revision-custom-instruction-input" value={customInstruction} onChange={e => setCustomInstruction(e.target.value)} onKeyDown={e => e.key === 'Enter' && canRun && runRevision('custom-instruction')} placeholder="e.g. Make this 25% shorter and more institutional" className="flex-1 bg-surface-inset border border-border-standard px-3 py-2 rounded-lg text-xs text-text-primary" />
-                <button data-testid="revision-custom-instruction-btn" onClick={() => runRevision('custom-instruction')} disabled={!customInstruction.trim() || state.isGenerating || !state.currentDraft.trim()} className="h-9 w-9 rounded-lg bg-surface-inset border border-border-standard text-brand-gold disabled:opacity-40 flex items-center justify-center"><Wand2 size={14} /></button>
+                <button data-testid="revision-custom-instruction-btn" aria-label="Apply custom revision instruction" onClick={() => runRevision('custom-instruction')} disabled={!customInstruction.trim() || state.isGenerating || !state.currentDraft.trim()} className="h-9 w-9 rounded-lg bg-surface-inset border border-border-standard text-brand-gold disabled:opacity-40 flex items-center justify-center"><Wand2 size={14} /></button>
               </div>
             </div>
 
@@ -401,7 +509,7 @@ export function RevisionStudio({
                       <div className="border-t border-border-standard p-2 space-y-1.5">
                         {actions.map(action => {
                           const inRecipe = selectedRecipeActions.includes(action.id);
-                          return <div key={action.id} className="flex gap-1.5"><button data-testid={`recipe-toggle-${action.id}`} type="button" onClick={() => toggleRecipeAction(action.id)} className={`w-8 h-8 rounded-md border flex items-center justify-center ${inRecipe ? 'bg-brand-gold text-text-inverse border-brand-gold' : 'bg-surface-primary border-border-standard text-text-secondary'}`}>{inRecipe ? <Check size={12} /> : <Plus size={12} />}</button><button data-testid={`run-action-${action.id}`} type="button" onClick={() => runRevision(action.id)} disabled={state.isGenerating || !state.currentDraft.trim()} className="flex-1 text-left px-3 py-1.5 rounded-md text-[10.5px] bg-surface-primary border border-border-standard text-text-primary hover:border-brand-gold disabled:opacity-40">{action.label}</button></div>;
+                          return <div key={action.id} className="flex gap-1.5"><button data-testid={`recipe-toggle-${action.id}`} aria-label={inRecipe ? `Remove ${action.label} from recipe` : `Add ${action.label} to recipe`} type="button" onClick={() => toggleRecipeAction(action.id)} className={`w-8 h-8 rounded-md border flex items-center justify-center ${inRecipe ? 'bg-brand-gold text-text-inverse border-brand-gold' : 'bg-surface-primary border-border-standard text-text-secondary'}`}>{inRecipe ? <Check size={12} /> : <Plus size={12} />}</button><button data-testid={`run-action-${action.id}`} type="button" onClick={() => runRevision(action.id)} disabled={state.isGenerating || !state.currentDraft.trim()} className="flex-1 text-left px-3 py-1.5 rounded-md text-[10.5px] bg-surface-primary border border-border-standard text-text-primary hover:border-brand-gold disabled:opacity-40">{action.label}</button></div>;
                         })}
                       </div>
                     </details>

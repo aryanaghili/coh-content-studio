@@ -362,6 +362,8 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   // Advanced settings panel state
   const [showAdvancedSettings, setShowAdvancedSettings] = useState<boolean>(false);
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
+  const [selectedRegenWeek, setSelectedRegenWeek] = useState<number>(2);
+  const [selectedRegenChannel, setSelectedRegenChannel] = useState<string>(defaultCycle.activeChannels[0] || CHANNELS[0]);
 
   useEffect(() => {
     if (initialCalendar) {
@@ -427,15 +429,14 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
     } else if (mode === 'Regenerate Weak Items Only') {
       protectedItems = items.filter(i => i.riskLevel !== 'High' && i.riskLevel !== 'Medium' && i.sourceBasis !== 'Needs validation');
     } else if (mode === 'Regenerate Selected Week') {
-      const weekStr = window.prompt("Which week number (1-5) would you like to regenerate?", "2");
-      const targetWeek = parseInt(weekStr || "2");
+      const targetWeek = selectedRegenWeek || 2;
       protectedItems = items.filter(i => {
          const d = new Date(i.date);
          const w = Math.ceil(d.getDate() / 7);
          return w !== targetWeek;
       });
     } else if (mode === 'Regenerate Selected Channel') {
-      const targetChannel = window.prompt(`Which channel to regenerate? (${cycle.activeChannels.join(', ')})`, cycle.activeChannels[0]);
+      const targetChannel = selectedRegenChannel || cycle.activeChannels[0] || CHANNELS[0];
       protectedItems = items.filter(i => i.channel.toLowerCase() !== (targetChannel || '').toLowerCase());
     } else {
       protectedItems = items.filter(i => i.isProtected || i.status === 'Approved' || i.status === 'Draft Handoff' || i.status === 'Drafted');
@@ -1043,9 +1044,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
   };
 
   return (
-    <div className="h-full flex flex-col bg-transparent">
+    <div className="page-shell pb-12">
       {/* Header & Action Bar */}
-      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-level-1 mb-5">
+      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shrink-0 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-level-1">
         <div>
           <h2 className="page-title">
             Editorial Calendar Studio
@@ -1210,8 +1211,10 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                   {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
                 </Button>
                 
-                <div className="relative">
+                <div className="flex flex-wrap items-center gap-2">
                   <select 
+                    data-testid="calendar-specific-regen-select"
+                    aria-label="Specific regeneration action"
                     className="h-9 bg-surface-inset border border-border-standard text-text-primary text-xs font-medium px-3 py-1.5 rounded-lg outline-none cursor-pointer hover:border-border-strong focus:ring-2 focus:ring-focus-ring transition-all"
                     onChange={(e) => {
                       if (e.target.value) {
@@ -1226,10 +1229,30 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                     <option value="Generate New Version">Generate New Version</option>
                     <option value="Regenerate All Items">Regenerate All Items</option>
                     <option value="Regenerate Weak Items Only">Regenerate Weak Items Only</option>
-                    <option value="Regenerate Selected Week">Regenerate Selected Week</option>
-                    <option value="Regenerate Selected Channel">Regenerate Selected Channel</option>
+                    <option value="Regenerate Selected Week">Regenerate Selected Week (Week {selectedRegenWeek})</option>
+                    <option value="Regenerate Selected Channel">Regenerate Selected Channel ({selectedRegenChannel})</option>
                     <option value="Generate Alternative Angle">Generate Alternative Angle</option>
                     <option value="Preserve Approved Items and Regenerate the Rest">Preserve Approved and Manual Items</option>
+                  </select>
+                  <select
+                    data-testid="calendar-regen-week-select"
+                    aria-label="Target week for regeneration"
+                    value={selectedRegenWeek}
+                    onChange={(e) => setSelectedRegenWeek(Number(e.target.value))}
+                    className="h-9 bg-surface-inset border border-border-standard text-text-secondary text-[11px] font-medium px-2.5 py-1.5 rounded-lg outline-none cursor-pointer hover:border-border-strong"
+                    title="Target week for 'Regenerate Selected Week'"
+                  >
+                    {[1, 2, 3, 4, 5].map(w => <option key={w} value={w}>Week {w}</option>)}
+                  </select>
+                  <select
+                    data-testid="calendar-regen-channel-select"
+                    aria-label="Target channel for regeneration"
+                    value={selectedRegenChannel}
+                    onChange={(e) => setSelectedRegenChannel(e.target.value)}
+                    className="h-9 bg-surface-inset border border-border-standard text-text-secondary text-[11px] font-medium px-2.5 py-1.5 rounded-lg outline-none cursor-pointer hover:border-border-strong"
+                    title="Target channel for 'Regenerate Selected Channel'"
+                  >
+                    {(cycle.activeChannels.length > 0 ? cycle.activeChannels : CHANNELS).map(ch => <option key={ch} value={ch}>{ch}</option>)}
                   </select>
                 </div>
               </div>
@@ -1240,9 +1263,9 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start flex-1 min-h-0">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px] gap-5 items-start flex-1 min-h-0">
             {/* Calendar Canvas Panel */}
-            <div className="col-span-1 lg:col-span-8 flex flex-col h-full gap-5">
+            <div className="min-w-0 flex flex-col h-full gap-5">
               {/* Monthly Editorial Arc */}
               {arc && items.length > 0 && (
                 <div className="bg-surface-primary border border-brand-gold/35 p-5 rounded-xl shadow-level-1 shrink-0">
@@ -1283,8 +1306,8 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                 <div className="border-b border-border-standard px-5 py-3.5 bg-surface-inset/70 flex justify-between items-center shrink-0">
                   <h3 className="font-sans text-base font-semibold text-text-primary">Calendar Canvas</h3>
                   <div className="flex gap-1 bg-surface-primary border border-border-standard rounded-lg p-0.5">
-                    <button onClick={() => setViewMode('List')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'List' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={15} /></button>
-                    <button onClick={() => setViewMode('Month')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'Month' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={15} /></button>
+                    <button aria-label="List view" onClick={() => setViewMode('List')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'List' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><LayoutList size={15} /></button>
+                    <button aria-label="Month calendar view" onClick={() => setViewMode('Month')} className={`p-1.5 rounded-md transition-colors ${viewMode === 'Month' ? 'bg-brand-gold text-text-inverse shadow-xs' : 'text-text-secondary hover:text-text-primary'}`}><Calendar size={15} /></button>
                   </div>
                 </div>
 
@@ -1321,7 +1344,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
                             </div>
                           </div>
 
-                          <button className="p-1.5 text-text-muted group-hover:text-brand-gold bg-surface-inset rounded-lg transition" onClick={(e) => { e.stopPropagation(); setSelectedItem(item); setValidationResult(null); }}>
+                          <button aria-label={`Inspect ${item.title}`} className="p-1.5 text-text-muted group-hover:text-brand-gold bg-surface-inset rounded-lg transition" onClick={(e) => { e.stopPropagation(); setSelectedItem(item); setValidationResult(null); }}>
                             <ChevronRight size={18} />
                           </button>
                         </div>
@@ -1333,7 +1356,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {/* Review Panel */}
-            <div className="col-span-1 lg:col-span-4 space-y-5 lg:overflow-y-auto pb-6 lg:max-h-full">
+            <div className="min-w-0 space-y-5 lg:overflow-y-auto pb-6 lg:max-h-full">
               <div className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-5 sticky top-0">
                 <h3 className="font-sans text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
                   <CheckCircle2 size={17} className="text-brand-gold" /> Calendar Review
@@ -1392,7 +1415,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               <h3 className="font-sans text-base font-semibold flex items-center gap-2">
                 <FileText size={17} className="text-brand-gold"/> Calendar Item Details
               </h3>
-              <button onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="text-text-secondary hover:text-text-primary transition"><X size={18} /></button>
+              <button aria-label="Close calendar item details" onClick={() => { setSelectedItem(null); setValidationResult(null); }} className="text-text-secondary hover:text-text-primary transition"><X size={18} /></button>
             </div>
             
             <div className="p-4 md:p-6 overflow-y-auto flex-1 text-sm space-y-6">

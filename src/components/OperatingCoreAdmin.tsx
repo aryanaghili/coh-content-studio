@@ -182,7 +182,7 @@ export default function OperatingCoreAdmin({
 
   if (!isUnlocked) {
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[60vh]">
+      <div className="page-shell items-center justify-center h-full min-h-[60vh]">
         <div className="bg-surface-primary border border-border-strong p-8 rounded-[20px] shadow-2xl max-w-md w-full text-center">
           <Lock className="mx-auto mb-4 text-brand-gold" size={48} />
           <h2 className="text-xl font-sans text-text-primary mb-2">Operating Core Locked</h2>
@@ -259,16 +259,16 @@ export default function OperatingCoreAdmin({
   const completeness = getCompleteness();
 
   return (
-    <div className="space-y-6 animate-fadeIn pb-24">
+    <div className="page-shell animate-fadeIn pb-16">
       {/* Header */}
-      <div className="border-b border-border-standard pb-6 flex justify-between items-start">
-        <div className="mb-6">
+      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shadow-level-1 flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
           <h2 className="page-title">Operating Core</h2>
           <p className="page-subtitle">
             The single source of truth for strategy, audience, voice, visual DNA, and guardrails across all workspaces.
           </p>
         </div>
-        <div className="flex flex-col items-end gap-3">
+        <div className="flex flex-col md:items-end gap-2.5 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-xs font-semibold text-text-secondary">Core Status:</span>
             <button
@@ -280,7 +280,7 @@ export default function OperatingCoreAdmin({
               {draftCore.active ? 'ACTIVE' : 'INACTIVE'}
             </button>
           </div>
-          <div className="flex items-center gap-2 bg-violet-600/10 px-3 py-2 rounded border border-border-strong text-xs text-text-primary font-mono mt-2 mb-2 w-fit">
+          <div className="flex items-center gap-2 bg-violet-600/10 px-3 py-1.5 rounded border border-border-strong text-xs text-text-primary font-mono w-fit">
             <Lock size={14} className="text-brand-gold"/> <span className="font-bold uppercase">Protected COH Kernel:</span> <span className="text-green-700 font-bold">ALWAYS ON</span>
           </div>
           <div className="flex gap-2">
@@ -295,10 +295,10 @@ export default function OperatingCoreAdmin({
         </div>
       </div>
 
-      <div className="flex gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] gap-6 items-start">
         {/* Sidebar Tabs */}
-        <div className="w-1/4 space-y-1">
-          <div className="mb-4 p-3 bg-violet-600/5 rounded border border-border-standard text-xs">
+        <div className="min-w-0 space-y-1">
+          <div className="mb-4 p-3 bg-surface-primary rounded-xl border border-border-standard text-xs shadow-level-1">
             <h4 className="font-bold text-text-primary mb-2 border-b border-border-standard pb-1">Completeness</h4>
             <ul className="space-y-1 font-mono text-[9px]">
               <li className="flex justify-between"><span>Core Passport</span><span className={completeness.passport === 'Strong' ? 'text-green-600' : 'text-red-500'}>{completeness.passport}</span></li>
@@ -325,7 +325,7 @@ export default function OperatingCoreAdmin({
         </div>
 
         {/* Content Area */}
-        <div className="w-3/4 bg-surface-primary p-6 rounded shadow-sm border border-border-standard h-[600px] overflow-y-auto">
+        <div className="min-w-0 bg-surface-primary p-6 rounded-xl shadow-level-1 border border-border-standard min-h-[600px]">
           {/* CORE PASSPORT */}
           {activeTab === 'passport' && (
             <div className="space-y-6">
@@ -680,7 +680,7 @@ export default function OperatingCoreAdmin({
           {/* CORE SOURCES */}
           {activeTab === 'evidence' && (
             <div className="space-y-6">
-              <div className="flex justify-between items-center border-b border-border-standard pb-2 mb-4">
+              <div className="flex flex-wrap justify-between items-center gap-3 border-b border-border-standard pb-2 mb-4">
                 <h3 className="font-sans text-xl font-bold text-text-primary">Core Documents</h3>
 {dbStatus === 'local_only' ? (
               <div className="bg-status-error/10 border border-status-error/20 text-status-error text-xs p-3 rounded mb-4 flex items-center gap-2">
@@ -769,7 +769,7 @@ export default function OperatingCoreAdmin({
     }
     setOperatingCoreDocuments(operatingCoreDocuments.filter(d => d.id !== doc.id));
     
-                        }} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
+                        }} aria-label={`Delete document ${doc.title || ''}`} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={16}/></button>
                       </div>
                       
                       <div className="p-4 grid grid-cols-2 gap-4">

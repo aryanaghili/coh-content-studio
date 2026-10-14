@@ -111,6 +111,7 @@ export function TopBar({
               onClick={() => onThemeToggle('light')}
               className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'light' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Light Mode"
+              aria-label="Light Mode"
             >
               <Sun size={13} />
             </button>
@@ -118,6 +119,7 @@ export function TopBar({
               onClick={() => onThemeToggle('dark')}
               className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'dark' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Dark Mode"
+              aria-label="Dark Mode"
             >
               <Moon size={13} />
             </button>

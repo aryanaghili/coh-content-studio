@@ -603,11 +603,22 @@ export default function App() {
   };
   const [calendarToLoad, setCalendarToLoad] = useState<SavedCalendar | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isRenamingWorkItem, setIsRenamingWorkItem] = useState(false);
+  const [workItemRenameInput, setWorkItemRenameInput] = useState('');
   const [theme, setTheme] = useState<'light' | 'dark'>((localStorage.getItem('coh-theme') as 'light' | 'dark') || 'light');
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('coh-theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsMobileMenuOpen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
 
   const getPageTitle = () => {
     switch(activeTab) {
@@ -618,14 +629,16 @@ export default function App() {
       case 'content-workspace': return 'Content Workspace';
       case 'editorial-calendar': return 'Editorial Calendar';
       case 'visual-studio': return 'Visual Studio';
+      case 'calendar-library': return 'Calendar Library';
       case 'source-library': return 'Source Library';
       case 'idea-library': return 'Idea Library';
       case 'content-library': return 'Content Library';
       case 'create': return 'Create Content';
-      case 'calendars': return 'Calendars';
+      case 'calendars': return 'Calendar Library';
       case 'library': return 'Content Library';
       case 'sources': return 'Source Material';
-      case 'operating-core': return 'Operating Core Settings';
+      case 'operating-core': return 'Operating Core';
+      case 'settings': return 'Settings';
       default: return 'Content Studio';
     }
   };
@@ -4864,7 +4877,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         <div className="font-sans text-lg font-bold tracking-tight text-text-primary">
           Climate Opera Haus
         </div>
-        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 -mr-2 text-brand-gold hover:text-text-primary">
+        <button aria-label="Open navigation menu" onClick={() => setIsMobileMenuOpen(true)} className="p-2.5 -mr-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-brand-gold hover:text-text-primary">
           <Menu size={24} />
         </button>
       </div>
@@ -4876,7 +4889,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
       />
       <aside className={`fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 md:relative md:translate-x-0 w-[252px] max-w-[85vw] border-r border-white/10 bg-sidebar-bg text-white flex flex-col justify-between p-5 shrink-0 overflow-y-auto ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Mobile close button */}
-        <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-4 right-4 p-2 text-brand-gold hover:text-white">
+        <button aria-label="Close navigation menu" onClick={() => setIsMobileMenuOpen(false)} className="md:hidden absolute top-3 right-3 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-brand-gold hover:text-white">
           <X size={22} />
         </button>
         <div>
@@ -5087,39 +5100,36 @@ WRITING CLEANLINESS RULES (CRITICAL):
             handleCopyIdeaToWorkspace(idea);
           }}
         />
-        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6 flex flex-col min-w-0">
+        <main className="app-main page-content flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6 flex flex-col min-w-0">
         
         {/* --- TAB 1: COMMAND CENTER --- */}
         
         {activeTab === 'operating-core' && (<ErrorBoundary fallbackTitle="Operating Core Error">
-          <div className="h-full overflow-hidden bg-transparent">
-            <OperatingCoreAdmin 
-              dbStatus={dbStatus}
-              core={operatingCore} 
-              sourceLibrary={[...workspaceLocalSources, ...sources]}
-              onSave={(newCore) => {
-                setOperatingCore(newCore);
-              }}
-              onReset={() => {
-                const defaultCore = createDefaultOperatingCore();
-                setOperatingCore(defaultCore);
-              }}
-              onAddNewCoreSource={(section) => {
-                setActiveTab('source-library');
-                setNewSource({
-                  ...newSource,
-                  
-                  selectable: true,
-                  status: 'Active',
-                  title: '', type: 'Other',  notes: '', content: '', url: ''
-                });
-              }}
-              onLinkExistingSource={() => {
-                setActiveTab('source-library');
-              }}
-            />
-          </div>
-        
+          <OperatingCoreAdmin 
+            dbStatus={dbStatus}
+            core={operatingCore} 
+            sourceLibrary={[...workspaceLocalSources, ...sources]}
+            onSave={(newCore) => {
+              setOperatingCore(newCore);
+            }}
+            onReset={() => {
+              const defaultCore = createDefaultOperatingCore();
+              setOperatingCore(defaultCore);
+            }}
+            onAddNewCoreSource={(section) => {
+              setActiveTab('source-library');
+              setNewSource({
+                ...newSource,
+                
+                selectable: true,
+                status: 'Active',
+                title: '', type: 'Other',  notes: '', content: '', url: ''
+              });
+            }}
+            onLinkExistingSource={() => {
+              setActiveTab('source-library');
+            }}
+          />
 </ErrorBoundary>)}
                 {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="page-shell">
@@ -5172,9 +5182,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
               {/* Input Form Column (Left) */}
-              <div className="col-span-1 lg:col-span-4 flex flex-col gap-5">
+              <div className="min-w-0 flex flex-col gap-5">
                 <Card className="shadow-level-1 border-border-standard">
                   <CardHeader className="pb-4 border-b border-border-standard">
                     <CardTitle className="text-lg">New Exploration</CardTitle>
@@ -5364,7 +5374,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Ideas Display (Right) */}
-              <div className="col-span-1 lg:col-span-8 flex flex-col gap-6">
+              <div className="min-w-0 flex flex-col gap-6">
                 {generatedIdeas.length > 0 ? (
                   <div className="flex flex-col gap-6">
                     {/* Strategic Diversity & Evidence Summary Strip */}
@@ -5403,7 +5413,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                                   {cat}
                                 </h3>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
                                   {generatedIdeas
                                     .filter(idea => idea.category === cat)
                                     .map(idea => (
@@ -5467,7 +5477,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 mb-5">
+            <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1">
               <h2 className="page-title">Idea Library</h2>
               <p className="page-subtitle">
                 Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
@@ -5476,7 +5486,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* List of saved ideas */}
             {savedIdeas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
                 {savedIdeas.map(idea => (
                   <div key={idea.id} className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col justify-between gap-4">
                     <div className="space-y-3">
@@ -5569,7 +5579,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-gold block mb-1">Editorial Command</span>
                 <h2 className="font-sans text-xl md:text-2xl font-semibold text-text-primary tracking-tight">What are you working on today?</h2>
               </div>
-              <div className="flex flex-col md:flex-row gap-2.5">
+              <div className="flex flex-col lg:flex-row gap-2.5">
                 <input 
                   type="text" 
                   placeholder="e.g. 'Write a LinkedIn post about our new climate initiative...'"
@@ -5609,10 +5619,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
               
-              {/* Left Column (2/3 width) */}
-              <div className="lg:col-span-2 space-y-6">
+              {/* Left Column */}
+              <div className="min-w-0 space-y-6">
                 
                 {/* Active Work / Needs Attention */}
                 <div className="flex flex-col gap-4">
@@ -5829,19 +5839,60 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 <div className="flex flex-col gap-2 items-end">
+                  {isRenamingWorkItem ? (
+                    <div className="flex items-center gap-2" data-testid="work-item-inline-rename">
+                      <input
+                        type="text"
+                        aria-label="New work item title"
+                        data-testid="work-item-rename-input"
+                        value={workItemRenameInput}
+                        onChange={(e) => setWorkItemRenameInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && workItemRenameInput.trim()) {
+                            setActiveWorkItem(prev => prev ? { ...prev, title: workItemRenameInput.trim(), updatedAt: new Date().toISOString() } : null);
+                            setIsRenamingWorkItem(false);
+                          } else if (e.key === 'Escape') {
+                            setIsRenamingWorkItem(false);
+                          }
+                        }}
+                        className="h-8 px-2.5 bg-surface-inset border border-border-standard rounded-lg text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-focus-ring"
+                      />
+                      <button
+                        type="button"
+                        data-testid="work-item-rename-save-btn"
+                        onClick={() => {
+                          if (workItemRenameInput.trim()) {
+                            setActiveWorkItem(prev => prev ? { ...prev, title: workItemRenameInput.trim(), updatedAt: new Date().toISOString() } : null);
+                          }
+                          setIsRenamingWorkItem(false);
+                        }}
+                        className="h-8 px-2.5 bg-brand-gold text-text-inverse rounded-lg text-[11px] font-semibold"
+                      >
+                        Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsRenamingWorkItem(false)}
+                        className="h-8 px-2 bg-surface-inset border border-border-standard rounded-lg text-[11px] text-text-secondary"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      data-testid="work-item-rename-btn"
+                      onClick={() => {
+                        setWorkItemRenameInput(activeWorkItem?.title || 'Standalone Draft');
+                        setIsRenamingWorkItem(true);
+                      }}
+                      className="text-[11px] text-text-primary underline font-semibold interactive-button"
+                    >
+                      Rename Work Item
+                    </button>
+                  )}
                   <button
-                    onClick={() => {
-                      const title = prompt("Rename Work Item:", (activeWorkItem?.title || 'Standalone Draft'));
-                      if (title && title.trim()) {
-                        setActiveWorkItem(prev => prev ? { ...prev, title: title.trim(), updatedAt: new Date().toISOString() } : null);
-                      }
-                    }}
-                    className="text-[11px] text-text-primary underline font-semibold interactive-button"
-                  >
-                    Rename Work Item
-                  </button>
-                  <button
-                    onClick={() => setActiveWorkItem(null)}
+                    onClick={() => { setIsRenamingWorkItem(false); setActiveWorkItem(null); }}
                     className="text-[11px] text-text-secondary hover:text-status-error underline font-semibold interactive-button mt-1"
                   >
                     Clear Workspace
@@ -5849,7 +5900,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
               </div>
             ) : (
-              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+              <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 flex flex-col lg:flex-row flex-wrap justify-between items-start lg:items-center gap-4">
                 <div>
                   <div className="flex items-center gap-3">
                     <h2 className="page-title">Content Workspace</h2>
@@ -5861,7 +5912,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
                 
                 {/* Mode Toggle Button Group */}
-                <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard shrink-0">
+                <div className="flex flex-wrap bg-surface-inset p-1 rounded-lg border border-border-standard shrink-0">
                   <button
                     onClick={() => setCreationMode('simple')}
                     className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
@@ -6130,10 +6181,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {/* Three Panel Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[440px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
               
               {/* PANEL 1: BRIEF */}
-              <div className="col-span-1 lg:col-span-4 card-level-1 p-5 border border-border-standard space-y-4 text-xs">
+              <div className="min-w-0 card-level-1 p-5 border border-border-standard space-y-4 text-xs">
                 
                 {creationMode === 'simple' ? (
                   <div className="space-y-4">
@@ -7168,7 +7219,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="col-span-1 lg:col-span-8 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
+              <div className="min-w-0 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
                 
                 <div className="border-b border-border-standard pb-2 flex justify-between items-center">
                   <h3 className="font-sans text-lg font-semibold text-text-primary">
@@ -7606,9 +7657,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               );
             })()}
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[420px_minmax(0,1fr)] gap-6 items-start">
               {/* Left Column: Editor & Controls */}
-              <div className="lg:col-span-5 space-y-5">
+              <div className="min-w-0 space-y-5">
                 
                 {/* Input Mode Selector */}
                 <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
@@ -7833,7 +7884,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="lg:col-span-7 card-level-1 p-6 space-y-5">
+              <div className="min-w-0 card-level-1 p-6 space-y-5">
                 <div className="border-b border-border-standard pb-3 flex justify-between items-center">
                   <div>
                     <h3 className="font-sans text-base font-bold text-text-primary">
@@ -7915,7 +7966,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               currentStudio: 'Revision Studio'
             });
             return (
-              <div className="px-4 sm:px-6 pt-4">
+              <div className="mb-4">
                 <CurrentWorkContextBar
                   currentStudio="Revision Studio"
                   originLabel={snap.originLabel}
@@ -7962,7 +8013,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               currentStudio: 'Reframing Studio'
             });
             return (
-              <div className="px-4 sm:px-6 pt-4">
+              <div className="mb-4">
                 <CurrentWorkContextBar
                   currentStudio="Reframing Studio"
                   originLabel={snap.originLabel}
@@ -8202,7 +8253,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {actualFilteredSaved.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
                 {actualFilteredSaved.map(item => (
                   <div key={item.id} className="card-level-1 p-5 flex flex-col justify-between gap-4 hover:border-brand-gold/35 transition-colors">
                     <div className="space-y-3">
@@ -8423,9 +8474,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)] gap-6 items-start">
               {/* Form panel */}
-              <div className="card-level-1 p-5 sm:p-6 h-fit space-y-5">
+              <div className="min-w-0 card-level-1 p-5 sm:p-6 h-fit space-y-5">
                 <div>
                   <h3 className="font-sans text-base font-bold text-text-primary pb-2 border-b border-border-standard">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
@@ -8558,7 +8609,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Records List Panel */}
-              <div className="lg:col-span-2 space-y-5">
+              <div className="min-w-0 space-y-5">
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-1.5 pb-2 border-b border-border-standard">
@@ -8742,10 +8793,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* ── Settings Sections ─────────────────────────────────────── */}
             {settingsSection === 'ai' && (
-              <div className="page-shell pb-12">
+              <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-12 items-start">
                 
                 {/* 1. Provider Connection */}
-                <Card>
+                <Card className="xl:col-span-6">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -8817,7 +8868,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </Card>
 
                 {/* 2. Model Preferences */}
-                <Card className={!settingsProvider ? 'opacity-50 pointer-events-none' : ''}>
+                <Card className={`xl:col-span-6 ${!settingsProvider ? 'opacity-50 pointer-events-none' : ''}`}>
                   <CardHeader>
                     <CardTitle>2. Model Preferences</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Select the specific models to use for text and visual generation.</p>
@@ -8918,7 +8969,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </Card>
 
                 {/* 3. Testing & Verification */}
-                <Card className={!settingsTextModel ? 'opacity-50 pointer-events-none' : ''}>
+                <Card className={`xl:col-span-6 ${!settingsTextModel ? 'opacity-50 pointer-events-none' : ''}`}>
                   <CardHeader>
                     <CardTitle>3. Test & Save Connection</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Verify your credentials work before saving the configuration.</p>
@@ -9012,7 +9063,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </Card>
 
                 {/* 4. Generation Mode Override */}
-                <Card>
+                <Card className="xl:col-span-6">
                   <CardHeader>
                     <CardTitle>4. Generation Mode Override</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Force the system to use a specific generation mode, overriding the active AI Connection.</p>
@@ -9048,7 +9099,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
       {pendingIdeaToCopy && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm">
           <div className="bg-surface-inset rounded-3xl shadow-xl border border-border-standard p-6 max-w-sm w-full relative">
-            <button onClick={() => setPendingIdeaToCopy(null)} className="absolute top-4 right-4 text-text-muted hover:text-text-secondary">
+            <button aria-label="Close overwrite confirmation" onClick={() => setPendingIdeaToCopy(null)} className="absolute top-4 right-4 text-text-muted hover:text-text-secondary">
               <X size={16} />
             </button>
             <h3 className="font-sans text-lg font-bold text-text-primary mb-2">Overwrite Workspace?</h3>

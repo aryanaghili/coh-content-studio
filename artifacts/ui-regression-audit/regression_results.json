@@ -1,0 +1,294 @@
+{
+  "timestamp": "2026-10-14T21:49:01.700Z",
+  "routesVerified": [
+    {
+      "slug": "command-center",
+      "label": "Command Center",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Command Center",
+      "activeSidebarLabel": "Command Center",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "ideation-workspace",
+      "label": "Ideation Workspace",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Ideation Workspace",
+      "activeSidebarLabel": "Ideation Workspace",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "editorial-calendar",
+      "label": "Editorial Calendar",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Editorial Calendar",
+      "activeSidebarLabel": "Editorial Calendar",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "content-workspace",
+      "label": "Content Workspace",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Content Workspace",
+      "activeSidebarLabel": "Content Workspace",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "visual-studio",
+      "label": "Visual Studio",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Visual Studio",
+      "activeSidebarLabel": "Visual Studio",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "revision-studio",
+      "label": "Revision Studio",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Revision Studio",
+      "activeSidebarLabel": "Revision Studio",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "reframing-studio",
+      "label": "Reframing Studio",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Reframing Studio",
+      "activeSidebarLabel": "Reframing Studio",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "calendar-library",
+      "label": "Calendar Library",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Calendar Library",
+      "activeSidebarLabel": "Calendar Library",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "idea-library",
+      "label": "Idea Library",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Idea Library",
+      "activeSidebarLabel": "Idea Library",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "content-library",
+      "label": "Content Library",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Content Library",
+      "activeSidebarLabel": "Content Library",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "source-library",
+      "label": "Source Library",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Source Library",
+      "activeSidebarLabel": "Source Library",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "operating-core",
+      "label": "Operating Core",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Operating Core",
+      "activeSidebarLabel": "Operating Core",
+      "unlabeledButtons": 0
+    },
+    {
+      "slug": "settings",
+      "label": "Settings",
+      "directUrl": true,
+      "refreshPersists": true,
+      "topBarTitle": "Settings",
+      "activeSidebarLabel": "Settings",
+      "unlabeledButtons": 0
+    }
+  ],
+  "historyAndFallback": {
+    "afterNav": "/ideation-workspace",
+    "afterBack": "/command-center",
+    "afterForward": "/ideation-workspace",
+    "unknownFallback": "/command-center",
+    "passed": true
+  },
+  "viewportMatrixCount": 234,
+  "viewportOverflowFailures": [],
+  "desktopRailMetrics1920": [
+    {
+      "route": "command-center",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          1220,
+          360
+        ]
+      ]
+    },
+    {
+      "route": "ideation-workspace",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          400,
+          1172
+        ]
+      ]
+    },
+    {
+      "route": "editorial-calendar",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": []
+    },
+    {
+      "route": "content-workspace",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          440,
+          1132
+        ]
+      ]
+    },
+    {
+      "route": "visual-studio",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          420,
+          1160
+        ]
+      ]
+    },
+    {
+      "route": "revision-studio",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          1180,
+          400
+        ]
+      ]
+    },
+    {
+      "route": "reframing-studio",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          440,
+          1140
+        ]
+      ]
+    },
+    {
+      "route": "calendar-library",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          1604
+        ]
+      ]
+    },
+    {
+      "route": "idea-library",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          521
+        ]
+      ]
+    },
+    {
+      "route": "content-library",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          521
+        ]
+      ]
+    },
+    {
+      "route": "source-library",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          400,
+          1180
+        ]
+      ]
+    },
+    {
+      "route": "operating-core",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          280,
+          1300
+        ]
+      ]
+    },
+    {
+      "route": "settings",
+      "availW": 1604,
+      "shellW": 1604,
+      "grids": [
+        [
+          790,
+          790,
+          790,
+          790
+        ]
+      ]
+    }
+  ],
+  "mobileDrawerAndTouchChecks": {
+    "openButtonSize": "44x44",
+    "escapeClosesDrawer": true,
+    "passed": true
+  },
+  "a11yUnlabeledButtons": [],
+  "reducedMotionSupported": true,
+  "workflows": {
+    "workflowA": "PASS",
+    "workflowB": "PASS",
+    "workflowC": "PASS",
+    "workflowF": "PASS",
+    "workflowD": "PASS",
+    "workflowE": "PASS",
+    "workflowG": "PASS",
+    "workflowH": "PASS"
+  },
+  "errorResilience": {
+    "offlineTranslationBlockedSafely": true,
+    "draftPreservedOnFailure": true,
+    "noPromptDialogsTriggered": true
+  },
+  "consoleErrors": [],
+  "pageErrors": []
+}

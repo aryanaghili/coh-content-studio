@@ -96,7 +96,7 @@ export const GuidedTour: React.FC = () => {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md">
         <div className="bg-surface-primary border border-border-strong rounded-3xl shadow-2xl p-8 max-w-md w-full relative">
-          <button onClick={skipTour} className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors">
+          <button aria-label="Close guided tour" onClick={skipTour} className="absolute top-4 right-4 text-text-muted hover:text-text-primary transition-colors">
             <X size={20} />
           </button>
           
@@ -110,7 +110,7 @@ export const GuidedTour: React.FC = () => {
             Welcome to Content Studio 👋
           </h2>
           
-          <p className="text-slate-300 text-center text-sm leading-relaxed mb-8">
+          <p className="text-text-secondary text-center text-sm leading-relaxed mb-8">
             This platform centralizes your ideation, drafting, visual generation, and compliance. 
             Take a quick 1-minute tour of the main workspaces, or skip and explore on your own.
           </p>
@@ -170,7 +170,7 @@ export const GuidedTour: React.FC = () => {
           left: targetRect.right + padding + 12, // Position to the right of sidebar items
         } : {}}
       >
-        <button onClick={skipTour} className="absolute top-3 right-3 text-text-muted hover:text-text-primary">
+        <button aria-label="Close guided tour" onClick={skipTour} className="absolute top-3 right-3 text-text-muted hover:text-text-primary">
           <X size={16} />
         </button>
         
@@ -179,7 +179,7 @@ export const GuidedTour: React.FC = () => {
         </div>
         
         <h3 className="text-text-primary font-bold text-lg mb-2">{step.title}</h3>
-        <p className="text-slate-300 text-sm leading-relaxed mb-6">{step.content}</p>
+        <p className="text-text-secondary text-sm leading-relaxed mb-6">{step.content}</p>
         
         <div className="flex items-center justify-between">
           <div className="flex gap-1">
