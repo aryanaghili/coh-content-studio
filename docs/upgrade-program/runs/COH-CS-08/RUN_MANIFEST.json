@@ -2,6 +2,7 @@
   "runId": "COH-CS-08",
   "title": "Final Integrated Validation, Scope Audit, Preview Verification and Audit Archive",
   "branch": "feature/coh-content-intelligence-v2",
+  "commitSha": "510e0ac8cdac03cc496800db897e8bb0c936ab28",
   "status": "PASS_WITH_WARNINGS",
   "predecessorRunId": "COH-CS-07",
   "predecessorCommit": "910ab4e1e51d73e3bffcb5f41203f9b7260225da",

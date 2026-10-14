@@ -14,7 +14,8 @@
 | `COH-CS-05` | Reframing Studio | COMPLETED | `5d561175a8f6a767c8be4fc5363d8e0a8023c7a7` | PASS | READY | PASS |
 | `COH-CS-06` | Creation + Revision Productivity | COMPLETED | `95071d39d6cd229982a070f02bfd6bdf7d95c172` | PASS | READY | PASS |
 | `COH-CS-07` | Workflow Continuity + Governance Cleanup | COMPLETED | `fb8fa8672874377a74a267bfba2d0a610514d848` | PASS | READY | PASS |
-| `COH-CS-08` | Integrated Validation | COMPLETED | `PENDING_CS08_SHA` | PASS WITH WARNINGS | READY | PASS WITH WARNINGS |
+| `COH-CS-08` | Integrated Validation | COMPLETED | `510e0ac8cdac03cc496800db897e8bb0c936ab28` | PASS WITH WARNINGS | READY | PASS WITH WARNINGS |
+
 
 
 
