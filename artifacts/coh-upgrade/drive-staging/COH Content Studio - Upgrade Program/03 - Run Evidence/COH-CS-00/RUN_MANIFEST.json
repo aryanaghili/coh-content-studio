@@ -1,0 +1,41 @@
+{
+  "id": "COH-CS-00",
+  "title": "Program Bootstrap, Baseline, Evidence Governance and Safe Implementation Environment",
+  "status": "PASS",
+  "baseCommit": "867a7eb88efaec68610eaae0bd7d623eb0d13874",
+  "implementationCommit": "d5ebdf0751f73b028bad87a2f889e8a250b9fbd3",
+  "branch": "feature/coh-content-intelligence-v2",
+  "databaseChanged": false,
+  "schemaChanged": false,
+  "productionDataChanged": false,
+  "dependenciesChanged": false,
+  "filesCreated": [
+    "docs/upgrade-program/MASTER_PROTOCOL.md",
+    "docs/upgrade-program/MASTER_REGISTER.md",
+    "docs/upgrade-program/BASELINE_ARCHITECTURE.md",
+    "docs/upgrade-program/BASELINE_VALIDATION.md",
+    "docs/upgrade-program/DRIVE_SYNC_REQUIRED.md",
+    "docs/upgrade-program/DRIVE_SYNC_MANIFEST.json",
+    "docs/upgrade-program/runs/COH-CS-00/PROMPT_SNAPSHOT.md",
+    "docs/upgrade-program/runs/COH-CS-00/IMPLEMENTATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-00/CHANGE_MANIFEST.md",
+    "docs/upgrade-program/runs/COH-CS-00/VALIDATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-00/RUN_MANIFEST.json"
+  ],
+  "filesModified": [
+    ".gitignore",
+    "src/App.tsx",
+    "src/components/TopBar.tsx",
+    "src/components/CommandPaletteModal.tsx"
+  ],
+  "filesDeleted": [],
+  "testsPassed": [
+    "npm run build",
+    "Playwright baseline smoke check across 10 studio routes, light/dark themes, and desktop/mobile viewports"
+  ],
+  "testsFailed": [],
+  "warnings": [
+    "Local /api/operating-core returns 503 when POSTGRES_URL is not set locally; client transparently falls back to localStorage."
+  ],
+  "knownIssues": []
+}
