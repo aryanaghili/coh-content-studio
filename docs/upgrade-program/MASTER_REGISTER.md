@@ -10,7 +10,7 @@
 | `COH-CS-01` | Shared COH Context Compiler, Context Manifest & Strategic Authority Foundation | COMPLETED | `0466227ee8581d66340ae7f4d9aec2b0e645db34` | PASS | READY | PASS |
 | `COH-CS-02` | AI Provider Modernization (OpenAI GPT-6 Luna & GPT-6.1 Sol Capability Layer) | COMPLETED | `ea62a235221f584ecebaf97dba27f5f6451b86f9` | PASS | READY | PASS |
 | `COH-CS-03` | Source Intelligence & Task-Level Source Context System | COMPLETED | `5eeab25bc8142221ce5b120caa8b60f8fc914faf` | PASS | READY | PASS |
-| `COH-CS-04` | Ideation 2.0 | COMPLETED | PENDING_COMMIT_SHA | PASS | READY | PASS |
+| `COH-CS-04` | Ideation 2.0 | COMPLETED | `8638d1a2293a230fb6b4ade160a465eca014e8b6` | PASS | READY | PASS |
 | `COH-CS-05` | Reframing Studio | NOT STARTED | - | NOT STARTED | NOT STARTED | NOT STARTED |
 | `COH-CS-06` | Creation + Revision Productivity | NOT STARTED | - | NOT STARTED | NOT STARTED | NOT STARTED |
 | `COH-CS-07` | Workflow Continuity + Governance Cleanup | NOT STARTED | - | NOT STARTED | NOT STARTED | NOT STARTED |

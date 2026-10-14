@@ -3,7 +3,7 @@
   "title": "Ideation 2.0 - Opportunity-Led, Evidence-Aware and Reuse-Aware Ideation",
   "status": "PASS",
   "baseCommit": "effef06c306a32266a3a5098fb1b8d0432531037",
-  "implementationCommit": "PENDING_COMMIT_SHA",
+  "implementationCommit": "8638d1a2293a230fb6b4ade160a465eca014e8b6",
   "branch": "feature/coh-content-intelligence-v2",
   "databaseChanged": false,
   "schemaChanged": false,
