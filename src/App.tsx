@@ -163,88 +163,21 @@ export interface WorkItem {
 
 
 
-export type RevisionActionGroup = 
-  | 'Clean & Polish' 
-  | 'Voice & Tone' 
-  | 'COH & Strategic Fit' 
-  | 'Structure & Alternatives' 
-  | 'Evidence & Claim Discipline' 
-  | 'Translation & Localization';
+import {
+  REVISION_ACTIONS,
+  REVISION_GROUP_ORDER,
+  type RevisionActionDef,
+  type RevisionActionGroup
+} from './lib/revisionActions';
+import {
+  resolveSmartBrief,
+  type GenerationSpeedMode,
+  type ResolvedSmartBrief
+} from './lib/smartBriefAndRevision';
+import { SmartBriefPanel } from './components/SmartBriefPanel';
 
-export interface RevisionActionDef {
-  id: string;
-  label: string;
-  group: RevisionActionGroup;
-  description?: string;
-}
-
-
-export const REVISION_ACTIONS: RevisionActionDef[] = [
-  { id: 'clean-ai-punctuation', label: '🧼 Clean AI-Style Characters', group: 'Clean & Polish', description: 'Removes em dashes, hidden Unicode characters, awkward AI punctuation, excessive separators, and export-unfriendly symbols.' },
-  { id: 'improve-clarity', label: 'Improve clarity', group: 'Clean & Polish' },
-  { id: 'shorter', label: '✂️ Make it shorter', group: 'Clean & Polish' },
-  { id: 'smoother', label: 'Make it smoother', group: 'Clean & Polish' },
-  { id: 'remove-repetition', label: 'Remove repetition', group: 'Clean & Polish' },
-  { id: 'fix-grammar', label: 'Fix grammar and punctuation', group: 'Clean & Polish' },
-  { id: 'remove-awkward', label: 'Remove awkward phrasing', group: 'Clean & Polish' },
-
-  { id: 'human', label: '👤 Make it more human', group: 'Voice & Tone' },
-  { id: 'sharper', label: '⚡ Make it sharper', group: 'Voice & Tone' },
-  { id: 'warmer', label: 'Make it warmer', group: 'Voice & Tone' },
-  { id: 'direct', label: 'Make it more direct', group: 'Voice & Tone' },
-  { id: 'less-corporate', label: '💼 Make it less corporate', group: 'Voice & Tone' },
-  { id: 'less-ngo', label: '🌱 Make it less NGO-like', group: 'Voice & Tone' },
-  { id: 'less-poetic', label: '📐 Make it less poetic', group: 'Voice & Tone' },
-  { id: 'premium', label: 'Make it more premium', group: 'Voice & Tone' },
-  { id: 'natural', label: 'Make it more natural', group: 'Voice & Tone' },
-
-  { id: 'coh-specific', label: '🎭 Make it more COH-specific', group: 'COH & Strategic Fit' },
-  { id: 'institutional', label: '🏛️ Make it more institutional', group: 'COH & Strategic Fit' },
-  { id: 'sponsor-facing', label: '💰 Make it more sponsor-facing', group: 'COH & Strategic Fit' },
-  { id: 'audience-friendly', label: '🤝 Make it more audience-friendly', group: 'COH & Strategic Fit' },
-  { id: 'channel-ready', label: '📱 Make it more channel-ready', group: 'COH & Strategic Fit' },
-  { id: 'culturally-grounded', label: 'Make it more culturally grounded', group: 'COH & Strategic Fit' },
-  { id: 'strategic', label: 'Make it more strategic', group: 'COH & Strategic Fit' },
-  { id: 'less-generic', label: 'Make it less generic', group: 'COH & Strategic Fit' },
-
-  { id: 'translate-selected', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize-selected', label: 'Localize for selected language', group: 'Translation & Localization' },
-  { id: 'preserve-meaning-flow', label: 'Preserve meaning, improve flow', group: 'Translation & Localization' },
-  { id: 'adapt-channel-lang', label: 'Adapt for selected channel', group: 'Translation & Localization' },
-
-  { id: 'openings', label: '📝 Create 3 alternative openings', group: 'Structure & Alternatives' },
-  { id: 'ctas', label: '📣 Create 3 CTA options', group: 'Structure & Alternatives' },
-  { id: 'stronger-headline', label: 'Create a stronger headline', group: 'Structure & Alternatives' },
-  { id: 'shorter-version', label: 'Create a shorter version', group: 'Structure & Alternatives' },
-  { id: 'longer-version', label: 'Create a longer version', group: 'Structure & Alternatives' },
-  { id: 'bullet-points', label: 'Turn into bullet points', group: 'Structure & Alternatives' },
-  { id: 'paragraph', label: 'Turn into a paragraph', group: 'Structure & Alternatives' },
-  { id: 'email', label: 'Turn into an email', group: 'Structure & Alternatives' },
-  { id: 'social-post', label: 'Turn into a social post', group: 'Structure & Alternatives' },
-
-  { id: 'remove-unsupported', label: '🛡️ Remove unsupported claims', group: 'Evidence & Claim Discipline' },
-  { id: 'flag-claims', label: 'Flag claims that need proof', group: 'Evidence & Claim Discipline' },
-  { id: 'more-careful', label: 'Make claims more careful', group: 'Evidence & Claim Discipline' },
-  { id: 'stronger-proof', label: '📊 Expand with stronger proof', group: 'Evidence & Claim Discipline' },
-  { id: 'less-exaggerated', label: 'Make it less exaggerated', group: 'Evidence & Claim Discipline' },
-  { id: 'simplify-claims', label: 'Simplify factual claims', group: 'Evidence & Claim Discipline' },
-
-  { id: 'translate', label: 'Translate to selected language', group: 'Translation & Localization' },
-  { id: 'localize', label: 'Localize for natural tone', group: 'Translation & Localization' },
-  { id: 'preserve-meaning', label: 'Preserve meaning and improve flow', group: 'Translation & Localization' },
-  { id: 'adapt-channel', label: 'Adapt translation for selected channel', group: 'Translation & Localization' },
-  { id: 'persian-natural', label: 'Make Persian more natural and spoken', group: 'Translation & Localization' },
-  { id: 'english-polished', label: 'Make English more polished', group: 'Translation & Localization' },
-];
-
-export const REVISION_GROUP_ORDER: RevisionActionGroup[] = [
-  'Clean & Polish',
-  'Voice & Tone',
-  'COH & Strategic Fit',
-  'Structure & Alternatives',
-  'Evidence & Claim Discipline',
-  'Translation & Localization'
-];
+export { REVISION_ACTIONS, REVISION_GROUP_ORDER };
+export type { RevisionActionDef, RevisionActionGroup };
 
 export const PROTECTED_COH_KERNEL = `
 PROTECTED COH KERNEL: ALWAYS ON (Highest Priority)
@@ -833,6 +766,7 @@ export default function App() {
   }, [operatingCore, dbStatus]);
 
   const [creationMode, setCreationMode] = useState<'simple' | 'quick' | 'advanced'>('simple');
+  const [generationSpeedMode, setGenerationSpeedMode] = useState<GenerationSpeedMode>('explore');
   const [startedFromNote, setStartedFromNote] = useState<string>('');
   const [importedIdeationContext, setImportedIdeationContext] = useState<SavedIdea | null>(null);
   const [pendingIdeaToCopy, setPendingIdeaToCopy] = useState<SavedIdea | null>(null);
@@ -5969,7 +5903,80 @@ WRITING CLEANLINESS RULES (CRITICAL):
             <ContextManifestPanel
               manifest={buildContentWorkspaceContextPackage().manifest}
               theme={theme}
-              className="mb-6"
+              className="mb-4"
+            />
+
+            <SmartBriefPanel
+              smartBrief={resolveSmartBrief({
+                rawRequest:
+                  creationMode === 'simple'
+                    ? simpleBrief.goal
+                    : creationMode === 'quick'
+                      ? `${quickBrief.goal} ${quickBrief.notes}`.trim()
+                      : advancedBrief.topic,
+                explicitChannel:
+                  creationMode === 'simple'
+                    ? simpleBrief.channel
+                    : creationMode === 'quick'
+                      ? quickBrief.channel
+                      : advancedBrief.channel,
+                explicitFormat:
+                  creationMode === 'quick'
+                    ? quickBrief.outputFormat
+                    : creationMode === 'advanced'
+                      ? advancedBrief.outputFormat
+                      : undefined,
+                explicitAudience: creationMode === 'advanced' ? advancedBrief.audience : undefined,
+                explicitPurpose: creationMode === 'advanced' ? advancedBrief.purpose : undefined,
+                explicitPillar: creationMode === 'advanced' ? advancedBrief.pillar : undefined,
+                explicitLanguage:
+                  creationMode === 'quick'
+                    ? quickBrief.language
+                    : creationMode === 'advanced'
+                      ? advancedBrief.language
+                      : undefined,
+                explicitLength: creationMode === 'advanced' ? advancedBrief.desiredLength : undefined,
+                explicitDirection: creationMode === 'advanced' ? advancedBrief.customDirection : undefined,
+                selectedSourceIds: advancedBrief.selectedSourceIds,
+                inheritedWorkContext: extractWorkContextFromWorkItem(activeWorkItem),
+                availableSources: [...selectableSources, ...workspaceLocalSources]
+              })}
+              speedMode={generationSpeedMode}
+              onChangeSpeedMode={setGenerationSpeedMode}
+              onApplySmartBrief={(resolved: ResolvedSmartBrief) => {
+                setSimpleBrief(prev => ({
+                  ...prev,
+                  goal: resolved.topic.value || prev.goal,
+                  channel: resolved.channel.value
+                }));
+                setQuickBrief(prev => ({
+                  ...prev,
+                  goal: resolved.topic.value || prev.goal,
+                  channel: resolved.channel.value,
+                  outputFormat: resolved.outputFormat.value,
+                  language: resolved.language.value
+                }));
+                setAdvancedBrief(prev => ({
+                  ...prev,
+                  topic: resolved.topic.value || prev.topic,
+                  channel: resolved.channel.value,
+                  outputFormat: resolved.outputFormat.value,
+                  audience: resolved.audience.value,
+                  purpose: resolved.purpose.value,
+                  pillar: resolved.pillar.value,
+                  language: resolved.language.value,
+                  desiredLength: resolved.desiredLength.value,
+                  customDirection: resolved.directionAngle.value
+                }));
+              }}
+              onSelectSuggestedSource={(sourceId: string) => {
+                setAdvancedBrief(prev => ({
+                  ...prev,
+                  selectedSourceIds: prev.selectedSourceIds.includes(sourceId)
+                    ? prev.selectedSourceIds
+                    : [...prev.selectedSourceIds, sourceId]
+                }));
+              }}
             />
 
             {/* Validation warning block */}
@@ -7182,9 +7189,16 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <div className="space-y-4">
 
                       {/* Option A card */}
-                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
+                      <div
+                        data-testid="draft-option-a-card"
+                        className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm"
+                      >
                         <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
-                          <span className="font-sans text-xs font-bold text-text-primary">Option A — Direct / Institutional</span>
+                          <span className="font-sans text-xs font-bold text-text-primary">
+                            {generationSpeedMode === 'fast'
+                              ? 'Focused Primary Draft (Fast Mode)'
+                              : 'Option A — Direct / Institutional'}
+                          </span>
                           <div className="flex items-center gap-2">
                             {detectCleanlinessIssues(draftOptions.optionA) ? (
                               <button
@@ -7224,6 +7238,21 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             Revise This Draft
                           </button>
                           <button
+                            onClick={() => {
+                              setReframingInitialOrigin({
+                                originType: 'Content Workspace',
+                                originTitle: `${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option A`,
+                                sourceContent: draftOptions.optionA,
+                                originChannel: creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel,
+                                originAudience: creationMode === 'advanced' ? advancedBrief.audience : 'General Public'
+                              });
+                              setActiveTab('reframing-studio');
+                            }}
+                            className="bg-surface-primary border border-border-strong text-text-primary hover:border-brand-gold text-[10px] font-bold px-3 py-1.5 rounded transition"
+                          >
+                            Reframe Draft
+                          </button>
+                          <button
                             onClick={() => saveDirectDraftToLibrary(draftOptions.optionA, 'A')}
                             className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
                           >
@@ -7238,70 +7267,80 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                       </div>
 
-                      {/* Option B card */}
-                      <div className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm">
-                        <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
-                          <span className="font-sans text-xs font-bold text-text-primary">Option B — Human / Narrative</span>
-                          <div className="flex items-center gap-2">
-                            {detectCleanlinessIssues(draftOptions.optionB) ? (
-                              <button
-                                onClick={cleanOptionBDraft}
-                                title="Click to clean em dashes, curly quotes, and AI punctuation"
-                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
-                              >
-                                ⚠️ Needs cleanup
-                              </button>
-                            ) : (
-                              <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-800 border border-green-200">
-                                ✓ Clean
+                      {/* Option B card (Explore Mode only) */}
+                      {generationSpeedMode === 'explore' && (
+                        <div
+                          data-testid="draft-option-b-card"
+                          className="border border-border-standard rounded bg-surface-inset flex flex-col overflow-hidden shadow-sm"
+                        >
+                          <div className="bg-surface-inset p-3 border-b border-border-standard flex justify-between items-center">
+                            <span className="font-sans text-xs font-bold text-text-primary">Option B — Human / Narrative</span>
+                            <div className="flex items-center gap-2">
+                              {detectCleanlinessIssues(draftOptions.optionB) ? (
+                                <button
+                                  onClick={cleanOptionBDraft}
+                                  title="Click to clean em dashes, curly quotes, and AI punctuation"
+                                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-200 transition action-button"
+                                >
+                                  ⚠️ Needs cleanup
+                                </button>
+                              ) : (
+                                <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-800 border border-green-200">
+                                  ✓ Clean
+                                </span>
+                              )}
+                              <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-violet-600/25 text-text-primary-light flex items-center gap-1">
+                                {draftOptions.labelB} <Tooltip text="Shows how much the draft is supported by sources." />
                               </span>
-                            )}
-                            <span className="text-[9px] uppercase font-mono font-bold px-1.5 py-0.5 rounded bg-violet-600/25 text-text-primary-light flex items-center gap-1">
-                              {draftOptions.labelB} <Tooltip text="Shows how much the draft is supported by sources." />
-                            </span>
+                            </div>
+                          </div>
+                          <div className="p-4">
+                            <p className="text-xs text-text-primary/85 leading-relaxed whitespace-pre-wrap select-all font-sans">
+                              {draftOptions.optionB}
+                            </p>
+                          </div>
+                          <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
+                            <button
+                              onClick={() => {
+                                setActiveDraftText(draftOptions.optionB);
+                                setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option B`);
+                                setActiveDraftVersion(1);
+                                setActiveDraftHistory([{ version: 1, text: draftOptions.optionB, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
+                                setActiveDraftSource('Content Workspace');
+                                setActiveTab('revision-studio');
+                              }}
+                              className="bg-slate-900 text-white hover:bg-brand-gold-hover text-[10px] font-bold px-3 py-1.5 rounded transition"
+                            >
+                              Revise This Draft
+                            </button>
+                            <button
+                              onClick={() => saveDirectDraftToLibrary(draftOptions.optionB, 'B')}
+                              className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
+                            >
+                              Save to Library
+                            </button>
+                            <button
+                              onClick={() => handleCopyClipboard(draftOptions.optionB, 'optB')}
+                              className="text-text-secondary text-[10px] font-medium px-2 py-2 interactive-link"
+                            >
+                              {copySuccessMap['optB'] ? '✓ Copied' : 'Copy'}
+                            </button>
                           </div>
                         </div>
-                        <div className="p-4">
-                          <p className="text-xs text-text-primary/85 leading-relaxed whitespace-pre-wrap select-all font-sans">
-                            {draftOptions.optionB}
-                          </p>
-                        </div>
-                        <div className="bg-surface-inset p-3 border-t border-border-standard flex flex-wrap gap-2">
-                          <button
-                            onClick={() => {
-                              setActiveDraftText(draftOptions.optionB);
-                              setActiveDraftTitle(`${creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel} Option B`);
-                              setActiveDraftVersion(1);
-                              setActiveDraftHistory([{ version: 1, text: draftOptions.optionB, timestamp: new Date().toLocaleTimeString(), actionUsed: 'Initial generation' }]);
-                              setActiveDraftSource('Content Workspace');
-                              setActiveTab('revision-studio');
-                            }}
-                            className="bg-slate-900 text-white hover:bg-brand-gold-hover text-[10px] font-bold px-3 py-1.5 rounded transition"
-                          >
-                            Revise This Draft
-                          </button>
-                          <button
-                            onClick={() => saveDirectDraftToLibrary(draftOptions.optionB, 'B')}
-                            className="bg-slate-900 text-white text-[10px] font-bold px-4 py-2 rounded interactive-button"
-                          >
-                            Save to Library
-                          </button>
-                          <button
-                            onClick={() => handleCopyClipboard(draftOptions.optionB, 'optB')}
-                            className="text-text-secondary text-[10px] font-medium px-2 py-2 interactive-link"
-                          >
-                            {copySuccessMap['optB'] ? '✓ Copied' : 'Copy'}
-                          </button>
-                        </div>
+                      )}
+
+                    </div>
+
+                    {/* 2. Shorter Version (Explore Mode only) */}
+                    {generationSpeedMode === 'explore' && (
+                      <div
+                        data-testid="draft-shorter-version-card"
+                        className="bg-surface-inset border border-border-standard p-4 rounded text-xs space-y-2"
+                      >
+                        <span className="font-sans font-bold text-text-primary text-xs block">Shorter Version</span>
+                        <p className="text-xs text-text-primary italic leading-relaxed">{draftOptions.optionC}</p>
                       </div>
-
-                    </div>
-
-                    {/* 2. Shorter Version */}
-                    <div className="bg-surface-inset border border-border-standard p-4 rounded text-xs space-y-2">
-                      <span className="font-sans font-bold text-text-primary text-xs block">Shorter Version</span>
-                      <p className="text-xs text-text-primary italic leading-relaxed">{draftOptions.optionC}</p>
-                    </div>
+                    )}
 
                     {/* 3. Visual Direction */}
                     <div className="bg-surface-inset p-4 border border-border-standard rounded text-xs space-y-2">

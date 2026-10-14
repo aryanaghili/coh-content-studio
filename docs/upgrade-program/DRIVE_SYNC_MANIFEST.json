@@ -1,7 +1,7 @@
 {
   "archiveRoot": "COH Content Studio - Upgrade Program",
   "driveAuthenticatedAccessAvailable": false,
-  "lastUpdated": "2026-10-14T13:28:00Z",
+  "lastUpdated": "2026-10-14T13:44:20Z",
   "folders": {
     "00 - Master Protocol": [
       "docs/upgrade-program/MASTER_PROTOCOL.md",
@@ -17,7 +17,8 @@
       "docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-04/PROMPT_SNAPSHOT.md",
-      "docs/upgrade-program/runs/COH-CS-05/PROMPT_SNAPSHOT.md"
+      "docs/upgrade-program/runs/COH-CS-05/PROMPT_SNAPSHOT.md",
+      "docs/upgrade-program/runs/COH-CS-06/PROMPT_SNAPSHOT.md"
     ],
     "03 - Run Evidence": {
       "COH-CS-00": [
@@ -71,6 +72,16 @@
         "docs/upgrade-program/runs/COH-CS-05/CHANGE_MANIFEST.md",
         "docs/upgrade-program/runs/COH-CS-05/VALIDATION_REPORT.md",
         "docs/upgrade-program/runs/COH-CS-05/RUN_MANIFEST.json"
+      ],
+      "COH-CS-06": [
+        "docs/upgrade-program/runs/COH-CS-06/PROMPT_SNAPSHOT.md",
+        "docs/upgrade-program/runs/COH-CS-06/SMART_BRIEF_CONTRACT.md",
+        "docs/upgrade-program/runs/COH-CS-06/REVISION_RECIPE_MATRIX.md",
+        "docs/upgrade-program/runs/COH-CS-06/REVISION_STATE_REGRESSION.md",
+        "docs/upgrade-program/runs/COH-CS-06/IMPLEMENTATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-06/CHANGE_MANIFEST.md",
+        "docs/upgrade-program/runs/COH-CS-06/VALIDATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-06/RUN_MANIFEST.json"
       ]
     },
     "04 - Review Reports": [],
