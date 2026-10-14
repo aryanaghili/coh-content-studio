@@ -1,0 +1,43 @@
+{
+  "id": "COH-CS-04",
+  "title": "Ideation 2.0 - Opportunity-Led, Evidence-Aware and Reuse-Aware Ideation",
+  "status": "PASS",
+  "baseCommit": "effef06c306a32266a3a5098fb1b8d0432531037",
+  "implementationCommit": "PENDING_COMMIT_SHA",
+  "branch": "feature/coh-content-intelligence-v2",
+  "databaseChanged": false,
+  "schemaChanged": false,
+  "productionDataChanged": false,
+  "dependenciesChanged": false,
+  "filesCreated": [
+    "src/lib/ideationIntelligence.ts",
+    "src/components/IdeationOpportunityCard.tsx",
+    "tests/ideationIntelligence.test.ts",
+    "docs/upgrade-program/runs/COH-CS-04/PROMPT_SNAPSHOT.md",
+    "docs/upgrade-program/runs/COH-CS-04/IDEATION_OPPORTUNITY_CONTRACT.md",
+    "docs/upgrade-program/runs/COH-CS-04/REUSE_AWARENESS_TESTS.md",
+    "docs/upgrade-program/runs/COH-CS-04/IMPLEMENTATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-04/CHANGE_MANIFEST.md",
+    "docs/upgrade-program/runs/COH-CS-04/VALIDATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-04/RUN_MANIFEST.json"
+  ],
+  "filesModified": [
+    "src/lib/contextCompiler.ts",
+    "src/App.tsx",
+    "server/ai/promptBuilder.js",
+    "docs/upgrade-program/MASTER_REGISTER.md",
+    "docs/upgrade-program/DRIVE_SYNC_MANIFEST.json"
+  ],
+  "filesDeleted": [],
+  "testsPassed": [
+    "node --test tests/ideationIntelligence.test.ts (4/4 passed)",
+    "node --test tests/sourceIntelligence.test.ts (5/5 passed)",
+    "node --test tests/contextCompiler.test.ts (5/5 passed)",
+    "node --test tests/openaiModernization.test.js (5/5 passed)",
+    "node artifacts/coh-upgrade/verify_cs04.mjs (Playwright UI & handoff checks PASS)",
+    "npm run build"
+  ],
+  "testsFailed": [],
+  "warnings": [],
+  "knownIssues": []
+}

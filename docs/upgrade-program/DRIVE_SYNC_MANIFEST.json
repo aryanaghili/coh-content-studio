@@ -15,7 +15,8 @@
       "docs/upgrade-program/runs/COH-CS-00/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-01/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md",
-      "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md"
+      "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md",
+      "docs/upgrade-program/runs/COH-CS-04/PROMPT_SNAPSHOT.md"
     ],
     "03 - Run Evidence": {
       "COH-CS-00": [
@@ -50,6 +51,15 @@
         "docs/upgrade-program/runs/COH-CS-03/CHANGE_MANIFEST.md",
         "docs/upgrade-program/runs/COH-CS-03/VALIDATION_REPORT.md",
         "docs/upgrade-program/runs/COH-CS-03/RUN_MANIFEST.json"
+      ],
+      "COH-CS-04": [
+        "docs/upgrade-program/runs/COH-CS-04/PROMPT_SNAPSHOT.md",
+        "docs/upgrade-program/runs/COH-CS-04/IDEATION_OPPORTUNITY_CONTRACT.md",
+        "docs/upgrade-program/runs/COH-CS-04/REUSE_AWARENESS_TESTS.md",
+        "docs/upgrade-program/runs/COH-CS-04/IMPLEMENTATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-04/CHANGE_MANIFEST.md",
+        "docs/upgrade-program/runs/COH-CS-04/VALIDATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-04/RUN_MANIFEST.json"
       ]
     },
     "04 - Review Reports": [],

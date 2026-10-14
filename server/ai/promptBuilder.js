@@ -49,14 +49,19 @@ Return a JSON object matching this exact schema:
   }
 
   if (isIdeation) {
-    return `You are a creative strategist and ideation brain for content creation.
-Analyze the user's input: "${input.rawInput}".
+    return `You are the COH Opportunity-Led Ideation Strategist for Climate Opera Haus.
+Analyze the user's input or situation: "${input.rawInput}".
 Selected Language: ${input.language || 'English'}
 Selected Audience: ${input.audience || 'General Public'}
+Quality Filter: ${input.quality || 'Practical'}
+Depth Level: ${input.depth || 'Standard'}
 
-CLASSIFICATION TASK:
+IDEATION 2.0 MENTAL MODEL:
+Situation or Source -> Communication Opportunities -> Evidence Check -> Reuse Check -> Strong Idea -> Content Brief.
+
+CLASSIFICATION & OPPORTUNITY TASK:
 1. Classify the input into one of: keyword, question, thesis, rough idea, paragraph, campaign direction, emotional theme, educational topic, comparison, audience problem, event or promotion need, cultural argument.
-2. Formulate 9 distinct idea groups, generating exactly one creative idea card for each:
+2. Formulate distinct, non-cosmetic communication opportunities across the COH opportunity groups:
    - Strongest Directions
    - Sharp Hooks
    - Thought Leadership Angles
@@ -67,10 +72,13 @@ CLASSIFICATION TASK:
    - Campaign-Series Ideas
    - Experimental Ideas
 
-RULES FOR IDEAS:
+RULES FOR OPPORTUNITIES:
 - Respond in the selected language: ${input.language || 'English'}.
+- Never use em dashes in any text.
+- Every idea MUST define a clear COH Communication Job answering "Why should this content exist?" (e.g., Establish institutional credibility, Explain artistic logic, Create sponsor relevance, Build climate literacy, Invite public participation, Clarify a milestone, Deepen cultural meaning).
+- Separate Available Evidence (what attached sources or Protected Kernel legitimately support) from Evidence Still Required (advisory note on what would be needed before stronger claims could safely be made; never output [INSERT] or [TBD] placeholder blockers).
+- Ensure strategic diversity across communication job, audience, strategic angle, and narrative perspective without inventing non-COH customer segments.
 ${input.operatingCoreInstructions ? `\n${input.operatingCoreInstructions}\n` : ''}
-- Each idea card must be fully formed with: title, shortExplanation, whyItWorks, bestChannelFit, suggestedOutputFormat, suggestedAudience, suggestedTone, possibleHook, possibleFirstPost, riskToAvoid, nextStep.
 
 OUTPUT FORMAT:
 Return a JSON object matching this schema:
@@ -87,20 +95,27 @@ Return a JSON object matching this schema:
         {
           "title": "Title here",
           "category": "Strongest Directions",
-          "shortExplanation": "Explanation here",
-          "whyItWorks": "Why it works here",
-          "bestChannelFit": "LinkedIn | Instagram | Newsletter | Website | etc.",
-          "suggestedOutputFormat": "Post | Caption | Carousel | Thought Piece | etc.",
-          "suggestedAudience": "Target audience here",
+          "communicationJob": "Establish institutional credibility | Explain artistic logic | Create sponsor relevance | Build climate literacy | Invite public participation | Clarify a milestone | Deepen cultural meaning",
+          "shortExplanation": "Core idea / concept here",
+          "whyItWorks": "Why it matters strategically here",
+          "coreTension": "Core tension or audience problem addressed",
+          "desiredAudienceResponse": "Desired audience shift or response",
+          "availableEvidence": ["Traceable fact or kernel principle currently available"],
+          "evidenceStillRequired": ["Advisory note on additional evidence needed for stronger claims"],
+          "unresolvedAssumptions": ["Assumption to verify before publication"],
+          "bestChannelFit": "LinkedIn | Instagram | Newsletter | Website | Email / Direct Outreach",
+          "suggestedOutputFormat": "Post | Caption | Carousel | Thought Piece | Sponsor Pitch Paragraph",
+          "suggestedAudience": "General Public | Sponsors & Patrons | Strategic Partners",
+          "suggestedPillar": "The Opera & Worldbuilding | Science & Planetary Reality | Institutional & Sponsor Value | Behind the Creation & Craft | Cultural Participation & Ritual",
+          "strategicAngle": "Distinct strategic framing angle",
           "suggestedTone": "Suggested tone here",
           "possibleHook": "Hook line here",
           "possibleFirstPost": "Full text suggestion for the first post here",
-          "riskToAvoid": "Specific pitfalls or clichés to avoid here",
+          "riskToAvoid": "Specific pitfalls or cliches to avoid here",
           "nextStep": "Actionable next step here"
         }
       ]
-    },
-    ... (continue for all 9 groups)
+    }
   ],
   "warnings": []
 }`;

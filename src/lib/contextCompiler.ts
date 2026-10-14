@@ -47,17 +47,27 @@ export interface TransformationMetadata {
 
 export interface WorkContext {
   origin?: string;
+  originId?: string;
+  originTitle?: string;
   originatingItemId?: string;
-  originatingItemType?: 'idea' | 'calendar' | 'content' | 'source' | 'visual' | 'revision' | 'manual';
+  originatingItemType?: 'idea' | 'calendar' | 'content' | 'source' | 'visual' | 'revision' | 'reframe' | 'manual';
   audience?: string;
   channel?: string;
   format?: string;
   pillar?: string;
   language?: string;
   communicationJob?: string;
+  strategicAngle?: string;
+  evidenceNotes?: string;
+  unresolvedAssumptions?: string[];
   sourceBindings?: TaskSourceBinding[];
   evidenceRequirements?: string[];
   transformationMetadata?: TransformationMetadata;
+  transformationHistory?: Array<{
+    step: string;
+    studio: string;
+    timestamp: string;
+  }>;
 }
 
 export type StudioWorkflow =
@@ -66,6 +76,7 @@ export type StudioWorkflow =
   | 'Advanced Brief'
   | 'Content Workspace'
   | 'Revision Studio'
+  | 'Reframing Studio'
   | 'Ideation Workspace'
   | 'Visual Studio'
   | 'Editorial Calendar'

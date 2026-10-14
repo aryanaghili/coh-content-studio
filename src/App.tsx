@@ -73,6 +73,15 @@ import {
   type SourceIntelligenceAnalysis
 } from './lib/sourceIntelligence';
 import { SourceIntelligenceCardAddon } from './components/SourceIntelligencePanel';
+import {
+  enrichAndDiversifyOpportunities,
+  buildIdeationToContentHandoff,
+  evaluateOpportunityDiversity,
+  COH_COMMUNICATION_JOBS,
+  type ReuseOpportunity,
+  type IdeationOpportunityProposal
+} from './lib/ideationIntelligence';
+import { IdeationOpportunityCard } from './components/IdeationOpportunityCard';
 
 // --- Type Definitions ---
 
@@ -384,9 +393,18 @@ export interface SavedIdea {
   category: string;
   explanation: string;
   whyItWorks: string;
+  communicationJob?: string;
+  coreTension?: string;
+  desiredAudienceResponse?: string;
+  availableEvidence?: string[];
+  evidenceStillRequired?: string[];
+  unresolvedAssumptions?: string[];
   suggestedChannel: string;
   suggestedFormat: string;
   suggestedTone: string;
+  suggestedPillar?: string;
+  strategicAngle?: string;
+  reuseOpportunity?: ReuseOpportunity;
   possibleHook: string;
   possibleNextStep: string;
   possibleFirstPost?: string;
@@ -396,6 +414,8 @@ export interface SavedIdea {
   dateCreated: string;
   status: 'New' | 'Promising' | 'Ready for Content' | 'Used' | 'Archived' | 'Not Useful';
   notes?: string;
+  sourceIds?: string[];
+  sourceRoles?: Record<string, SourceTaskRole>;
   visualAssets?: { id: string; url: string; prompt: string; createdAt: string; provider: string; model: string; aspectRatio: string; sourceDirection: string }[];
 }
 
@@ -1490,24 +1510,26 @@ export default function App() {
     if (!inputVal) return;
     setIsIdeating(true);
 
+    const ideationSourceBindings: TaskSourceBinding[] = advancedBrief.selectedSourceIds
+      .map(id => {
+        const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+        if (!s) return null;
+        return {
+          sourceId: s.id,
+          title: s.title || 'Untitled Source',
+          type: s.type || 'Other',
+          role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
+          selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
+          content: s.content || s.notes || s.url || '',
+          summary: s.notes || undefined
+        } as TaskSourceBinding;
+      })
+      .filter((b): b is TaskSourceBinding => Boolean(b));
+
+    const dateStr = new Date().toISOString().split('T')[0];
+
     if (generationMode === 'ai' && aiStatus === 'connected') {
       try {
-        const ideationSourceBindings: TaskSourceBinding[] = advancedBrief.selectedSourceIds
-          .map(id => {
-            const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
-            if (!s) return null;
-            return {
-              sourceId: s.id,
-              title: s.title || 'Untitled Source',
-              type: s.type || 'Other',
-              role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
-              selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
-              content: s.content || s.notes || s.url || '',
-              summary: s.notes || undefined
-            } as TaskSourceBinding;
-          })
-          .filter((b): b is TaskSourceBinding => Boolean(b));
-
         const ideationContextPkg = compileGovernedContext({
           workflow: 'Ideation Workspace',
           operatingCore,
@@ -1528,20 +1550,28 @@ export default function App() {
           quality: ideationFilterQuality,
           operatingCoreInstructions: ideationContextPkg.compiledInstructions
         });
-        const dateStr = new Date().toISOString().split('T')[0];
-        const list: SavedIdea[] = [];
+
+        const rawList: Partial<IdeationOpportunityProposal>[] = [];
         result.ideaGroups?.forEach((group: any) => {
           group.ideas?.forEach((idea: any, idx: number) => {
-            list.push({
+            rawList.push({
               id: `idea-ai-${idx}-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
               title: idea.title || 'Untitled',
               originalInput: inputVal,
               category: idea.category || group.groupTitle || 'General',
               explanation: idea.shortExplanation || idea.explanation || '',
+              communicationJob: idea.communicationJob || undefined,
               whyItWorks: idea.whyItWorks || '',
-              suggestedChannel: idea.bestChannelFit || 'LinkedIn',
+              coreTension: idea.coreTension || undefined,
+              desiredAudienceResponse: idea.desiredAudienceResponse || undefined,
+              availableEvidence: Array.isArray(idea.availableEvidence) ? idea.availableEvidence : undefined,
+              evidenceStillRequired: Array.isArray(idea.evidenceStillRequired) ? idea.evidenceStillRequired : undefined,
+              unresolvedAssumptions: Array.isArray(idea.unresolvedAssumptions) ? idea.unresolvedAssumptions : undefined,
+              suggestedChannel: idea.bestChannelFit || ideationFilterChannel || 'LinkedIn',
               suggestedFormat: idea.suggestedOutputFormat || 'Post',
               suggestedAudience: idea.suggestedAudience || ideationFilterAudience,
+              suggestedPillar: idea.suggestedPillar || undefined,
+              strategicAngle: idea.strategicAngle || group.groupTitle || undefined,
               suggestedTone: idea.suggestedTone || 'Measured / Credible',
               possibleHook: idea.possibleHook || '',
               possibleFirstPost: idea.possibleFirstPost || '',
@@ -1553,47 +1583,30 @@ export default function App() {
             });
           });
         });
-        setGeneratedIdeas(list);
+
+        if (rawList.length > 0) {
+          const enrichedList = enrichAndDiversifyOpportunities({
+            rawProposals: rawList,
+            rawInput: inputVal,
+            defaultAudience: ideationFilterAudience,
+            defaultChannel: ideationFilterChannel,
+            defaultLanguage: ideationFilterLanguage,
+            sourceBindings: ideationSourceBindings,
+            derivedSourceAnalyses: sourceIntelligenceMap,
+            savedIdeas,
+            savedContents: savedContent
+          });
+          setGeneratedIdeas(enrichedList);
+          setIsIdeating(false);
+          return;
+        }
       } catch (err: any) {
-        setAiLastError(err.message || 'AI Ideation failed.');
-      } finally {
-        setIsIdeating(false);
+        setAiLastError(err.message || 'AI Ideation unavailable; using deterministic COH opportunity engine.');
       }
-      return;
     }
 
-    // Prototype fallback
+    // Deterministic COH Opportunity Engine fallback (works both offline and when AI returns 503)
     setTimeout(() => {
-      const inputLower = inputVal.toLowerCase();
-      const dateStr = new Date().toISOString().split('T')[0];
-
-      // 1. Input type classification
-      let detectedType = 'rough idea';
-      if (inputLower.split(' ').length <= 2) {
-        detectedType = 'keyword';
-      } else if (inputLower.includes('?')) {
-        detectedType = 'question';
-      } else if (inputLower.includes('vs') || inputLower.includes('superior to') || inputLower.includes('better than') || inputLower.includes('compared')) {
-        detectedType = 'comparison';
-      } else if (inputLower.includes('grief') || inputLower.includes('feel') || inputLower.includes('sorrow') || inputLower.includes('mourn') || inputLower.includes('hope') || inputLower.includes('ritual') || inputLower.includes('emotion')) {
-        detectedType = 'emotional theme';
-      } else if (inputLower.includes('how') || inputLower.includes('explain') || inputLower.includes('what is') || inputLower.includes('learn') || inputLower.includes('science')) {
-        detectedType = 'educational topic';
-      } else if (inputLower.includes('should') || inputLower.includes('must') || inputLower.includes('is superior') || inputLower.includes('why is') || inputLower.includes('because')) {
-        detectedType = 'thesis';
-      } else if (inputLower.includes('campaign') || inputLower.includes('launch') || inputLower.includes('outreach') || inputLower.includes('series')) {
-        detectedType = 'campaign direction';
-      } else if (inputLower.includes('how to reach') || inputLower.includes('barrier') || inputLower.includes('hesitant')) {
-        detectedType = 'audience problem';
-      } else if (inputLower.includes('ticket') || inputLower.includes('invite') || inputLower.includes('attend') || inputLower.includes('reserve') || inputLower.includes('event')) {
-        detectedType = 'event or promotion need';
-      } else if (inputLower.includes('art') || inputLower.includes('opera') || inputLower.includes('culture') || inputLower.includes('canon') || inputLower.includes('aesthetic')) {
-        detectedType = 'cultural argument';
-      } else if (inputLower.split(' ').length > 20) {
-        detectedType = 'paragraph';
-      }
-
-      // Helper functions for dynamic strings
       const getTone = (depth: string, q: string) => {
         if (depth === 'Experimental') return 'Bold / Punchy';
         if (q === 'Sponsor-facing') return 'Calm / Institutional';
@@ -1601,114 +1614,145 @@ export default function App() {
         return 'Measured / Credible';
       };
 
-      const getTitle = (cat: string) => {
-        const cleanInput = inputVal.replace(/\?$/, '');
-        if (cat === 'Strongest Directions') return `Visceral bypass vs intellectual distance for: ${cleanInput}`;
-        if (cat === 'Sharp Hooks') return `Provocative entry points for: ${cleanInput}`;
-        if (cat === 'Thought Leadership Angles') return `Strategic thesis on: ${cleanInput}`;
-        if (cat === 'Educational Angles') return `Demystifying the mechanics behind: ${cleanInput}`;
-        if (cat === 'Emotional or Reflective Angles') return `Somatic memory and resonance of: ${cleanInput}`;
-        if (cat === 'Storytelling Angles') return `Staging the transformation of: ${cleanInput}`;
-        if (cat === 'Promotional Angles') return `Action pathway: Engaging supporters for: ${cleanInput}`;
-        if (cat === 'Campaign-Series Ideas') return `Multi-part cycle: Deep dive into: ${cleanInput}`;
-        return `Unusual creative framing for: ${cleanInput}`;
-      };
+      const cleanInput = inputVal.replace(/\?$/, '');
+      const isDeep = ideationFilterDepth === 'Deep';
+      const qualityStr = ideationFilterQuality !== 'Practical' ? `Applying a focused ${ideationFilterQuality.toLowerCase()} filter, ` : '';
+      const depthStr = isDeep ? 'Detail a strategic, high-nuance concept arguing that' : 'Outline a clean direction stating that';
 
-      const getExplanation = (cat: string) => {
-        const isDeep = ideationFilterDepth === 'Deep';
-        const qualityStr = ideationFilterQuality !== 'Practical' ? `Applying a focused ${ideationFilterQuality.toLowerCase()} filter, ` : '';
-        const depthStr = isDeep ? 'Detail a strategic, high-nuance concept arguing that' : 'Outline a clean direction stating that';
-        
-        if (cat === 'Strongest Directions') {
-          return `${qualityStr}${depthStr} live somatic experiences of "${inputVal}" create a lasting impact that policy briefs fail to establish.`;
+      const opportunityTemplates = [
+        {
+          category: 'Strongest Directions',
+          communicationJob: 'Establish institutional credibility',
+          strategicAngle: 'Origin Asset & Worldbuilding Multiplier',
+          suggestedPillar: 'The Opera & Worldbuilding',
+          title: `Visceral bypass vs intellectual distance for: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} live somatic experiences of "${inputVal}" create a lasting cultural anchor that abstract policy briefs fail to establish.`,
+          coreTension: 'Decision-makers and audiences are saturated with abstract climate statistics that rarely translate into lasting cultural commitment.',
+          desiredAudienceResponse: 'Recognize Climate Opera Haus as an enduring cultural IP venture built around live operatic worldbuilding.',
+          channel: ideationFilterChannel || 'LinkedIn',
+          format: 'Post'
+        },
+        {
+          category: 'Thought Leadership Angles',
+          communicationJob: 'Create sponsor relevance',
+          strategicAngle: 'Long-Horizon Cultural Infrastructure & Prestige',
+          suggestedPillar: 'Institutional & Sponsor Value',
+          title: `Strategic thesis on: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} "${inputVal}" requires permanent, reusable cultural infrastructure rather than temporary public awareness campaigns.`,
+          coreTension: 'Sponsors and strategic partners need clear institutional prestige and multi-horizon relevance rather than short-lived event visibility.',
+          desiredAudienceResponse: 'See a clear pathway for institutional alignment and long-horizon partnership with COH.',
+          channel: 'LinkedIn',
+          format: 'Thought Piece'
+        },
+        {
+          category: 'Educational Angles',
+          communicationJob: 'Build climate literacy',
+          strategicAngle: 'Scientific Grounding & Planetary Thresholds',
+          suggestedPillar: 'Science & Planetary Reality',
+          title: `Demystifying the mechanics behind: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can translate the physical and ecological reality behind "${inputVal}" into clear, jargon-free human terms.`,
+          coreTension: 'Technical climate discourse often alienates general audiences with jargon while neglecting emotional comprehension.',
+          desiredAudienceResponse: 'Grasp the core planetary insight clearly and connect it to lived human experience.',
+          channel: 'Instagram',
+          format: 'Carousel'
+        },
+        {
+          category: 'Storytelling Angles',
+          communicationJob: 'Explain artistic logic',
+          strategicAngle: 'Behind-the-Scenes Artistic Rigor & Craft',
+          suggestedPillar: 'Behind the Creation & Craft',
+          title: `Staging the transformation of: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can follow a specific musical, dramaturgical, or staging threshold that makes "${inputVal}" visible on stage.`,
+          coreTension: 'Audiences unfamiliar with contemporary opera wonder how planetary themes become compelling dramatic art without becoming didactic.',
+          desiredAudienceResponse: 'Appreciate the artistic discipline, musical craft, and dramatic tension driving the production.',
+          channel: 'Newsletter',
+          format: 'Post'
+        },
+        {
+          category: 'Emotional or Reflective Angles',
+          communicationJob: 'Deepen cultural meaning',
+          strategicAngle: 'Collective Cultural Ritual & Public Meaning',
+          suggestedPillar: 'Cultural Participation & Ritual',
+          title: `Somatic memory and resonance of: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} operatic performance provides a shared civic space to process the emotional weight and collective stake of "${inputVal}".`,
+          coreTension: 'Public audiences carry unspoken ecological fatigue and lack shared cultural spaces that honor both truth and human resilience.',
+          desiredAudienceResponse: 'Feel invited into an accessible, deeply resonant cultural gathering rather than a lecture.',
+          channel: 'Instagram',
+          format: 'Caption'
+        },
+        {
+          category: 'Promotional Angles',
+          communicationJob: 'Invite public participation',
+          strategicAngle: 'Milestone Clarity & Institutional Momentum',
+          suggestedPillar: 'Institutional & Sponsor Value',
+          title: `Action pathway: Engaging supporters for: ${cleanInput}`,
+          explanation: `${qualityStr}${depthStr} we can invite institutions, patrons, and cultural allies to participate in the next development phase of "${inputVal}".`,
+          coreTension: 'Interested supporters often admire the artistic vision but need a concrete, credible entry point to engage.',
+          desiredAudienceResponse: 'Take a clear, low-friction step toward conversation, partnership inquiry, or attendance.',
+          channel: 'Email / Direct Outreach',
+          format: 'Sponsor Pitch Paragraph'
         }
-        if (cat === 'Sharp Hooks') {
-          return `${qualityStr}${depthStr} we can hook public attention by questioning conventional views on "${inputVal}".`;
-        }
-        if (cat === 'Thought Leadership Angles') {
-          return `${qualityStr}${depthStr} "${inputVal}" requires permanent, reusable cultural infrastructure rather than temporary public awareness campaigns.`;
-        }
-        if (cat === 'Educational Angles') {
-          return `${qualityStr}${depthStr} we can break down the physical or structural science behind "${inputVal}" using clear, jargon-free analogies.`;
-        }
-        if (cat === 'Emotional or Reflective Angles') {
-          return `${qualityStr}${depthStr} art provides the necessary ritual space to process the grief and emotional weight of "${inputVal}".`;
-        }
-        if (cat === 'Storytelling Angles') {
-          return `${qualityStr}${depthStr} we can follow a specific scene, character, or musical threshold that makes "${inputVal}" visible.`;
-        }
-        if (cat === 'Promotional Angles') {
-          return `${qualityStr}${depthStr} we can invite sponsors and partners to back the creative development of "${inputVal}" as a prestige asset.`;
-        }
-        if (cat === 'Campaign-Series Ideas') {
-          return `${qualityStr}${depthStr} a 3-part sequential series can trace the history, immediate reality, and future potential of "${inputVal}".`;
-        }
-        return `${qualityStr}Juxtapose "${inputVal}" with acoustic resonance, planetary timelines, or staging methods to deliver a bold new creative concept.`;
-      };
-
-      const getWhyItWorks = (cat: string) => {
-        if (ideationFilterQuality === 'Sponsor-facing') return 'Directly aligns with long-term capital backing and prestige ROI.';
-        if (ideationFilterQuality === 'Emotional') return 'Triggers a strong personal connection and bypasses academic jargon.';
-        if (ideationFilterQuality === 'Bold') return 'Stands out in feeds by taking a highly provocative and visible stand.';
-        return 'Bridges the gap between raw data and somatic human experience.';
-      };
-
-      const getHook = (cat: string) => {
-        return `Why do we keep writing reports about ${inputVal.toLowerCase().replace(/\?$/, '')} when music can change how we breathe?`;
-      };
-
-      const getFirstPost = (cat: string) => {
-        return `Staging a response to ${inputVal.toLowerCase().replace(/\?$/, '')} isn't just about entertainment. It's about building a permanent cultural archive of our changing planet.`;
-      };
-
-      const getRisk = (cat: string) => {
-        return `Avoid generic activist slogans, preachy language, or over-promising concrete political changes.`;
-      };
-
-      const getNextStep = (cat: string) => {
-        return `Draft a direct output brief and send it to the Content Workspace for copy generation.`;
-      };
-
-      const categoriesList = [
-        'Strongest Directions',
-        'Sharp Hooks',
-        'Thought Leadership Angles',
-        'Educational Angles',
-        'Emotional or Reflective Angles',
-        'Storytelling Angles',
-        'Promotional Angles',
-        'Campaign-Series Ideas',
-        'Experimental Ideas'
       ];
 
-      const list: SavedIdea[] = categoriesList.map((catName, idx) => {
-        const chan = catName.includes('Promotional') ? 'Email / Direct Outreach' : (catName.includes('Hook') || catName.includes('Emotional') ? 'Instagram' : 'LinkedIn');
-        const fmt = catName.includes('Promotional') ? 'Sponsor Pitch Paragraph' : (catName.includes('Hook') ? 'Caption' : (catName.includes('Educational') ? 'Carousel' : 'Post'));
+      const rawProposals: Partial<IdeationOpportunityProposal>[] = opportunityTemplates.map((tpl, idx) => ({
+        id: `idea-gen-${idx}-${Date.now()}`,
+        title: translateText(tpl.title, ideationFilterLanguage),
+        originalInput: inputVal,
+        category: translateText(tpl.category, ideationFilterLanguage),
+        explanation: translateText(tpl.explanation, ideationFilterLanguage),
+        communicationJob: tpl.communicationJob,
+        whyItWorks: translateText(
+          ideationFilterQuality === 'Sponsor-facing'
+            ? 'Directly aligns with long-term institutional backing and cultural prestige.'
+            : ideationFilterQuality === 'Emotional'
+            ? 'Triggers a genuine human connection and bypasses academic jargon.'
+            : 'Bridges the gap between planetary reality and somatic artistic experience.',
+          ideationFilterLanguage
+        ),
+        coreTension: tpl.coreTension,
+        desiredAudienceResponse: tpl.desiredAudienceResponse,
+        suggestedChannel: tpl.channel,
+        suggestedFormat: tpl.format,
+        suggestedAudience: translateText(ideationFilterAudience, ideationFilterLanguage),
+        suggestedPillar: tpl.suggestedPillar,
+        strategicAngle: tpl.strategicAngle,
+        suggestedTone: translateText(getTone(ideationFilterDepth, ideationFilterQuality), ideationFilterLanguage),
+        possibleHook: translateText(
+          `Why do we keep writing reports about ${cleanInput.toLowerCase()} when live performance can change how a room breathes together?`,
+          ideationFilterLanguage
+        ),
+        possibleFirstPost: translateText(
+          `Staging a response to ${cleanInput.toLowerCase()} is not about temporary awareness. It is about building an enduring cultural work that makes planetary reality felt.`,
+          ideationFilterLanguage
+        ),
+        riskToAvoid: translateText(
+          'Avoid generic activist slogans, preachy language, or unverified milestone claims.',
+          ideationFilterLanguage
+        ),
+        possibleNextStep: translateText(
+          'Promote this opportunity to Content Workspace with its communication job and evidence profile attached.',
+          ideationFilterLanguage
+        ),
+        language: ideationFilterLanguage,
+        dateCreated: dateStr,
+        status: 'New'
+      }));
 
-        return {
-          id: `idea-gen-${idx}-${Date.now()}`,
-          title: translateText(getTitle(catName), ideationFilterLanguage),
-          originalInput: inputVal,
-          category: translateText(catName, ideationFilterLanguage),
-          explanation: translateText(getExplanation(catName), ideationFilterLanguage),
-          whyItWorks: translateText(getWhyItWorks(catName), ideationFilterLanguage),
-          suggestedChannel: chan,
-          suggestedFormat: fmt,
-          suggestedAudience: translateText(ideationFilterAudience, ideationFilterLanguage),
-          suggestedTone: translateText(getTone(ideationFilterDepth, ideationFilterQuality), ideationFilterLanguage),
-          possibleHook: translateText(getHook(catName), ideationFilterLanguage),
-          possibleFirstPost: translateText(getFirstPost(catName), ideationFilterLanguage),
-          riskToAvoid: translateText(getRisk(catName), ideationFilterLanguage),
-          possibleNextStep: translateText(getNextStep(catName), ideationFilterLanguage),
-          language: ideationFilterLanguage,
-          dateCreated: dateStr,
-          status: 'New'
-        };
+      const enrichedList = enrichAndDiversifyOpportunities({
+        rawProposals,
+        rawInput: inputVal,
+        defaultAudience: ideationFilterAudience,
+        defaultChannel: ideationFilterChannel,
+        defaultLanguage: ideationFilterLanguage,
+        sourceBindings: ideationSourceBindings,
+        derivedSourceAnalyses: sourceIntelligenceMap,
+        savedIdeas,
+        savedContents: savedContent
       });
 
-      setGeneratedIdeas(list);
+      setGeneratedIdeas(enrichedList);
       setIsIdeating(false);
-    }, 800);
+    }, 350);
   };
 
   const [savingIdeaId, setSavingIdeaId] = useState<string | null>(null);
@@ -1739,34 +1783,70 @@ export default function App() {
     // Preset to 'advanced' mode when pushing from Ideation to Content Workspace
     setCreationMode('advanced');
 
-    const mappedNotes = `${idea.explanation}\n\nWhy it works: ${idea.whyItWorks}\nHook suggestion: ${idea.possibleHook}`;
+    const handoff = buildIdeationToContentHandoff({
+      idea: idea as IdeationOpportunityProposal,
+      currentSelectedSourceIds: advancedBrief.selectedSourceIds,
+      currentTaskSourceRoleMap: taskSourceRoleMap
+    });
+
+    setTaskSourceRoleMap(handoff.restoredRoleMap);
 
     setSimpleBrief({
       goal: idea.title,
-      channel: idea.suggestedChannel || 'LinkedIn'
+      channel: handoff.advancedBriefPatch.channel
     });
 
     setQuickBrief({
       creationScope: 'Single Channel',
       targetChannels: ['LinkedIn', 'Instagram', 'Newsletter', 'Website'],
       goal: idea.title,
-      notes: mappedNotes,
-      channel: idea.suggestedChannel || 'LinkedIn',
-      mustInclude: '',
-      mustAvoid: '',
-      language: idea.language || 'English',
-      outputFormat: idea.suggestedFormat || 'Post'
+      notes: handoff.advancedBriefPatch.customDirection,
+      channel: handoff.advancedBriefPatch.channel,
+      mustInclude: handoff.advancedBriefPatch.mustInclude,
+      mustAvoid: handoff.advancedBriefPatch.mustAvoid,
+      language: handoff.advancedBriefPatch.language,
+      outputFormat: handoff.advancedBriefPatch.outputFormat
     });
 
     setAdvancedBrief(prev => ({
       ...prev,
-      topic: idea.title,
+      topic: handoff.advancedBriefPatch.topic,
       directionMode: 'custom',
-      customDirection: mappedNotes,
-      channel: idea.suggestedChannel || prev.channel,
-      audience: idea.suggestedAudience || prev.audience,
-      language: idea.language || prev.language,
-      outputFormat: idea.suggestedFormat || prev.outputFormat
+      customDirection: handoff.advancedBriefPatch.customDirection,
+      channel: handoff.advancedBriefPatch.channel || prev.channel,
+      audience: handoff.advancedBriefPatch.audience || prev.audience,
+      pillar: handoff.advancedBriefPatch.pillar || prev.pillar,
+      purpose: handoff.advancedBriefPatch.purpose || prev.purpose,
+      language: handoff.advancedBriefPatch.language || prev.language,
+      outputFormat: handoff.advancedBriefPatch.outputFormat || prev.outputFormat,
+      mustInclude: handoff.advancedBriefPatch.mustInclude || prev.mustInclude,
+      mustAvoid: handoff.advancedBriefPatch.mustAvoid || prev.mustAvoid,
+      selectedSourceIds: handoff.advancedBriefPatch.selectedSourceIds
+    }));
+
+    setActiveWorkItem(prev => ({
+      ...(prev || {
+        id: `work-${Date.now()}`,
+        draftVersions: [],
+        imageResults: [],
+        revisionHistory: [],
+        approved: false,
+        saved: false,
+        createdAt: new Date().toISOString()
+      }),
+      title: idea.title,
+      type: 'Content',
+      status: 'Brief',
+      ideaId: idea.id,
+      channel: handoff.advancedBriefPatch.channel,
+      outputFormat: handoff.advancedBriefPatch.outputFormat,
+      audience: handoff.advancedBriefPatch.audience,
+      purpose: handoff.advancedBriefPatch.purpose,
+      language: handoff.advancedBriefPatch.language,
+      sourceIds: handoff.advancedBriefPatch.selectedSourceIds,
+      origin: 'Ideation Workspace',
+      workContext: handoff.workContext,
+      updatedAt: new Date().toISOString()
     }));
 
     setImportedIdeationContext(idea);
@@ -5091,11 +5171,52 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {activeTab === 'ideation-workspace' && (<ErrorBoundary fallbackTitle="Ideation Workspace Error">
           <div className="page-shell">
             {/* Header */}
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-2">
-              <h2 className="font-sans text-2xl font-bold text-text-primary">Ideation Workspace</h2>
-              <p className="font-sans text-[15px] text-text-secondary mt-1">
-                Explore creative angles, hooks, and campaign trajectories before writing. Turn ideas into actionable content briefs.
-              </p>
+            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-4">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                  <h2 className="font-sans text-2xl font-bold text-text-primary">Ideation Workspace</h2>
+                  <p className="font-sans text-[14px] text-text-secondary mt-1">
+                    Situation or Source to Communication Opportunities, Evidence Check, Reuse Check, Strong Idea, and Content Brief.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-text-secondary bg-surface-inset px-3 py-1.5 rounded-lg border border-border-standard">
+                  <span>Library Context:</span>
+                  <span className="text-brand-gold font-bold">{savedIdeas.length} Saved Ideas</span>
+                  <span>|</span>
+                  <span className="text-brand-gold font-bold">{savedContent.length} Content Pieces</span>
+                </div>
+              </div>
+              <div className="mt-4">
+                <ContextManifestPanel
+                  manifest={
+                    compileGovernedContext({
+                      workflow: 'Ideation Workspace',
+                      operatingCore,
+                      coreDocuments: operatingCoreDocs,
+                      audience: ideationFilterAudience,
+                      channel: ideationFilterChannel,
+                      language: ideationFilterLanguage,
+                      sourceBindings: advancedBrief.selectedSourceIds
+                        .map(id => {
+                          const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+                          if (!s) return null;
+                          return {
+                            sourceId: s.id,
+                            title: s.title || 'Untitled Source',
+                            type: s.type || 'Other',
+                            role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type),
+                            selectedExcerpts: taskSourceRoleMap[s.id]?.selectedExcerpts || [],
+                            content: s.content || s.notes || s.url || '',
+                            summary: s.notes || undefined
+                          } as TaskSourceBinding;
+                        })
+                        .filter((b): b is TaskSourceBinding => Boolean(b)),
+                      derivedSourceAnalyses: sourceIntelligenceMap,
+                      userInstruction: ideationInput
+                    }).manifest
+                  }
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
@@ -5108,7 +5229,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   <CardContent className="pt-5 flex flex-col gap-5">
                     
                     <div className="flex flex-col gap-2">
-                      <label className="font-sans text-[13px] font-semibold text-text-primary">What do you want to explore?</label>
+                      <label className="font-sans text-[13px] font-semibold text-text-primary">What situation, question, or source angle do you want to explore?</label>
                       <p className="font-sans text-[11px] text-text-secondary">
                         Enter a keyword, phrase, question, paragraph, theme, campaign direction, audience need, or content problem.
                       </p>
@@ -5118,6 +5239,121 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         onChange={(e) => setIdeationInput(e.target.value)}
                         placeholder="e.g. Why is climate opera superior to other forms of climate art?"
                       />
+                    </div>
+
+                    {/* Source-Grounded Ideation Panel */}
+                    <div
+                      data-testid="ideation-attached-sources-panel"
+                      className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-inset border border-border-standard"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-sans text-[12px] font-bold text-text-primary">
+                          Attached Sources ({advancedBrief.selectedSourceIds.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setActiveTab('source-library')}
+                          className="text-[11px] font-semibold text-brand-gold hover:underline"
+                        >
+                          Browse Source Library
+                        </button>
+                      </div>
+
+                      {advancedBrief.selectedSourceIds.length > 0 ? (
+                        <div className="flex flex-col gap-2">
+                          {advancedBrief.selectedSourceIds.map(srcId => {
+                            const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === srcId);
+                            if (!s) return null;
+                            const currentRole = taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type);
+                            const analysis = sourceIntelligenceMap[s.id];
+                            return (
+                              <div
+                                key={s.id}
+                                data-testid={`ideation-attached-source-${s.id}`}
+                                className="p-2.5 rounded-lg bg-surface-primary border border-border-standard flex flex-col gap-1.5"
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="font-sans text-[12px] font-bold text-text-primary truncate">
+                                    {s.title}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setAdvancedBrief(prev => ({
+                                        ...prev,
+                                        selectedSourceIds: prev.selectedSourceIds.filter(id => id !== s.id)
+                                      }))
+                                    }
+                                    className="text-[10px] font-semibold text-status-error hover:underline"
+                                  >
+                                    Detach
+                                  </button>
+                                </div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <label className="text-[10px] font-semibold text-text-secondary">Task Role:</label>
+                                  <select
+                                    data-testid={`ideation-source-role-select-${s.id}`}
+                                    value={currentRole}
+                                    onChange={e =>
+                                      handleChangeSourceTaskRole(s.id, e.target.value as SourceTaskRole)
+                                    }
+                                    className="text-[11px] font-semibold bg-surface-inset border border-border-standard rounded px-2 py-0.5 text-text-primary"
+                                  >
+                                    {ALL_SOURCE_TASK_ROLES.map(r => (
+                                      <option key={r} value={r}>
+                                        {r}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </div>
+                                {analysis && analysis.keyFacts.length > 0 && (
+                                  <div className="text-[10px] text-text-secondary bg-surface-inset p-1.5 rounded border border-border-standard">
+                                    <span className="font-semibold text-brand-gold">Traceable Fact: </span>
+                                    {analysis.keyFacts[0]}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="font-sans text-[11px] text-text-secondary">
+                          No source attached. Ideation will ground opportunities in the Protected COH Kernel and Operating Core, or you can attach a source below.
+                        </p>
+                      )}
+
+                      {sources.filter(s => s.selectable && !advancedBrief.selectedSourceIds.includes(s.id)).length > 0 && (
+                        <div className="pt-1">
+                          <select
+                            data-testid="ideation-attach-source-dropdown"
+                            value=""
+                            onChange={e => {
+                              const selectedId = e.target.value;
+                              if (!selectedId) return;
+                              const found = sources.find(s => s.id === selectedId);
+                              if (found && !taskSourceRoleMap[selectedId]) {
+                                handleChangeSourceTaskRole(selectedId, inferDefaultSourceRole(found.type));
+                              }
+                              setAdvancedBrief(prev => ({
+                                ...prev,
+                                selectedSourceIds: prev.selectedSourceIds.includes(selectedId)
+                                  ? prev.selectedSourceIds
+                                  : [...prev.selectedSourceIds, selectedId]
+                              }));
+                            }}
+                            className="w-full text-[11px] bg-surface-primary border border-border-standard rounded-md px-2.5 py-1.5 text-text-secondary"
+                          >
+                            <option value="">+ Attach source from Source Library...</option>
+                            {sources
+                              .filter(s => s.selectable && !advancedBrief.selectedSourceIds.includes(s.id))
+                              .map(s => (
+                                <option key={s.id} value={s.id}>
+                                  {s.title} ({s.type})
+                                </option>
+                              ))}
+                          </select>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex flex-col gap-4 pt-2">
@@ -5154,12 +5390,13 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
 
                     <Button
+                      data-testid="generate-ideas-btn"
                       onClick={handleGenerateIdeas}
-                      disabled={isIdeating || !aiProvider}
+                      disabled={isIdeating}
                       className="w-full h-11 mt-2 flex items-center justify-center gap-2 font-bold"
                     >
                       {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
-                      {isIdeating ? 'Generating...' : 'Generate Ideas'}
+                      {isIdeating ? 'Generating Opportunities...' : 'Generate Ideas'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -5168,119 +5405,98 @@ WRITING CLEANLINESS RULES (CRITICAL):
               {/* Ideas Display (Right) */}
               <div className="col-span-1 lg:col-span-8 flex flex-col gap-6">
                 {generatedIdeas.length > 0 ? (
-                  <div className="flex flex-col gap-8">
-                    {/* Unique Categories derived from the list */}
-                    {Array.from(new Set(generatedIdeas.map(i => i.category))).map(cat => (
-                      <div key={cat} className="flex flex-col gap-4">
-                        <h3 className="font-sans text-lg font-bold text-brand-gold border-b border-border-standard pb-2 capitalize">
-                          {cat}
-                        </h3>
+                  <div className="flex flex-col gap-6">
+                    {/* Strategic Diversity & Evidence Summary Strip */}
+                    {(() => {
+                      const divStats = evaluateOpportunityDiversity(generatedIdeas as IdeationOpportunityProposal[]);
+                      const sourceMap: Record<string, string> = {};
+                      [...sources, ...workspaceLocalSources].forEach((s: any) => {
+                        sourceMap[s.id] = s.title;
+                      });
+                      return (
+                        <>
+                          <div
+                            data-testid="ideation-diversity-summary"
+                            className="bg-surface-primary border border-border-standard px-4 py-3 rounded-xl flex flex-wrap items-center justify-between gap-3 text-[12px]"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-text-primary">Opportunity Set Quality:</span>
+                              <span className="px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-semibold">
+                                {divStats.uniqueCommunicationJobs} Distinct Communication Jobs
+                              </span>
+                              <span className="px-2 py-0.5 rounded bg-surface-inset text-text-secondary border border-border-standard">
+                                {divStats.uniqueStrategicAngles} Strategic Angles
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-text-secondary">
+                              {advancedBrief.selectedSourceIds.length > 0
+                                ? `Grounded in ${advancedBrief.selectedSourceIds.length} attached source(s)`
+                                : 'Grounded in Protected COH Kernel & Operating Core'}
+                            </div>
+                          </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                          {generatedIdeas.filter(idea => idea.category === cat).map(idea => (
-                            <Card key={idea.id} className="shadow-level-1 border-border-standard hover:border-brand-gold/50 transition-colors flex flex-col h-full">
-                              <CardContent className="p-5 flex-1 flex flex-col gap-3">
-                                <div className="flex justify-between items-start gap-2">
-                                  <h4 className="font-sans font-bold text-text-primary text-[15px] leading-snug">{idea.title}</h4>
-                                  <Badge variant={idea.status === 'Promising' ? 'default' : 'outline'} className="text-[9px] uppercase">
-                                    {idea.status}
-                                  </Badge>
+                          <div className="flex flex-col gap-8">
+                            {Array.from(new Set(generatedIdeas.map(i => i.category))).map(cat => (
+                              <div key={cat} className="flex flex-col gap-4">
+                                <h3 className="font-sans text-lg font-bold text-brand-gold border-b border-border-standard pb-2 capitalize">
+                                  {cat}
+                                </h3>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                  {generatedIdeas
+                                    .filter(idea => idea.category === cat)
+                                    .map(idea => (
+                                      <IdeationOpportunityCard
+                                        key={idea.id}
+                                        idea={idea}
+                                        savingIdeaId={savingIdeaId}
+                                        sourceTitlesMap={sourceMap}
+                                        onUpdateStatus={handleUpdateIdeaStatus}
+                                        onGenerateVariation={targetIdea => {
+                                          setIsIdeating(true);
+                                          setTimeout(() => {
+                                            setIsIdeating(false);
+                                            setGeneratedIdeas(prev =>
+                                              prev.map(p =>
+                                                p.id === targetIdea.id
+                                                  ? {
+                                                      ...p,
+                                                      title: `Alternative Angle: ${p.title.replace(/^Alternative Angle:\s*/i, '')}`,
+                                                      strategicAngle: `${p.strategicAngle || 'Strategic'} (Refined Perspective)`,
+                                                      status: 'New'
+                                                    }
+                                                  : p
+                                              )
+                                            );
+                                          }, 350);
+                                        }}
+                                        onSaveToLibrary={handleSaveIdeaToLibrary}
+                                        onPromoteToWorkspace={handleCopyIdeaToWorkspace}
+                                        onInspectReuseCandidate={(itemType, _itemId) => {
+                                          if (itemType === 'idea') {
+                                            setActiveTab('idea-library');
+                                          } else {
+                                            setActiveTab('content-library');
+                                          }
+                                        }}
+                                      />
+                                    ))}
                                 </div>
-                                <p className="font-sans text-[13px] text-text-secondary leading-relaxed">{idea.explanation}</p>
-                                <p className="font-sans text-[12px] text-brand-gold font-semibold leading-relaxed">Why it works: {idea.whyItWorks}</p>
-                                
-                                {idea.possibleHook && (
-                                  <div className="bg-surface-inset p-2.5 border border-border-standard rounded-md font-sans text-[12px] italic text-text-secondary">
-                                    <span className="font-bold not-italic block mb-0.5">Hook idea:</span> "{idea.possibleHook}"
-                                  </div>
-                                )}
-
-                                {idea.possibleFirstPost && (
-                                  <div className="bg-brand-gold/5 p-2.5 border border-brand-gold/20 rounded-md font-sans text-[12px] text-text-primary">
-                                    <span className="font-bold block text-text-secondary mb-0.5">First Post Idea:</span>
-                                    "{idea.possibleFirstPost}"
-                                  </div>
-                                )}
-
-                                {idea.riskToAvoid && (
-                                  <p className="font-sans text-[12px] text-status-warning leading-relaxed mt-1">
-                                    <span className="font-bold">Risk to Avoid:</span> {idea.riskToAvoid}
-                                  </p>
-                                )}
-
-                                <p className="font-sans text-[12px] text-text-muted leading-relaxed mt-auto pt-2">
-                                  <span className="font-bold text-text-secondary">Next Step:</span> {idea.possibleNextStep}
-                                </p>
-
-                                <div className="flex gap-2 flex-wrap items-center mt-2">
-                                  <Badge variant="outline" className="text-[10px] text-text-muted border-border-strong">{idea.suggestedChannel}</Badge>
-                                  <Badge variant="outline" className="text-[10px] text-text-muted border-border-strong">{idea.suggestedFormat}</Badge>
-                                </div>
-                              </CardContent>
-
-                              <CardFooter className="p-4 border-t border-border-standard flex items-center justify-between gap-2 bg-surface-inset rounded-b-xl">
-                                <div className="flex gap-1.5">
-                                  <Button
-                                    variant="ghost" size="sm"
-                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Promising')}
-                                    className="h-8 text-xs text-brand-gold hover:bg-brand-gold/10"
-                                  >
-                                    Promising
-                                  </Button>
-                                  <Button
-                                    variant="ghost" size="sm"
-                                    onClick={() => handleUpdateIdeaStatus(idea.id, 'Not Useful')}
-                                    className="h-8 text-xs text-status-error hover:bg-status-error/10"
-                                  >
-                                    Not Useful
-                                  </Button>
-                                </div>
-
-                                <div className="flex gap-1.5 items-center">
-                                  <Button
-                                    variant="outline" size="sm"
-                                    onClick={() => {
-                                      setIsIdeating(true);
-                                      setTimeout(() => {
-                                        setIsIdeating(false);
-                                        setGeneratedIdeas(prev => prev.map(p => p.id === idea.id ? { ...p, title: `Alternative: ${p.title}`, status: 'New' } : p));
-                                      }, 500);
-                                    }}
-                                    className="h-8 text-xs border-border-strong text-text-secondary hover:text-text-primary"
-                                  >
-                                    Variations
-                                  </Button>
-                                  <Button
-                                    variant="outline" size="sm"
-                                    disabled={savingIdeaId === idea.id}
-                                    onClick={() => handleSaveIdeaToLibrary(idea)}
-                                    className="h-8 text-xs border-border-strong text-text-secondary hover:text-text-primary disabled:opacity-50"
-                                  >
-                                    {savingIdeaId === idea.id ? 'Saving...' : 'Save'}
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleCopyIdeaToWorkspace(idea)}
-                                    className="h-8 text-xs"
-                                  >
-                                    Draft
-                                  </Button>
-                                </div>
-                              </CardFooter>
-                            </Card>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="flex flex-col items-center justify-center p-16 text-center border-2 border-dashed border-border-standard rounded-2xl bg-surface-inset">
                     <div className="w-16 h-16 bg-surface-primary rounded-full flex items-center justify-center shadow-sm mb-4">
                       <Lightbulb size={28} className="text-brand-gold" />
                     </div>
-                    <h3 className="font-sans text-[18px] font-bold text-text-primary mb-2">No Ideas Generated Yet</h3>
+                    <h3 className="font-sans text-[18px] font-bold text-text-primary mb-2">No Opportunities Generated Yet</h3>
                     <p className="font-sans text-[14px] text-text-secondary max-w-md">
-                      Use the exploration panel on the left to generate fresh angles, hooks, and content directions.
+                      Use the exploration panel on the left to generate evidence-aware, reuse-checked COH communication opportunities.
                     </p>
                   </div>
                 )}
