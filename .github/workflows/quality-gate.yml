@@ -33,9 +33,24 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Check whether SheetJS is actually used
+        run: |
+          echo "Application/test references to xlsx or XLSX:"
+          grep -RniE "from ['\"]xlsx['\"]|require\(['\"]xlsx['\"]\)|XLSX\." src server api tests 2>/dev/null || true
+
       - name: Inspect production dependency advisories
         run: npm audit --omit=dev --audit-level=high
         continue-on-error: true
+
+      - name: Generate semver-safe lockfile remediation candidate
+        run: npm audit fix --package-lock-only || true
+
+      - name: Upload remediated lockfile candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: remediated-package-lock
+          path: package-lock.json
+          retention-days: 1
 
       - name: Run regression suite and production build
         run: npm run validate
