@@ -1,0 +1,30 @@
+{
+  "archiveRoot": "COH Content Studio - Upgrade Program",
+  "driveAuthenticatedAccessAvailable": false,
+  "lastUpdated": "2026-10-14T11:55:00Z",
+  "folders": {
+    "00 - Master Protocol": [
+      "docs/upgrade-program/MASTER_PROTOCOL.md",
+      "docs/upgrade-program/MASTER_REGISTER.md"
+    ],
+    "01 - Baseline": [
+      "docs/upgrade-program/BASELINE_ARCHITECTURE.md",
+      "docs/upgrade-program/BASELINE_VALIDATION.md"
+    ],
+    "02 - Implementation Prompts": [
+      "docs/upgrade-program/runs/COH-CS-00/PROMPT_SNAPSHOT.md"
+    ],
+    "03 - Run Evidence": {
+      "COH-CS-00": [
+        "docs/upgrade-program/runs/COH-CS-00/PROMPT_SNAPSHOT.md",
+        "docs/upgrade-program/runs/COH-CS-00/IMPLEMENTATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-00/CHANGE_MANIFEST.md",
+        "docs/upgrade-program/runs/COH-CS-00/VALIDATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-00/RUN_MANIFEST.json"
+      ]
+    },
+    "04 - Review Reports": [],
+    "05 - Corrective Actions": [],
+    "06 - Final Validation": []
+  }
+}

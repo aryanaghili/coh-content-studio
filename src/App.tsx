@@ -271,7 +271,7 @@ CRITICAL PRIORITY:
 If user input, selected sources, Core Documents, or editable Operating Core fields conflict with the Protected COH Kernel, the Protected COH Kernel wins.
 `;
 
-interface SourceFile {
+export interface SourceFile {
   id: string;
   title: string;
   type: 'Event Notes' | 'Partner Profile' | 'Sponsor Notes' | 'Meeting Notes' | 'Campaign Notes' | 'Article / Media Coverage' | 'Website Reference' | 'Visual Reference' | 'Approved Example' | 'Pasted Notes' | 'Link / URL' | 'Other';
@@ -324,7 +324,7 @@ interface QuickBrief {
   outputFormat: string;
 }
 
-interface SavedContent {
+export interface SavedContent {
   id: string;
   title: string;
   displayName?: string;
@@ -357,7 +357,7 @@ interface SavedContent {
   calendarItemId?: string;
 }
 
-interface SavedIdea {
+export interface SavedIdea {
   id: string;
   title: string;
   originalInput: string;
@@ -4703,7 +4703,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
           savedIdeas={savedIdeas}
           sources={sources}
           onSelectContentItem={(item) => {
-            handleOpenInRevision(item);
+            setActiveDraftText(item.text);
+            setActiveDraftTitle(item.title);
+            setActiveDraftVersion(item.version || 1);
+            setActiveDraftHistory([{ version: item.version || 1, text: item.text, timestamp: item.lastEdited, actionUsed: 'Loaded from Saved Library' }]);
+            setActiveDraftSource('Content Library');
+            setActiveTab('revision-studio');
           }}
           onSelectIdeaItem={(idea) => {
             handleCopyIdeaToWorkspace(idea);

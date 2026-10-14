@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Search, Command } from 'lucide-react';
 import { CommandPaletteModal } from './CommandPaletteModal';
-import { SavedContent, SavedIdea, SourceFile } from '../App';
+import type { SavedContent, SavedIdea, SourceFile } from '../App';
 
 interface TopBarProps {
   title: string;
