@@ -20,8 +20,8 @@ export function loadFromEnv() {
       provider: 'openai',
       displayName: 'OpenAI',
       apiKey: process.env.OPENAI_API_KEY || '',
-      textModel: process.env.OPENAI_MODEL || 'gpt-4o',
-      imageModel: process.env.OPENAI_IMAGE_MODEL || 'dall-e-3',
+      textModel: process.env.OPENAI_MODEL || 'gpt-6-luna',
+      imageModel: process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2',
       baseUrl: null,
       apiKeySource: process.env.OPENAI_API_KEY ? 'env' : 'not_configured',
       status: process.env.OPENAI_API_KEY ? 'not_connected' : 'not_configured',
@@ -80,12 +80,16 @@ export function getActiveConfig() {
 
 export function updateConfig(newConfig) {
   if (!newConfig.provider) throw new Error('Provider must be specified');
+  const resolvedTextModel =
+    newConfig.textModel ||
+    newConfig.model ||
+    (newConfig.provider === 'openai' ? (process.env.OPENAI_MODEL || 'gpt-6-luna') : '');
   
   activeConfig = {
     provider: newConfig.provider,
     apiKey: newConfig.apiKey || '',
-    textModel: newConfig.textModel || '',
-    imageModel: newConfig.imageModel || '',
+    textModel: resolvedTextModel,
+    imageModel: newConfig.imageModel || (newConfig.provider === 'openai' ? (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2') : ''),
     baseUrl: newConfig.baseUrl || null,
     apiKeySource: newConfig.apiKey ? 'session' : 'not_configured',
     status: newConfig.apiKey ? 'connected' : 'not_configured',

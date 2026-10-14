@@ -430,15 +430,19 @@ interface AIModelConfig {
   speed: string;
   usage: string;
   bestUseCase: string;
+  tierLabel?: string;
   isRecommended?: boolean;
 }
 
 const MODEL_REGISTRY: AIModelConfig[] = [
-  // OpenAI Text
-  { id: 'gpt-5.5', label: 'GPT-5.5', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content', isRecommended: true },
-  { id: 'gpt-5.4', label: 'GPT-5.4', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
-  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'Drafts, Ideation, Revision, Prompt generation, Daily content operations' },
-  { id: 'gpt-4o', label: 'GPT-4o (Legacy)', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
+  // OpenAI Text (Current Generation)
+  { id: 'gpt-6-luna', label: 'GPT-6 Luna - Efficient', tierLabel: 'Efficient', provider: 'openai', type: 'text', quality: 'High', speed: 'Fast', usage: 'Efficient', bestUseCase: 'Recommended for most routine Content Studio work and cost-efficient generation, Drafts, Ideation, Revision, Source analysis', isRecommended: true },
+  { id: 'gpt-6.1-sol', label: 'GPT-6.1 Sol - Advanced', tierLabel: 'Advanced', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Medium-Fast', usage: 'Advanced Reasoning', bestUseCase: 'Stronger reasoning for difficult strategic or transformation work, Complex institutional positioning, Multi-stakeholder framing' },
+  // OpenAI Text (Legacy / Compatible)
+  { id: 'gpt-5.5', label: 'GPT-5.5 (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Highest', speed: 'Fast', usage: 'High', bestUseCase: 'complex strategy, premium writing, nuanced professional content' },
+  { id: 'gpt-5.4', label: 'GPT-5.4 (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Very high', speed: 'Fast', usage: 'Medium-high', bestUseCase: 'strong everyday professional content and strategy work' },
+  { id: 'gpt-5.4-mini', label: 'GPT-5.4 Mini (Compatible)', tierLabel: 'Compatible', provider: 'openai', type: 'text', quality: 'Strong', speed: 'Faster', usage: 'Lower', bestUseCase: 'Drafts, Ideation, Revision, Prompt generation, Daily content operations' },
+  { id: 'gpt-4o', label: 'GPT-4o (Legacy)', tierLabel: 'Legacy', provider: 'openai', type: 'text', quality: 'Legacy / compatible', speed: 'Fast', usage: 'Medium', bestUseCase: 'fallback compatibility if newer models are unavailable' },
   
   // OpenAI Image
   { id: 'gpt-image-2', label: 'GPT Image 2', provider: 'openai', type: 'image', quality: 'Highest', speed: 'Medium', usage: 'High', bestUseCase: 'Visual Studio, Campaign artwork, Social media graphics, Editorial illustrations', isRecommended: true },
@@ -895,7 +899,7 @@ export default function App() {
 
   // Settings form fields (never persisted to localStorage, sent to backend only)
   const [settingsProvider, setSettingsProvider] = useState<string>('openai');
-  const [settingsTextModel, setSettingsTextModel] = useState<string>(() => safeLocalStorageGet('coh_settings_text_model', 'gpt-5.4-mini'));
+  const [settingsTextModel, setSettingsTextModel] = useState<string>(() => safeLocalStorageGet('coh_settings_text_model', 'gpt-6-luna'));
   const [settingsImageModel, setSettingsImageModel] = useState<string>(() => safeLocalStorageGet('coh_settings_image_model', 'gpt-image-2'));
   const [settingsApiKey, setSettingsApiKey] = useState<string>('');
   const [settingsBaseUrl, setSettingsBaseUrl] = useState<string>('');
@@ -909,13 +913,21 @@ export default function App() {
   useEffect(() => {
     let fallbackTriggered = false;
     
-    if (settingsTextModel && !MODEL_REGISTRY.some(m => m.id === settingsTextModel && m.type === 'text')) {
-      setSettingsTextModel('gpt-5.4-mini');
-      safeLocalStorageSet('coh_settings_text_model', 'gpt-5.4-mini');
+    if (
+      settingsTextModel &&
+      settingsTextModel !== aiTextModel &&
+      !MODEL_REGISTRY.some(m => m.id === settingsTextModel && m.type === 'text')
+    ) {
+      setSettingsTextModel('gpt-6-luna');
+      safeLocalStorageSet('coh_settings_text_model', 'gpt-6-luna');
       fallbackTriggered = true;
     }
     
-    if (settingsImageModel && !MODEL_REGISTRY.some(m => m.id === settingsImageModel && m.type === 'image')) {
+    if (
+      settingsImageModel &&
+      settingsImageModel !== aiImageModel &&
+      !MODEL_REGISTRY.some(m => m.id === settingsImageModel && m.type === 'image')
+    ) {
       setSettingsImageModel('gpt-image-2');
       safeLocalStorageSet('coh_settings_image_model', 'gpt-image-2');
       fallbackTriggered = true;
@@ -924,7 +936,7 @@ export default function App() {
     if (fallbackTriggered) {
       setFallbackWarning('The previously selected model is unavailable. The recommended default has been selected.');
     }
-  }, [settingsTextModel, settingsImageModel]);
+  }, [settingsTextModel, settingsImageModel, aiTextModel, aiImageModel]);
   
   // Cooldown effect
   useEffect(() => {
@@ -8034,7 +8046,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       
                       {settingsTextModel && MODEL_REGISTRY.find(m => m.id === settingsTextModel) && (
                         <div className="mt-3 text-sm text-text-secondary bg-surface-inset p-4 rounded-lg border border-border-standard flex flex-col gap-2">
-                          <div className="flex gap-6">
+                          <div className="flex flex-wrap items-center gap-6">
+                            {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.tierLabel && (
+                              <span><strong className="text-text-primary">Tier:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.tierLabel}</span>
+                            )}
                             <span><strong className="text-text-primary">Quality:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.quality}</span>
                             <span><strong className="text-text-primary">Speed:</strong> {MODEL_REGISTRY.find(m => m.id === settingsTextModel)?.speed}</span>
                           </div>
@@ -8115,13 +8130,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined);
                             if (result.connected) {
                               setSettingsTestPassed(true);
-                              setSettingsTestResult(`Connection verified. You can now save these settings. (Latency: ${result.latency}ms)`);
+                              setSettingsTestResult(`Connection verified for ${settingsProvider} (${settingsTextModel}). Latency: ${result.latency}ms.`);
                               setAiLastTested(new Date().toLocaleString());
                               setAiLatency(result.latency);
                               setAiStatus('not_connected');
                             } else {
                               setSettingsTestPassed(false);
-                              const errMsg = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              const rawErr = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              const errMsg = `[${settingsProvider} / ${settingsTextModel}] ${rawErr}`;
                               setSettingsTestResult(errMsg);
                               
                               if (errMsg.includes('Rate limit reached')) {

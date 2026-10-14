@@ -2,41 +2,192 @@ import { repairJson } from '../jsonRepair.js';
 import { buildGenerationPrompt } from '../promptBuilder.js';
 import { runQualityGate } from '../qualityGate.js';
 
-async function callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, jsonMode = true) {
-  const url = `${baseUrl || 'https://api.openai.com'}/v1/chat/completions`;
-  
+export const DEFAULT_OPENAI_TEXT_MODEL = 'gpt-6-luna';
+
+/**
+ * Capability matrix for supported OpenAI text models.
+ * Avoids fragile legacy prefix checks such as model.startsWith("gpt-4")
+ * and prevents sending unsupported sampling parameters (such as temperature: 0.8)
+ * to modern GPT-6 and reasoning models.
+ */
+export function getOpenAICapabilities(model = DEFAULT_OPENAI_TEXT_MODEL, baseUrl = null) {
+  const normalized = String(model || DEFAULT_OPENAI_TEXT_MODEL).trim();
+  const lower = normalized.toLowerCase();
+  const isCustomBaseUrl = Boolean(baseUrl && !baseUrl.includes('api.openai.com'));
+
+  if (lower === 'gpt-6-luna' || lower.startsWith('gpt-6-luna')) {
+    return {
+      model: normalized,
+      family: 'gpt-6-luna',
+      tier: 'Efficient',
+      preferredEndpoint: isCustomBaseUrl ? '/v1/chat/completions' : '/v1/responses',
+      fallbackEndpoint: '/v1/chat/completions',
+      supportsStructuredJson: true,
+      supportsTemperature: false,
+      supportsReasoningEffort: true,
+      defaultReasoningEffort: 'low'
+    };
+  }
+
+  if (lower === 'gpt-6.1-sol' || lower.startsWith('gpt-6.1-sol') || lower.startsWith('gpt-6.1')) {
+    return {
+      model: normalized,
+      family: 'gpt-6.1-sol',
+      tier: 'Advanced',
+      preferredEndpoint: isCustomBaseUrl ? '/v1/chat/completions' : '/v1/responses',
+      fallbackEndpoint: '/v1/chat/completions',
+      supportsStructuredJson: true,
+      supportsTemperature: false,
+      supportsReasoningEffort: true,
+      defaultReasoningEffort: 'high'
+    };
+  }
+
+  if (lower.startsWith('gpt-6') || lower.startsWith('gpt-5') || lower.startsWith('o1') || lower.startsWith('o3') || lower.startsWith('o4')) {
+    return {
+      model: normalized,
+      family: 'modern-reasoning',
+      tier: 'Compatible',
+      preferredEndpoint: '/v1/chat/completions',
+      fallbackEndpoint: '/v1/chat/completions',
+      supportsStructuredJson: true,
+      supportsTemperature: false,
+      supportsReasoningEffort: true,
+      defaultReasoningEffort: 'medium'
+    };
+  }
+
+  return {
+    model: normalized,
+    family: 'legacy-chat',
+    tier: 'Legacy / Compatible',
+    preferredEndpoint: '/v1/chat/completions',
+    fallbackEndpoint: '/v1/chat/completions',
+    supportsStructuredJson: true,
+    supportsTemperature: true,
+    defaultTemperature: 0.7,
+    supportsReasoningEffort: false,
+    defaultReasoningEffort: null
+  };
+}
+
+/**
+ * Builds an endpoint-specific request payload grounded in model capabilities.
+ */
+export function buildOpenAIRequest(model, baseUrl, systemPrompt, userPrompt, jsonMode = true, forceEndpoint = null) {
+  const capabilities = getOpenAICapabilities(model, baseUrl);
+  const cleanBase = (baseUrl || 'https://api.openai.com').replace(/\/+$/, '');
+  const endpoint = forceEndpoint || capabilities.preferredEndpoint;
+  const url = `${cleanBase}${endpoint}`;
+
+  if (endpoint === '/v1/responses') {
+    const payload = {
+      model: capabilities.model,
+      instructions: systemPrompt,
+      input: userPrompt
+    };
+    if (jsonMode && capabilities.supportsStructuredJson) {
+      payload.text = { format: { type: 'json_object' } };
+    }
+    return { url, endpoint, payload, capabilities };
+  }
+
+  // /v1/chat/completions contract
   const payload = {
-    model,
+    model: capabilities.model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
-    ],
-    temperature: 0.8,
+    ]
   };
-  
-  if (jsonMode && (model.startsWith('gpt-4') || model.startsWith('gpt-3.5'))) {
+
+  // Only send temperature to legacy chat models that support sampling temperature
+  if (capabilities.supportsTemperature && typeof capabilities.defaultTemperature === 'number') {
+    payload.temperature = capabilities.defaultTemperature;
+  }
+
+  if (jsonMode && capabilities.supportsStructuredJson) {
     payload.response_format = { type: 'json_object' };
   }
 
-  const res = await fetch(url, {
+  return { url, endpoint, payload, capabilities };
+}
+
+/**
+ * Extracts text from either OpenAI Responses API or Chat Completions API payloads.
+ */
+export function extractOpenAIText(data) {
+  if (!data || typeof data !== 'object') return null;
+
+  if (typeof data.output_text === 'string' && data.output_text.trim()) {
+    return data.output_text;
+  }
+
+  if (Array.isArray(data.output)) {
+    for (const item of data.output) {
+      if (Array.isArray(item?.content)) {
+        for (const block of item.content) {
+          if (typeof block?.text === 'string' && block.text.trim()) {
+            return block.text;
+          }
+        }
+      }
+    }
+  }
+
+  if (typeof data.choices?.[0]?.message?.content === 'string') {
+    return data.choices[0].message.content;
+  }
+
+  return null;
+}
+
+async function callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, jsonMode = true) {
+  const primary = buildOpenAIRequest(model, baseUrl, systemPrompt, userPrompt, jsonMode);
+
+  const res = await fetch(primary.url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(primary.payload),
   });
+
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`OpenAI API error ${res.status}: ${err}`);
+    const errText = await res.text();
+    // Safe fallback to /v1/chat/completions if /v1/responses endpoint is unsupported on target host
+    if (
+      primary.endpoint === '/v1/responses' &&
+      (res.status === 404 || errText.includes('unknown_url') || errText.includes('Unsupported endpoint'))
+    ) {
+      const fallback = buildOpenAIRequest(model, baseUrl, systemPrompt, userPrompt, jsonMode, '/v1/chat/completions');
+      const fallbackRes = await fetch(fallback.url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(fallback.payload),
+      });
+      if (!fallbackRes.ok) {
+        const fbErr = await fallbackRes.text();
+        throw new Error(`OpenAI API error ${fallbackRes.status}: ${fbErr}`);
+      }
+      const fbData = await fallbackRes.json();
+      return extractOpenAIText(fbData);
+    }
+
+    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
   }
+
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || null;
+  return extractOpenAIText(data);
 }
 
 export async function generate(config, input) {
   const { apiKey, baseUrl } = config;
-  const model = config.textModel || config.model;
+  const model = config.textModel || config.model || process.env.OPENAI_MODEL || DEFAULT_OPENAI_TEXT_MODEL;
   if (!model) return { success: false, errorType: 'CONFIGURATION_ERROR', userMessage: 'Text model is missing from generation request.' };
   const prompt = buildGenerationPrompt(input);
   const systemPrompt = 'You are an expert content strategist. Always return valid JSON matching the requested schema exactly. Never include markdown codeblock wrappers. Return only raw JSON.';
@@ -80,27 +231,41 @@ export async function generate(config, input) {
 
 export async function compileImagePrompt(config, systemPrompt, userPrompt) {
   const { apiKey, baseUrl } = config;
-  const model = config.textModel || config.model || 'gpt-4o';
-  // Use a capable text model for this
-  const compileModel = model.startsWith('gpt-image') || model.startsWith('dall-e') ? 'gpt-4o' : model;
+  const model = config.textModel || config.model || process.env.OPENAI_MODEL || DEFAULT_OPENAI_TEXT_MODEL;
+  // Use a capable text model for compiling visual prompts
+  const compileModel = model.startsWith('gpt-image') || model.startsWith('dall-e') ? DEFAULT_OPENAI_TEXT_MODEL : model;
   const rawText = await callOpenAI(apiKey, compileModel, baseUrl, systemPrompt, userPrompt, false);
   return rawText;
 }
 
 export async function testConnection(config) {
   const { apiKey, baseUrl } = config;
-  const model = config.textModel || config.model;
+  const model = config.textModel || config.model || process.env.OPENAI_MODEL || DEFAULT_OPENAI_TEXT_MODEL;
   if (!model) return { connected: false, provider: 'openai', error: 'Text model is missing.' };
+  const capabilities = getOpenAICapabilities(model, baseUrl);
   const start = Date.now();
   const systemPrompt = 'You are a connection test assistant. Return only valid JSON.';
   const userPrompt = 'Respond with exactly: { "ok": true, "provider": "openai", "model": "' + model + '" }';
   try {
-    const rawText = await callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt);
+    const rawText = await callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, true);
     const parsed = repairJson(rawText);
     if (!parsed?.ok) throw new Error('Invalid test response: ' + rawText);
-    return { connected: true, provider: 'openai', model, latency: Date.now() - start };
+    return {
+      connected: true,
+      provider: 'openai',
+      model,
+      tier: capabilities.tier,
+      latency: Date.now() - start
+    };
   } catch (err) {
-    return { connected: false, provider: 'openai', model, latency: Date.now() - start, error: friendlyError(err) };
+    return {
+      connected: false,
+      provider: 'openai',
+      model,
+      tier: capabilities.tier,
+      latency: Date.now() - start,
+      error: friendlyError(err)
+    };
   }
 }
 

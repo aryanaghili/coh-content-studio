@@ -1,0 +1,43 @@
+{
+  "id": "COH-CS-02",
+  "title": "Modernize the OpenAI Provider for GPT-6 Luna and GPT-6.1 Sol Without Breaking Existing Providers",
+  "status": "PASS",
+  "baseCommit": "c03cb947ef1cb6b769ae88cf3b476ae3a625bdcc",
+  "implementationCommit": "PENDING_EVIDENCE_COMMIT",
+  "branch": "feature/coh-content-intelligence-v2",
+  "databaseChanged": false,
+  "schemaChanged": false,
+  "productionDataChanged": false,
+  "dependenciesChanged": false,
+  "filesCreated": [
+    "tests/openaiModernization.test.js",
+    "docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md",
+    "docs/upgrade-program/runs/COH-CS-02/OPENAI_CAPABILITY_MATRIX.md",
+    "docs/upgrade-program/runs/COH-CS-02/IMPLEMENTATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-02/CHANGE_MANIFEST.md",
+    "docs/upgrade-program/runs/COH-CS-02/VALIDATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-02/RUN_MANIFEST.json"
+  ],
+  "filesModified": [
+    "server/ai/adapters/openaiAdapter.js",
+    "server/ai/providerManager.js",
+    "server/ai/adapters/anthropicAdapter.js",
+    "server/ai/adapters/mistralAdapter.js",
+    "server/ai/adapters/geminiAdapter.js",
+    "server/ai/adapters/openrouterAdapter.js",
+    "src/App.tsx",
+    "docs/upgrade-program/MASTER_REGISTER.md",
+    "docs/upgrade-program/DRIVE_SYNC_MANIFEST.json"
+  ],
+  "filesDeleted": [],
+  "testsPassed": [
+    "node --test tests/openaiModernization.test.js (5/5 passed, 6 COH benchmark fixtures x 2 GPT-6 models)",
+    "node --test tests/contextCompiler.test.ts (5/5 passed)",
+    "npm run build"
+  ],
+  "testsFailed": [],
+  "warnings": [
+    "Live OpenAI API verification marked NOT RUN as no live OPENAI_API_KEY is present in local environment."
+  ],
+  "knownIssues": []
+}
