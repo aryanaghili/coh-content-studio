@@ -37,6 +37,14 @@ export const CurrentWorkContextBar: React.FC<CurrentWorkContextBarProps> = ({
   onClearWorkContext
 }) => {
   const sourceLabel = sourceBindings.length > 0 ? `${sourceBindings.length} source${sourceBindings.length > 1 ? 's' : ''}` : 'Core only';
+  const isBlankStandalone =
+    currentStudio === 'Content Workspace' &&
+    originLabel === 'Content Workspace' &&
+    (!originTitle || originTitle === 'Standalone Draft') &&
+    sourceBindings.length === 0 &&
+    !onClearWorkContext;
+
+  if (isBlankStandalone) return null;
 
   return (
     <details
