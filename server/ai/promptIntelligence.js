@@ -53,6 +53,31 @@ V11. NEGATIVE PROMPTS MUST BE CONCRETE. Name specific visual failures to avoid, 
 V12. DESIGNER NOTES MUST ADD EXECUTION VALUE. Mention crop safety, text-safe zones, sequence logic, motion opportunities, or post-production considerations only when useful.
 `;
 
+function buildQualityRepairContext(input = {}) {
+  const issues = Array.isArray(input.qualityRepairIssues)
+    ? input.qualityRepairIssues.map((issue) => clean(issue)).filter(Boolean)
+    : [];
+  if (issues.length === 0) return '';
+
+  let previous = '';
+  try {
+    previous = JSON.stringify(input.previousCandidate || {});
+  } catch {
+    previous = '';
+  }
+  if (previous.length > 12000) previous = `${previous.slice(0, 12000)}...`;
+
+  return `
+=== CONTROLLED QUALITY REPAIR PASS ===
+This is the single permitted repair attempt after the previous candidate failed deterministic quality checks.
+Fix the listed failures without changing the underlying brief, widening factual claims, inventing evidence, or adding unrelated material.
+Quality failures to repair:
+${issues.map((issue, index) => `${index + 1}. ${issue}`).join('\n')}
+${previous ? `Previous candidate JSON for targeted correction:\n${previous}` : ''}
+Return the complete corrected schema, not a patch or commentary.
+`;
+}
+
 export function buildTaskContract(input = {}) {
   return `=== TASK CONTRACT ===
 - Studio Mode: ${clean(input.mode, 'creation')}
@@ -67,7 +92,7 @@ export function buildTaskContract(input = {}) {
 - Desired Length: ${clean(input.desiredLength, 'Appropriate to the target format')}
 - Must Include: ${list(input.mustInclude)}
 - Must Avoid: ${list(input.mustAvoid)}
-`;
+${buildQualityRepairContext(input)}`;
 }
 
 export function buildEvidenceContract(input = {}) {
