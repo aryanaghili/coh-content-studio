@@ -35,31 +35,7 @@ export const SmartBriefPanel: React.FC<SmartBriefPanelProps> = ({
     ['Language', smartBrief.language]
   ] as const;
 
-  if (waitingForRequest) {
-    return (
-      <div data-testid="smart-brief-panel" className="bg-surface-primary border border-border-standard rounded-xl px-4 py-3 shadow-level-1">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-          <div className="flex items-start gap-2.5 min-w-0">
-            <Sparkles size={15} className="text-brand-gold shrink-0 mt-0.5" />
-            <div>
-              <h4 className="text-[12.5px] font-semibold text-text-primary">Draft Setup</h4>
-              <p className="text-[11.5px] text-text-secondary mt-0.5">
-                Start with what you want to create. Audience, channel, format, pillar, and sources will resolve around that request.
-              </p>
-            </div>
-          </div>
-          <div data-testid="generation-speed-toggle" className="inline-flex self-start md:self-center rounded-lg bg-surface-inset p-0.5 border border-border-standard shrink-0">
-            <button type="button" data-testid="speed-mode-fast" onClick={() => onChangeSpeedMode('fast')} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 ${speedMode === 'fast' ? 'bg-brand-gold text-text-inverse' : 'text-text-secondary'}`}>
-              <Zap size={11} /> Fast
-            </button>
-            <button type="button" data-testid="speed-mode-explore" onClick={() => onChangeSpeedMode('explore')} className={`px-2.5 py-1 rounded-md text-[11px] font-semibold inline-flex items-center gap-1 ${speedMode === 'explore' ? 'bg-brand-gold text-text-inverse' : 'text-text-secondary'}`}>
-              <Compass size={11} /> Explore
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (waitingForRequest) return null;
 
   return (
     <div data-testid="smart-brief-panel" className="bg-surface-primary border border-border-standard rounded-xl p-4 shadow-level-1 space-y-3">
