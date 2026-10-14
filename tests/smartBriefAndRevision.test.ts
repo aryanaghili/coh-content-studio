@@ -92,6 +92,7 @@ describe('COH-CS-06 Smart Brief, Fast/Explore Mode, and Revision Productivity', 
     );
 
     assert.equal(recipe.hasBlockingConflict, false);
+    assert.equal(recipe.requiresAiExecution, true);
     const stageSequence = recipe.orderedSteps.map(s => s.stage);
     assert.deepEqual(stageSequence, [1, 2, 3, 4, 5, 6]);
     assert.ok(
@@ -100,18 +101,34 @@ describe('COH-CS-06 Smart Brief, Fast/Explore Mode, and Revision Productivity', 
       'Expected strict PT-EU governance note'
     );
 
-    // Execute deterministically and verify no em dashes and PT-EU marker
+    // Deterministic execution on deterministic-safe recipe removes em dashes and exaggerations
+    const detSafeRecipe = compileRevisionRecipe(
+      ['clean-ai-punctuation', 'institutional', 'shorter', 'more-careful', 'preserve-meaning'],
+      { targetLanguage: 'English', channel: 'LinkedIn' }
+    );
     const output = executeDeterministicRevisionRecipe(
       'Climate Opera Haus — guaranteed 100% impact. Climate Opera Haus is an operatic venture.',
-      recipe,
-      { targetLanguage: 'Portuguese (European)', channel: 'LinkedIn' }
+      detSafeRecipe,
+      { targetLanguage: 'English', channel: 'LinkedIn' }
     );
     assert.ok(!output.includes('\u2014'), 'Output must not contain em dashes');
-    assert.ok(output.includes('PT-EU'), 'Output must reflect PT-EU localization');
+    assert.ok(!output.includes('100%'), 'Output must soften unsupported 100% exaggeration');
+
+    // Offline execution of translation recipe must throw rather than faking translation
+    assert.throws(
+      () =>
+        executeDeterministicRevisionRecipe(
+          'Climate Opera Haus develops original operas.',
+          recipe,
+          { targetLanguage: 'Portuguese (European)', channel: 'LinkedIn' }
+        ),
+      /AI Connection Required/
+    );
 
     // 2. Persian governance check
     const persianRecipe = compileRevisionRecipe(['persian-natural'], { targetLanguage: 'Persian (Farsi)' });
     assert.ok(persianRecipe.languageGovernanceNote?.includes('spoken-friendly Persian'));
+    assert.equal(persianRecipe.requiresAiExecution, true);
 
     // 3. Conflict detection for contradictory actions
     const conflicts = detectRevisionConflicts(['shorter', 'longer-version']);

@@ -1,7 +1,9 @@
 import {
   REVISION_ACTIONS,
   type RevisionActionDef,
-  getCanonicalRevisionAction
+  type RevisionExecutionMode,
+  getCanonicalRevisionAction,
+  isAiRequiredRevisionAction
 } from './revisionActions.ts';
 import type { WorkContext } from './contextCompiler.ts';
 import {
@@ -610,12 +612,14 @@ export interface CompiledRevisionRecipeStep {
   stageName: string;
   actionId: string;
   label: string;
+  executionMode: RevisionExecutionMode;
 }
 
 export interface CompiledRevisionRecipe {
   orderedSteps: CompiledRevisionRecipeStep[];
   conflicts: RevisionConflict[];
   hasBlockingConflict: boolean;
+  requiresAiExecution: boolean;
   compiledInstruction: string;
   summaryLabel: string;
   languageGovernanceNote?: string;
@@ -652,7 +656,8 @@ export function compileRevisionRecipe(
       stage,
       stageName: STAGE_NAMES[stage],
       actionId: id,
-      label: def?.label.replace(/^[^\w\s]+\s*/, '') || id
+      label: def?.label.replace(/^[^\w\s]+\s*/, '') || id,
+      executionMode: def?.executionMode || 'deterministic-safe'
     };
   });
 
@@ -666,6 +671,11 @@ export function compileRevisionRecipe(
   const hasTranslationStep =
     steps.some(s => s.stage === 6) ||
     targetLang !== 'English';
+
+  const requiresAiExecution = isAiRequiredRevisionAction(uniqueIds, {
+    targetLanguage: targetLang,
+    customInstruction: settings.customInstruction
+  });
 
   if (hasTranslationStep) {
     if (/portuguese|pt-eu/i.test(targetLang)) {
@@ -717,10 +727,79 @@ export function compileRevisionRecipe(
     orderedSteps: steps,
     conflicts,
     hasBlockingConflict,
+    requiresAiExecution,
     compiledInstruction: instructionLines.join('\n'),
     summaryLabel,
     languageGovernanceNote
   };
+}
+
+/**
+ * Validates AI revision output when translation or target-language localization was requested.
+ * Ensures Persian targets contain Persian script and PT-EU targets are not unchanged English or fake fallback headers.
+ */
+export function validateRevisionTranslationOutput(params: {
+  revisedCopy: string;
+  previousDraft: string;
+  targetLanguage?: string;
+  actionIds?: string[];
+}): { valid: boolean; reason?: string } {
+  const cleanRevised = String(params.revisedCopy || '').trim();
+  const cleanPrev = String(params.previousDraft || '').trim();
+  const targetLang = String(params.targetLanguage || 'English').trim();
+  const actionIds = params.actionIds || [];
+
+  if (!cleanRevised) {
+    return { valid: false, reason: 'Revision output is empty.' };
+  }
+
+  if (
+    /\[Translated to [^\]]+\]|\[Localized for [^\]]+\]|\[PT-EU \| Português Europeu\]|\[FA \| فارسی روان و طبیعی\]/i.test(
+      cleanRevised
+    )
+  ) {
+    return {
+      valid: false,
+      reason: 'Fake offline translation prefix detected. Real AI translation is required.'
+    };
+  }
+
+  const isPersianTarget =
+    /persian|farsi/i.test(targetLang) || actionIds.includes('persian-natural');
+  if (isPersianTarget) {
+    if (!/[\u0600-\u06FF]/.test(cleanRevised)) {
+      return {
+        valid: false,
+        reason: 'Persian translation validation failed: output does not contain Persian script.'
+      };
+    }
+  }
+
+  const isPortugueseTarget = /portuguese|pt-eu/i.test(targetLang);
+  if (isPortugueseTarget) {
+    if (cleanPrev && cleanRevised.toLowerCase() === cleanPrev.toLowerCase()) {
+      return {
+        valid: false,
+        reason: 'Portuguese (PT-EU) translation validation failed: output is identical to the original draft.'
+      };
+    }
+    const englishStopwords = (
+      cleanRevised.toLowerCase().match(/\b(the|and|with|that|from|this|their|through|about|would)\b/g) || []
+    ).length;
+    const portugueseMarkers = (
+      cleanRevised
+        .toLowerCase()
+        .match(/\b(para|com|uma|dos|das|pelos|pelas|através|sobre|como|não|está|são|equipa|mundos)\b|[ãõç]/g) || []
+    ).length;
+    if (englishStopwords >= 4 && portugueseMarkers === 0) {
+      return {
+        valid: false,
+        reason: 'Portuguese (PT-EU) translation validation failed: output remains predominantly English.'
+      };
+    }
+  }
+
+  return { valid: true };
 }
 
 export function cleanTypographyArtifacts(text: string): string {
@@ -751,6 +830,20 @@ export function executeDeterministicRevisionRecipe(
   if (!working) return '';
 
   const actionIds = recipe.orderedSteps.map(s => s.actionId);
+  const targetLang = settings.targetLanguage || 'English';
+
+  // Block fake offline translation / AI-required actions!
+  if (
+    recipe.requiresAiExecution ||
+    isAiRequiredRevisionAction(actionIds, {
+      targetLanguage: targetLang,
+      customInstruction: settings.customInstruction
+    })
+  ) {
+    throw new Error(
+      `AI Connection Required: Translation, localization (${targetLang}), or deep semantic rewriting cannot be faked offline. Your current draft has been preserved unchanged. Connect an AI provider in Settings to run this action.`
+    );
+  }
 
   // Stage 2: Evidence & Claim Discipline
   if (
@@ -759,7 +852,7 @@ export function executeDeterministicRevisionRecipe(
     )
   ) {
     working = working
-      .replace(/\b(100%|guaranteed|undisputed|world's first|largest in history)\b/gi, 'significant')
+      .replace(/\b100%|\b(guaranteed|undisputed|world's first|largest in history)\b/gi, 'significant')
       .replace(/\bproven to\b/gi, 'designed to');
     if (actionIds.includes('flag-claims')) {
       working += '\n\n[Claim Check: Verify any specific dates, partner names, or metrics against attached Source Library records before external publication.]';
@@ -841,24 +934,6 @@ export function executeDeterministicRevisionRecipe(
       .replace(/\bsave the planet\b/gi, 'strengthen cultural resilience')
       .replace(/\bsynergy\b/gi, 'collaboration')
       .replace(/\bleverage\b/gi, 'use');
-  }
-
-  // Stage 6: Translation & Localization (PT-EU and Persian deterministic support when offline)
-  const targetLang = settings.targetLanguage || 'English';
-  const hasTranslationAction = actionIds.some(id =>
-    ['translate', 'translate-selected', 'localize', 'localize-selected', 'persian-natural', 'adapt-channel-lang'].includes(id)
-  );
-
-  if (hasTranslationAction && targetLang !== 'English') {
-    if (/portuguese|pt-eu/i.test(targetLang)) {
-      working = `[PT-EU | Português Europeu] Na Climate Opera Haus, a equipa está a criar mundos operáticos originais que ligam a excelência artística ao diálogo cultural e ecológico.\n\n${working}`;
-    } else if (/persian|farsi/i.test(targetLang) || actionIds.includes('persian-natural')) {
-      working = `[FA | فارسی روان و طبیعی] در خانه اپرای اقلیمی (Climate Opera Haus)، ما روایت‌های هنری و اپرایی را به تجربه‌ای ملموس، انسانی و الهام‌بخش برای مخاطبان تبدیل می‌کنیم.\n\n${working}`;
-    } else {
-      working = `[Localized for ${targetLang}]\n\n${working}`;
-    }
-  } else if (actionIds.includes('persian-natural')) {
-    working = `[FA | فارسی روان و طبیعی] در خانه اپرای اقلیمی (Climate Opera Haus)، روایت هنری با زبانی طبیعی و گفتاری بازآفرینی شده است:\n\n${working}`;
   }
 
   if (settings.customInstruction && settings.customInstruction.trim()) {

@@ -105,23 +105,36 @@ describe('COH-CS-05 Dedicated COH Reframing Studio (Journeys A through H)', () =
     assert.ok(result.evidenceWarnings.length > 0);
   });
 
-  it('Journey G & H: Protected quote remains verbatim and saved lineage preserves origin without overwriting', () => {
+  it('Journey G & H: Protected quote remains verbatim in deterministic reframe, missing AI quote is flagged without fake wrapper, and saved lineage preserves origin without overwriting', () => {
     const plan = resolveReframeIntent({
       rawIntent: 'Reframe this for strategic partners on LinkedIn.',
       sourceContent: samplePublicSource
     });
 
-    // Even if raw AI copy omitted the quote, finalizeReframeResult enforces verbatim quote protection
-    const finalized = finalizeReframeResult({
+    // Deterministic reframe retains required quote verbatim without synthetic wrapper
+    const detResult = buildDeterministicReframe({
+      sourceContent: samplePublicSource,
+      plan
+    });
+    assert.equal(detResult.preservedQuotesVerified, true);
+    assert.ok(
+      detResult.reframedCopy.includes('"The opera creates the world, and the world outlives the stage."'),
+      'Exact double-quoted text must remain verbatim when Direct quotations is protected'
+    );
+    assert.ok(
+      !detResult.reframedCopy.includes('As noted directly in the source material:'),
+      'Must not append synthetic quote wrapper'
+    );
+
+    // If raw AI copy omitted the required quote, finalizeReframeResult flags it truthfully rather than appending a fake wrapper
+    const finalizedMissingQuote = finalizeReframeResult({
       sourceContent: samplePublicSource,
       rawReframedCopy: 'Strategic framing for partners around Soria Moria in 2026.',
       plan
     });
-
-    assert.equal(finalized.preservedQuotesVerified, true);
+    assert.equal(finalizedMissingQuote.preservedQuotesVerified, false);
     assert.ok(
-      finalized.reframedCopy.includes('"The opera creates the world, and the world outlives the stage."'),
-      'Exact double-quoted text must remain verbatim when Direct quotations is protected'
+      !finalizedMissingQuote.reframedCopy.includes('As noted directly in the source material:')
     );
 
     const lineage = buildReframeLineageMetadata({

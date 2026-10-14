@@ -22,6 +22,7 @@ import {
   getReframingAudienceOptions,
   getReframingPillarOptions,
   DEFAULT_PROTECTED_ELEMENTS,
+  NON_NEGOTIABLE_FACTUAL_INTEGRITY_RULES,
   type ReframeOriginType,
   type AudienceFamiliarityLevel,
   type ResolvedReframePlan,
@@ -168,6 +169,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
   );
 
   const [resolvedPlan, setResolvedPlan] = useState<ResolvedReframePlan | null>(null);
+  const [routeOverrideConfirmed, setRouteOverrideConfirmed] = useState<boolean>(false);
   const [reframeResult, setReframeResult] = useState<ReframeOutputResult | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -188,6 +190,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
       }
       setReframeResult(null);
       setGenerationError(null);
+      setRouteOverrideConfirmed(false);
     }
   }, [initialOrigin]);
 
@@ -260,6 +263,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
       operatingCore
     });
     setResolvedPlan(plan);
+    setRouteOverrideConfirmed(false);
     setGenerationError(null);
   };
 
@@ -279,7 +283,11 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
     handleUpdatePlanField('protectedElements', updated);
   };
 
-  const handleGenerateReframe = async (options?: { forceDeterministic?: boolean; simulateFailure?: boolean }) => {
+  const handleGenerateReframe = async (options?: {
+    forceDeterministic?: boolean;
+    simulateFailure?: boolean;
+    allowRevisionOverride?: boolean;
+  }) => {
     if (!sourceContent.trim()) return;
     const activePlan =
       resolvedPlan ||
@@ -294,6 +302,18 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
       });
     if (!resolvedPlan) {
       setResolvedPlan(activePlan);
+    }
+
+    // Route enforcement: block normal Reframe generation when REVISION is recommended unless explicitly overridden
+    if (
+      activePlan.recommendedRoute === 'REVISION' &&
+      !routeOverrideConfirmed &&
+      !options?.allowRevisionOverride
+    ) {
+      setGenerationError(
+        'This instruction is classified as a Revision task (same communication job). Please use "Open in Revision Studio" or explicitly click "Override - continue as Reframe".'
+      );
+      return;
     }
 
     setIsGenerating(true);
@@ -369,6 +389,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
     setSourceContent('');
     setRawIntent('');
     setResolvedPlan(null);
+    setRouteOverrideConfirmed(false);
     setReframeResult(null);
     setGenerationError(null);
     setOriginType('Manual Input');
@@ -379,6 +400,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
   const handleStartNewReframeKeepSource = () => {
     setRawIntent('');
     setResolvedPlan(null);
+    setRouteOverrideConfirmed(false);
     setReframeResult(null);
     setGenerationError(null);
   };
@@ -659,7 +681,7 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
               Resolve Transformation Plan
             </button>
 
-            {/* Route Detection Alert: If REVISION is recommended (Journey E) */}
+            {/* Route Detection Enforcement Alert: If REVISION is recommended (Journey E + COH-CS-12) */}
             {resolvedPlan && resolvedPlan.recommendedRoute === 'REVISION' && (
               <div
                 data-testid="reframe-revision-route-alert"
@@ -669,28 +691,50 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                   <div className="text-xs">
                     <span className="font-bold text-text-primary block">
-                      Recommended Route: Revision Studio
+                      Recommended Route: Revision Studio (Reframe Generation Paused)
                     </span>
                     <p className="text-text-secondary mt-0.5 leading-relaxed">
                       {resolvedPlan.routeRationale}
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  data-testid="handoff-to-revision-studio-btn"
-                  onClick={() =>
-                    onHandoffToRevisionStudio({
-                      sourceText: sourceContent,
-                      title: originTitle,
-                      suggestedActionId: resolvedPlan.suggestedRevisionActionId,
-                      instructionNote: rawIntent
-                    })
-                  }
-                  className="w-full py-2 px-3 rounded-lg bg-brand-gold text-text-inverse font-bold text-xs inline-flex items-center justify-center gap-1.5 hover:bg-brand-gold-hover transition-colors"
-                >
-                  Open in Revision Studio <ArrowRight size={13} />
-                </button>
+                <div className="flex flex-col sm:flex-row items-center gap-2">
+                  <button
+                    type="button"
+                    data-testid="handoff-to-revision-studio-btn"
+                    onClick={() =>
+                      onHandoffToRevisionStudio({
+                        sourceText: sourceContent,
+                        title: originTitle,
+                        suggestedActionId: resolvedPlan.suggestedRevisionActionId,
+                        instructionNote: rawIntent
+                      })
+                    }
+                    className="w-full py-2 px-3 rounded-lg bg-brand-gold text-text-inverse font-bold text-xs inline-flex items-center justify-center gap-1.5 hover:bg-brand-gold-hover transition-colors"
+                  >
+                    Open in Revision Studio <ArrowRight size={13} />
+                  </button>
+                  {!routeOverrideConfirmed ? (
+                    <button
+                      type="button"
+                      data-testid="override-continue-reframe-btn"
+                      onClick={() => {
+                        setRouteOverrideConfirmed(true);
+                        setGenerationError(null);
+                      }}
+                      className="w-full sm:w-auto shrink-0 py-2 px-3 rounded-lg border border-border-standard bg-surface-inset text-text-secondary hover:text-text-primary font-semibold text-[11px] transition-colors"
+                    >
+                      Override - continue as Reframe
+                    </button>
+                  ) : (
+                    <span
+                      data-testid="override-reframe-confirmed-badge"
+                      className="shrink-0 text-[10px] font-bold px-2.5 py-1.5 rounded bg-surface-inset border border-brand-gold/40 text-brand-gold"
+                    >
+                      Override Active
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
@@ -834,11 +878,29 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                   />
                 </div>
 
-                {/* Protected Elements */}
+                {/* Non-Negotiable Factual Integrity Governance (Always Locked) */}
+                <div className="p-2.5 rounded-lg bg-surface-inset border border-border-standard space-y-1.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-brand-gold flex items-center gap-1">
+                    <ShieldCheck size={12} />
+                    Non-Negotiable Factual Integrity (Always Enforced)
+                  </span>
+                  <div className="flex flex-wrap gap-1">
+                    {NON_NEGOTIABLE_FACTUAL_INTEGRITY_RULES.map(rule => (
+                      <span
+                        key={rule}
+                        className="text-[9px] px-2 py-0.5 rounded bg-surface-primary border border-border-standard text-text-secondary font-medium"
+                      >
+                        Locked: {rule}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Optional Preservation Preferences (Toggleable) */}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-wider text-text-secondary flex items-center gap-1">
                     <ShieldCheck size={12} className="text-brand-gold" />
-                    Protected Elements (Hard Constraints)
+                    Optional Preservation Preferences (Toggle Retention)
                   </label>
                   <div className="flex flex-wrap gap-1.5">
                     {DEFAULT_PROTECTED_ELEMENTS.map(elem => {
@@ -880,7 +942,11 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                 <button
                   type="button"
                   data-testid="generate-reframe-btn"
-                  disabled={isGenerating || !sourceContent.trim()}
+                  disabled={
+                    isGenerating ||
+                    !sourceContent.trim() ||
+                    (resolvedPlan.recommendedRoute === 'REVISION' && !routeOverrideConfirmed)
+                  }
                   onClick={() => handleGenerateReframe()}
                   className="w-full h-11 rounded-xl bg-brand-gold text-text-inverse font-sans text-xs font-bold hover:bg-brand-gold-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
                 >
@@ -888,6 +954,11 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
                     <>
                       <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Reframing Content...
+                    </>
+                  ) : resolvedPlan.recommendedRoute === 'REVISION' && !routeOverrideConfirmed ? (
+                    <>
+                      <AlertTriangle size={15} />
+                      Revision Route Recommended (Use Override Above to Reframe)
                     </>
                   ) : (
                     <>

@@ -25,6 +25,7 @@ import {
   suggestRevisionActions,
   compileRevisionRecipe,
   executeDeterministicRevisionRecipe,
+  validateRevisionTranslationOutput,
   cleanTypographyArtifacts
 } from '../lib/smartBriefAndRevision';
 
@@ -287,8 +288,25 @@ export function RevisionStudio({
           });
 
           if (result && result.revisedCopy) {
-            revised = cleanTypographyArtifacts(result.revisedCopy);
+            const candidateRevised = cleanTypographyArtifacts(result.revisedCopy);
+            if (recipe.requiresAiExecution) {
+              const langCheck = validateRevisionTranslationOutput({
+                revisedCopy: candidateRevised,
+                previousDraft: baseText,
+                targetLanguage: state.targetLanguage,
+                actionIds: actionIdsToRun
+              });
+              if (!langCheck.valid) {
+                throw new Error(langCheck.reason || 'Translation validation failed.');
+              }
+            }
+            revised = candidateRevised;
           } else {
+            if (recipe.requiresAiExecution) {
+              throw new Error(
+                `AI Translation Failed: Provider did not return valid ${state.targetLanguage} copy. Your current draft has been preserved.`
+              );
+            }
             revised = executeDeterministicRevisionRecipe(baseText, recipe, {
               channel: state.channel,
               format: state.format,
@@ -297,7 +315,10 @@ export function RevisionStudio({
               customInstruction
             });
           }
-        } catch {
+        } catch (aiErr: any) {
+          if (recipe.requiresAiExecution) {
+            throw aiErr;
+          }
           revised = executeDeterministicRevisionRecipe(baseText, recipe, {
             channel: state.channel,
             format: state.format,
@@ -307,7 +328,7 @@ export function RevisionStudio({
           });
         }
       } else {
-        // Deterministic local execution for single action or multi-step Revision Recipe
+        // Deterministic local execution for deterministic-safe actions; throws if recipe.requiresAiExecution is true
         revised = executeDeterministicRevisionRecipe(baseText, recipe, {
           channel: state.channel,
           format: state.format,

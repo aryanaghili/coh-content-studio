@@ -55,15 +55,39 @@ export type AudienceFamiliarityLevel =
 
 export type RecommendedTransformationRoute = 'REFRAME' | 'REVISION';
 
-export const DEFAULT_PROTECTED_ELEMENTS = [
-  'Confirmed facts & numbers',
+export const NON_NEGOTIABLE_FACTUAL_INTEGRITY_RULES = [
+  'Do not invent facts, numbers, dates, or funding milestones',
+  'Do not escalate a fact into an unsupported stronger claim',
+  'Do not fabricate partner or institution commitments',
+  'Do not mutate a direct quotation and present it as verbatim',
+  'Preserve Protected COH Kernel positioning'
+] as const;
+
+export const OPTIONAL_PRESERVATION_PREFERENCES = [
+  'Direct quotations (verbatim)',
   'Names & proper titles',
   'Dates & timelines',
-  'Direct quotations (verbatim)',
+  'Confirmed facts & numbers',
   'Approved COH terminology',
   'Central artistic meaning',
   'Source-backed claims'
 ] as const;
+
+export const DEFAULT_PROTECTED_ELEMENTS = OPTIONAL_PRESERVATION_PREFERENCES;
+
+export type ElementVerificationStatus =
+  | 'retained unchanged'
+  | 'intentionally omitted'
+  | 'altered and blocked'
+  | 'requires review';
+
+export interface ElementVerificationRecord {
+  category: 'Number / Date' | 'Proper Name / Title' | 'Direct Quotation' | 'COH Terminology';
+  token: string;
+  requiredByPreference: boolean;
+  status: ElementVerificationStatus;
+  detail: string;
+}
 
 export interface ResolvedReframePlan {
   rawIntent: string;
@@ -81,6 +105,7 @@ export interface ResolvedReframePlan {
   evidenceEmphasis: string;
   desiredAudienceResponse: string;
   protectedElements: string[];
+  nonNegotiableIntegrityRules?: readonly string[];
   unresolvedItems: string[];
 }
 
@@ -91,6 +116,8 @@ export interface ReframeOutputResult {
   evidenceWarnings: string[];
   visualDirection?: string;
   preservedQuotesVerified: boolean;
+  integrityCheckPassed: boolean;
+  elementVerification: ElementVerificationRecord[];
 }
 
 export interface ReframeLineageMetadata {
@@ -115,7 +142,7 @@ export interface ReframeLineageMetadata {
 
 /**
  * Extracts exact double-quoted substrings (>= 12 chars) from source content
- * so they can be protected verbatim during reframing.
+ * so they can be verified verbatim during reframing.
  */
 export function extractExactQuotations(sourceText: string): string[] {
   if (!sourceText) return [];
@@ -123,26 +150,318 @@ export function extractExactQuotations(sourceText: string): string[] {
   return Array.from(new Set(matches.map(m => m.trim())));
 }
 
+const COMMON_SENTENCE_STARTERS = new Set([
+  'The', 'This', 'That', 'These', 'Those', 'With', 'From', 'Into', 'Through',
+  'Across', 'Between', 'Within', 'Under', 'Over', 'When', 'While', 'Where',
+  'Because', 'Although', 'However', 'Furthermore', 'Moreover', 'Beyond',
+  'For', 'And', 'But', 'Nor', 'Yet', 'Our', 'Their', 'Every', 'Each',
+  'Today', 'Tomorrow', 'Here', 'There', 'First', 'Second', 'Third'
+]);
+
 /**
- * Extracts numbers/dates/namedCOH entities from source text to verify factual preservation.
+ * Extracts numbers, dates, COH canonical terms, and proper names/entities from source text
+ * so preservation can be truthfully verified against reframed output.
  */
 export function extractConfirmedSourceTokens(sourceText: string): {
   numbersAndDates: string[];
   properTerms: string[];
+  properNamesAndEntities: string[];
 } {
-  if (!sourceText) return { numbersAndDates: [], properTerms: [] };
-  const numMatches = sourceText.match(/\b(\d+(?:\.\d+)?%?|\b20\d{2}\b)/g) || [];
+  if (!sourceText) {
+    return { numbersAndDates: [], properTerms: [], properNamesAndEntities: [] };
+  }
+
+  const numMatches =
+    sourceText.match(
+      /\b(?:\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}|(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+(?:\d{1,2},?\s+)?\d{4}|(?:Q[1-4]\s+20\d{2})|\d+(?:[.,]\d+)?%?|\b20\d{2}\b)/gi
+    ) || [];
+
   const cohTerms = [
     'Climate Opera Haus',
     'COH',
     'The Golden Fountain',
     'Soria Moria',
-    'The Climate Tetralogy'
+    'The Water Dragon',
+    'Roar to the Wind',
+    'The Climate Tetralogy',
+    'Resonance 2027'
   ].filter(term => sourceText.toLowerCase().includes(term.toLowerCase()));
 
+  // Extract multi-word capitalized proper names/titles and non-starter capitalized entities
+  const entityCandidates = new Set<string>();
+  const multiWordProper = sourceText.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b/g) || [];
+  for (const phrase of multiWordProper) {
+    if (!cohTerms.some(t => t.toLowerCase() === phrase.toLowerCase())) {
+      entityCandidates.add(phrase.trim());
+    }
+  }
+
+  // Also capture single capitalized proper nouns that appear mid-sentence or are known proper names
+  const sentences = sourceText.split(/(?<=[.!?])\s+|\n+/);
+  for (const sent of sentences) {
+    const words = sent.trim().split(/\s+/);
+    for (let i = 1; i < words.length; i++) {
+      const cleanWord = words[i].replace(/^[^A-Za-z]+|[^A-Za-z]+$/g, '');
+      if (
+        /^[A-Z][a-z]{2,}$/.test(cleanWord) &&
+        !COMMON_SENTENCE_STARTERS.has(cleanWord) &&
+        !cohTerms.some(t => t.toLowerCase().includes(cleanWord.toLowerCase()))
+      ) {
+        entityCandidates.add(cleanWord);
+      }
+    }
+  }
+
   return {
-    numbersAndDates: Array.from(new Set(numMatches)),
-    properTerms: cohTerms
+    numbersAndDates: Array.from(new Set(numMatches.map(m => m.trim()))),
+    properTerms: cohTerms,
+    properNamesAndEntities: Array.from(entityCandidates)
+  };
+}
+
+/**
+ * Deterministically verifies whether numbers/dates, proper names/titles, COH terminology,
+ * and direct quotations from the source were retained unchanged, intentionally omitted,
+ * or altered/fabricated in the reframed copy.
+ */
+export function verifyReframedElementContinuity(params: {
+  sourceContent: string;
+  reframedCopy: string;
+  protectedElements: string[];
+  sourceBindings?: TaskSourceBinding[];
+}): {
+  records: ElementVerificationRecord[];
+  preservedSummaryLines: string[];
+  integrityWarnings: string[];
+  preservedQuotesVerified: boolean;
+  integrityCheckPassed: boolean;
+} {
+  const { sourceContent, reframedCopy, protectedElements = [], sourceBindings = [] } = params;
+  const records: ElementVerificationRecord[] = [];
+  const preservedSummaryLines: string[] = [];
+  const integrityWarnings: string[] = [];
+
+  const combinedAllowedSourceText = [
+    sourceContent,
+    ...sourceBindings
+      .filter(b => b.role !== 'Approved Example' && b.role !== 'Visual Reference')
+      .map(b => b.content || b.summary || '')
+  ].join('\n');
+
+  const tokens = extractConfirmedSourceTokens(sourceContent);
+  const quotes = extractExactQuotations(sourceContent);
+  const lowerReframed = reframedCopy.toLowerCase();
+
+  const requireFactsAndNumbers = protectedElements.includes('Confirmed facts & numbers');
+  const requireDates = protectedElements.includes('Dates & timelines');
+  const requireNames = protectedElements.includes('Names & proper titles');
+  const requireQuotes = protectedElements.includes('Direct quotations (verbatim)');
+  const requireCohTerms = protectedElements.includes('Approved COH terminology');
+
+  // 1. Check for invented numbers/dates in reframedCopy (Non-negotiable factual integrity: ALWAYS ON)
+  const outputNums = reframedCopy.match(/\b\d+(?:[.,]\d+)?%?\b/g) || [];
+  const inventedNums: string[] = [];
+  for (const outNum of outputNums) {
+    if (!combinedAllowedSourceText.includes(outNum)) {
+      inventedNums.push(outNum);
+      records.push({
+        category: 'Number / Date',
+        token: outNum,
+        requiredByPreference: true,
+        status: 'altered and blocked',
+        detail: `Number or date "${outNum}" in reframed output is not present in source material.`
+      });
+    }
+  }
+  if (inventedNums.length > 0) {
+    integrityWarnings.push(
+      `Factual Integrity Alert (Blocked): Reframed output introduced untraceable number(s)/date(s) (${Array.from(new Set(inventedNums)).join(', ')}) not present in the source.`
+    );
+  }
+
+  // 2. Verify source numbers & dates
+  const retainedNums: string[] = [];
+  const omittedNums: string[] = [];
+  for (const numTok of tokens.numbersAndDates) {
+    const isDate = /\b20\d{2}\b|january|february|march|april|may|june|july|august|september|october|november|december|q[1-4]/i.test(
+      numTok
+    );
+    const req = isDate ? requireDates || requireFactsAndNumbers : requireFactsAndNumbers;
+    if (lowerReframed.includes(numTok.toLowerCase())) {
+      retainedNums.push(numTok);
+      records.push({
+        category: 'Number / Date',
+        token: numTok,
+        requiredByPreference: req,
+        status: 'retained unchanged',
+        detail: `Verified "${numTok}" retained unchanged in reframed copy.`
+      });
+    } else {
+      omittedNums.push(numTok);
+      const status: ElementVerificationStatus =
+        inventedNums.length > 0 ? 'altered and blocked' : req ? 'requires review' : 'intentionally omitted';
+      records.push({
+        category: 'Number / Date',
+        token: numTok,
+        requiredByPreference: req,
+        status,
+        detail:
+          status === 'altered and blocked'
+            ? `Source figure/date "${numTok}" was replaced by unverified figure(s) (${inventedNums.join(', ')}).`
+            : req
+              ? `Source figure/date "${numTok}" was omitted while protection was requested (requires review).`
+              : `Source figure/date "${numTok}" was intentionally omitted.`
+      });
+      if (req && status === 'requires review') {
+        integrityWarnings.push(
+          `Protected Date/Number Review: Source token "${numTok}" was omitted from the reframed output.`
+        );
+      }
+    }
+  }
+
+  if (retainedNums.length > 0) {
+    preservedSummaryLines.push(
+      `Confirmed Facts & Dates (retained unchanged): Verified ${retainedNums.join(', ')} in reframed copy.`
+    );
+  }
+  if (omittedNums.length > 0 && inventedNums.length === 0) {
+    preservedSummaryLines.push(
+      `Source Numbers/Dates (${requireDates || requireFactsAndNumbers ? 'requires review' : 'intentionally omitted'}): ${omittedNums.join(', ')} not repeated in reframed copy.`
+    );
+  }
+
+  // 3. Verify Proper Names & Entities
+  const retainedNames: string[] = [];
+  const omittedNames: string[] = [];
+  for (const nameTok of tokens.properNamesAndEntities) {
+    if (lowerReframed.includes(nameTok.toLowerCase())) {
+      retainedNames.push(nameTok);
+      records.push({
+        category: 'Proper Name / Title',
+        token: nameTok,
+        requiredByPreference: requireNames,
+        status: 'retained unchanged',
+        detail: `Verified proper name/entity "${nameTok}" retained unchanged.`
+      });
+    } else {
+      omittedNames.push(nameTok);
+      const status: ElementVerificationStatus = requireNames ? 'requires review' : 'intentionally omitted';
+      records.push({
+        category: 'Proper Name / Title',
+        token: nameTok,
+        requiredByPreference: requireNames,
+        status,
+        detail: requireNames
+          ? `Protected name/title "${nameTok}" was omitted from reframed copy (requires review).`
+          : `Proper name/title "${nameTok}" was intentionally omitted.`
+      });
+      if (requireNames) {
+        integrityWarnings.push(
+          `Protected Name/Title Review: "${nameTok}" was marked for preservation but omitted in the reframed copy.`
+        );
+      }
+    }
+  }
+
+  if (retainedNames.length > 0) {
+    preservedSummaryLines.push(
+      `Names & Proper Titles (retained unchanged): Verified ${retainedNames.join(', ')}.`
+    );
+  } else if (omittedNames.length > 0) {
+    preservedSummaryLines.push(
+      `Names & Proper Titles (${requireNames ? 'requires review' : 'intentionally omitted'}): ${omittedNames.join(', ')} omitted in reframed copy.`
+    );
+  }
+
+  // 4. Verify COH Terminology
+  const retainedCohTerms = tokens.properTerms.filter(t => lowerReframed.includes(t.toLowerCase()));
+  if (retainedCohTerms.length > 0) {
+    for (const term of retainedCohTerms) {
+      records.push({
+        category: 'COH Terminology',
+        token: term,
+        requiredByPreference: requireCohTerms,
+        status: 'retained unchanged',
+        detail: `Approved COH terminology "${term}" retained unchanged.`
+      });
+    }
+    preservedSummaryLines.push(
+      `Approved COH Terminology (retained unchanged): Verified ${retainedCohTerms.join(', ')}.`
+    );
+  }
+
+  // 5. Verify Direct Quotations (NO fake auto-appended quotes!)
+  // Also check if reframedCopy contains any double-quoted text that mutates a source quote (Non-negotiable!)
+  const outputQuotes = extractExactQuotations(reframedCopy);
+  let mutatedQuoteDetected = false;
+  for (const outQ of outputQuotes) {
+    if (!sourceContent.includes(outQ) && !combinedAllowedSourceText.includes(outQ)) {
+      mutatedQuoteDetected = true;
+      records.push({
+        category: 'Direct Quotation',
+        token: outQ,
+        requiredByPreference: true,
+        status: 'altered and blocked',
+        detail: `Direct quotation ${outQ} in reframed copy does not match verbatim source text.`
+      });
+      integrityWarnings.push(
+        `Quotation Integrity Alert (Blocked): Reframed copy presents mutated or fabricated direct quote ${outQ} as verbatim.`
+      );
+    }
+  }
+
+  let preservedQuotesVerified = !mutatedQuoteDetected;
+  for (const srcQuote of quotes) {
+    if (reframedCopy.includes(srcQuote)) {
+      records.push({
+        category: 'Direct Quotation',
+        token: srcQuote,
+        requiredByPreference: requireQuotes,
+        status: 'retained unchanged',
+        detail: `Direct quotation ${srcQuote} retained verbatim.`
+      });
+      preservedSummaryLines.push(`Direct Quotation (retained unchanged): ${srcQuote}`);
+    } else {
+      if (requireQuotes) {
+        preservedQuotesVerified = false;
+        records.push({
+          category: 'Direct Quotation',
+          token: srcQuote,
+          requiredByPreference: true,
+          status: 'altered and blocked',
+          detail: `Required verbatim quotation ${srcQuote} was omitted or altered in reframed output.`
+        });
+        integrityWarnings.push(
+          `Protected Quotation Missing (Blocked): Required verbatim quote ${srcQuote} was not preserved in the reframed copy.`
+        );
+      } else {
+        records.push({
+          category: 'Direct Quotation',
+          token: srcQuote,
+          requiredByPreference: false,
+          status: 'intentionally omitted',
+          detail: `Quotation ${srcQuote} was intentionally omitted because verbatim quote retention was disabled.`
+        });
+        preservedSummaryLines.push(
+          `Direct Quotation (intentionally omitted): ${srcQuote} omitted per optional preference.`
+        );
+      }
+    }
+  }
+
+  const integrityCheckPassed =
+    inventedNums.length === 0 &&
+    !mutatedQuoteDetected &&
+    preservedQuotesVerified &&
+    !records.some(r => r.status === 'altered and blocked');
+
+  return {
+    records,
+    preservedSummaryLines,
+    integrityWarnings,
+    preservedQuotesVerified,
+    integrityCheckPassed
   };
 }
 
@@ -377,13 +696,15 @@ export function resolveReframeIntent(params: {
     evidenceEmphasis,
     desiredAudienceResponse,
     protectedElements: [...DEFAULT_PROTECTED_ELEMENTS],
+    nonNegotiableIntegrityRules: NON_NEGOTIABLE_FACTUAL_INTEGRITY_RULES,
     unresolvedItems
   };
 }
 
 /**
- * Enforces protected elements (such as exact quotations) and generates accurate
- * Changed vs Preserved explanations comparing sourceContent and reframedCopy.
+ * Verifies protected elements and non-negotiable factual integrity without ever silently
+ * auto-appending fake quote wrappers, and produces truthful Changed vs Preserved explanations
+ * based on actual deterministic verification against `reframedCopy`.
  */
 export function finalizeReframeResult(params: {
   sourceContent: string;
@@ -395,20 +716,18 @@ export function finalizeReframeResult(params: {
   aiWarnings?: string[];
 }): ReframeOutputResult {
   const { sourceContent, plan, sourceBindings = [], aiChanged = [], aiPreserved = [], aiWarnings = [] } = params;
-  let reframedCopy = (params.rawReframedCopy || '').replace(/\u2014/g, ' - ').trim();
+  const reframedCopy = (params.rawReframedCopy || '')
+    .replace(/\u2014/g, ' - ')
+    .replace(/\n*As noted directly in the source material:\s*"[^"]*"/g, '')
+    .trim();
 
-  // 1. Enforce exact quotations if "Direct quotations (verbatim)" is in protectedElements
-  const quotes = extractExactQuotations(sourceContent);
-  let preservedQuotesVerified = true;
-  if (plan.protectedElements.includes('Direct quotations (verbatim)') && quotes.length > 0) {
-    for (const q of quotes) {
-      if (!reframedCopy.includes(q)) {
-        // Re-anchor exact quote cleanly so protected quotations are never lost or mutated
-        reframedCopy = `${reframedCopy}\n\nAs noted directly in the source material: ${q}`;
-      }
-    }
-    preservedQuotesVerified = quotes.every(q => reframedCopy.includes(q));
-  }
+  // 1. Run deterministic verification of dates, numbers, names, COH terms, and quotes
+  const verification = verifyReframedElementContinuity({
+    sourceContent,
+    reframedCopy,
+    protectedElements: plan.protectedElements,
+    sourceBindings
+  });
 
   // 2. Build meaningful Changed explanation
   const changedExplanation: string[] = [];
@@ -429,59 +748,57 @@ export function finalizeReframeResult(params: {
     );
   }
 
-  // 3. Build meaningful Preserved explanation
-  const preservedExplanation: string[] = [];
+  // 3. Build truthful Preserved explanation grounded in actual verification results
+  const preservedExplanation: string[] = [
+    'Protected COH Kernel (retained unchanged): Preserved Climate Opera Haus identity as an opera-based cultural IP venture.'
+  ];
+  for (const verifiedLine of verification.preservedSummaryLines) {
+    if (!preservedExplanation.includes(verifiedLine)) {
+      preservedExplanation.push(verifiedLine);
+    }
+  }
   for (const item of aiPreserved) {
     if (item && typeof item === 'string') {
-      preservedExplanation.push(item.replace(/\u2014/g, ' - ').trim());
+      const cleanItem = item.replace(/\u2014/g, ' - ').trim();
+      // Do not allow AI to claim quotes or dates were preserved if verification proved they failed
+      if (!verification.preservedQuotesVerified && /quote|quotation/i.test(cleanItem)) {
+        continue;
+      }
+      if (!preservedExplanation.includes(cleanItem)) {
+        preservedExplanation.push(cleanItem);
+      }
     }
   }
-  const tokens = extractConfirmedSourceTokens(sourceContent);
-  if (preservedExplanation.length === 0) {
+  if (sourceBindings.length > 0) {
     preservedExplanation.push(
-      'Protected COH Kernel: Preserved Climate Opera Haus identity as an opera-based cultural IP venture.'
+      `Task Source Boundaries: Respected task-level roles across ${sourceBindings.length} attached source(s).`
     );
-    if (tokens.properTerms.length > 0) {
-      preservedExplanation.push(
-        `Approved Terminology & Proper Titles: Preserved ${tokens.properTerms.join(', ')}.`
-      );
-    }
-    if (tokens.numbersAndDates.length > 0) {
-      preservedExplanation.push(
-        `Confirmed Facts & Dates: Preserved exact figures/dates (${tokens.numbersAndDates.join(', ')}) without inflation.`
-      );
-    }
-    if (quotes.length > 0 && plan.protectedElements.includes('Direct quotations (verbatim)')) {
-      preservedExplanation.push(
-        `Verbatim Quotations: Preserved ${quotes.length} direct quotation(s) word-for-word.`
-      );
-    }
-    if (sourceBindings.length > 0) {
-      preservedExplanation.push(
-        `Task Source Boundaries: Respected task-level roles across ${sourceBindings.length} attached source(s).`
-      );
-    }
   }
 
-  // 4. Evidence Warnings
-  const evidenceWarnings = [
-    ...plan.unresolvedItems,
-    ...aiWarnings.map(w => w.replace(/\u2014/g, ' - ').trim())
-  ];
+  // 4. Evidence & Integrity Warnings
+  const evidenceWarnings = Array.from(
+    new Set([
+      ...plan.unresolvedItems,
+      ...verification.integrityWarnings,
+      ...aiWarnings.map(w => w.replace(/\u2014/g, ' - ').trim())
+    ])
+  );
 
   return {
     reframedCopy,
     changedExplanation,
     preservedExplanation,
     evidenceWarnings,
-    preservedQuotesVerified
+    preservedQuotesVerified: verification.preservedQuotesVerified,
+    integrityCheckPassed: verification.integrityCheckPassed,
+    elementVerification: verification.records
   };
 }
 
 /**
  * Deterministic COH Reframe Generator used when AI is offline or returns 503,
  * ensuring every visible plan control (audience, familiarity, channel, format, strategic frame,
- * pillar, protected quotes, evidence discipline) directly shapes the generated reframe.
+ * pillar, optional quote retention, evidence discipline) directly shapes the generated reframe.
  */
 export function buildDeterministicReframe(params: {
   sourceContent: string;
@@ -492,10 +809,14 @@ export function buildDeterministicReframe(params: {
   const { sourceContent, plan, sourceBindings = [], derivedSourceAnalyses = {} } = params;
   const cleanSource = sourceContent.replace(/\u2014/g, ' - ').trim();
   const quotes = extractExactQuotations(cleanSource);
-  const tokens = extractConfirmedSourceTokens(cleanSource);
+  const requireQuotes = plan.protectedElements.includes('Direct quotations (verbatim)');
 
   // Extract core factual sentences from source without inventing new facts
-  const sentences = cleanSource
+  const workingSource = requireQuotes
+    ? cleanSource
+    : cleanSource.replace(/"[^"]{12,300}"/g, '').replace(/\s{2,}/g, ' ').trim();
+
+  const sentences = workingSource
     .split(/(?<=[.!?])\s+/)
     .map(s => s.trim())
     .filter(Boolean);
@@ -524,8 +845,8 @@ export function buildDeterministicReframe(params: {
     plan.audienceFamiliarity === 'Low Familiarity (Needs foundational COH context)'
       ? 'For audiences and institutions encountering Climate Opera Haus for the first time: COH is a climate-era cultural IP venture where live opera serves as the origin asset for enduring artistic worlds.'
       : plan.audienceFamiliarity === 'Deep COH / Partner Familiarity'
-      ? 'Building directly on our shared Climate Opera Haus strategic architecture:'
-      : `Positioned for ${plan.targetAudience} with a focus on ${plan.contentPillarEmphasis}:`;
+        ? 'Building directly on our shared Climate Opera Haus strategic architecture:'
+        : `Positioned for ${plan.targetAudience} with a focus on ${plan.contentPillarEmphasis}:`;
 
   let openingFrame = '';
   if (/institution|venue|opera house|festival/i.test(plan.targetAudience)) {
@@ -550,11 +871,11 @@ export function buildDeterministicReframe(params: {
     bodyParagraphs.push(attachedFactLine);
   }
 
-  // Ensure exact quotes are included if protected
-  if (plan.protectedElements.includes('Direct quotations (verbatim)') && quotes.length > 0) {
+  // Include exact quotes naturally if "Direct quotations (verbatim)" preference is enabled
+  if (requireQuotes && quotes.length > 0) {
     for (const q of quotes) {
       if (!bodyParagraphs.some(p => p.includes(q))) {
-        bodyParagraphs.push(`Preserved source quotation: ${q}`);
+        bodyParagraphs.push(q);
       }
     }
   }

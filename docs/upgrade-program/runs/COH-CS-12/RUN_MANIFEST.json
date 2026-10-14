@@ -1,0 +1,21 @@
+{
+  "runId": "COH-CS-12",
+  "title": "Reframing Protected-Element Integrity, Revision Translation Safety and Route Enforcement",
+  "repository": "aryanaghili/coh-content-studio",
+  "branch": "feature/coh-content-intelligence-v2",
+  "predecessorRun": "COH-CS-11",
+  "predecessorCommit": "b2ee2c16d29734b707b93a3755136c479994a225",
+  "status": "PASS",
+  "testsPassed": 57,
+  "testsFailed": 0,
+  "buildPassed": true,
+  "artifacts": [
+    "REFRAMING_INTEGRITY_REPORT.md",
+    "REVISION_TRANSLATION_SAFETY_REPORT.md",
+    "PROMPT_SNAPSHOT.md",
+    "IMPLEMENTATION_REPORT.md",
+    "CHANGE_MANIFEST.md",
+    "VALIDATION_REPORT.md",
+    "RUN_MANIFEST.json"
+  ]
+}
