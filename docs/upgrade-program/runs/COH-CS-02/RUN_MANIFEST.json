@@ -3,7 +3,7 @@
   "title": "Modernize the OpenAI Provider for GPT-6 Luna and GPT-6.1 Sol Without Breaking Existing Providers",
   "status": "PASS",
   "baseCommit": "c03cb947ef1cb6b769ae88cf3b476ae3a625bdcc",
-  "implementationCommit": "PENDING_EVIDENCE_COMMIT",
+  "implementationCommit": "ea62a235221f584ecebaf97dba27f5f6451b86f9",
   "branch": "feature/coh-content-intelligence-v2",
   "databaseChanged": false,
   "schemaChanged": false,
