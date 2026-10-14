@@ -15,7 +15,8 @@
 | `COH-CS-06` | Creation + Revision Productivity | COMPLETED | `95071d39d6cd229982a070f02bfd6bdf7d95c172` | PASS | READY | PASS |
 | `COH-CS-07` | Workflow Continuity + Governance Cleanup | COMPLETED | `fb8fa8672874377a74a267bfba2d0a610514d848` | PASS | READY | PASS |
 | `COH-CS-08` | Integrated Validation | COMPLETED | `510e0ac8cdac03cc496800db897e8bb0c936ab28` | PASS WITH WARNINGS | READY | PASS WITH WARNINGS |
-
-
-
-
+| `COH-CS-09` | Safe Remote Handoff for Independent Review | COMPLETED | `b49587a455a123de25fc5b563c06db14a814fb74` | PASS | READY | PASS |
+| `COH-CS-10` | Restore Operating Core as Single Strategic Authority Across Ideation, Smart Brief & Reframing | COMPLETED | `1a6a25ded0f945fdc2f2894fd6ba807e2c7f76a3` | PASS | READY | PASS |
+| `COH-CS-11` | Evidence Integrity, Source Grounding & Quality-Gate Hardening | COMPLETED | `b2ee2c16d29734b707b93a3755136c479994a225` | PASS | READY | PASS |
+| `COH-CS-12` | Reframing Protected-Element Integrity, Revision Translation Safety & Route Enforcement | COMPLETED | `581887a60dcc1be6e798a86f232fa5e547bdc9f6` | PASS | READY | PASS |
+| `COH-CS-13` | Post-Remediation Integrated Re-Audit | COMPLETED | `HEAD` | PASS | READY | PASS |
