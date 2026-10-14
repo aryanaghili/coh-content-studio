@@ -1,0 +1,23 @@
+{
+  "runId": "COH-CS-05",
+  "title": "Build a Dedicated COH Reframing Studio",
+  "branch": "feature/coh-content-intelligence-v2",
+  "status": "PASS",
+  "predecessorSha": "3a4097f17654ddca6a4b7e2098677e6b3e3529ce",
+  "commitSha": "5d561175a8f6a767c8be4fc5363d8e0a8023c7a7",
+  "validation": {
+    "build": "PASS",
+    "unitTests": "PASS (5/5 in tests/reframingStudio.test.ts)",
+    "playwrightBrowser": "PASS (artifacts/coh-upgrade/verify_cs05.mjs)"
+  },
+  "artifacts": [
+    "docs/upgrade-program/runs/COH-CS-05/PROMPT_SNAPSHOT.md",
+    "docs/upgrade-program/runs/COH-CS-05/REFRAME_CONTRACT.md",
+    "docs/upgrade-program/runs/COH-CS-05/REFRAME_VS_REVISION_MATRIX.md",
+    "docs/upgrade-program/runs/COH-CS-05/REFRAME_ACCEPTANCE_TESTS.md",
+    "docs/upgrade-program/runs/COH-CS-05/IMPLEMENTATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-05/CHANGE_MANIFEST.md",
+    "docs/upgrade-program/runs/COH-CS-05/VALIDATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-05/RUN_MANIFEST.json"
+  ]
+}

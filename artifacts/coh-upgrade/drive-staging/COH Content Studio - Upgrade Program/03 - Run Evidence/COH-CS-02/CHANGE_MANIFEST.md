@@ -1,0 +1,27 @@
+# COH-CS-02 Change Manifest
+
+- **Files Created:**
+  - `tests/openaiModernization.test.js`
+  - `docs/upgrade-program/runs/COH-CS-02/PROMPT_SNAPSHOT.md`
+  - `docs/upgrade-program/runs/COH-CS-02/OPENAI_CAPABILITY_MATRIX.md`
+  - `docs/upgrade-program/runs/COH-CS-02/IMPLEMENTATION_REPORT.md`
+  - `docs/upgrade-program/runs/COH-CS-02/CHANGE_MANIFEST.md`
+  - `docs/upgrade-program/runs/COH-CS-02/VALIDATION_REPORT.md`
+  - `docs/upgrade-program/runs/COH-CS-02/RUN_MANIFEST.json`
+- **Files Modified:**
+  - `server/ai/adapters/openaiAdapter.js`
+  - `server/ai/providerManager.js`
+  - `server/ai/adapters/anthropicAdapter.js`
+  - `server/ai/adapters/mistralAdapter.js`
+  - `server/ai/adapters/geminiAdapter.js`
+  - `server/ai/adapters/openrouterAdapter.js`
+  - `src/App.tsx`
+  - `docs/upgrade-program/MASTER_REGISTER.md`
+  - `docs/upgrade-program/DRIVE_SYNC_MANIFEST.json`
+- **Files Deleted:** `NONE`
+- **Dependencies Added/Removed:** `NONE`
+- **Environment Variables Added/Changed:** `NONE`
+- **Persistence Changes:** `NONE`
+- **Database Changes:** `NONE`
+- **Schema Changes:** `NONE`
+- **Production-Data Changes:** `NONE`
