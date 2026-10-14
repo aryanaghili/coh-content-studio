@@ -3,7 +3,7 @@
   "title": "Upgrade Source Library into Source Intelligence and Build a Task-Level Source Context System",
   "status": "PASS",
   "baseCommit": "5d6c26e8c9259b677b3572c85b73189e68d1d48a",
-  "implementationCommit": "PENDING_EVIDENCE_COMMIT",
+  "implementationCommit": "5eeab25bc8142221ce5b120caa8b60f8fc914faf",
   "branch": "feature/coh-content-intelligence-v2",
   "databaseChanged": false,
   "schemaChanged": false,
