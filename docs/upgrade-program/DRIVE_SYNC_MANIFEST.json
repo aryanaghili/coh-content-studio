@@ -1,7 +1,7 @@
 {
   "archiveRoot": "COH Content Studio - Upgrade Program",
   "driveAuthenticatedAccessAvailable": false,
-  "lastUpdated": "2026-10-14T13:44:20Z",
+  "lastUpdated": "2026-10-14T14:01:30Z",
   "folders": {
     "00 - Master Protocol": [
       "docs/upgrade-program/MASTER_PROTOCOL.md",
@@ -18,7 +18,8 @@
       "docs/upgrade-program/runs/COH-CS-03/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-04/PROMPT_SNAPSHOT.md",
       "docs/upgrade-program/runs/COH-CS-05/PROMPT_SNAPSHOT.md",
-      "docs/upgrade-program/runs/COH-CS-06/PROMPT_SNAPSHOT.md"
+      "docs/upgrade-program/runs/COH-CS-06/PROMPT_SNAPSHOT.md",
+      "docs/upgrade-program/runs/COH-CS-07/PROMPT_SNAPSHOT.md"
     ],
     "03 - Run Evidence": {
       "COH-CS-00": [
@@ -82,6 +83,17 @@
         "docs/upgrade-program/runs/COH-CS-06/CHANGE_MANIFEST.md",
         "docs/upgrade-program/runs/COH-CS-06/VALIDATION_REPORT.md",
         "docs/upgrade-program/runs/COH-CS-06/RUN_MANIFEST.json"
+      ],
+      "COH-CS-07": [
+        "docs/upgrade-program/runs/COH-CS-07/PROMPT_SNAPSHOT.md",
+        "docs/upgrade-program/runs/COH-CS-07/HANDOFF_MATRIX.md",
+        "docs/upgrade-program/runs/COH-CS-07/GOVERNANCE_DUPLICATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-07/PLACEHOLDER_REGRESSION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-07/VISUAL_HANDOFF_REGRESSION.md",
+        "docs/upgrade-program/runs/COH-CS-07/IMPLEMENTATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-07/CHANGE_MANIFEST.md",
+        "docs/upgrade-program/runs/COH-CS-07/VALIDATION_REPORT.md",
+        "docs/upgrade-program/runs/COH-CS-07/RUN_MANIFEST.json"
       ]
     },
     "04 - Review Reports": [],

@@ -84,6 +84,10 @@ import {
 import { IdeationOpportunityCard } from './components/IdeationOpportunityCard';
 import { ReframingStudio } from './components/ReframingStudio';
 import type { ReframeOriginType } from './lib/reframingEngine';
+import {
+  CurrentWorkContextBar,
+  buildWorkContextSnapshot
+} from './components/CurrentWorkContextBar';
 
 // --- Type Definitions ---
 
@@ -2152,6 +2156,35 @@ export default function App() {
     setVsConcept(analysis?.strategicContext || src.notes || src.title);
     setVsNotes(`Visual Reference Source: ${src.title}. ${(src.content || '').slice(0, 300)}`);
     setActiveTab('visual-studio');
+  };
+
+  const handleUseSourceInReframing = (
+    src: { id: string; title: string; type: string; content: string; notes?: string },
+    analysis?: SourceIntelligenceAnalysis | null
+  ) => {
+    const role = getEffectiveSourceRole(src);
+    setTaskSourceRoleMap(prev => ({
+      ...prev,
+      [src.id]: {
+        role,
+        selectedExcerpts: prev[src.id]?.selectedExcerpts || []
+      }
+    }));
+    setAdvancedBrief(prev => ({
+      ...prev,
+      selectedSourceIds: prev.selectedSourceIds.includes(src.id)
+        ? prev.selectedSourceIds
+        : [...prev.selectedSourceIds, src.id]
+    }));
+    setReframingInitialOrigin({
+      originType: 'Source Library',
+      originId: src.id,
+      originTitle: src.title,
+      sourceContent: src.content || src.notes || analysis?.strategicContext || src.title,
+      originChannel: analysis?.relevantChannels?.[0] || 'LinkedIn',
+      originAudience: analysis?.relevantAudiences?.[0] || 'Cultural Institutions & Museums'
+    });
+    setActiveTab('reframing-studio');
   };
 
   const handleEditSource = (src: SourceFile) => {
@@ -5900,6 +5933,53 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             )}
 
+            {(() => {
+              const snap = buildWorkContextSnapshot({
+                activeWorkItem,
+                fallbackOrigin: startedFromNote || (importedIdeationContext ? 'Ideation 2.0 Opportunity' : 'Content Workspace'),
+                fallbackTitle:
+                  activeWorkItem?.title ||
+                  importedIdeationContext?.title ||
+                  (creationMode === 'simple' ? simpleBrief.goal : creationMode === 'quick' ? quickBrief.goal : advancedBrief.topic) ||
+                  'Standalone Draft',
+                audience: creationMode === 'advanced' ? advancedBrief.audience : undefined,
+                channel: creationMode === 'simple' ? simpleBrief.channel : creationMode === 'quick' ? quickBrief.channel : advancedBrief.channel,
+                format: creationMode === 'quick' ? quickBrief.outputFormat : creationMode === 'advanced' ? advancedBrief.outputFormat : undefined,
+                pillar: creationMode === 'advanced' ? advancedBrief.pillar : undefined,
+                communicationJob: creationMode === 'advanced' ? advancedBrief.purpose : undefined,
+                sourceBindings: advancedBrief.selectedSourceIds
+                  .map(id => {
+                    const s = [...sources, ...workspaceLocalSources].find(x => x.id === id);
+                    return s
+                      ? {
+                          sourceId: s.id,
+                          title: s.title,
+                          type: s.type,
+                          role: taskSourceRoleMap[s.id]?.role || inferDefaultSourceRole(s.type)
+                        }
+                      : null;
+                  })
+                  .filter(Boolean) as TaskSourceBinding[],
+                currentStudio: 'Content Workspace'
+              });
+              return (
+                <CurrentWorkContextBar
+                  currentStudio="Content Workspace"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                  onClearWorkContext={activeWorkItem ? () => setActiveWorkItem(null) : undefined}
+                />
+              );
+            })()}
+
             <ContextManifestPanel
               manifest={buildContentWorkspaceContextPackage().manifest}
               theme={theme}
@@ -7526,10 +7606,39 @@ WRITING CLEANLINESS RULES (CRITICAL):
           return (
           <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-8">
+            <div className="bg-surface-primary border border-border-standard p-6 rounded-2xl shadow-sm mb-4">
               <h2 className="page-title">Visual Studio</h2>
               <p className="page-subtitle">Create visual outputs from full visual directions or custom prompts.</p>
             </div>
+
+            {(() => {
+              const snap = buildWorkContextSnapshot({
+                activeWorkItem,
+                fallbackOrigin: vsSourceItem ? `${vsSourceItem.type} Handoff` : 'Visual Studio',
+                fallbackTitle: vsSourceItem?.title || activeWorkItem?.title || vsConcept || 'Visual Direction Brief',
+                audience: advancedBrief.audience,
+                channel: advancedBrief.channel,
+                format: vsFormat || advancedBrief.outputFormat,
+                pillar: advancedBrief.pillar,
+                communicationJob: advancedBrief.purpose,
+                currentStudio: 'Visual Studio'
+              });
+              return (
+                <CurrentWorkContextBar
+                  currentStudio="Visual Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              );
+            })()}
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               {/* Left Column: Editor & Controls */}
@@ -7820,6 +7929,36 @@ WRITING CLEANLINESS RULES (CRITICAL):
 </ErrorBoundary>)})()}
 
         {activeTab === 'revision-studio' && (<ErrorBoundary fallbackTitle="Revision Studio Error">
+          {(() => {
+            const snap = buildWorkContextSnapshot({
+              activeWorkItem,
+              fallbackOrigin: activeDraftSource || 'Revision Studio',
+              fallbackTitle: activeDraftTitle || activeWorkItem?.title || 'Draft in Revision',
+              audience: advancedBrief.audience,
+              channel: advancedBrief.channel,
+              format: advancedBrief.outputFormat,
+              pillar: advancedBrief.pillar,
+              communicationJob: advancedBrief.purpose,
+              currentStudio: 'Revision Studio'
+            });
+            return (
+              <div className="px-4 sm:px-6 pt-4">
+                <CurrentWorkContextBar
+                  currentStudio="Revision Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              </div>
+            );
+          })()}
           <RevisionStudio
             initialDraft={activeDraftText}
             initialSourceType={activeDraftSource === 'Content Workspace' ? 'contentWorkspace' : 'contentLibrary'}
@@ -7837,6 +7976,36 @@ WRITING CLEANLINESS RULES (CRITICAL):
         </ErrorBoundary>)}
 
         {activeTab === 'reframing-studio' && (<ErrorBoundary fallbackTitle="Reframing Studio Error">
+          {(() => {
+            const snap = buildWorkContextSnapshot({
+              activeWorkItem,
+              fallbackOrigin: reframingInitialOrigin?.originType || 'Reframing Studio',
+              fallbackTitle: reframingInitialOrigin?.originTitle || activeWorkItem?.title || 'Strategic Reframe',
+              audience: reframingInitialOrigin?.originAudience || advancedBrief.audience,
+              channel: reframingInitialOrigin?.originChannel || advancedBrief.channel,
+              format: advancedBrief.outputFormat,
+              pillar: advancedBrief.pillar,
+              communicationJob: advancedBrief.purpose,
+              currentStudio: 'Reframing Studio'
+            });
+            return (
+              <div className="px-4 sm:px-6 pt-4">
+                <CurrentWorkContextBar
+                  currentStudio="Reframing Studio"
+                  originLabel={snap.originLabel}
+                  originTitle={snap.originTitle}
+                  audience={snap.audience}
+                  channel={snap.channel}
+                  format={snap.format}
+                  pillar={snap.pillar}
+                  communicationJob={snap.communicationJob}
+                  sourceBindings={snap.sourceBindings}
+                  transformationTrail={snap.transformationTrail}
+                  onNavigateStudio={target => setActiveTab(target)}
+                />
+              </div>
+            );
+          })()}
           <ReframingStudio
             operatingCore={operatingCore}
             operatingCoreDocs={operatingCoreDocs}
@@ -8521,6 +8690,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               onUseInIdeation={handleUseSourceInIdeation}
                               onCreateContent={handleCreateContentFromSource}
                               onUseAsVisualReference={handleUseSourceAsVisualReference}
+                              onUseInReframing={handleUseSourceInReframing}
                             />
 
                             <div className="pt-2">

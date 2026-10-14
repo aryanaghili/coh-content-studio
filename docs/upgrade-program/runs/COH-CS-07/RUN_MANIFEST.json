@@ -1,0 +1,33 @@
+{
+  "runId": "COH-CS-07",
+  "title": "Cross-Studio Continuity, Handoff Hardening, Regression Verification & Final Release Readiness",
+  "branch": "feature/coh-content-intelligence-v2",
+  "status": "PASS",
+  "predecessorRunId": "COH-CS-06",
+  "predecessorCommit": "8a4e861c83c2e69414cce009b91187f24763fe9d",
+  "verification": {
+    "typecheckAndBuild": "PASS",
+    "unitTests": {
+      "command": "node --test tests/*.test.ts",
+      "suites": 6,
+      "passed": 26,
+      "failed": 0
+    },
+    "playwrightE2E": {
+      "script": "artifacts/coh-upgrade/verify_cs07.mjs",
+      "status": "PASS",
+      "screenshotsDir": "artifacts/coh-upgrade/runs/COH-CS-07/screenshots"
+    }
+  },
+  "artifacts": [
+    "docs/upgrade-program/runs/COH-CS-07/PROMPT_SNAPSHOT.md",
+    "docs/upgrade-program/runs/COH-CS-07/HANDOFF_MATRIX.md",
+    "docs/upgrade-program/runs/COH-CS-07/GOVERNANCE_DUPLICATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-07/PLACEHOLDER_REGRESSION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-07/VISUAL_HANDOFF_REGRESSION.md",
+    "docs/upgrade-program/runs/COH-CS-07/IMPLEMENTATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-07/CHANGE_MANIFEST.md",
+    "docs/upgrade-program/runs/COH-CS-07/VALIDATION_REPORT.md",
+    "docs/upgrade-program/runs/COH-CS-07/RUN_MANIFEST.json"
+  ]
+}

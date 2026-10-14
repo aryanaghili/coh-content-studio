@@ -41,6 +41,7 @@ export interface SourceIntelligenceCardAddonProps {
   onUseInIdeation: (source: SourceRecordLike, analysis?: SourceIntelligenceAnalysis | null) => void;
   onCreateContent: (source: SourceRecordLike, analysis?: SourceIntelligenceAnalysis | null) => void;
   onUseAsVisualReference: (source: SourceRecordLike, analysis?: SourceIntelligenceAnalysis | null) => void;
+  onUseInReframing?: (source: SourceRecordLike, analysis?: SourceIntelligenceAnalysis | null) => void;
 }
 
 export const SourceIntelligenceCardAddon: React.FC<SourceIntelligenceCardAddonProps> = ({
@@ -57,7 +58,8 @@ export const SourceIntelligenceCardAddon: React.FC<SourceIntelligenceCardAddonPr
   onAddToCurrentBrief,
   onUseInIdeation,
   onCreateContent,
-  onUseAsVisualReference
+  onUseAsVisualReference,
+  onUseInReframing
 }) => {
   const [isExpanded, setIsExpanded] = useState<boolean>(Boolean(analysis || isAnalyzing || analysisError));
   const [showExcerptPicker, setShowExcerptPicker] = useState<boolean>(false);
@@ -159,6 +161,18 @@ export const SourceIntelligenceCardAddon: React.FC<SourceIntelligenceCardAddonPr
             <PenTool size={12} />
             <span>Create Content</span>
           </button>
+
+          {onUseInReframing && (
+            <button
+              type="button"
+              onClick={() => onUseInReframing(source, analysis)}
+              data-testid={`use-in-reframing-btn-${source.id}`}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded text-[11px] font-semibold bg-surface-primary border border-border-standard text-text-primary hover:border-brand-gold transition cursor-pointer"
+            >
+              <RefreshCw size={12} />
+              <span>Use in Reframing</span>
+            </button>
+          )}
 
           <button
             type="button"
