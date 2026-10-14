@@ -464,6 +464,8 @@ export const createDefaultOperatingCore = (): OperatingCore => ({
   learningInbox: []
 });
 
+import { compileGovernedContext } from './contextCompiler.ts';
+
 export interface CompileContext {
   workspace: 'Simple Mode' | 'Quick Create' | 'Advanced Brief' | 'Ideation Workspace' | 'Revision Studio' | 'Visual Studio';
   channel?: string;
@@ -473,134 +475,15 @@ export interface CompileContext {
 }
 
 export function compileOperatingCoreContext(core: OperatingCore | null, context: CompileContext, appliedDocs: CoreDocument[] = []): string {
-  // Always include the Protected Kernel at the very top.
-  const sections: string[] = [
-    PROTECTED_COH_KERNEL
-  ];
-
-  if (!core || !core.active) {
-    return sections.join('\n');
-  }
-
-  sections.push("--- OPERATING CORE CONTEXT ---");
-
-  // Core Passport is injected for most workspaces
-  if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Ideation Workspace', 'Revision Studio'].includes(context.workspace)) {
-    sections.push(`
-CORE PASSPORT (IDENTITY LAYER):
-- Organization: ${core.corePassport.organizationName} (${core.corePassport.category})
-- Definition: ${core.corePassport.oneLineDefinition}
-- Distinction: ${core.corePassport.coreDistinction}
-- Operating Logic: ${core.corePassport.operatingLogic}
-- Phase: ${core.corePassport.currentStrategicPhase}
-- Strategic Priorities: ${core.corePassport.primaryStrategicPriorities}
-- Posture: ${core.corePassport.defaultCommunicationPosture}
-- NEVER COLLAPSE INTO: ${core.corePassport.neverCollapseInto}`);
-  }
-
-  // Strategy Kernel
-  if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Ideation Workspace'].includes(context.workspace)) {
-    sections.push(`
-STRATEGY KERNEL:
-- Positioning: ${core.strategyKernel.positioning}
-- Ambition: ${core.strategyKernel.strategicAmbition}
-- Value Prop: ${core.strategyKernel.valueProposition}
-- Proof Ladder: ${core.strategyKernel.proofLadder}`);
-
-    if (core.strategyKernel.internalLaw.length > 0) {
-      const laws = core.strategyKernel.internalLaw
-        .filter(law => law.appliesTo.includes('All workspaces') || law.appliesTo.includes('Content generation') || law.appliesTo.includes('Ideation Workspace'))
-        .map(law => `- [${law.enforcement.toUpperCase()}] ${law.title}: ${law.rule}`)
-        .join('\n');
-      if (laws) {
-        sections.push(`\nINTERNAL LAW (NON-NEGOTIABLES):\n${laws}`);
-      }
-    }
-  }
-
-  // Audience Logic
-  if (context.audience) {
-    const audienceMatch = core.audiences.find(a => a.name.toLowerCase() === context.audience?.toLowerCase());
-    if (audienceMatch) {
-      sections.push(`
-AUDIENCE TARGET: ${audienceMatch.name}
-- Cares About: ${audienceMatch.caresAbout}
-- Proof Needed: ${audienceMatch.proofNeeded}
-- Tone preference: ${audienceMatch.preferredTone}
-- Level of Detail: ${audienceMatch.levelOfDetail}
-- CTA: ${audienceMatch.cta}
-- Avoid: ${audienceMatch.avoid}`);
-    }
-  }
-
-  // Channel Rules
-  if (context.channel) {
-    const channelMatch = core.channels.find(c => c.name.toLowerCase() === context.channel?.toLowerCase());
-    if (channelMatch) {
-      sections.push(`
-CHANNEL RULES: ${channelMatch.name}
-- Purpose: ${channelMatch.purpose}
-- Typical Structure: ${channelMatch.typicalStructure}
-- Tone Guidance: ${channelMatch.toneGuidance}
-- Formatting Rules: ${channelMatch.formattingRules}
-- Avoid: ${channelMatch.avoid}`);
-    }
-  }
-
-  // Claim boundaries
-  if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio', 'Ideation Workspace'].includes(context.workspace)) {
-    const approved = core.claimsProofBoundaries.claims.filter(c => c.type === 'Approved').map(c => `- ${c.text}`).join('\n');
-    const requiresProof = core.claimsProofBoundaries.claims.filter(c => c.type === 'Requires proof').map(c => `- ${c.text}`).join('\n');
-    const forbidden = core.claimsProofBoundaries.claims.filter(c => c.type === 'Forbidden').map(c => `- ${c.text}`).join('\n');
-    
-    if (approved || requiresProof || forbidden) {
-      sections.push(`\nCLAIMS & PROOF BOUNDARIES:`);
-      sections.push(`OVERSTATEMENT WARNING: ${core.claimsProofBoundaries.overstatementWarnings}`);
-      sections.push(`STYLE RULES: ${core.claimsProofBoundaries.claimStyleRules}`);
-      if (approved) sections.push(`APPROVED CLAIMS:\n${approved}`);
-      if (requiresProof) sections.push(`REQUIRES PROOF:\n${requiresProof}`);
-      if (forbidden) sections.push(`FORBIDDEN CLAIMS (CRITICAL):\n${forbidden}`);
-    }
-  }
-
-  // Voice & Language applies to all text generation
-  if (['Simple Mode', 'Quick Create', 'Advanced Brief', 'Revision Studio'].includes(context.workspace)) {
-    sections.push(`
-VOICE & LANGUAGE:
-- Overall Tone: ${core.voiceAndLanguage.overallTone}
-- Writing Style: ${core.voiceAndLanguage.writingStyle}
-- Founder Notes: ${core.voiceAndLanguage.founderVoiceNotes}`);
-    
-    if (core.voiceAndLanguage.avoidPhrases.length > 0) {
-      sections.push(`- WORDS/PHRASES TO AVOID: ${core.voiceAndLanguage.avoidPhrases.join(', ')}`);
-    }
-    if (core.voiceAndLanguage.aiPhrasesToAvoid.length > 0) {
-      sections.push(`- AI SYNTAX TO AVOID: ${core.voiceAndLanguage.aiPhrasesToAvoid.join(', ')}`);
-    }
-  }
-
-  // Revision specific
-  if (context.workspace === 'Revision Studio' && context.action) {
-    const revMatch = core.revisionStandards.find(r => r.action === context.action || r.id === context.action);
-    if (revMatch) {
-      sections.push(`
-REVISION STANDARD TO APPLY: ${revMatch.action}
-- What this revision does: ${revMatch.does}
-- What it avoids: ${revMatch.avoids}`);
-    }
-  }
-
-  // Visual specific
-  if (context.workspace === 'Visual Studio') {
-    sections.push(`
-VISUAL DNA:
-- Visual Atmosphere: ${core.visualDNA.visualAtmosphere}
-- Photography Style: ${core.visualDNA.photographyStyle}
-- Principle: ${core.visualDNA.imagePromptRules}
-- CLICHES TO AVOID (CRITICAL): ${core.visualDNA.visualClichesToAvoid}`);
-  }
-
-  return sections.join('\n');
+  return compileGovernedContext({
+    workflow: context.workspace,
+    operatingCore: core,
+    coreDocuments: appliedDocs,
+    channel: context.channel,
+    audience: context.audience,
+    format: context.format,
+    action: context.action
+  }).compiledInstructions;
 }
 
 export function normalizeText(text: string | null | undefined): string {

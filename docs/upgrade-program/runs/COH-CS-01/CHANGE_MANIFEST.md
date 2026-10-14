@@ -1,0 +1,25 @@
+# COH-CS-01 Change Manifest
+
+- **Files Created:**
+  - `src/lib/contextCompiler.ts`
+  - `src/components/ContextManifestPanel.tsx`
+  - `tests/contextCompiler.test.ts`
+  - `docs/upgrade-program/runs/COH-CS-01/PROMPT_SNAPSHOT.md`
+  - `docs/upgrade-program/runs/COH-CS-01/CONTEXT_AUTHORITY_MAP.md`
+  - `docs/upgrade-program/runs/COH-CS-01/IMPLEMENTATION_REPORT.md`
+  - `docs/upgrade-program/runs/COH-CS-01/CHANGE_MANIFEST.md`
+  - `docs/upgrade-program/runs/COH-CS-01/VALIDATION_REPORT.md`
+  - `docs/upgrade-program/runs/COH-CS-01/RUN_MANIFEST.json`
+- **Files Modified:**
+  - `src/lib/operatingCore.ts`
+  - `src/components/RevisionStudio.tsx`
+  - `src/App.tsx`
+  - `docs/upgrade-program/MASTER_REGISTER.md`
+  - `docs/upgrade-program/DRIVE_SYNC_MANIFEST.json`
+- **Files Deleted:** `NONE`
+- **Dependencies Added/Removed:** `NONE`
+- **Environment Variables Added/Changed:** `NONE`
+- **Persistence Changes:** Backward-compatible optional `workContext?: WorkContext` field added to `WorkItem` interface; no existing storage keys or stored payloads modified.
+- **Database Changes:** `NONE`
+- **Schema Changes:** `NONE`
+- **Production-Data Changes:** `NONE`

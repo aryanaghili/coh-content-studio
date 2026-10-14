@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { RefreshCcw, Save, CheckCircle2, AlertTriangle, ChevronRight, Edit3, Type, Wand2, Copy, FileText, Trash2 } from 'lucide-react';
 import { Button } from './ui/Button';
 import { LANGUAGES, getLanguageDirection } from '../lib/languages';
+import { compileGovernedContext, extractWorkContextFromWorkItem } from '../lib/contextCompiler';
+import { ContextManifestPanel } from './ContextManifestPanel';
 
 export type RevisionActionGroup = 'Clean & Polish' | 'Voice & Tone' | 'COH & Strategic Fit' | 'Translation & Localization' | 'Format & Structure' | 'Creative Actions';
 
@@ -108,6 +110,9 @@ interface RevisionStudioProps {
   initialSourceType?: RevisionState['sourceType'];
   initialSourceTitle?: string;
   operatingCore: any;
+  coreDocuments?: any[];
+  activeWorkItem?: any;
+  theme?: 'light' | 'dark';
   aiStatus: string;
   generationMode: string;
   aiService: any;
@@ -120,6 +125,9 @@ export function RevisionStudio({
   initialSourceType,
   initialSourceTitle,
   operatingCore,
+  coreDocuments = [],
+  activeWorkItem = null,
+  theme = 'light',
   aiStatus,
   generationMode,
   aiService,
@@ -130,6 +138,34 @@ export function RevisionStudio({
   const [customInstruction, setCustomInstruction] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [cleanNote, setCleanNote] = useState('');
+
+  const inheritedWorkContext = useMemo(
+    () => extractWorkContextFromWorkItem(activeWorkItem),
+    [activeWorkItem]
+  );
+
+  const activeContextPackage = useMemo(() => {
+    const channelVal = state.channel !== 'General / Custom' ? state.channel : undefined;
+    const formatVal = state.format !== 'General / Custom' ? state.format : undefined;
+    return compileGovernedContext({
+      workflow: 'Revision Studio',
+      operatingCore,
+      coreDocuments,
+      action: state.selectedAction || undefined,
+      channel: channelVal,
+      format: formatVal,
+      language: state.targetLanguage,
+      communicationJob: state.optionalContext || undefined,
+      userInstruction: customInstruction || state.optionalContext || undefined,
+      inheritedWorkContext,
+      explicitFields: {
+        channel: Boolean(channelVal),
+        format: Boolean(formatVal),
+        language: Boolean(state.targetLanguage),
+        communicationJob: Boolean(state.optionalContext)
+      }
+    });
+  }, [operatingCore, coreDocuments, state.selectedAction, state.channel, state.format, state.targetLanguage, state.optionalContext, customInstruction, inheritedWorkContext]);
 
   // Handle incoming props initialization
   useEffect(() => {
@@ -199,18 +235,32 @@ export function RevisionStudio({
           }
         }
         
+        const revisionContextPkg = compileGovernedContext({
+          workflow: 'Revision Studio',
+          operatingCore,
+          coreDocuments,
+          action,
+          channel: state.channel !== 'General / Custom' ? state.channel : undefined,
+          format: state.format !== 'General / Custom' ? state.format : undefined,
+          language: state.targetLanguage,
+          communicationJob: state.optionalContext || undefined,
+          userInstruction: instruction,
+          inheritedWorkContext,
+          transformationIntent: actionLabel
+        });
+
         const result = await aiService.revise({
           previousDraft: state.revisionSource === 'original' ? state.originalDraft : state.currentDraft,
           rawInput: state.optionalContext,
           channel: state.channel,
           outputFormat: state.format,
-          audience: 'General Public',
+          audience: revisionContextPkg.manifest.audience.value || 'General Public',
           purpose: state.optionalContext || 'General Revision',
           language: state.targetLanguage,
           tone: state.tone,
           selectedRevisionAction: action,
           revisionInstruction: instruction,
-          operatingCoreInstructions: JSON.stringify(operatingCore) // Simple compile 
+          operatingCoreInstructions: revisionContextPkg.compiledInstructions
         });
 
         if (!result || !result.revisedCopy) {
@@ -291,7 +341,7 @@ export function RevisionStudio({
 
   return (
     <div className="page-shell">
-      <div className="bg-surface-primary border border-border-standard p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+      <div className="bg-surface-primary border border-border-standard p-4 rounded shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-3">
         <div>
           <h2 className="page-title">
             Revision Studio
@@ -309,6 +359,12 @@ export function RevisionStudio({
           </Button>
         </div>
       </div>
+
+      <ContextManifestPanel
+        manifest={activeContextPackage.manifest}
+        theme={theme}
+        className="mb-4"
+      />
 
       <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-160px)]">
         

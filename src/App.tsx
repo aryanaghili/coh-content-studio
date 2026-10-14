@@ -54,6 +54,14 @@ import { safeRead } from './lib/storage';
 import { createDefaultOperatingCore, compileOperatingCoreContext, normalizeText } from './lib/operatingCore';
 import type { OperatingCore } from './lib/operatingCore';
 import OperatingCoreAdmin from './components/OperatingCoreAdmin';
+import {
+  compileGovernedContext,
+  extractWorkContextFromWorkItem,
+  inferDefaultSourceRole,
+  type WorkContext,
+  type TaskSourceBinding
+} from './lib/contextCompiler';
+import { ContextManifestPanel } from './components/ContextManifestPanel';
 
 // --- Type Definitions ---
 
@@ -125,6 +133,7 @@ export interface WorkItem {
   createdAt: string;
   updatedAt: string;
   origin?: string;
+  workContext?: WorkContext;
 }
 
 
@@ -3531,12 +3540,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           mustAvoid: creationMode === 'advanced' ? advancedBrief.mustAvoid : '',
           framingMode: dirMode,
           customFraming: customDir,
-          operatingCoreInstructions: compileOperatingCoreContext(operatingCore, { 
-            workspace: isSimple ? 'Simple Mode' : isQuick ? 'Quick Create' : 'Advanced Brief', 
-            channel, 
-            audience, 
-            format 
-          }),
+          operatingCoreInstructions: buildContentWorkspaceContextPackage().compiledInstructions,
           taskSources: (creationMode === 'advanced' ? advancedBrief.selectedSourceIds : []).map(id => {
             const s = [...workspaceLocalSources, ...sources].find((x: any) => x.id === id);
             return s ? { title: s.title, type: s.type, content: s.content || s.notes || s.url } : null;
@@ -4283,6 +4287,70 @@ Revision History:
     }
   };
 
+  // --- Shared Context Compiler Integration for Content Workspace ---
+  const buildContentWorkspaceContextPackage = () => {
+    const isSimple = creationMode === 'simple';
+    const isQuick = creationMode === 'quick';
+    const workflow = isSimple ? 'Simple Mode' : (isQuick ? 'Quick Create' : 'Advanced Brief');
+
+    const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
+    const format = isSimple ? undefined : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const topic = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
+    const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
+    const aud = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.audience : undefined);
+    const custAud = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.customAudience : undefined);
+    const pillar = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.pillar : undefined);
+    const purpose = isSimple ? undefined : (creationMode === 'advanced' ? advancedBrief.purpose : undefined);
+
+    const inherited = extractWorkContextFromWorkItem(activeWorkItem);
+
+    const activeSourceIds =
+      creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0
+        ? advancedBrief.selectedSourceIds
+        : activeWorkItem?.sourceIds || [];
+
+    const sourceBindings: TaskSourceBinding[] = activeSourceIds
+      .map(id => {
+        const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
+        if (!s) return null;
+        const existingBinding = inherited?.sourceBindings?.find(b => b.sourceId === id);
+        return {
+          sourceId: s.id,
+          title: s.title || 'Untitled Source',
+          type: s.type || 'Other',
+          role: existingBinding?.role || inferDefaultSourceRole(s.type),
+          selectedExcerpts: existingBinding?.selectedExcerpts,
+          content: s.content || s.notes || s.url || '',
+          summary: s.notes || undefined
+        } as TaskSourceBinding;
+      })
+      .filter((b): b is TaskSourceBinding => Boolean(b));
+
+    return compileGovernedContext({
+      workflow,
+      operatingCore,
+      coreDocuments: operatingCoreDocs,
+      audience: aud,
+      customAudience: custAud,
+      channel,
+      format,
+      pillar,
+      language: lang,
+      communicationJob: purpose || topic || undefined,
+      sourceBindings,
+      userInstruction: topic || undefined,
+      inheritedWorkContext: inherited,
+      explicitFields: {
+        channel: Boolean(channel),
+        format: Boolean(format),
+        audience: creationMode === 'advanced' && Boolean(aud),
+        pillar: creationMode === 'advanced' && Boolean(pillar),
+        language: !isSimple && Boolean(lang),
+        communicationJob: Boolean(purpose || topic)
+      }
+    });
+  };
+
   // --- Prompt Builder Compiler ---
   const compileStructuredPrompt = () => {
     const isSimple = creationMode === 'simple';
@@ -4292,7 +4360,6 @@ Revision History:
     const targetChannels = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
     const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
     const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
-    const topic = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
     const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
     const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
     const mustAvoid = isSimple ? '' : (isQuick ? quickBrief.mustAvoid : advancedBrief.mustAvoid);
@@ -4337,12 +4404,7 @@ Revision History:
       ? '\n\nLANGUAGE DIRECTIVE (CRITICAL): The final output must be written entirely in ' + lang + '. Do not mix English sentences with ' + lang + '. Do not use translation fragments or partial phrases. Approved proper names that must NOT be translated: Climate Opera Haus, RESONANCE 2027, The Climate Tetralogy, Soria Moria, The Golden Fountain, The Water Dragon, Roar to the Wind. All other text — headlines, body copy, CTAs, captions — must be natural, fluent ' + lang + ' as written by a native speaker. If Email / Letter format is used, write the greeting and sign-off in ' + lang + ' also.'
       : '';
 
-
-    const operatingCoreContext = compileOperatingCoreContext(operatingCore, {
-      workspace: creationMode === 'simple' ? 'Simple Mode' : (creationMode === 'quick' ? 'Quick Create' : 'Advanced Brief'),
-      channel: channel,
-      audience: aud
-    });
+    const operatingCoreContext = buildContentWorkspaceContextPackage().compiledInstructions;
 
     return `${operatingCoreContext}
 
@@ -5375,6 +5437,12 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
               </div>
             )}
+
+            <ContextManifestPanel
+              manifest={buildContentWorkspaceContextPackage().manifest}
+              theme={theme}
+              className="mb-6"
+            />
 
             {/* Validation warning block */}
             {validationWarning && (
@@ -7161,6 +7229,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
             initialSourceType={activeDraftSource === 'Content Workspace' ? 'contentWorkspace' : 'contentLibrary'}
             initialSourceTitle={activeDraftTitle}
             operatingCore={operatingCore}
+            coreDocuments={operatingCoreDocs}
+            activeWorkItem={activeWorkItem}
+            theme={theme}
             aiStatus={aiStatus}
             generationMode={generationMode}
             aiService={aiService}
