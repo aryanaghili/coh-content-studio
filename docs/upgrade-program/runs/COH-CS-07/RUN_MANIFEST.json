@@ -2,6 +2,7 @@
   "runId": "COH-CS-07",
   "title": "Cross-Studio Continuity, Handoff Hardening, Regression Verification & Final Release Readiness",
   "branch": "feature/coh-content-intelligence-v2",
+  "commitSha": "fb8fa8672874377a74a267bfba2d0a610514d848",
   "status": "PASS",
   "predecessorRunId": "COH-CS-06",
   "predecessorCommit": "8a4e861c83c2e69414cce009b91187f24763fe9d",
