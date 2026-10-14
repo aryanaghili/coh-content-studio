@@ -113,11 +113,6 @@ export function isConnected() {
   return activeConfig?.status === 'connected';
 }
 
-function maskKey(key) {
-  if (!key || key.length < 8) return '***';
-  return key.substring(0, 3) + '...' + key.substring(key.length - 4);
-}
-
 function getAdapter(provider) {
   const adapters = {
     openai: openaiAdapter,
@@ -135,12 +130,76 @@ export async function testConnection(cfg) {
   return adapter.testConnection(cfg);
 }
 
+/**
+ * Execute generation with one bounded quality-repair attempt.
+ *
+ * Every adapter already runs the deterministic COH quality gate. When a
+ * structurally valid candidate fails that gate, the manager permits exactly
+ * one targeted retry carrying only the failed dimensions and the prior
+ * candidate. This is deliberately bounded to prevent loops, cost runaway,
+ * or iterative claim drift.
+ */
 export async function generate(input) {
   if (!activeConfig || !activeConfig.apiKey) {
     throw new Error('AI provider is not configured. Add an API key in Settings.');
   }
   const adapter = getAdapter(activeConfig.provider);
-  return adapter.generate(activeConfig, input);
+  const firstResult = await adapter.generate(activeConfig, input);
+
+  const firstQuality = firstResult?.data?.qualityCheck;
+  const firstIssues = Array.isArray(firstQuality?.issues) ? firstQuality.issues.filter(Boolean) : [];
+  const mode = String(input?.mode || input?.taskType || 'creation');
+  const repairEligible =
+    firstResult?.success === true &&
+    firstQuality?.passed === false &&
+    firstIssues.length > 0 &&
+    !input?.__qualityRepairAttempt &&
+    mode !== 'source_analysis' &&
+    mode !== 'source-analysis';
+
+  if (!repairEligible) return firstResult;
+
+  const repairInput = {
+    ...input,
+    __qualityRepairAttempt: true,
+    qualityRepairIssues: firstIssues.slice(0, 10),
+    previousCandidate: firstResult.data,
+  };
+
+  try {
+    const repairedResult = await adapter.generate(activeConfig, repairInput);
+    const repairedQuality = repairedResult?.data?.qualityCheck;
+
+    if (repairedResult?.success === true && repairedQuality?.passed === true) {
+      repairedResult.data.qualityRepair = {
+        attempted: true,
+        repaired: true,
+        originalIssues: firstIssues,
+      };
+      return repairedResult;
+    }
+
+    if (firstResult?.data) {
+      firstResult.data.qualityRepair = {
+        attempted: true,
+        repaired: false,
+        originalIssues: firstIssues,
+        remainingIssues: Array.isArray(repairedQuality?.issues) ? repairedQuality.issues : [],
+      };
+    }
+    return firstResult;
+  } catch (error) {
+    console.warn('[AI] Controlled quality repair attempt failed:', error?.message || error);
+    if (firstResult?.data) {
+      firstResult.data.qualityRepair = {
+        attempted: true,
+        repaired: false,
+        originalIssues: firstIssues,
+        remainingIssues: ['Repair attempt could not be completed. Original candidate preserved.'],
+      };
+    }
+    return firstResult;
+  }
 }
 
 export async function compileImagePrompt(systemPrompt, userPrompt) {
@@ -149,7 +208,6 @@ export async function compileImagePrompt(systemPrompt, userPrompt) {
   }
   const adapter = getAdapter(activeConfig.provider);
   if (typeof adapter.compileImagePrompt !== 'function') {
-    // If provider doesn't have text capabilities for compiling, just return the user prompt
     return userPrompt;
   }
   return adapter.compileImagePrompt(activeConfig, systemPrompt, userPrompt);
