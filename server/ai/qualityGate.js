@@ -21,7 +21,7 @@ export function runQualityGate(output, input) {
     return { passed: issues.length === 0, issues };
   }
 
-  if (input.mode === 'ideation' || input.mode === 'revision') {
+  if (input.mode === 'ideation' || input.mode === 'revision' || input.mode === 'reframe') {
     return { passed: true, issues: [] };
   }
 

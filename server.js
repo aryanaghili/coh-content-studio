@@ -488,6 +488,42 @@ app.post('/api/ai/analyze-source', requireAuth, async (req, res) => {
   }
 });
 
+// ─── Reframe (Reframing Studio) ───────────────────────────────────────────────
+app.post('/api/ai/reframe', requireAuth, async (req, res) => {
+  try {
+    const input = {
+      ...req.body,
+      mode: 'reframe',
+      taskType: 'reframing',
+      rawInput: req.body?.rawIntent || req.body?.sourceContent || ''
+    };
+    if (!req.body?.sourceContent || !String(req.body.sourceContent).trim()) {
+      return res.json({
+        success: false,
+        errorType: 'VALIDATION_ERROR',
+        userMessage: 'Source content is required for reframing.'
+      });
+    }
+    if (!providerManager.isConnected()) {
+      return res.json({
+        success: false,
+        errorType: 'CONFIGURATION_ERROR',
+        userMessage: 'AI provider is not connected. Configure a provider in Settings or use deterministic COH reframing.'
+      });
+    }
+    const result = await providerManager.generate(input);
+    res.json(result);
+  } catch (err) {
+    console.error('[/api/ai/reframe]', err.message);
+    res.json({
+      success: false,
+      errorType: 'SERVER_ERROR',
+      userMessage: friendlyServerError(err),
+      debug: { message: err.message }
+    });
+  }
+});
+
 // ─── Prompt Builder ───────────────────────────────────────────────────────────
 app.post('/api/ai/prompt', requireAuth, (req, res) => {
   try {

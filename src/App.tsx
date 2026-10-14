@@ -1,4 +1,4 @@
-import { Menu, X } from "lucide-react";
+import { Menu, X, RefreshCw } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { buildAdvancedBriefFromCalendarItem } from './utils/calendarHandoffUtils';
 
@@ -82,6 +82,8 @@ import {
   type IdeationOpportunityProposal
 } from './lib/ideationIntelligence';
 import { IdeationOpportunityCard } from './components/IdeationOpportunityCard';
+import { ReframingStudio } from './components/ReframingStudio';
+import type { ReframeOriginType } from './lib/reframingEngine';
 
 // --- Type Definitions ---
 
@@ -684,9 +686,19 @@ export default function App() {
 
   const validTabs = [
     'command-center', 'ideation-workspace', 'editorial-calendar', 'content-workspace',
-    'visual-studio', 'revision-studio', 'idea-library', 'content-library', 
+    'visual-studio', 'revision-studio', 'reframing-studio', 'idea-library', 'content-library', 
     'source-library', 'operating-core', 'settings', 'calendar-library', 'prompt-builder'
   ];
+
+  const [reframingInitialOrigin, setReframingInitialOrigin] = useState<{
+    originType: ReframeOriginType;
+    originId?: string;
+    originTitle?: string;
+    sourceContent: string;
+    originChannel?: string;
+    originAudience?: string;
+    suggestedIntent?: string;
+  } | null>(null);
 
   const currentPath = location.pathname.substring(1);
   const activeTab = validTabs.includes(currentPath) ? currentPath : 'command-center';
@@ -713,6 +725,15 @@ export default function App() {
   const getPageTitle = () => {
     switch(activeTab) {
       case 'command-center': return 'Command Center';
+      case 'reframing-studio': return 'Reframing Studio';
+      case 'revision-studio': return 'Revision Studio';
+      case 'ideation-workspace': return 'Ideation Workspace';
+      case 'content-workspace': return 'Content Workspace';
+      case 'editorial-calendar': return 'Editorial Calendar';
+      case 'visual-studio': return 'Visual Studio';
+      case 'source-library': return 'Source Library';
+      case 'idea-library': return 'Idea Library';
+      case 'content-library': return 'Content Library';
       case 'create': return 'Create Content';
       case 'calendars': return 'Calendars';
       case 'library': return 'Content Library';
@@ -5032,6 +5053,19 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 <span className="absolute top-2.5 right-4 w-2 h-2 rounded-full bg-violet-600" />
               )}
             </button>
+            <button
+              id="nav-reframing"
+              data-testid="nav-reframing-studio"
+              onClick={() => { setIsMobileMenuOpen(false); setActiveTab('reframing-studio'); }}
+              className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium transition-all duration-200 rounded relative ${
+                activeTab === 'reframing-studio'
+                  ? 'bg-sidebar-active text-white font-semibold rounded-md shadow-sm'
+                  : 'text-brand-gold/70 hover:bg-brand-gold-hover hover:text-text-primary'
+              }`}
+            >
+              <RefreshCw size={16} />
+              Reframing Studio
+            </button>
 
             <div className="pt-6 pb-2 px-4 text-[11px] font-semibold tracking-wider text-text-muted uppercase">
               Libraries
@@ -7762,6 +7796,138 @@ WRITING CLEANLINESS RULES (CRITICAL):
             onNavigateToLibrary={() => setActiveTab('content-library')}
           />
         </ErrorBoundary>)}
+
+        {activeTab === 'reframing-studio' && (<ErrorBoundary fallbackTitle="Reframing Studio Error">
+          <ReframingStudio
+            operatingCore={operatingCore}
+            operatingCoreDocs={operatingCoreDocs}
+            sources={[...sources, ...workspaceLocalSources]}
+            savedContent={savedContent}
+            workspaceDraftText={draftOptions?.optionA || activeDraftText || ''}
+            workspaceTitle={advancedBrief.topic || activeWorkItem?.title || 'Workspace Draft'}
+            revisionDraftText={activeDraftText}
+            revisionTitle={activeDraftTitle || 'Revision Output'}
+            selectedSourceIds={advancedBrief.selectedSourceIds}
+            taskSourceRoleMap={taskSourceRoleMap}
+            sourceIntelligenceMap={sourceIntelligenceMap}
+            initialOrigin={reframingInitialOrigin}
+            onChangeSourceTaskRole={handleChangeSourceTaskRole}
+            onToggleAttachedSource={(srcId) => {
+              setAdvancedBrief(prev => ({
+                ...prev,
+                selectedSourceIds: prev.selectedSourceIds.includes(srcId)
+                  ? prev.selectedSourceIds.filter(id => id !== srcId)
+                  : [...prev.selectedSourceIds, srcId]
+              }));
+            }}
+            onHandoffToRevisionStudio={({ sourceText, title }) => {
+              setActiveDraftText(sourceText);
+              setActiveDraftTitle(title);
+              setActiveDraftVersion(1);
+              setActiveDraftHistory([
+                {
+                  version: 1,
+                  text: sourceText,
+                  timestamp: new Date().toISOString().split('T')[0],
+                  actionUsed: 'Routed from Reframing Studio (Revision Intent Detected)'
+                }
+              ]);
+              setActiveDraftSource('Content Workspace');
+              setActiveTab('revision-studio');
+            }}
+            onSendReframeToWorkspace={({ reframedText, title, plan, lineage }) => {
+              const dateStr = new Date().toISOString();
+              setAdvancedBrief(prev => ({
+                ...prev,
+                topic: title,
+                channel: plan.targetChannel,
+                audience: plan.targetAudience,
+                pillar: plan.contentPillarEmphasis,
+                purpose: plan.communicationPurpose,
+                outputFormat: plan.targetFormat,
+                directionMode: 'custom',
+                customDirection: `Reframed from ${lineage.originType} (${lineage.originTitle || 'Source'}): ${plan.strategicFrame}`
+              }));
+              setDraftOptions({
+                optionA: reframedText,
+                optionB: reframedText,
+                optionC: reframedText.slice(0, 220),
+                visualIdeation: `Editorial visual aligned with ${plan.strategicFrame} for ${plan.targetAudience}`,
+                editorialWarning: '',
+                labelA: `Reframed (${plan.targetAudience})`
+              });
+              setActiveDraftText(reframedText);
+              setActiveDraftTitle(title);
+              setActiveWorkItem(prev => ({
+                ...(prev || {
+                  id: `work-${Date.now()}`,
+                  draftVersions: [],
+                  imageResults: [],
+                  revisionHistory: [],
+                  approved: false,
+                  saved: false,
+                  createdAt: dateStr
+                }),
+                title,
+                channel: plan.targetChannel,
+                outputFormat: plan.targetFormat,
+                audience: plan.targetAudience,
+                purpose: plan.communicationPurpose,
+                status: 'Draft',
+                origin: 'Reframing Studio',
+                workContext: {
+                  ...(prev?.workContext || {}),
+                  origin: 'Reframing Studio',
+                  originId: lineage.originContentId,
+                  originTitle: lineage.originTitle,
+                  audience: plan.targetAudience,
+                  channel: plan.targetChannel,
+                  format: plan.targetFormat,
+                  pillar: plan.contentPillarEmphasis,
+                  communicationJob: plan.communicationPurpose,
+                  strategicAngle: plan.strategicFrame,
+                  transformationHistory: [
+                    ...(prev?.workContext?.transformationHistory || []),
+                    {
+                      step: `Reframed for ${plan.targetAudience} (${plan.targetChannel})`,
+                      studio: 'Reframing Studio',
+                      timestamp: dateStr
+                    }
+                  ]
+                },
+                updatedAt: dateStr
+              }));
+              setActiveTab('content-workspace');
+            }}
+            onSaveReframeToLibrary={({ reframedText, title, plan, lineage }) => {
+              const dateStr = new Date().toISOString().split('T')[0];
+              const newItem: SavedContent = {
+                id: `saved-reframe-${Date.now()}`,
+                title,
+                displayName: title,
+                savedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                channel: plan.targetChannel,
+                outputFormat: plan.targetFormat,
+                pillar: plan.contentPillarEmphasis,
+                angle: plan.strategicFrame,
+                audience: plan.targetAudience,
+                purpose: plan.communicationPurpose,
+                status: 'Revised',
+                sourcesUsed: lineage.sourceReferences,
+                createdAt: dateStr,
+                lastEdited: dateStr,
+                text: reframedText,
+                finalCopy: reframedText,
+                notes: `Reframed from ${lineage.originType} (${lineage.originTitle || 'Source'}). Intent: ${lineage.reframeIntent}`,
+                version: 1,
+                metadata: {
+                  reframeLineage: lineage
+                }
+              };
+              setSavedContent(prev => [newItem, ...prev]);
+            }}
+          />
+        </ErrorBoundary>)}
         {/* --- TAB 6: CONTENT LIBRARY --- */}
         {activeTab === 'content-library' && (<ErrorBoundary fallbackTitle="Content Library Error">
           <div className="page-shell">
@@ -7977,6 +8143,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           className="flex items-center gap-1 text-[11px] text-text-primary hover:text-brand-gold font-semibold transition"
                         >
                           <Edit3 size={11} /> Edit / Revise
+                        </button>
+                        <button
+                          data-testid={`reframe-library-item-${item.id}`}
+                          onClick={() => {
+                            setReframingInitialOrigin({
+                              originType: 'Content Library',
+                              originId: item.id,
+                              originTitle: item.title,
+                              sourceContent: item.text,
+                              originChannel: item.channel,
+                              originAudience: item.audience
+                            });
+                            setActiveTab('reframing-studio');
+                          }}
+                          className="flex items-center gap-1 text-[11px] text-brand-gold hover:underline font-semibold transition"
+                        >
+                          <RefreshCw size={11} /> Reframe
                         </button>
                         <button
                           onClick={() => handleDeleteSaved(item.id)}
