@@ -49,6 +49,12 @@ export interface SourceRecordLike {
   selectable?: boolean;
 }
 
+export interface GroundedEvidenceClaim {
+  text: string;
+  evidenceExcerpt: string;
+  sourceId: string;
+}
+
 export interface SourceIntelligenceAnalysis {
   sourceId: string;
   sourceTitle: string;
@@ -59,6 +65,8 @@ export interface SourceIntelligenceAnalysis {
   disclaimer: typeof SOURCE_INTELLIGENCE_DISCLAIMER;
   keyFacts: string[];
   supportedClaims: string[];
+  groundedFacts?: GroundedEvidenceClaim[];
+  groundedClaims?: GroundedEvidenceClaim[];
   strategicContext: string;
   cautionsAndAmbiguities: string[];
   usefulExcerpts: string[];
@@ -139,6 +147,91 @@ export function isValidSourceIntelligenceRecord(val: unknown): val is SourceInte
 }
 
 /**
+ * Normalizes a stored SourceIntelligenceAnalysis record so legacy records without
+ * groundedFacts/groundedClaims are safely reconciled against usefulExcerpts without
+ * fabricating fake evidence anchors.
+ */
+export function normalizeStoredSourceIntelligenceRecord(
+  record: SourceIntelligenceAnalysis
+): SourceIntelligenceAnalysis {
+  const isRestrictedRole =
+    record.sourceType === 'Approved Example' || record.sourceType === 'Visual Reference';
+  if (isRestrictedRole) {
+    return {
+      ...record,
+      schemaVersion: SOURCE_INTELLIGENCE_SCHEMA_VERSION,
+      disclaimer: SOURCE_INTELLIGENCE_DISCLAIMER,
+      keyFacts: [],
+      supportedClaims: [],
+      groundedFacts: [],
+      groundedClaims: []
+    };
+  }
+
+  const pseudoSource: Pick<SourceRecordLike, 'id' | 'content' | 'notes'> = {
+    id: record.sourceId,
+    content: (record.usefulExcerpts || []).join('\n'),
+    notes: ''
+  };
+
+  let groundedFacts: GroundedEvidenceClaim[] = [];
+  if (Array.isArray(record.groundedFacts) && record.groundedFacts.length > 0) {
+    groundedFacts = record.groundedFacts.filter(
+      gf =>
+        gf &&
+        typeof gf.text === 'string' &&
+        typeof gf.evidenceExcerpt === 'string' &&
+        gf.evidenceExcerpt.trim().length > 0 &&
+        typeof gf.sourceId === 'string'
+    );
+  } else if (pseudoSource.content.length > 0) {
+    for (const fact of record.keyFacts || []) {
+      const anchor = findGroundableSourceAnchor(pseudoSource, fact);
+      if (anchor.grounded) {
+        groundedFacts.push({
+          text: fact,
+          evidenceExcerpt: anchor.evidenceExcerpt,
+          sourceId: record.sourceId
+        });
+      }
+    }
+  }
+
+  let groundedClaims: GroundedEvidenceClaim[] = [];
+  if (Array.isArray(record.groundedClaims) && record.groundedClaims.length > 0) {
+    groundedClaims = record.groundedClaims.filter(
+      gc =>
+        gc &&
+        typeof gc.text === 'string' &&
+        typeof gc.evidenceExcerpt === 'string' &&
+        gc.evidenceExcerpt.trim().length > 0 &&
+        typeof gc.sourceId === 'string'
+    );
+  } else if (pseudoSource.content.length > 0) {
+    for (const claim of record.supportedClaims || []) {
+      const anchor = findGroundableSourceAnchor(pseudoSource, claim);
+      if (anchor.grounded) {
+        groundedClaims.push({
+          text: claim,
+          evidenceExcerpt: anchor.evidenceExcerpt,
+          sourceId: record.sourceId
+        });
+      }
+    }
+  }
+
+  return {
+    ...record,
+    schemaVersion: SOURCE_INTELLIGENCE_SCHEMA_VERSION,
+    disclaimer: SOURCE_INTELLIGENCE_DISCLAIMER,
+    keyFacts: groundedFacts.length > 0 ? groundedFacts.map(f => f.text) : record.keyFacts,
+    supportedClaims: groundedClaims.length > 0 ? groundedClaims.map(c => c.text) : record.supportedClaims,
+    groundedFacts,
+    groundedClaims
+  };
+}
+
+/**
  * Non-destructively loads derived Source Intelligence records from versioned storage.
  * Corrupted payloads or individual malformed entries never throw or block raw source access.
  */
@@ -170,11 +263,7 @@ export function loadSourceIntelligenceStore(
     const validated: Record<string, SourceIntelligenceAnalysis> = {};
     for (const [key, value] of Object.entries(candidateRecords)) {
       if (isValidSourceIntelligenceRecord(value)) {
-        validated[key] = {
-          ...value,
-          schemaVersion: SOURCE_INTELLIGENCE_SCHEMA_VERSION,
-          disclaimer: SOURCE_INTELLIGENCE_DISCLAIMER
-        };
+        validated[key] = normalizeStoredSourceIntelligenceRecord(value);
       }
     }
     return validated;
@@ -220,11 +309,11 @@ export function upsertSourceIntelligenceRecord(
 ): Record<string, SourceIntelligenceAnalysis> {
   const next = {
     ...currentRecords,
-    [analysis.sourceId]: {
+    [analysis.sourceId]: normalizeStoredSourceIntelligenceRecord({
       ...analysis,
       schemaVersion: SOURCE_INTELLIGENCE_SCHEMA_VERSION,
       disclaimer: SOURCE_INTELLIGENCE_DISCLAIMER
-    }
+    })
   };
   saveSourceIntelligenceStore(next, storage);
   return next;
@@ -310,12 +399,166 @@ function findUntraceableNumericTokens(claimText: string, rawSourceText: string):
   return untraceable;
 }
 
+const CLAIM_META_PREFIX_REGEX =
+  /^(?:source[- ]grounded\s+statement|verified\s+fact|supported\s+claim|fact|claim)\s*:\s*/i;
+
+const GROUNDING_STOPWORDS = new Set([
+  'the', 'and', 'for', 'that', 'with', 'from', 'this', 'into', 'over', 'under',
+  'have', 'has', 'had', 'were', 'was', 'are', 'been', 'being', 'will', 'would',
+  'could', 'should', 'about', 'through', 'across', 'between', 'within', 'their',
+  'there', 'where', 'which', 'while', 'when', 'what', 'who', 'whom', 'whose',
+  'climate', 'opera', 'haus', 'source', 'grounded', 'statement', 'supported',
+  'claim', 'confirmed', 'directly', 'stated', 'based', 'piece', 'content',
+  'formally', 'officially', 'recently', 'currently', 'already', 'also', 'very',
+  'more', 'most', 'some', 'such', 'than', 'then', 'only', 'both', 'each'
+]);
+
+const ALLOWED_META_PROPER_WORDS = new Set([
+  'The', 'This', 'That', 'These', 'Those', 'Source', 'Statement', 'Supported',
+  'Claim', 'Fact', 'Verified', 'Grounded', 'Climate', 'Opera', 'Haus', 'COH',
+  'In', 'On', 'At', 'For', 'With', 'From', 'By', 'As', 'To', 'During', 'After',
+  'Before', 'Across', 'Through', 'Within', 'Between', 'Under', 'Over', 'When',
+  'While', 'Where', 'Because', 'Although', 'However', 'Furthermore', 'Moreover'
+]);
+
+/**
+ * Finds a verified verbatim evidence excerpt in the raw source text that grounds a candidate
+ * fact or supported claim. Rejects any claim that:
+ * - introduces untraceable proper nouns/entities/institutions (e.g., "UNESCO", "Berlin Philharmonic")
+ *   absent from the raw source text, OR
+ * - lacks sufficient lexical/factual grounding in an actual verbatim sentence of the source.
+ */
+export function findGroundableSourceAnchor(
+  source: Pick<SourceRecordLike, 'id' | 'content' | 'notes'>,
+  candidateText: string,
+  explicitEvidenceExcerpt?: string
+): { grounded: boolean; evidenceExcerpt: string; reason?: string } {
+  const combinedSourceText = `${source.content || ''}\n${source.notes || ''}`.trim();
+  if (!combinedSourceText) {
+    return { grounded: false, evidenceExcerpt: '', reason: 'Raw source text is empty.' };
+  }
+
+  const strippedCandidate = String(candidateText || '')
+    .trim()
+    .replace(CLAIM_META_PREFIX_REGEX, '')
+    .trim();
+  if (!strippedCandidate) {
+    return { grounded: false, evidenceExcerpt: '', reason: 'Candidate claim is empty.' };
+  }
+
+  // 1. Check for any untraceable capitalized proper nouns / acronyms (e.g. "UNESCO", "NATO", "Louvre")
+  const capitalizedTokens = strippedCandidate.match(/\b(?:[A-Z]{2,}|[A-Z][a-z]{2,})\b/g) || [];
+  const lowerSource = combinedSourceText.toLowerCase();
+  for (const capToken of capitalizedTokens) {
+    if (ALLOWED_META_PROPER_WORDS.has(capToken)) continue;
+    if (!lowerSource.includes(capToken.toLowerCase())) {
+      return {
+        grounded: false,
+        evidenceExcerpt: '',
+        reason: `Contains proper noun or entity "${capToken}" not present in the raw source.`
+      };
+    }
+  }
+
+  // 2. If an explicit evidenceExcerpt was provided, validate it verbatim first
+  if (explicitEvidenceExcerpt && explicitEvidenceExcerpt.trim().length > 0) {
+    const explicitCheck = validateExactSourceExcerpt(source, explicitEvidenceExcerpt);
+    if (!explicitCheck.valid) {
+      return {
+        grounded: false,
+        evidenceExcerpt: '',
+        reason: `Provided evidenceExcerpt is not an exact substring of the raw source.`
+      };
+    }
+    // Still verify that the candidate claim's content words relate to the explicit excerpt or source
+    const contentWords = (strippedCandidate.toLowerCase().match(/\b[a-z]{4,}\b/g) || []).filter(
+      w => !GROUNDING_STOPWORDS.has(w)
+    );
+    if (contentWords.length > 0) {
+      const matchedInSource = contentWords.filter(w =>
+        lowerSource.includes(w) || (w.length >= 6 && lowerSource.includes(w.slice(0, 5)))
+      );
+      if (matchedInSource.length / contentWords.length < 0.6) {
+        return {
+          grounded: false,
+          evidenceExcerpt: '',
+          reason: 'Claim content words are not sufficiently grounded in the raw source text.'
+        };
+      }
+    }
+    return { grounded: true, evidenceExcerpt: explicitCheck.normalizedExcerpt };
+  }
+
+  // 3. Direct substring check on the stripped candidate itself
+  const directCheck = validateExactSourceExcerpt(source, strippedCandidate);
+  if (directCheck.valid) {
+    return { grounded: true, evidenceExcerpt: directCheck.normalizedExcerpt };
+  }
+
+  // 4. Token-grounding check against verbatim source sentences
+  const contentWords = Array.from(
+    new Set(
+      (strippedCandidate.toLowerCase().match(/\b[a-z]{4,}\b/g) || []).filter(
+        w => !GROUNDING_STOPWORDS.has(w)
+      )
+    )
+  );
+
+  if (contentWords.length === 0) {
+    return {
+      grounded: false,
+      evidenceExcerpt: '',
+      reason: 'Claim contains no specific groundable content tokens.'
+    };
+  }
+
+  const allSourceSegments = combinedSourceText
+    .replace(/\r\n/g, '\n')
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map(s => s.replace(/^[-*•#>\s]+/, '').trim())
+    .filter(s => s.length >= 15 && !s.startsWith('[URL reference:'));
+
+  let bestSegment = '';
+  let bestScore = 0;
+
+  for (const seg of allSourceSegments) {
+    const segLower = seg.toLowerCase();
+    let matchedCount = 0;
+    for (const word of contentWords) {
+      if (segLower.includes(word) || (word.length >= 6 && segLower.includes(word.slice(0, 5)))) {
+        matchedCount++;
+      }
+    }
+    const ratio = matchedCount / contentWords.length;
+    if (ratio > bestScore && (matchedCount >= 2 || (contentWords.length === 1 && matchedCount === 1))) {
+      bestScore = ratio;
+      bestSegment = seg;
+    }
+  }
+
+  // Require at least 60% of specific content tokens to anchor to a single verbatim source sentence
+  if (bestScore >= 0.6 && bestSegment) {
+    const verifiedSeg = validateExactSourceExcerpt(source, bestSegment);
+    if (verifiedSeg.valid) {
+      return { grounded: true, evidenceExcerpt: verifiedSeg.normalizedExcerpt };
+    }
+  }
+
+  return {
+    grounded: false,
+    evidenceExcerpt: '',
+    reason: 'No verbatim evidence anchor in the raw source supports this factual statement.'
+  };
+}
+
 /**
  * Enforces COH claim discipline on any SourceIntelligenceAnalysis:
+ * - Every fact in keyFacts and claim in supportedClaims MUST have a verified verbatim source anchor
  * - Unsupported numeric/date inferences are flagged as interpretation in cautionsAndAmbiguities
+ * - Non-numeric hallucinated factual claims (e.g., fabricated endorsements/partners) are rejected and moved to cautionsAndAmbiguities
  * - Aspirations are kept out of confirmed facts/supported claims
  * - Excerpts are verified verbatim against raw source text
- * - Approved Examples and Visual References do not produce factual supportedClaims
+ * - Approved Examples and Visual References do not produce factual supportedClaims or keyFacts
  * - Missing evidence remains flagged as missing
  */
 export function enforceSourceIntelligenceClaimDiscipline(
@@ -332,20 +575,54 @@ export function enforceSourceIntelligenceClaimDiscipline(
   const cautions: string[] = sanitizeStringArray(rawAnalysis.cautionsAndAmbiguities, 10);
   const verifiedFacts: string[] = [];
   const verifiedClaims: string[] = [];
+  const groundedFacts: GroundedEvidenceClaim[] = [];
+  const groundedClaims: GroundedEvidenceClaim[] = [];
 
-  for (const fact of sanitizeStringArray(rawAnalysis.keyFacts, 8)) {
-    const missingNums = findUntraceableNumericTokens(fact, combinedSourceText);
-    if (missingNums.length > 0) {
-      cautions.push(
-        `Interpretation flag: "${fact}" contains numbers or dates (${missingNums.join(', ')}) not directly traceable to raw source text.`
-      );
-      continue;
+  const rawGroundedFactsMap = new Map<string, string>();
+  if (Array.isArray(rawAnalysis.groundedFacts)) {
+    for (const gf of rawAnalysis.groundedFacts) {
+      if (gf && typeof gf.text === 'string' && typeof gf.evidenceExcerpt === 'string') {
+        rawGroundedFactsMap.set(stripEmDashes(gf.text), gf.evidenceExcerpt);
+      }
     }
-    if (ASPIRATION_PATTERNS.test(fact)) {
-      cautions.push(`Aspiration kept separate from confirmed fact: "${fact}"`);
-      continue;
+  }
+
+  const rawGroundedClaimsMap = new Map<string, string>();
+  if (Array.isArray(rawAnalysis.groundedClaims)) {
+    for (const gc of rawAnalysis.groundedClaims) {
+      if (gc && typeof gc.text === 'string' && typeof gc.evidenceExcerpt === 'string') {
+        rawGroundedClaimsMap.set(stripEmDashes(gc.text), gc.evidenceExcerpt);
+      }
     }
-    verifiedFacts.push(fact);
+  }
+
+  if (!isApprovedExample && !isVisualReference) {
+    for (const fact of sanitizeStringArray(rawAnalysis.keyFacts, 8)) {
+      const missingNums = findUntraceableNumericTokens(fact, combinedSourceText);
+      if (missingNums.length > 0) {
+        cautions.push(
+          `Interpretation flag: "${fact}" contains numbers or dates (${missingNums.join(', ')}) not directly traceable to raw source text.`
+        );
+        continue;
+      }
+      if (ASPIRATION_PATTERNS.test(fact)) {
+        cautions.push(`Aspiration kept separate from confirmed fact: "${fact}"`);
+        continue;
+      }
+      const anchor = findGroundableSourceAnchor(source, fact, rawGroundedFactsMap.get(fact));
+      if (!anchor.grounded) {
+        cautions.push(
+          `Unverified or unanchored fact moved to caution: "${fact}" (${anchor.reason || 'Not directly anchored in raw source text.'})`
+        );
+        continue;
+      }
+      verifiedFacts.push(fact);
+      groundedFacts.push({
+        text: fact,
+        evidenceExcerpt: anchor.evidenceExcerpt,
+        sourceId: source.id
+      });
+    }
   }
 
   if (isApprovedExample) {
@@ -369,7 +646,19 @@ export function enforceSourceIntelligenceClaimDiscipline(
         cautions.push(`Aspiration or future pathway (not confirmed proof): "${claim}"`);
         continue;
       }
+      const anchor = findGroundableSourceAnchor(source, claim, rawGroundedClaimsMap.get(claim));
+      if (!anchor.grounded) {
+        cautions.push(
+          `Unverified or unanchored claim moved to caution: "${claim}" (${anchor.reason || 'Not directly anchored in raw source text.'})`
+        );
+        continue;
+      }
       verifiedClaims.push(claim);
+      groundedClaims.push({
+        text: claim,
+        evidenceExcerpt: anchor.evidenceExcerpt,
+        sourceId: source.id
+      });
     }
   }
 
@@ -396,7 +685,7 @@ export function enforceSourceIntelligenceClaimDiscipline(
     exactExcerpts.push(...extractVerbatimSentences(combinedSourceText, 3));
   }
 
-  const uniqueCautions = Array.from(new Set(cautions)).slice(0, 8);
+  const uniqueCautions = Array.from(new Set(cautions)).slice(0, 10);
 
   return {
     sourceId: source.id,
@@ -408,6 +697,8 @@ export function enforceSourceIntelligenceClaimDiscipline(
     disclaimer: SOURCE_INTELLIGENCE_DISCLAIMER,
     keyFacts: isApprovedExample || isVisualReference ? [] : verifiedFacts,
     supportedClaims: isApprovedExample || isVisualReference ? [] : verifiedClaims,
+    groundedFacts: isApprovedExample || isVisualReference ? [] : groundedFacts,
+    groundedClaims: isApprovedExample || isVisualReference ? [] : groundedClaims,
     strategicContext:
       stripEmDashes(rawAnalysis.strategicContext || '') ||
       `Source "${source.title}" (${source.type}) provides contextual material for Climate Opera Haus communications.`,
@@ -567,24 +858,41 @@ const ROLE_SORT_ORDER: Record<SourceTaskRole, number> = {
   'Visual Reference': 6
 };
 
+const TRUNCATION_NOTICE = '\n[...Bounded to preserve context budget...]';
+
 function boundTextCleanly(text: string, maxChars: number): { bounded: string; wasTruncated: boolean } {
   const cleaned = String(text || '').trim();
+  if (maxChars <= 0) {
+    return { bounded: '', wasTruncated: cleaned.length > 0 };
+  }
   if (cleaned.length <= maxChars) {
     return { bounded: cleaned, wasTruncated: false };
   }
-  const slice = cleaned.slice(0, maxChars);
+  if (maxChars <= TRUNCATION_NOTICE.length + 12) {
+    return { bounded: cleaned.slice(0, maxChars), wasTruncated: true };
+  }
+  const availableForContent = maxChars - TRUNCATION_NOTICE.length;
+  const slice = cleaned.slice(0, availableForContent);
   const lastPeriod = Math.max(slice.lastIndexOf('. '), slice.lastIndexOf('\n'));
-  const cutIndex = lastPeriod > Math.floor(maxChars * 0.6) ? lastPeriod + 1 : maxChars;
+  const cutIndex = lastPeriod > Math.floor(availableForContent * 0.6) ? lastPeriod + 1 : availableForContent;
   return {
-    bounded: slice.slice(0, cutIndex).trim() + '\n[...Bounded to preserve context budget...]',
+    bounded: slice.slice(0, cutIndex).trim() + TRUNCATION_NOTICE,
     wasTruncated: true
   };
 }
 
 /**
  * Deterministic role-based source grounding and bounded context compiler.
- * Prioritizes sources by task role and selected verbatim excerpts so that one large source
- * cannot crowd out Protected COH Kernel, Operating Core, user instruction, or other evidence.
+ *
+ * HARD CAP INVARIANT:
+ * The total length of `formattedSection` (including section header, source headers, role directives,
+ * bounded body blocks, and cautions) is strictly <= `maxTotalChars` (default 8000 chars).
+ * - Sources are sorted by role priority (`Must-use Material` > `Evidence` > `Quote / Language Source` >
+ *   `Strategic Context` > `Approved Example` > `Visual Reference`).
+ * - When multiple sources are attached, no single source can consume more than 65% of `maxTotalChars`,
+ *   preventing one huge source from starving subsequent high-priority sources.
+ * - `remainingBudget` decreases monotonically toward 0; if many sources (e.g., 15+) exhaust the budget,
+ *   lower-priority trailing sources are omitted or truncated and an explicit warning is recorded in `truncationWarnings`.
  */
 export function compileSourceGroundingContext(
   bindings: TaskSourceBinding[],
@@ -600,7 +908,7 @@ export function compileSourceGroundingContext(
   const derivedAnalyses = options?.derivedAnalyses || {};
   const isVisualWorkflow = workflow === 'Visual Studio';
 
-  if (!Array.isArray(bindings) || bindings.length === 0) {
+  if (!Array.isArray(bindings) || bindings.length === 0 || maxTotalChars <= 0) {
     return {
       formattedSection: '',
       manifestSources: [],
@@ -657,15 +965,14 @@ export function compileSourceGroundingContext(
     }
   }
 
-  let remainingBudget = maxTotalChars;
+  const sectionPrefix = 'GOVERNED SOURCE & EVIDENCE CONTEXT:\n';
+  let remainingBudget = Math.max(0, maxTotalChars - sectionPrefix.length);
+  const maxSingleSourceShare =
+    sortedBindings.length > 1 ? Math.floor(remainingBudget * 0.65) : remainingBudget;
 
   for (let i = 0; i < sortedBindings.length; i++) {
     const item = sortedBindings[i];
-    const proportionalShare = Math.floor((item.weight / totalWeight) * maxTotalChars);
-    const allocatedBudget = Math.max(
-      minPerSourceChars,
-      Math.min(remainingBudget, proportionalShare)
-    );
+    const separatorLen = sourceSectionParts.length > 0 ? 2 : 0; // '\n\n'
 
     const derived = derivedAnalyses[item.sourceId];
     let roleDirective = '';
@@ -700,53 +1007,101 @@ export function compileSourceGroundingContext(
       roleGovernanceSummary.push(`${item.title}: Must-use Material (governed by Kernel & Claim Safety)`);
     }
 
-    let bodyBlock = '';
+    const headerPrefix = `[SOURCE: ${item.title} | Type: ${item.type} | Active Task Role: ${item.role}]\n${roleDirective}\n`;
+    const bodyLabel =
+      item.role === 'Visual Reference' && !isVisualWorkflow
+        ? 'VISUAL DIRECTION NOTES (For Visual Design Brief only, NOT for body copy facts):\n'
+        : item.excerpts.length > 0
+          ? 'SELECTED VERBATIM EXCERPTS (Exact source text, distinct from AI interpretation):\n'
+          : item.role === 'Approved Example'
+            ? 'REFERENCE TEXT FOR TONE & STRUCTURE ONLY (Do not copy factual specifics):\n'
+            : 'RAW SOURCE TEXT (Bounded):\n';
+
+    const fixedOverhead = separatorLen + headerPrefix.length + bodyLabel.length;
+    if (remainingBudget <= fixedOverhead + 30) {
+      truncationWarnings.push(
+        `Source budget cap (${maxTotalChars} chars) reached; omitted remaining source "${item.title}" (${item.role}) to preserve hard context ceiling.`
+      );
+      continue;
+    }
+
+    const availableForEntry = remainingBudget - fixedOverhead;
+    const proportionalShare = Math.floor((item.weight / totalWeight) * (maxTotalChars - sectionPrefix.length));
+    const effectiveMinPerSource = Math.min(
+      minPerSourceChars,
+      Math.max(120, Math.floor((maxTotalChars - sectionPrefix.length) / Math.max(1, sortedBindings.length)) - fixedOverhead)
+    );
+    const targetBodyBudget = Math.min(
+      availableForEntry,
+      maxSingleSourceShare,
+      Math.max(effectiveMinPerSource, proportionalShare)
+    );
+
+    let cautionsBlock = '';
+    if (derived && derived.cautionsAndAmbiguities.length > 0) {
+      const candidateCautions = `\nSOURCE CAUTIONS (${SOURCE_INTELLIGENCE_DISCLAIMER}):\n${derived.cautionsAndAmbiguities.slice(0, 2).map(c => `- ${c}`).join('\n')}`;
+      if (candidateCautions.length < Math.floor(targetBodyBudget * 0.35)) {
+        cautionsBlock = candidateCautions;
+      }
+    }
+
+    const maxBodyContentChars = Math.max(24, targetBodyBudget - cautionsBlock.length);
+
+    let boundedContent = '';
     if (item.role === 'Visual Reference' && !isVisualWorkflow) {
-      // In text workflows, keep Visual Reference strictly scoped to visual brief notes so it never becomes factual copy
       const rawVisualNotes = item.excerpts.length > 0
         ? item.excerpts.join(' | ')
         : (item.summary || item.content || '').slice(0, 450);
-      bodyBlock = `VISUAL DIRECTION NOTES (For Visual Design Brief only, NOT for body copy facts):\n${rawVisualNotes}`;
+      const { bounded, wasTruncated } = boundTextCleanly(rawVisualNotes, maxBodyContentChars);
+      if (wasTruncated) {
+        truncationWarnings.push(
+          `Visual reference notes for "${item.title}" were bounded to ${maxBodyContentChars} chars to respect the context budget.`
+        );
+      }
+      boundedContent = bounded;
     } else if (item.excerpts.length > 0) {
       const formattedExcerpts = item.excerpts
         .map((ex, idx) => `[Verbatim Excerpt ${idx + 1} from "${item.title}"] "${ex}"`)
         .join('\n');
-      const { bounded, wasTruncated } = boundTextCleanly(formattedExcerpts, allocatedBudget);
+      const { bounded, wasTruncated } = boundTextCleanly(formattedExcerpts, maxBodyContentChars);
       if (wasTruncated) {
         truncationWarnings.push(
-          `Selected excerpts for "${item.title}" exceeded the per-source budget (${allocatedBudget} chars) and were bounded.`
+          `Selected excerpts for "${item.title}" exceeded the per-source budget (${maxBodyContentChars} chars) and were bounded.`
         );
       }
-      bodyBlock = `SELECTED VERBATIM EXCERPTS (Exact source text, distinct from AI interpretation):\n${bounded}`;
+      boundedContent = bounded;
     } else {
       const rawText = (item.content || item.summary || '').trim();
-      const { bounded, wasTruncated } = boundTextCleanly(rawText, allocatedBudget);
+      const { bounded, wasTruncated } = boundTextCleanly(rawText, maxBodyContentChars);
       if (wasTruncated) {
         truncationWarnings.push(
-          `Source "${item.title}" (${rawText.length} chars) was bounded to ${allocatedBudget} chars to protect Kernel, Operating Core, and multi-source context limits. Select specific excerpts to pin exact passages.`
+          `Source "${item.title}" (${rawText.length} chars) was bounded to ${maxBodyContentChars} chars to protect Kernel, Operating Core, and multi-source context limits. Select specific excerpts to pin exact passages.`
         );
       }
-      bodyBlock = item.role === 'Approved Example'
-        ? `REFERENCE TEXT FOR TONE & STRUCTURE ONLY (Do not copy factual specifics):\n${bounded}`
-        : `RAW SOURCE TEXT (Bounded):\n${bounded}`;
+      boundedContent = bounded;
     }
 
-    if (derived && derived.cautionsAndAmbiguities.length > 0) {
-      bodyBlock += `\nSOURCE CAUTIONS (${SOURCE_INTELLIGENCE_DISCLAIMER}):\n${derived.cautionsAndAmbiguities.slice(0, 3).map(c => `- ${c}`).join('\n')}`;
-    }
-
-    if (bodyBlock) {
-      sourceSectionParts.push(
-        `[SOURCE: ${item.title} | Type: ${item.type} | Active Task Role: ${item.role}]\n${roleDirective}\n${bodyBlock}`
-      );
-      remainingBudget = Math.max(minPerSourceChars, remainingBudget - bodyBlock.length);
+    if (boundedContent) {
+      const fullEntry = `${headerPrefix}${bodyLabel}${boundedContent}${cautionsBlock}`;
+      if (separatorLen + fullEntry.length <= remainingBudget) {
+        sourceSectionParts.push(fullEntry);
+        remainingBudget = Math.max(0, remainingBudget - (separatorLen + fullEntry.length));
+      } else {
+        truncationWarnings.push(
+          `Source budget cap (${maxTotalChars} chars) reached; omitted "${item.title}" (${item.role}).`
+        );
+      }
     }
   }
 
-  const formattedSection =
+  let formattedSection =
     sourceSectionParts.length > 0
-      ? `GOVERNED SOURCE & EVIDENCE CONTEXT:\n${sourceSectionParts.join('\n\n')}`
+      ? `${sectionPrefix}${sourceSectionParts.join('\n\n')}`
       : '';
+
+  if (formattedSection.length > maxTotalChars) {
+    formattedSection = formattedSection.slice(0, maxTotalChars);
+  }
 
   return {
     formattedSection,

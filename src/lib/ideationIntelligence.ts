@@ -17,7 +17,10 @@ import {
   normalizeOperatingCoreAudience,
   type OperatingCore
 } from './operatingCore.ts';
-import type { SourceIntelligenceAnalysis } from './sourceIntelligence.ts';
+import {
+  findGroundableSourceAnchor,
+  type SourceIntelligenceAnalysis
+} from './sourceIntelligence.ts';
 
 export const COH_COMMUNICATION_JOBS = [
   'Establish institutional credibility',
@@ -307,12 +310,12 @@ export function buildIdeationEvidenceProfile(params: {
   const bindings = params.sourceBindings || [];
   const analyses = params.derivedSourceAnalyses || {};
 
-  // 1. Extract legitimate source-grounded evidence (excluding Approved Example & Visual Reference)
-  for (const b of bindings) {
-    if (b.role === 'Approved Example' || b.role === 'Visual Reference') {
-      continue;
-    }
+  // 1. Extract legitimate source-grounded evidence (strictly from factual roles: Evidence, Must-use Material, Quote / Language Source)
+  const factualBindings = bindings.filter(
+    b => b.role === 'Evidence' || b.role === 'Must-use Material' || b.role === 'Quote / Language Source'
+  );
 
+  for (const b of factualBindings) {
     const analysis = analyses[b.sourceId];
     if (analysis) {
       for (const fact of analysis.keyFacts.slice(0, 3)) {
@@ -337,17 +340,43 @@ export function buildIdeationEvidenceProfile(params: {
     }
   }
 
-  // Merge AI-supplied evidence items only if they don't violate Approved Example / Visual Reference rules
-  const factualSourceCount = bindings.filter(
-    b => b.role !== 'Approved Example' && b.role !== 'Visual Reference'
-  ).length;
-
-  if (factualSourceCount > 0 && Array.isArray(params.aiAvailableEvidence)) {
+  // Merge AI-supplied evidence items ONLY if they are verifiably grounded in an attached factual source
+  if (Array.isArray(params.aiAvailableEvidence)) {
     for (const item of params.aiAvailableEvidence) {
-      if (item && typeof item === 'string' && availableEvidence.length < 6) {
-        const clean = item.replace(/\u2014/g, ' - ').trim();
-        if (!availableEvidence.includes(clean)) {
-          availableEvidence.push(clean);
+      if (!item || typeof item !== 'string') continue;
+      const clean = item.replace(/\u2014/g, ' - ').trim();
+      if (!clean) continue;
+
+      let matchedAttribution = '';
+      for (const fb of factualBindings) {
+        const analysis = analyses[fb.sourceId];
+        const rawSourceText = [
+          fb.content || '',
+          fb.summary || '',
+          ...(analysis?.usefulExcerpts || []),
+          ...(analysis?.keyFacts || [])
+        ]
+          .filter(Boolean)
+          .join('\n');
+
+        const anchor = findGroundableSourceAnchor(
+          { id: fb.sourceId, content: rawSourceText, notes: '' },
+          clean
+        );
+        if (anchor.grounded) {
+          matchedAttribution = `[${fb.title} - Verified Source Anchor] ${clean}`;
+          break;
+        }
+      }
+
+      if (matchedAttribution) {
+        if (availableEvidence.length < 6 && !availableEvidence.includes(matchedAttribution)) {
+          availableEvidence.push(matchedAttribution);
+        }
+      } else {
+        const unverifiedNote = `Unverified AI claim requires source proof before use: "${clean}"`;
+        if (!unresolvedAssumptions.includes(unverifiedNote)) {
+          unresolvedAssumptions.push(unverifiedNote);
         }
       }
     }
@@ -360,7 +389,7 @@ export function buildIdeationEvidenceProfile(params: {
       );
     } else {
       availableEvidence.push(
-        'Attached sources are restricted to style/visual reference roles; factual claims must rely only on Protected COH Kernel positioning.'
+        'Attached sources are restricted to style/visual/strategic reference roles; factual claims must rely only on Protected COH Kernel positioning.'
       );
     }
   }
@@ -401,10 +430,14 @@ export function buildIdeationEvidenceProfile(params: {
   if (Array.isArray(params.aiUnresolvedAssumptions) && params.aiUnresolvedAssumptions.length > 0) {
     for (const assump of params.aiUnresolvedAssumptions.slice(0, 3)) {
       if (assump && typeof assump === 'string') {
-        unresolvedAssumptions.push(assump.replace(/\u2014/g, ' - ').trim());
+        const cleanedAssump = assump.replace(/\u2014/g, ' - ').trim();
+        if (cleanedAssump && !unresolvedAssumptions.includes(cleanedAssump)) {
+          unresolvedAssumptions.push(cleanedAssump);
+        }
       }
     }
-  } else {
+  }
+  if (unresolvedAssumptions.length === 0) {
     if (bindings.length === 0) {
       unresolvedAssumptions.push(
         'Assumes this piece will focus on strategic or artistic framing rather than announcing a dated production milestone.'
