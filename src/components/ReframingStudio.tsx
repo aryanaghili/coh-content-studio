@@ -363,8 +363,10 @@ export const ReframingStudio: React.FC<ReframingStudioProps> = ({
       try {
         const response = await fetch('/api/ai/reframe', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
+
             rawIntent: activePlan.rawIntent,
             sourceContent,
             targetAudience: activePlan.targetAudience,

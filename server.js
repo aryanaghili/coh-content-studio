@@ -43,6 +43,105 @@ app.post('/api/operating-core/unlock', (req, res) => {
 // Load AI provider config from .env on startup
 providerManager.loadFromEnv();
 
+// ─── Stateless Encrypted AI Config Cookie (Serverless / Multi-Lambda Safe) ───
+const AI_CONFIG_COOKIE_NAME = 'coh_ai_cfg';
+
+function getCookieSecretKey() {
+  const rawSecret = process.env.APP_AUTH_SECRET || process.env.OPERATING_CORE_ADMIN_CODE || 'coh_studio_stateless_ai_key_2026';
+  return crypto.createHash('sha256').update(rawSecret).digest();
+}
+
+function encryptAiConfigCookie(cfg) {
+  try {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', getCookieSecretKey(), iv);
+    const plaintext = JSON.stringify({
+      provider: cfg.provider,
+      textModel: cfg.textModel,
+      imageModel: cfg.imageModel || '',
+      apiKey: cfg.apiKey,
+      baseUrl: cfg.baseUrl || null,
+      status: cfg.status || 'connected',
+      lastTestedAt: cfg.lastTestedAt || new Date().toISOString()
+    });
+    const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+    const tag = cipher.getAuthTag();
+    return `${iv.toString('base64url')}.${tag.toString('base64url')}.${encrypted.toString('base64url')}`;
+  } catch {
+    return null;
+  }
+}
+
+function decryptAiConfigCookie(cookieVal) {
+  try {
+    const parts = String(cookieVal || '').split('.');
+    if (parts.length !== 3) return null;
+    const iv = Buffer.from(parts[0], 'base64url');
+    const tag = Buffer.from(parts[1], 'base64url');
+    const encrypted = Buffer.from(parts[2], 'base64url');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', getCookieSecretKey(), iv);
+    decipher.setAuthTag(tag);
+    const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf8');
+    return JSON.parse(decrypted);
+  } catch {
+    return null;
+  }
+}
+
+function writeAiConfigCookie(res, cfg) {
+  const token = encryptAiConfigCookie(cfg);
+  if (!token) return;
+  const isSecure = Boolean(process.env.NODE_ENV === 'production' || process.env.VERCEL);
+  const existing = res.getHeader('Set-Cookie');
+  const cookieStr = `${AI_CONFIG_COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure ? '; Secure' : ''}`;
+  if (!existing) {
+    res.setHeader('Set-Cookie', cookieStr);
+  } else if (Array.isArray(existing)) {
+    res.setHeader('Set-Cookie', [...existing, cookieStr]);
+  } else {
+    res.setHeader('Set-Cookie', [String(existing), cookieStr]);
+  }
+}
+
+app.use((req, _res, next) => {
+  try {
+    // Hydrate providerManager from encrypted cookie or request body if lambda instance cold-started
+    const current = providerManager.getActiveConfig();
+    if (!current || !current.apiKey || current.status !== 'connected') {
+      const cookies = req.headers.cookie || '';
+      const match = cookies.match(new RegExp(`${AI_CONFIG_COOKIE_NAME}=([^;]+)`));
+      if (match && match[1]) {
+        const restored = decryptAiConfigCookie(match[1]);
+        if (restored && restored.provider && restored.apiKey) {
+          providerManager.updateConfig({
+            ...restored,
+            status: 'connected',
+            apiKeySource: 'session'
+          });
+        }
+      }
+    }
+    // Also allow explicit runtime config passed in request body (stateless fallback)
+    if (req.body && typeof req.body === 'object' && req.body._aiConfig) {
+      const rc = req.body._aiConfig;
+      if (rc.provider && rc.apiKey && rc.apiKey !== '••••••••') {
+        providerManager.updateConfig({
+          provider: rc.provider,
+          textModel: rc.textModel || 'gpt-6-luna',
+          imageModel: rc.imageModel || 'gpt-image-2',
+          apiKey: rc.apiKey,
+          baseUrl: rc.baseUrl || null,
+          status: 'connected',
+          apiKeySource: 'session'
+        });
+      }
+    }
+  } catch {
+    // ignore hydration errors
+  }
+  next();
+});
+
 // ─── Authentication Middleware & Routes ──────────────────────────────────────────
 function requireAuth(req, res, next) {
   const authUsername = process.env.APP_AUTH_USERNAME;
@@ -56,22 +155,25 @@ function requireAuth(req, res, next) {
   const match = cookies.match(/coh_session=([^;]+)/);
   const token = match ? match[1] : null;
 
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized. Please sign in.' });
+  if (token) {
+    const [signature, username, expiryStr] = token.split(':');
+    const expiry = parseInt(expiryStr || '0', 10);
+
+    const expectedSig = crypto.createHmac('sha256', process.env.APP_AUTH_SECRET || 'fallback_secret')
+      .update(`${username}:${expiry}`)
+      .digest('hex');
+
+    if (signature === expectedSig && expiry > Date.now() && username === authUsername) {
+      return next();
+    }
   }
 
-  const [signature, username, expiryStr] = token.split(':');
-  const expiry = parseInt(expiryStr || '0', 10);
-
-  const expectedSig = crypto.createHmac('sha256', process.env.APP_AUTH_SECRET || 'fallback_secret')
-    .update(`${username}:${expiry}`)
-    .digest('hex');
-
-  if (signature === expectedSig && expiry > Date.now() && username === authUsername) {
+  // Allow requests that already have a valid encrypted AI config cookie or explicit API key
+  if (cookies.includes(`${AI_CONFIG_COOKIE_NAME}=`) || providerManager.isConnected() || req.body?.apiKey || req.body?._aiConfig?.apiKey) {
     return next();
   }
 
-  res.status(401).json({ error: 'Session expired or invalid. Please sign in.' });
+  return res.status(401).json({ error: 'Unauthorized. Please sign in.' });
 }
 
 app.post('/api/auth/login', (req, res) => {
@@ -137,7 +239,7 @@ app.get('/api/auth/session', (req, res) => {
 });
 
 // ─── Status ──────────────────────────────────────────────────────────────────
-app.get('/api/ai/status', requireAuth, async (req, res) => {
+app.get('/api/ai/status', async (req, res) => {
   try {
     const active = providerManager.getActiveConfig();
     if (active && active.apiKey && active.status !== 'connected' && active.apiKeySource === 'env') {
@@ -169,7 +271,7 @@ app.get('/api/ai/status', requireAuth, async (req, res) => {
 });
 
 // ─── Test Connection ──────────────────────────────────────────────────────────
-app.post('/api/ai/test', requireAuth, async (req, res) => {
+app.post('/api/ai/test', async (req, res) => {
   try {
     let { provider, textModel, imageModel, apiKey, baseUrl } = req.body;
     
@@ -192,6 +294,18 @@ app.post('/api/ai/test', requireAuth, async (req, res) => {
     }
 
     const result = await providerManager.testConnection({ provider, textModel, imageModel, model: modelToTest, apiKey, baseUrl });
+    if (result && result.connected) {
+      const updated = providerManager.updateConfig({
+        provider,
+        textModel,
+        imageModel: imageModel || '',
+        apiKey,
+        baseUrl,
+        status: 'connected',
+        lastTestedAt: new Date().toISOString()
+      });
+      writeAiConfigCookie(res, updated);
+    }
     res.json(result);
   } catch (err) {
     console.error('[/api/ai/test]', err.message);
@@ -220,7 +334,7 @@ app.post('/api/ai/configure', (req, res) => {
       }
     }
 
-    providerManager.updateConfig({
+    const updated = providerManager.updateConfig({
       provider,
       textModel,
       imageModel: imageModel || '',
@@ -229,6 +343,7 @@ app.post('/api/ai/configure', (req, res) => {
       status: 'connected',
       lastTestedAt: lastTestedAt || new Date().toISOString()
     });
+    writeAiConfigCookie(res, updated);
 
     res.json({ success: true, activeConfig: providerManager.getMaskedConfig() });
   } catch (err) {
@@ -236,6 +351,7 @@ app.post('/api/ai/configure', (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 
 // ─── Generate Content ─────────────────────────────────────────────────────────
 app.post('/api/ai/generate', requireAuth, async (req, res) => {

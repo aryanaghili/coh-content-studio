@@ -978,10 +978,25 @@ export default function App() {
 
 
   // AI service - calls backend, never exposes keys
+  const buildRuntimeAiConfig = () => {
+    const cleanKey = settingsApiKey && settingsApiKey !== '••••••••' ? settingsApiKey.trim() : '';
+    const activeProvider = aiProvider || settingsProvider;
+    const activeTextModel = aiTextModel || settingsTextModel;
+    const activeImageModel = aiImageModel || settingsImageModel;
+    if (!activeProvider) return undefined;
+    return {
+      provider: activeProvider,
+      textModel: activeTextModel,
+      imageModel: activeImageModel,
+      ...(cleanKey ? { apiKey: cleanKey } : {}),
+      ...(settingsBaseUrl ? { baseUrl: settingsBaseUrl } : {})
+    };
+  };
+
   const aiService = {
     async getStatus() {
       try {
-        const res = await fetch('/api/ai/status');
+        const res = await fetch('/api/ai/status', { credentials: 'same-origin' });
         if (!res.ok) return;
         const data = await res.json();
         if (data.activeConfig) {
@@ -1009,10 +1024,10 @@ export default function App() {
       }
     },
 
-
     async testConnection(provider: string, textModel: string, imageModel: string, apiKey: string, baseUrl?: string) {
       const res = await fetch('/api/ai/test', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider, textModel, imageModel, apiKey, baseUrl })
       });
@@ -1022,6 +1037,7 @@ export default function App() {
     async applyProvider(provider: string, textModel: string, imageModel: string, apiKey: string, baseUrl?: string, lastTestedAt?: string) {
       const res = await fetch('/api/ai/configure', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ provider, textModel, imageModel, apiKey, baseUrl, lastTestedAt })
       });
@@ -1032,8 +1048,9 @@ export default function App() {
     async generate(input: Record<string, unknown>) {
       const res = await fetch('/api/ai/generate', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, _aiConfig: buildRuntimeAiConfig() }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -1045,8 +1062,9 @@ export default function App() {
     async ideate(input: Record<string, unknown>) {
       const res = await fetch('/api/ai/ideate', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, _aiConfig: buildRuntimeAiConfig() }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -1058,8 +1076,9 @@ export default function App() {
     async revise(input: Record<string, unknown>) {
       const res = await fetch('/api/ai/revise', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, _aiConfig: buildRuntimeAiConfig() }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -1071,8 +1090,9 @@ export default function App() {
     async getPrompt(input: Record<string, unknown>) {
       const res = await fetch('/api/ai/prompt', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, _aiConfig: buildRuntimeAiConfig() }),
       });
       return res.json();
     },
@@ -1080,8 +1100,9 @@ export default function App() {
     async analyzeSource(input: Record<string, unknown>) {
       const res = await fetch('/api/ai/analyze-source', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, _aiConfig: buildRuntimeAiConfig() }),
       });
       const data = await res.json();
       if (!res.ok || data.success === false) {
@@ -1090,6 +1111,7 @@ export default function App() {
       return data.data || data;
     },
   };
+
 
   // --- Visual Studio Logic ---
   const handleSendToVisualStudio = (item: any, rawDirection: any, type: 'Idea' | 'Content' | 'Library') => {
@@ -1249,9 +1271,11 @@ export default function App() {
     try {
       const res = await fetch('/api/ai/generate-image', {
         method: 'POST',
+        credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({ ...payload, _aiConfig: buildRuntimeAiConfig() })
       });
+
       
       const contentType = res.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
