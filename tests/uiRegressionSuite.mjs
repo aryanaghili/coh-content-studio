@@ -448,8 +448,160 @@ async function runSuite() {
       assert.equal(activeThemeAttr, 'dark');
       summary.workflows.workflowH = 'PASS';
 
+      // Workflow I: Content Workspace Unified Mode Architecture & Content Starters
+      console.log('[5b/7] Auditing Content Workspace Mode Architecture & Content Starters...');
+      await page.goto(`${BASE_URL}/content-workspace`, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(100);
+
+      // Ensure mode selector lives inside the creation card and there is only 1 mode selector
+      const modeSelectorCount = await page.locator('[data-testid="content-mode-selector"]').count();
+      assert.equal(modeSelectorCount, 1, 'There must be exactly one unified mode selector in Content Workspace');
+      const selectorInsideCard = await page.locator('[data-guide="content-creation-card"] [data-testid="content-mode-selector"]').count();
+      assert.equal(selectorInsideCard, 1, 'Mode selector must sit inside the Create Content card');
+
+      // Test Simple Mode copy
+      await page.click('[data-testid="mode-btn-simple"]');
+      await page.waitForTimeout(60);
+      const simpleHelper = await page.locator('[data-testid="content-mode-helper"]').textContent();
+      assert.equal(simpleHelper?.trim(), 'Tell us what you need and choose a channel. The Studio will infer the rest.');
+
+      // Test Quick Create copy
+      await page.click('[data-testid="mode-btn-quick"]');
+      await page.waitForTimeout(60);
+      const quickHelper = await page.locator('[data-testid="content-mode-helper"]').textContent();
+      assert.equal(quickHelper?.trim(), 'Add a little more direction without building a complete brief.');
+
+      // Test Advanced Brief copy
+      await page.click('[data-testid="mode-btn-advanced"]');
+      await page.waitForTimeout(60);
+      const advancedHelper = await page.locator('[data-testid="content-mode-helper"]').textContent();
+      assert.equal(advancedHelper?.trim(), 'Control audience, intent, format, language, tone, evidence, and production details.');
+
+      // Switch back to Simple and apply a Content Starter — verify automatic switch to Advanced Brief + non-blocking confirmation
+      await page.click('[data-testid="mode-btn-simple"]');
+      await page.waitForTimeout(60);
+      await page.click('[data-testid="content-starters-toggle"]');
+      await page.waitForTimeout(80);
+      await page.locator('[data-testid="content-starter-template-btn"]').first().click();
+      await page.waitForTimeout(120);
+      const starterFeedback = await page.locator('[data-testid="content-starter-feedback"]').textContent();
+      assert.ok(starterFeedback && starterFeedback.includes('Starter applied:'), 'Applying a Content Starter must display non-blocking confirmation');
+      summary.workflows.contentWorkspaceModeArchitecture = 'PASS';
+
+      // Workflow J: Workspace Guides (? Guide trigger, step navigation, Escape dismissal, and first-visit coachmark)
+      console.log('[5c/7] Auditing Workspace Guide system across routes...');
+      await page.click('[data-testid="workspace-guide-trigger"]');
+      await page.waitForTimeout(150);
+      const popoverVisible = await page.locator('[data-testid="guided-tour-popover"]').isVisible();
+      assert.equal(popoverVisible, true, 'Clicking ? Guide should open the Workspace Guide popover');
+      const step1Title = await page.locator('[data-testid="guided-tour-step-title"]').textContent();
+      assert.ok(step1Title && step1Title.includes('Choose how much control you need'), `Expected Content Workspace step 1 title, got: ${step1Title}`);
+      await page.click('[data-testid="guided-tour-next"]');
+      await page.waitForTimeout(120);
+      const step2Title = await page.locator('[data-testid="guided-tour-step-title"]').textContent();
+      assert.ok(step2Title && step2Title.includes('Content Starter'), `Expected Content Workspace step 2 title, got: ${step2Title}`);
+      await page.click('[data-testid="guided-tour-back"]');
+      await page.waitForTimeout(120);
+      const backTitle = await page.locator('[data-testid="guided-tour-step-title"]').textContent();
+      assert.equal(backTitle, step1Title, 'Back button should return to step 1');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(120);
+      const popoverAfterEsc = await page.locator('[data-testid="guided-tour-popover"]').count();
+      assert.equal(popoverAfterEsc, 0, 'Escape key should close the Workspace Guide');
+      summary.workflows.workspaceGuides = 'PASS';
+
+      // Workflow K: Visual Studio Structured Brief & Compiled Prompt Preview
+      console.log('[5d/7] Auditing Visual Studio structured brief and live compiled prompt preview...');
+      await page.goto(`${BASE_URL}/visual-studio`, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(150);
+      const compiledPreviewCount = await page.locator('[data-testid="visual-compiled-prompt-preview"]').count();
+      assert.equal(compiledPreviewCount, 1, 'Visual Studio should expose the live compiled prompt preview');
+      const compiledPreviewText = await page.locator('[data-testid="visual-compiled-prompt-preview"]').textContent();
+      assert.ok(compiledPreviewText && compiledPreviewText.length > 30, 'Compiled prompt preview should contain rich visual direction');
+      summary.workflows.visualStudioPromptCompiler = 'PASS';
+
+      // Workflow L: Contextual Help System across all 13 routes (Desktop + Mobile, Light + Dark, Keyboard flow, Right Now, Show Me Around)
+      console.log('[5e/7] Auditing Contextual Help System across all 13 destinations...');
+      await page.setViewportSize({ width: 1440, height: 900 });
+      for (const route of ROUTES) {
+        await page.goto(`${BASE_URL}/${route.slug}`, { waitUntil: 'networkidle' });
+        await page.waitForTimeout(80);
+        if (await page.locator('[data-testid="coachmark-disable-auto"]').isVisible()) {
+          await page.click('[data-testid="coachmark-disable-auto"]');
+          await page.waitForTimeout(50);
+        }
+
+        const helpTrigger = page.locator('[data-testid="contextual-help-trigger"]');
+        assert.equal(await helpTrigger.count(), 1, `Help trigger must exist on /${route.slug}`);
+        const ariaLabel = await helpTrigger.getAttribute('aria-label');
+        assert.equal(ariaLabel, `Help for ${route.label}`, `Expected contextual aria-label on /${route.slug}, got: ${ariaLabel}`);
+
+        // Click to open drawer
+        await helpTrigger.click();
+        await page.waitForTimeout(80);
+        const drawer = page.locator('[data-testid="contextual-help-drawer"]');
+        assert.equal(await drawer.isVisible(), true, `Help drawer should open on /${route.slug}`);
+        const drawerTitle = await page.locator('[data-testid="contextual-help-title"]').textContent();
+        assert.equal(drawerTitle?.trim(), route.label, `Help drawer title should match ${route.label}`);
+
+        // Verify sections & dynamic Right Now state
+        assert.equal(await page.locator('[data-testid="help-section-purpose"]').isVisible(), true);
+        assert.equal(await page.locator('[data-testid="help-section-capabilities"]').isVisible(), true);
+        assert.equal(await page.locator('[data-testid="help-section-getting-started"]').isVisible(), true);
+        assert.equal(await page.locator('[data-testid="contextual-help-right-now"]').isVisible(), true);
+
+        // Close via close button on even routes, Escape on odd routes, and verify focus returns to Help trigger
+        if (ROUTES.indexOf(route) % 2 === 0) {
+          await page.click('[data-testid="contextual-help-close"]');
+        } else {
+          await page.keyboard.press('Escape');
+        }
+        await page.waitForTimeout(60);
+        assert.equal(await drawer.count(), 0, `Help drawer should close on /${route.slug}`);
+        const focusedTestId = await page.evaluate(() => document.activeElement?.getAttribute('data-testid'));
+        assert.equal(focusedTestId, 'contextual-help-trigger', `Focus must return to Help trigger after closing on /${route.slug}`);
+      }
+
+      // Keyboard-only flow + Show Me Around integration + Mobile 390px + Dark/Light verification
+      await page.goto(`${BASE_URL}/content-workspace`, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(80);
+      await page.locator('[data-testid="contextual-help-trigger"]').focus();
+      await page.keyboard.press('Enter');
+      await page.waitForTimeout(80);
+      assert.equal(await page.locator('[data-testid="contextual-help-drawer"]').isVisible(), true, 'Enter key should open Help drawer');
+
+      // Test Show Me Around launching Guided Tour
+      await page.click('[data-testid="contextual-help-show-me-around"]');
+      await page.waitForTimeout(150);
+      assert.equal(await page.locator('[data-testid="contextual-help-drawer"]').count(), 0, 'Show Me Around should close Help drawer');
+      assert.equal(await page.locator('[data-testid="guided-tour-popover"]').isVisible(), true, 'Show Me Around should open Workspace Guide');
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(80);
+
+      // Mobile 390x844 full-height sheet check in Dark and Light themes without horizontal overflow
+      await page.setViewportSize({ width: 390, height: 844 });
+      for (const testTheme of ['dark', 'light']) {
+        await page.click(`button[aria-label="${testTheme === 'dark' ? 'Dark Mode' : 'Light Mode'}"]`);
+        await page.waitForTimeout(60);
+        await page.click('[data-testid="contextual-help-trigger"]');
+        await page.waitForTimeout(80);
+        assert.equal(await page.locator('[data-testid="contextual-help-drawer"]').isVisible(), true, `Help sheet visible on mobile (${testTheme})`);
+        const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+        assert.equal(mobileOverflow, false, `Mobile Help sheet must not cause horizontal overflow (${testTheme})`);
+        await page.click('[data-testid="contextual-help-close"]');
+        await page.waitForTimeout(60);
+      }
+      await page.setViewportSize({ width: 1440, height: 900 });
+      summary.workflows.contextualHelpSystem = 'PASS';
+
       // 7. Error & Resilience Testing (Offline translation safety + Empty input guard)
       console.log('[6/7] Auditing error and resilience states...');
+      await page.goto(`${BASE_URL}/revision-studio`, { waitUntil: 'networkidle' });
+      if (await page.locator('[data-testid="coachmark-disable-auto"]').isVisible()) {
+        await page.click('[data-testid="coachmark-disable-auto"]');
+        await page.waitForTimeout(60);
+      }
+      await page.fill('[data-testid="revision-draft-textarea"]', 'Draft preserved across theme toggle.');
       await page.click('details summary:has-text("Advanced revision controls")');
       await page.waitForTimeout(100);
       await page.selectOption('[data-testid="revision-language-select"]', 'Persian');

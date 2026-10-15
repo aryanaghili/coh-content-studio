@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Search, Command, HelpCircle } from 'lucide-react';
+import { Sun, Moon, Search, Command, Compass } from 'lucide-react';
 import { CommandPaletteModal } from './CommandPaletteModal';
+import { ContextualHelpTrigger } from './ContextualHelpDrawer';
 import type { SavedContent, SavedIdea, SourceFile } from '../App';
 
 interface TopBarProps {
@@ -15,6 +16,9 @@ interface TopBarProps {
   sources?: SourceFile[];
   onSelectContentItem?: (item: SavedContent) => void;
   onSelectIdeaItem?: (idea: SavedIdea) => void;
+  isHelpOpen?: boolean;
+  onToggleHelp?: () => void;
+  helpTriggerRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
 export function TopBar({ 
@@ -28,7 +32,10 @@ export function TopBar({
   savedIdeas = [],
   sources = [],
   onSelectContentItem,
-  onSelectIdeaItem
+  onSelectIdeaItem,
+  isHelpOpen = false,
+  onToggleHelp,
+  helpTriggerRef
 }: TopBarProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQueryVal, setSearchQueryVal] = useState('');
@@ -87,17 +94,27 @@ export function TopBar({
           </div>
         </div>
         
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Global Contextual Help Trigger */}
+          {onToggleHelp && (
+            <ContextualHelpTrigger
+              pageTitle={title}
+              isOpen={isHelpOpen}
+              onClick={onToggleHelp}
+              triggerRef={helpTriggerRef}
+            />
+          )}
+
           {/* Workspace Guide Trigger */}
           <button
             type="button"
             data-testid="workspace-guide-trigger"
             onClick={() => window.dispatchEvent(new CustomEvent('coh:open-guide', { detail: { mode: 'workspace' } }))}
-            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-inset border border-border-standard rounded-lg hover:border-brand-gold/60 text-text-secondary hover:text-text-primary transition-all cursor-pointer text-xs font-semibold"
-            title="Open contextual guide for this workspace"
+            className="hidden sm:inline-flex min-h-[34px] items-center gap-1.5 px-2.5 py-1 bg-surface-inset border border-border-standard rounded-lg hover:border-brand-gold/60 text-text-secondary hover:text-text-primary transition-all cursor-pointer text-xs font-semibold"
+            title="Open step-by-step tour for this workspace"
             aria-label="Workspace Guide"
           >
-            <HelpCircle size={13} className="text-brand-gold" />
+            <Compass size={13} className="text-brand-gold" />
             <span>Guide</span>
           </button>
 
@@ -122,7 +139,7 @@ export function TopBar({
           <div className="flex items-center bg-surface-inset p-0.5 border border-border-standard rounded-lg">
             <button 
               onClick={() => onThemeToggle('light')}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'light' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
+              className={`min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-1.5 flex items-center justify-center rounded-md transition-colors cursor-pointer ${theme === 'light' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Light Mode"
               aria-label="Light Mode"
             >
@@ -130,7 +147,7 @@ export function TopBar({
             </button>
             <button 
               onClick={() => onThemeToggle('dark')}
-              className={`p-1.5 rounded-md transition-colors cursor-pointer ${theme === 'dark' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
+              className={`min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 p-1.5 flex items-center justify-center rounded-md transition-colors cursor-pointer ${theme === 'dark' ? 'bg-surface-primary shadow-2xs text-text-primary' : 'text-text-muted hover:text-text-secondary'}`}
               title="Dark Mode"
               aria-label="Dark Mode"
             >

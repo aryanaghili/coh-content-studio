@@ -10,6 +10,7 @@ import {
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
 import { GuidedTour } from './components/GuidedTour';
+import { ContextualHelpDrawer } from './components/ContextualHelpDrawer';
 import { EditorialCalendarStudio } from './components/EditorialCalendarStudio';
 import { CalendarLibrary } from './components/CalendarLibrary';
 import type { SavedCalendar } from './components/CalendarLibrary';
@@ -4705,6 +4706,14 @@ WRITING CLEANLINESS RULES (CRITICAL):
     return true;
   });
 
+  // --- Contextual Help Drawer State ---
+  const [isHelpDrawerOpen, setIsHelpDrawerOpen] = useState(false);
+  const helpTriggerRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    setIsHelpDrawerOpen(false);
+  }, [activeTab]);
+
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-surface-primary font-sans text-text-primary">
@@ -5002,6 +5011,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
           onSelectIdeaItem={(idea) => {
             handleCopyIdeaToWorkspace(idea);
           }}
+          isHelpOpen={isHelpDrawerOpen}
+          onToggleHelp={() => setIsHelpDrawerOpen(prev => !prev)}
+          helpTriggerRef={helpTriggerRef}
         />
         <main className="app-main page-content flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-5 md:py-6 flex flex-col min-w-0">
         
@@ -6006,6 +6018,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       type="button"
                       role="tab"
+                      data-testid="mode-btn-simple"
                       aria-selected={creationMode === 'simple'}
                       onClick={() => setCreationMode('simple')}
                       className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
@@ -6019,6 +6032,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       type="button"
                       role="tab"
+                      data-testid="mode-btn-quick"
                       aria-selected={creationMode === 'quick'}
                       onClick={() => setCreationMode('quick')}
                       className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
@@ -6032,6 +6046,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <button
                       type="button"
                       role="tab"
+                      data-testid="mode-btn-advanced"
                       aria-selected={creationMode === 'advanced'}
                       onClick={() => setCreationMode('advanced')}
                       className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
@@ -6066,6 +6081,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                     <button
                       type="button"
+                      data-testid="content-starters-toggle"
                       className="text-[11px] text-brand-gold font-semibold bg-surface-primary border border-border-standard px-2.5 py-1 rounded-md shrink-0"
                     >
                       {showContentStarters ? 'Hide Starters' : 'Show Starters'}
@@ -6097,6 +6113,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <button
                               key={temp.name}
                               type="button"
+                              data-testid="content-starter-template-btn"
                               onClick={() => applyTemplate(temp)}
                               className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1.5 px-2.5 rounded-md text-[11px] transition font-medium"
                               title={temp.desc}
@@ -8172,7 +8189,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </p>
             </div>
 
-            <div className="card-level-1 p-4 sm:p-5 border border-border-standard flex gap-3.5 text-xs flex-wrap items-end">
+            <div data-guide="content-library-filters" className="card-level-1 p-4 sm:p-5 border border-border-standard flex gap-3.5 text-xs flex-wrap items-end">
               <div className="flex items-center gap-1.5 text-brand-gold shrink-0 pb-2">
                 <Filter size={15} />
                 <span className="font-semibold uppercase tracking-wider font-mono text-[11px]">Filters</span>
@@ -8252,7 +8269,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
             </div>
 
             {actualFilteredSaved.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+              <div data-guide="content-library-grid" className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
                 {actualFilteredSaved.map(item => (
                   <div key={item.id} className="card-level-1 p-5 flex flex-col justify-between gap-4 hover:border-brand-gold/35 transition-colors">
                     <div className="space-y-3">
@@ -8420,7 +8437,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 border border-dashed border-border-standard rounded-xl bg-surface-inset">
+              <div data-guide="content-library-grid" className="text-center py-20 border border-dashed border-border-standard rounded-xl bg-surface-inset">
                 <p className="text-xs text-text-secondary max-w-sm mx-auto">No saved content meets the active filters.</p>
               </div>
             )}
@@ -8431,7 +8448,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
         {/* --- TAB 5: SOURCE LIBRARY --- */}
         {activeTab === 'source-library' && (<ErrorBoundary fallbackTitle="Source Library Error">
           <div className="page-shell">
-            <div className="card-level-1 p-5 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div data-guide="source-library-header" className="card-level-1 p-5 sm:p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <div className="text-[10px] font-mono uppercase tracking-[0.2em] text-brand-gold font-semibold mb-1">
                   Evidence &amp; Grounding
@@ -8475,7 +8492,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             <div className="grid grid-cols-1 lg:grid-cols-[360px_minmax(0,1fr)] xl:grid-cols-[400px_minmax(0,1fr)] gap-6 items-start">
               {/* Form panel */}
-              <div className="min-w-0 card-level-1 p-5 sm:p-6 h-fit space-y-5">
+              <div data-guide="source-library-add" className="min-w-0 card-level-1 p-5 sm:p-6 h-fit space-y-5">
                 <div>
                   <h3 className="font-sans text-base font-bold text-text-primary pb-2 border-b border-border-standard">
                     {editingSourceId ? 'Edit Source Record' : 'Add Source'}
@@ -8608,7 +8625,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Records List Panel */}
-              <div className="min-w-0 space-y-5">
+              <div data-guide="source-library-list" className="min-w-0 space-y-5">
                 
                 {/* Filters */}
                 <div className="flex flex-wrap gap-1.5 pb-2 border-b border-border-standard">
@@ -8795,7 +8812,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 pb-12 items-start">
                 
                 {/* 1. Provider Connection */}
-                <Card className="xl:col-span-6">
+                <Card data-guide="settings-provider" className="xl:col-span-6">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div>
@@ -8962,7 +8979,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </Card>
 
                 {/* 2. Model Preferences */}
-                <Card className={`xl:col-span-6 ${!settingsProvider ? 'opacity-50 pointer-events-none' : ''}`}>
+                <Card data-guide="settings-models" className={`xl:col-span-6 ${!settingsProvider ? 'opacity-50 pointer-events-none' : ''}`}>
                   <CardHeader>
                     <CardTitle>2. Model Preferences</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Select the specific models to use for text and visual generation.</p>
@@ -9063,7 +9080,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </Card>
 
                 {/* 3. Testing & Verification */}
-                <Card className={`xl:col-span-6 ${!settingsTextModel ? 'opacity-50 pointer-events-none' : ''}`}>
+                <Card data-guide="settings-test" className={`xl:col-span-6 ${!settingsTextModel ? 'opacity-50 pointer-events-none' : ''}`}>
                   <CardHeader>
                     <CardTitle>3. Test & Save Connection</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Verify your credentials work before saving the configuration.</p>
@@ -9174,7 +9191,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
 
                 {/* 4. Generation Mode Override */}
-                <Card className="xl:col-span-6">
+                <Card data-guide="settings-mode" className="xl:col-span-6">
                   <CardHeader>
                     <CardTitle>4. Generation Mode Override</CardTitle>
                     <p className="text-sm text-text-secondary mt-1">Force the system to use a specific generation mode, overriding the active AI Connection.</p>
@@ -9236,6 +9253,28 @@ WRITING CLEANLINESS RULES (CRITICAL):
       )}
 
       <div className="fixed bottom-2 right-2 text-[10px] text-text-muted pointer-events-none z-50">v1.1.0-stable</div>
+      <ContextualHelpDrawer
+        isOpen={isHelpDrawerOpen}
+        onClose={() => setIsHelpDrawerOpen(false)}
+        activeRoute={activeTab}
+        triggerRef={helpTriggerRef}
+        runtimeState={{
+          activeRoute: activeTab,
+          aiStatus,
+          aiProvider,
+          hasDraftInContentWorkspace: Boolean(draftOptions),
+          creationMode,
+          visualInputMode: vsInputMode,
+          hasImportedVisualDirection: vsInputMode === 'Imported' && Boolean(vsSourceItem || vsConcept.trim()),
+          hasVisualPromptInput: Boolean(vsManualPrompt.trim() || vsConcept.trim()),
+          hasRevisionDraft: Boolean(activeDraftText.trim()),
+          hasReframingSource: Boolean(reframingInitialOrigin?.sourceContent?.trim() || activeDraftText.trim()),
+          savedIdeasCount: savedIdeas.length,
+          savedContentCount: savedContent.length,
+          savedCalendarsCount: (safeRead<unknown[]>('coh_saved_calendars_v1', []) || []).length,
+          sourcesCount: sources.length + workspaceLocalSources.length
+        }}
+      />
       <GuidedTour activeRoute={activeTab} onNavigateRoute={setActiveTab} />
     </div>
     </div>

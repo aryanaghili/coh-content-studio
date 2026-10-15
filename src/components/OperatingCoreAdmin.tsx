@@ -183,7 +183,7 @@ export default function OperatingCoreAdmin({
   if (!isUnlocked) {
     return (
       <div className="page-shell items-center justify-center h-full min-h-[60vh]">
-        <div className="bg-surface-primary border border-border-strong p-8 rounded-[20px] shadow-2xl max-w-md w-full text-center">
+        <div data-guide="operating-core-lock" className="bg-surface-primary border border-border-strong p-8 rounded-[20px] shadow-2xl max-w-md w-full text-center">
           <Lock className="mx-auto mb-4 text-brand-gold" size={48} />
           <h2 className="text-xl font-sans text-text-primary mb-2">Operating Core Locked</h2>
           <p className="text-sm text-text-secondary mb-6">
@@ -261,7 +261,7 @@ export default function OperatingCoreAdmin({
   return (
     <div className="page-shell animate-fadeIn pb-16">
       {/* Header */}
-      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shadow-level-1 flex flex-col md:flex-row justify-between items-start gap-4">
+      <div data-guide="operating-core-header" className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shadow-level-1 flex flex-col md:flex-row justify-between items-start gap-4">
         <div>
           <h2 className="page-title">Operating Core</h2>
           <p className="page-subtitle">
@@ -297,7 +297,7 @@ export default function OperatingCoreAdmin({
 
       <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] xl:grid-cols-[280px_minmax(0,1fr)] gap-6 items-start">
         {/* Sidebar Tabs */}
-        <div className="min-w-0 space-y-1">
+        <div data-guide="operating-core-nav" className="min-w-0 space-y-1">
           <div className="mb-4 p-3 bg-surface-primary rounded-xl border border-border-standard text-xs shadow-level-1">
             <h4 className="font-bold text-text-primary mb-2 border-b border-border-standard pb-1">Completeness</h4>
             <ul className="space-y-1 font-mono text-[9px]">
@@ -325,7 +325,7 @@ export default function OperatingCoreAdmin({
         </div>
 
         {/* Content Area */}
-        <div className="min-w-0 bg-surface-primary p-6 rounded-xl shadow-level-1 border border-border-standard min-h-[600px]">
+        <div data-guide="operating-core-content" className="min-w-0 bg-surface-primary p-6 rounded-xl shadow-level-1 border border-border-standard min-h-[600px]">
           {/* CORE PASSPORT */}
           {activeTab === 'passport' && (
             <div className="space-y-6">

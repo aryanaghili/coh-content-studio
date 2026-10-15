@@ -551,14 +551,19 @@ function deduplicateAvoidanceList(...rawSources) {
   for (const src of rawSources) {
     if (!src) continue;
     const rawItems = Array.isArray(src)
-      ? src
+      ? src.flatMap(entry =>
+          String(entry)
+            .split(/,(?![^(]*\))|;|\n|\s+\bor\b\s+(?![^(]*\))/i)
+            .map(s => s.trim())
+            .filter(Boolean)
+        )
       : String(src)
           .replace(/^(?:Avoid|Do not include|No)\s*:\s*/i, '')
-          .split(/[,;\n]+|\s+\b(?:and|or)\b\s+/i);
+          .split(/,(?![^(]*\))|;|\n|\s+\b(?:and|or)\b\s+(?![^(]*\))/i);
 
     for (const item of rawItems) {
       let cleaned = cleanBriefValue(item)
-        .replace(/^(?:no\s+|avoid\s+|do\s+not\s+include\s+|never\s+use\s+)/i, '')
+        .replace(/^(?:no\s+|avoid\s+|do\s+not\s+include\s+|never\s+use\s+|or\s+|and\s+)/i, '')
         .replace(/\.+$/, '')
         .trim();
       if (!cleaned || cleaned.length < 3) continue;
@@ -701,9 +706,12 @@ export function compileVisualStudioPrompt(options = {}) {
   }
 
   // 2. Key Visual Elements (only if distinct from primaryConcept)
+  const normKeyElements = cleanBriefValue(parsed.keyVisualElements).replace(/\.+$/, '').toLowerCase();
+  const normConceptForElements = cleanBriefValue(primaryConcept).replace(/\.+$/, '').toLowerCase();
   if (
-    parsed.keyVisualElements &&
-    !primaryConcept.toLowerCase().includes(parsed.keyVisualElements.toLowerCase())
+    normKeyElements &&
+    normKeyElements !== normConceptForElements &&
+    !normConceptForElements.includes(normKeyElements)
   ) {
     sections.push(
       normalizeSentence(`Key visual anchors and tactile details: ${parsed.keyVisualElements}`)
@@ -719,9 +727,11 @@ export function compileVisualStudioPrompt(options = {}) {
   sections.push(`${compositionParts.join('. ')}.`);
 
   // 4. Typography / Layout Zone Direction (when relevant & distinct from composition)
+  const normTypoLayout = cleanBriefValue(parsed.typographyLayout).replace(/\.+$/, '').toLowerCase();
+  const normCompCombined = compositionParts.join(' ').toLowerCase();
   if (
-    parsed.typographyLayout &&
-    !compositionParts.join(' ').toLowerCase().includes(parsed.typographyLayout.toLowerCase())
+    normTypoLayout &&
+    !normCompCombined.includes(normTypoLayout)
   ) {
     sections.push(
       normalizeSentence(
@@ -756,10 +766,13 @@ export function compileVisualStudioPrompt(options = {}) {
   }
 
   // 7. Curated AI Image Prompt Nuances (if the brief supplied extra scene details not already in visualConcept)
+  const normAiPrompt = cleanBriefValue(parsed.aiImagePrompt).replace(/\.+$/, '').toLowerCase();
+  const normPrimaryConcept = cleanBriefValue(primaryConcept).replace(/\.+$/, '').toLowerCase();
   if (
-    parsed.aiImagePrompt &&
-    parsed.aiImagePrompt.toLowerCase() !== primaryConcept.toLowerCase() &&
-    !primaryConcept.toLowerCase().includes(parsed.aiImagePrompt.toLowerCase().slice(0, 40))
+    normAiPrompt &&
+    normAiPrompt !== normPrimaryConcept &&
+    !normPrimaryConcept.includes(normAiPrompt) &&
+    !normAiPrompt.includes(normPrimaryConcept)
   ) {
     sections.push(normalizeSentence(`Additional scene direction: ${parsed.aiImagePrompt}`));
   }

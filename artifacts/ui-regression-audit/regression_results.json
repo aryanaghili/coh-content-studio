@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-14T21:49:01.700Z",
+  "timestamp": "2026-10-15T11:27:55.825Z",
   "routesVerified": [
     {
       "slug": "command-center",
@@ -282,7 +282,11 @@
     "workflowD": "PASS",
     "workflowE": "PASS",
     "workflowG": "PASS",
-    "workflowH": "PASS"
+    "workflowH": "PASS",
+    "contentWorkspaceModeArchitecture": "PASS",
+    "workspaceGuides": "PASS",
+    "visualStudioPromptCompiler": "PASS",
+    "contextualHelpSystem": "PASS"
   },
   "errorResilience": {
     "offlineTranslationBlockedSafely": true,
