@@ -75,11 +75,12 @@ export function loadFromEnv() {
 }
 
 export function getActiveConfig() {
-  return activeConfig ? { ...activeConfig, apiKey: undefined } : null;
+  return activeConfig ? { ...activeConfig } : null;
 }
 
 export function updateConfig(newConfig) {
   if (!newConfig.provider) throw new Error('Provider must be specified');
+  const cleanKey = typeof newConfig.apiKey === 'string' ? newConfig.apiKey.trim() : '';
   const resolvedTextModel =
     newConfig.textModel ||
     newConfig.model ||
@@ -87,14 +88,19 @@ export function updateConfig(newConfig) {
   
   activeConfig = {
     provider: newConfig.provider,
-    apiKey: newConfig.apiKey || '',
+    apiKey: cleanKey,
     textModel: resolvedTextModel,
     imageModel: newConfig.imageModel || (newConfig.provider === 'openai' ? (process.env.OPENAI_IMAGE_MODEL || 'gpt-image-2') : ''),
     baseUrl: newConfig.baseUrl || null,
-    apiKeySource: newConfig.apiKey ? 'session' : 'not_configured',
-    status: newConfig.apiKey ? 'connected' : 'not_configured',
+    apiKeySource: newConfig.apiKeySource || (cleanKey ? 'session' : 'not_configured'),
+    status: newConfig.status || (cleanKey ? 'connected' : 'not_configured'),
+    lastTestedAt: newConfig.lastTestedAt || new Date().toISOString(),
   };
   return activeConfig;
+}
+
+export function setConfig(newConfig) {
+  return updateConfig(newConfig);
 }
 
 export function getMaskedConfig() {
@@ -106,6 +112,7 @@ export function getMaskedConfig() {
     baseUrl: activeConfig.baseUrl,
     status: activeConfig.status,
     apiKeySource: activeConfig.apiKeySource,
+    lastTestedAt: activeConfig.lastTestedAt || null,
   };
 }
 
@@ -127,8 +134,13 @@ function getAdapter(provider) {
 
 export async function testConnection(cfg) {
   const adapter = getAdapter(cfg.provider);
-  return adapter.testConnection(cfg);
+  const cleanKey = typeof cfg.apiKey === 'string' ? cfg.apiKey.trim() : '';
+  return adapter.testConnection({
+    ...cfg,
+    apiKey: cleanKey,
+  });
 }
+
 
 /**
  * Execute generation with one bounded quality-repair attempt.

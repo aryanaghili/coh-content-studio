@@ -996,7 +996,7 @@ export default function App() {
           if (!settingsKeyDirty) {
             setSettingsProvider(data.activeConfig.provider || 'openai');
             setSettingsBaseUrl(data.activeConfig.baseUrl || '');
-            if (data.activeConfig.apiKeySource === 'env') {
+            if (data.activeConfig.apiKeySource === 'env' || data.activeConfig.apiKeySource === 'session') {
               setSettingsApiKey('••••••••');
             }
           }
@@ -1008,6 +1008,7 @@ export default function App() {
         // backend not running — stay in prototype mode
       }
     },
+
 
     async testConnection(provider: string, textModel: string, imageModel: string, apiKey: string, baseUrl?: string) {
       const res = await fetch('/api/ai/test', {
@@ -1312,8 +1313,9 @@ export default function App() {
 
   // Poll status on mount
   useEffect(() => {
-    // checkSession();
+    aiService.getStatus();
   }, []);
+
 
   // --- Workspace Local Dynamic Sources ---
   const [workspaceLocalSources, setWorkspaceLocalSources] = useState<SourceFile[]>([]);
@@ -8864,6 +8866,101 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         helperText="API keys are configured securely via backend or deployment environment variables. They are not exposed in the browser."
                       />
                     </div>
+
+                    <div className="pt-2 border-t border-border-standard flex flex-col gap-3">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          variant="secondary"
+                          disabled={settingsTestCooldown > 0 || settingsTesting || !settingsApiKey.trim() || !settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel)}
+                          onClick={async () => {
+                            setSettingsTesting(true);
+                            if (aiStatus !== 'error') setAiStatus('testing');
+                            setSettingsTestResult('');
+                            setSettingsTestPassed(null);
+                            try {
+                              const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined);
+                              if (result.connected) {
+                                setSettingsTestPassed(true);
+                                setSettingsTestResult(`Connection verified for ${settingsProvider} (${settingsTextModel}). Latency: ${result.latency}ms.`);
+                                setAiLastTested(new Date().toLocaleString());
+                                setAiLatency(result.latency);
+                                setAiStatus('not_connected');
+                              } else {
+                                setSettingsTestPassed(false);
+                                const rawErr = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                                const errMsg = `[${settingsProvider} / ${settingsTextModel}] ${rawErr}`;
+                                setSettingsTestResult(errMsg);
+                                if (errMsg.includes('Rate limit reached')) {
+                                  setSettingsTestCooldown(30);
+                                } else {
+                                  setAiStatus('error');
+                                  setAiLastError(errMsg);
+                                }
+                              }
+                            } catch {
+                              setSettingsTestPassed(false);
+                              setSettingsTestResult('Could not reach the backend server. Is it running?');
+                              setAiStatus('error');
+                            } finally {
+                              setSettingsTesting(false);
+                            }
+                          }}
+                        >
+                          {settingsTesting ? 'Testing...' : (settingsTestCooldown > 0 ? `Wait ${settingsTestCooldown}s` : 'Test Connection')}
+                        </Button>
+
+                        <Button
+                          variant="primary"
+                          disabled={settingsApplying || settingsTesting || !settingsApiKey.trim() || !settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel) || (!settingsKeyDirty && aiStatus === 'connected')}
+                          onClick={async () => {
+                            setSettingsApplying(true);
+                            setSettingsTestResult('');
+                            try {
+                              let testedTimestamp = aiLastTested;
+                              if (settingsTestPassed !== true) {
+                                const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined);
+                                if (!result.connected) {
+                                  setSettingsTestPassed(false);
+                                  const rawErr = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                                  const errMsg = `[${settingsProvider} / ${settingsTextModel}] ${rawErr}`;
+                                  setSettingsTestResult(errMsg);
+                                  setAiStatus('error');
+                                  setAiLastError(errMsg);
+                                  return;
+                                }
+                                setSettingsTestPassed(true);
+                                testedTimestamp = new Date().toLocaleString();
+                                setAiLastTested(testedTimestamp);
+                                setAiLatency(result.latency);
+                              }
+                              await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined, testedTimestamp);
+                              setAiStatus('connected');
+                              setAiProvider(settingsProvider);
+                              setAiTextModel(settingsTextModel);
+                              setAiImageModel(settingsImageModel);
+                              setGenerationMode('ai');
+                              setAiLastError('');
+                              setSettingsTestResult('AI settings saved. Text and image generation are active.');
+                              setSettingsKeyDirty(false);
+                            } catch {
+                              setAiStatus('error');
+                              setSettingsTestResult('Failed to apply provider. Check server logs.');
+                            } finally {
+                              setSettingsApplying(false);
+                            }
+                          }}
+                        >
+                          {settingsApplying ? 'Verifying & Saving...' : (!settingsKeyDirty && aiStatus === 'connected') ? '✓ Connected & Active' : 'Save & Connect Key'}
+                        </Button>
+                      </div>
+
+                      {settingsTestResult && (
+                        <div className={`flex items-center gap-2 text-xs font-semibold p-2.5 rounded-lg border ${settingsTestPassed || aiStatus === 'connected' ? 'bg-status-success/10 text-status-success border-status-success/20' : 'bg-status-error/10 text-status-error border-status-error/20'}`}>
+                          {settingsTestPassed || aiStatus === 'connected' ? <Check size={14} /> : <AlertTriangle size={14} />}
+                          <span>{settingsTestResult}</span>
+                        </div>
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
 
@@ -8986,7 +9083,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                           setSettingsTestResult('');
                           setSettingsTestPassed(null);
                           try {
-                            const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined);
+                            const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined);
                             if (result.connected) {
                               setSettingsTestPassed(true);
                               setSettingsTestResult(`Connection verified for ${settingsProvider} (${settingsTextModel}). Latency: ${result.latency}ms.`);
@@ -9020,8 +9117,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                       <div className="flex-1">
                         {settingsTestResult ? (
-                          <div className={`flex items-center gap-2 text-sm font-semibold ${settingsTestPassed ? 'text-status-success' : 'text-status-error'}`}>
-                            {settingsTestPassed ? <Check size={16} /> : <AlertTriangle size={16} />}
+                          <div className={`flex items-center gap-2 text-sm font-semibold ${settingsTestPassed || aiStatus === 'connected' ? 'text-status-success' : 'text-status-error'}`}>
+                            {settingsTestPassed || aiStatus === 'connected' ? <Check size={16} /> : <AlertTriangle size={16} />}
                             {settingsTestResult}
                           </div>
                         ) : (
@@ -9033,11 +9130,28 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <Button
                       variant="primary"
                       className="w-full py-3"
-                      disabled={settingsTestPassed !== true || settingsApplying || (!settingsKeyDirty && aiStatus === 'connected')}
+                      disabled={settingsApplying || settingsTesting || !settingsApiKey.trim() || !settingsProvider || !settingsTextModel || ((settingsProvider === 'openai' || settingsProvider === 'openrouter') && !settingsImageModel) || (!settingsKeyDirty && aiStatus === 'connected')}
                       onClick={async () => {
                         setSettingsApplying(true);
                         try {
-                          await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey, settingsBaseUrl || undefined, aiLastTested);
+                          let testedTimestamp = aiLastTested;
+                          if (settingsTestPassed !== true) {
+                            const result = await aiService.testConnection(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined);
+                            if (!result.connected) {
+                              setSettingsTestPassed(false);
+                              const rawErr = result.error || 'Provider connection failed. Check the API key or provider configuration.';
+                              const errMsg = `[${settingsProvider} / ${settingsTextModel}] ${rawErr}`;
+                              setSettingsTestResult(errMsg);
+                              setAiStatus('error');
+                              setAiLastError(errMsg);
+                              return;
+                            }
+                            setSettingsTestPassed(true);
+                            testedTimestamp = new Date().toLocaleString();
+                            setAiLastTested(testedTimestamp);
+                            setAiLatency(result.latency);
+                          }
+                          await aiService.applyProvider(settingsProvider, settingsTextModel, settingsImageModel, settingsApiKey.trim(), settingsBaseUrl || undefined, testedTimestamp);
                           setAiStatus('connected');
                           setAiProvider(settingsProvider);
                           setAiTextModel(settingsTextModel);
@@ -9056,11 +9170,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     >
                       {settingsApplying ? 'Saving Configuration...' 
                       : (!settingsKeyDirty && aiStatus === 'connected') ? '✓ Settings Up to Date'
-                      : settingsKeyDirty && settingsTestPassed !== true ? 'Test Connection First' 
                       : 'Save and Activate AI Generation'}
                     </Button>
                   </CardContent>
                 </Card>
+
 
                 {/* 4. Generation Mode Override */}
                 <Card className="xl:col-span-6">

@@ -142,20 +142,53 @@ export function extractOpenAIText(data) {
   return null;
 }
 
+export function getFallbackOpenAIModels(model) {
+  const lower = String(model || '').trim().toLowerCase();
+  if (lower === 'gpt-6-luna' || lower.startsWith('gpt-6-luna') || lower === 'gpt-5.4-mini') {
+    return ['gpt-4.1-mini', 'gpt-4o-mini', 'gpt-4o'];
+  }
+  if (
+    lower === 'gpt-6.1-sol' ||
+    lower.startsWith('gpt-6.1') ||
+    lower.startsWith('gpt-6') ||
+    lower.startsWith('gpt-5')
+  ) {
+    return ['gpt-4.1', 'gpt-4o', 'gpt-4o-mini'];
+  }
+  return [];
+}
+
+function isModelUnavailableError(status, errText = '') {
+  const text = String(errText || '').toLowerCase();
+  return (
+    status === 404 ||
+    text.includes('model_not_found') ||
+    text.includes('does not exist') ||
+    text.includes('do not have access') ||
+    text.includes('invalid model') ||
+    text.includes('not a chat model') ||
+    text.includes('not supported')
+  );
+}
+
 async function callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, jsonMode = true) {
+  const cleanKey = String(apiKey || '').trim();
   const primary = buildOpenAIRequest(model, baseUrl, systemPrompt, userPrompt, jsonMode);
 
   const res = await fetch(primary.url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${cleanKey}`,
     },
     body: JSON.stringify(primary.payload),
   });
 
   if (!res.ok) {
     const errText = await res.text();
+    let lastStatus = res.status;
+    let lastErrText = errText;
+
     // Safe fallback to /v1/chat/completions if /v1/responses endpoint is unsupported on target host
     if (
       primary.endpoint === '/v1/responses' &&
@@ -166,19 +199,52 @@ async function callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, json
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
+          'Authorization': `Bearer ${cleanKey}`,
         },
         body: JSON.stringify(fallback.payload),
       });
-      if (!fallbackRes.ok) {
-        const fbErr = await fallbackRes.text();
-        throw new Error(`OpenAI API error ${fallbackRes.status}: ${fbErr}`);
+      if (fallbackRes.ok) {
+        const fbData = await fallbackRes.json();
+        return extractOpenAIText(fbData);
       }
-      const fbData = await fallbackRes.json();
-      return extractOpenAIText(fbData);
+      lastStatus = fallbackRes.status;
+      lastErrText = await fallbackRes.text();
     }
 
-    throw new Error(`OpenAI API error ${res.status}: ${errText}`);
+    // Transparent alias resolution: if a COH tier model alias (e.g. gpt-6-luna, gpt-6.1-sol)
+    // is not recognized by the upstream OpenAI account, fall back to production OpenAI models.
+    if (isModelUnavailableError(lastStatus, lastErrText)) {
+      const candidateModels = getFallbackOpenAIModels(model);
+      for (const candidateModel of candidateModels) {
+        const candidateReq = buildOpenAIRequest(
+          candidateModel,
+          baseUrl,
+          systemPrompt,
+          userPrompt,
+          jsonMode,
+          '/v1/chat/completions'
+        );
+        const candidateRes = await fetch(candidateReq.url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${cleanKey}`,
+          },
+          body: JSON.stringify(candidateReq.payload),
+        });
+        if (candidateRes.ok) {
+          const candidateData = await candidateRes.json();
+          return extractOpenAIText(candidateData);
+        }
+        lastStatus = candidateRes.status;
+        lastErrText = await candidateRes.text();
+        if (!isModelUnavailableError(lastStatus, lastErrText)) {
+          break;
+        }
+      }
+    }
+
+    throw new Error(`OpenAI API error ${lastStatus}: ${lastErrText}`);
   }
 
   const data = await res.json();
@@ -239,17 +305,21 @@ export async function compileImagePrompt(config, systemPrompt, userPrompt) {
 }
 
 export async function testConnection(config) {
-  const { apiKey, baseUrl } = config;
+  const cleanKey = String(config.apiKey || '').trim();
+  const { baseUrl } = config;
   const model = config.textModel || config.model || process.env.OPENAI_MODEL || DEFAULT_OPENAI_TEXT_MODEL;
   if (!model) return { connected: false, provider: 'openai', error: 'Text model is missing.' };
   const capabilities = getOpenAICapabilities(model, baseUrl);
   const start = Date.now();
   const systemPrompt = 'You are a connection test assistant. Return only valid JSON.';
-  const userPrompt = 'Respond with exactly: { "ok": true, "provider": "openai", "model": "' + model + '" }';
+  const userPrompt = 'Respond with a JSON object: { "ok": true, "provider": "openai", "model": "' + model + '" }';
   try {
-    const rawText = await callOpenAI(apiKey, model, baseUrl, systemPrompt, userPrompt, true);
+    const rawText = await callOpenAI(cleanKey, model, baseUrl, systemPrompt, userPrompt, true);
     const parsed = repairJson(rawText);
-    if (!parsed?.ok) throw new Error('Invalid test response: ' + rawText);
+    const isValidResponse =
+      Boolean(parsed && (parsed.ok === true || parsed.provider === 'openai' || parsed.model)) ||
+      (typeof rawText === 'string' && rawText.trim().length > 0 && !(parsed && parsed.errorType === 'AI_PARSE_ERROR'));
+    if (!isValidResponse) throw new Error('Invalid test response: ' + rawText);
     return {
       connected: true,
       provider: 'openai',
@@ -290,6 +360,7 @@ function friendlyError(err) {
   
   return msg.substring(0, 150);
 }
+
 
 export async function generateImage(config, input) {
   const { apiKey, baseUrl, imageModel } = config;
@@ -372,45 +443,91 @@ export async function generateImage(config, input) {
     requestKeys: Object.keys(requestBody)
   });
 
-  const res = await fetch(url, {
+  let res = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
+      'Authorization': `Bearer ${String(apiKey || '').trim()}`,
     },
     body: JSON.stringify(requestBody),
   });
 
   if (!res.ok) {
-    const err = await res.text();
-    let cleanErr = err;
-    try {
-      const parsedErr = JSON.parse(err);
-      if (parsedErr.error && parsedErr.error.message) {
-        cleanErr = parsedErr.error.message;
-      }
-    } catch (e) {}
+    let err = await res.text();
+    if (requestedModel === 'gpt-image-2' && isModelUnavailableError(res.status, err)) {
+      const imageFallbacks = [
+        {
+          model: 'gpt-image-1',
+          size: reqWidth === reqHeight ? '1024x1024' : (reqWidth > reqHeight ? '1536x1024' : '1024x1536'),
+          quality: 'high'
+        },
+        {
+          model: 'dall-e-3',
+          size: reqWidth === reqHeight ? '1024x1024' : (reqWidth > reqHeight ? '1792x1024' : '1024x1792'),
+          quality: input.quality === 'hd' ? 'hd' : 'standard',
+          response_format: 'b64_json'
+        }
+      ];
 
-    let userFriendlyErr = cleanErr;
-    if (cleanErr.includes('response_format')) {
-      userFriendlyErr = 'Image generation failed because the selected model does not support response_format.';
-    } else if (cleanErr.includes('quality value')) {
-      userFriendlyErr = 'Image generation failed because the selected model does not support quality value hd.';
-    } else if (cleanErr.includes('model')) {
-      userFriendlyErr = 'The selected image model is unavailable for this API key. Choose another image model.';
-    }
-    
-    throw new Error(JSON.stringify({
-      isProviderError: true,
-      message: userFriendlyErr,
-      debug: {
-        provider: 'openai',
-        model: requestedModel,
-        size: requestBody.size,
-        requestKeys: Object.keys(requestBody)
+      for (const fb of imageFallbacks) {
+        const fbBody = {
+          model: fb.model,
+          prompt,
+          n: 1,
+          size: fb.size,
+          quality: fb.quality,
+          ...(fb.response_format ? { response_format: fb.response_format } : {})
+        };
+        const fbRes = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${String(apiKey || '').trim()}`,
+          },
+          body: JSON.stringify(fbBody),
+        });
+        if (fbRes.ok) {
+          res = fbRes;
+          break;
+        }
+        err = await fbRes.text();
+        if (!isModelUnavailableError(fbRes.status, err)) {
+          break;
+        }
       }
-    }));
+    }
+
+    if (!res.ok) {
+      let cleanErr = err;
+      try {
+        const parsedErr = JSON.parse(err);
+        if (parsedErr.error && parsedErr.error.message) {
+          cleanErr = parsedErr.error.message;
+        }
+      } catch (e) {}
+
+      let userFriendlyErr = cleanErr;
+      if (cleanErr.includes('response_format')) {
+        userFriendlyErr = 'Image generation failed because the selected model does not support response_format.';
+      } else if (cleanErr.includes('quality value')) {
+        userFriendlyErr = 'Image generation failed because the selected model does not support quality value hd.';
+      } else if (cleanErr.includes('model')) {
+        userFriendlyErr = 'The selected image model is unavailable for this API key. Choose another image model.';
+      }
+      
+      throw new Error(JSON.stringify({
+        isProviderError: true,
+        message: userFriendlyErr,
+        debug: {
+          provider: 'openai',
+          model: requestedModel,
+          size: requestBody.size,
+          requestKeys: Object.keys(requestBody)
+        }
+      }));
+    }
   }
+
 
   const data = await res.json();
   const imageData = data.data?.[0];

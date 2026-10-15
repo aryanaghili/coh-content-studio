@@ -10,8 +10,9 @@ import crypto from 'crypto';
 const app = express();
 const PORT = 3001;
 
-app.use(cors({ origin: 'http://localhost:5173' }));
+app.use(cors({ origin: [/^http:\/\/localhost:\d+$/, /^http:\/\/127\.0\.0\.1:\d+$/], credentials: true }));
 app.use(express.json({ limit: '2mb' }));
+
 
 app.post('/api/operating-core/unlock', (req, res) => {
   const submittedCode = String(req.body.code || "").trim();
@@ -555,7 +556,7 @@ function friendlyServerError(err) {
   return msg || 'AI generation error. Check server logs.';
 }
 
-if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL && !process.env.COH_EMBEDDED_API) {
   const server = app.listen(PORT, () => {
     console.log(`[COH AI Server] Running at http://localhost:${PORT}`);
     const cfg = providerManager.getMaskedConfig();
@@ -571,3 +572,4 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
 export default app;
 
 app.use('/api/operating-core', operatingCoreRouter);
+

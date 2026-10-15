@@ -274,4 +274,67 @@ describe('COH-CS-02 OpenAI Provider Modernization & Multi-Provider Regression Su
       globalThis.fetch = origFetch;
     }
   });
+
+  test('6. Transparently falls back to production OpenAI models when live OpenAI API returns model_not_found for gpt-6-luna or gpt-image-2', async () => {
+    const origFetch = globalThis.fetch;
+    const triedModels = [];
+
+    globalThis.fetch = async (url, options) => {
+      const body = options?.body ? JSON.parse(options.body) : {};
+      triedModels.push({ url, model: body.model });
+
+      // Simulate real OpenAI API returning 404 model_not_found for COH tier alias models
+      if (body.model === 'gpt-6-luna' || body.model === 'gpt-6.1-sol' || body.model === 'gpt-image-2') {
+        return {
+          ok: false,
+          status: 404,
+          text: async () => JSON.stringify({
+            error: {
+              message: `The model '${body.model}' does not exist or you do not have access to it.`,
+              type: 'invalid_request_error',
+              code: 'model_not_found'
+            }
+          })
+        };
+      }
+
+      if (String(url).includes('/v1/images/generations')) {
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({ data: [{ b64_json: 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=' }] })
+        };
+      }
+
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify({ ok: true, provider: 'openai', model: body.model }) } }]
+        })
+      };
+    };
+
+    try {
+      const connRes = await providerManager.testConnection({
+        provider: 'openai',
+        apiKey: '  sk-proj-live-key-with-whitespace  ',
+        textModel: 'gpt-6-luna',
+        imageModel: 'gpt-image-2'
+      });
+      assert.equal(connRes.connected, true);
+      assert.equal(connRes.model, 'gpt-6-luna');
+      assert.ok(triedModels.some(m => m.model === 'gpt-4.1-mini'));
+
+      const imgRes = await openaiAdapter.generateImage(
+        { apiKey: 'sk-proj-live-key', imageModel: 'gpt-image-2' },
+        { prompt: 'Elemental stage architecture', width: 1024, height: 1024 }
+      );
+      assert.equal(imgRes.length, 1);
+      assert.ok(triedModels.some(m => m.model === 'gpt-image-1'));
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
 });
+
