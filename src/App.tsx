@@ -191,6 +191,23 @@ import {
   type ResolvedSmartBrief
 } from './lib/smartBriefAndRevision';
 import { SmartBriefPanel } from './components/SmartBriefPanel';
+import {
+  normalizeSourceUrl,
+  normalizeSourceText,
+  computeDeterministicHash,
+  computeSourceFingerprint,
+  isUrlPlaceholderContent,
+  uniqueSourcesById,
+  findDuplicateSource,
+  findLikelyDuplicateIds,
+  validateSourceUsability,
+  validateAttachedSourcesPreflight,
+  getAttachedSourceIds,
+  buildActiveTaskSourceBindings,
+  serializeTaskSourcesForPayload,
+  type SourceIngestionMeta,
+  type SourceIngestionStateStatus
+} from './lib/sourcePipeline';
 
 export { REVISION_ACTIONS, REVISION_GROUP_ORDER, PROTECTED_COH_KERNEL };
 export type { RevisionActionDef, RevisionActionGroup };
@@ -206,6 +223,7 @@ export interface SourceFile {
   createdAt: string;
   selected?: boolean;
   selectable?: boolean;
+  ingestion?: SourceIngestionMeta;
 }
 
 interface ContentBrief {
@@ -334,6 +352,7 @@ interface VersionHistory {
 interface ContentTemplate {
   name: string;
   desc: string;
+  taskInstruction: string;
   channel: string;
   pillar: string;
   audience: string;
@@ -431,6 +450,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'LinkedIn Institutional Positioning',
     desc: 'For cultural institutions, sponsors, partners. Focus: credibility, adoption, cultural durability.',
+    taskInstruction: 'Explain why Climate Opera Haus matters to cultural institutions, sponsors, or strategic partners using the attached sources and approved COH facts.',
     channel: 'LinkedIn',
     pillar: 'Partnerships, Sponsorship & Institutional Value',
     audience: 'Sponsors & Patrons',
@@ -445,6 +465,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Instagram Visual Caption',
     desc: 'For visual posts, production images, opera worlds. Focus: human, precise, atmospheric.',
+    taskInstruction: 'Write an atmospheric Instagram caption that connects the visual world and dramatic tension of the opera to climate as a lived human condition.',
     channel: 'Instagram',
     pillar: 'Opera Worlds & Artistic Method',
     audience: 'General Public',
@@ -459,6 +480,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Instagram Carousel Explainer',
     desc: 'For explaining COH, the Tetralogy, cultural IP, or a specific opera. Focus: slide-by-slide clarity.',
+    taskInstruction: 'Draft a clear slide-by-slide Instagram carousel explaining the Climate Tetralogy and how live opera anchors long-term cultural IP.',
     channel: 'Instagram',
     pillar: 'Climate Tetralogy & Canon',
     audience: 'General Public',
@@ -473,6 +495,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Sponsor-Facing Paragraph',
     desc: 'For patrons, sponsors, strategic partners. Focus: value, fit, low-hype commercial logic.',
+    taskInstruction: 'Write a concise, high-credibility sponsor pitch paragraph highlighting long-horizon cultural IP, institutional adoption, and patron alignment.',
     channel: 'Email / Direct Outreach',
     pillar: 'Partnerships, Sponsorship & Institutional Value',
     audience: 'Sponsors & Patrons',
@@ -487,6 +510,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Partner Update',
     desc: 'For existing or prospective partners. Focus: what changed, why it matters, next step.',
+    taskInstruction: 'Draft a focused partner update summarizing recent progress, why it matters for institutional adoption, and the concrete next step.',
     channel: 'Email / Direct Outreach',
     pillar: 'Production & Behind the Work',
     audience: 'Strategic Partners',
@@ -501,6 +525,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Newsletter Section',
     desc: 'For monthly or campaign updates. Focus: continuity, proof, progress.',
+    taskInstruction: 'Write an editorial newsletter section sharing verifiable milestone progress and deepening reader connection to the Climate Tetralogy.',
     channel: 'Newsletter',
     pillar: 'Events, Convenings & Public Moments',
     audience: 'Sponsors & Patrons',
@@ -515,6 +540,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Website / News & Media Article',
     desc: 'For durable public updates. Focus: factual, polished, source-backed.',
+    taskInstruction: 'Write a polished, source-backed website or media article presenting Climate Opera Haus as a durable cultural engine for the climate transition.',
     channel: 'Website',
     pillar: 'Documentary, Media & Cultural IP',
     audience: 'General Public',
@@ -529,6 +555,7 @@ const CONTENT_TEMPLATES: ContentTemplate[] = [
   {
     name: 'Multi-Channel Pack',
     desc: 'For one idea adapted to LinkedIn, Instagram, X, newsletter, and partner note. Opens in Multi-Channel Pack scope.',
+    taskInstruction: 'Adapt the core proposition of the Climate Tetralogy and attached source material into a coordinated multi-channel communication pack.',
     channel: 'LinkedIn',
     pillar: 'Climate Tetralogy & Canon',
     audience: 'General Public',
@@ -1280,14 +1307,34 @@ export default function App() {
 
   // --- Workspace Local Dynamic Sources ---
   const [workspaceLocalSources, setWorkspaceLocalSources] = useState<SourceFile[]>([]);
-  const [inlineSourceType, setInlineSourceType] = useState<'library' | 'paste' | 'upload' | 'link'>('library');
+  const [inlineSourceType, setInlineSourceType] = useState<'library' | 'paste' | 'upload' | 'link'>('paste');
   const [inlinePasteData, setInlinePasteData] = useState({ title: '', content: '', saveToLibrary: false });
   
   // URL form fields
-  const [inlineLinkData, setInlineLinkData] = useState({ title: '', url: '', summary: '', saveToLibrary: false });
+  const [inlineLinkData, setInlineLinkData] = useState({ title: '', url: '', summary: '', saveToLibrary: false, showExcerptFallback: false });
   const [linkWarning, setLinkWarning] = useState<string>('');
 
   const [inlineUploadData, setInlineUploadData] = useState({ title: '', content: '', saveToLibrary: false });
+
+  // Unified Source Ingestion State (Paste / URL / Upload / Library)
+  const [sourceIngestionState, setSourceIngestionState] = useState<{
+    status: SourceIngestionStateStatus;
+    mode?: 'paste' | 'link' | 'upload' | 'library';
+    message?: string;
+    sourceId?: string;
+    title?: string;
+    capturedChars?: number;
+    savedToLibrary?: boolean;
+    attachedToBrief?: boolean;
+    capturedText?: string;
+    duplicateCandidate?: SourceFile;
+    pendingSource?: SourceFile;
+    pendingSaveToLibrary?: boolean;
+    pendingAttachToBrief?: boolean;
+    failedUrl?: string;
+    failedTitle?: string;
+    reason?: string;
+  }>({ status: 'idle' });
 
   // --- Validation Warning State ---
   const [validationWarning, setValidationWarning] = useState<string>('');
@@ -1772,6 +1819,13 @@ export default function App() {
     labelB?: string;
     contextWarning?: string;
     languageNotice?: string;
+    sourceTrace?: {
+      instruction: string;
+      sourcesSent: Array<{ id: string; title: string; type: string; role: string; capturedChars: number }>;
+      operatingCoreActive: boolean;
+      generationModeLabel: string;
+      providerModelLabel?: string;
+    };
   } | null>(null);
 
   // --- Active Revision Workspace ---
@@ -2200,13 +2254,25 @@ export default function App() {
 
   // --- Dynamic Inputs Snapshot Generator ---
   const getCurrentInputsString = () => {
+    const attachedIds = getAttachedSourceIds({
+      selectedSourceIds: advancedBrief.selectedSourceIds,
+      activeWorkItemSourceIds: activeWorkItem?.sourceIds
+    });
+    const allUniqueSources = uniqueSourcesById(sources, workspaceLocalSources);
+    const attachedContentSig = attachedIds
+      .map(id => {
+        const s = allUniqueSources.find(x => x.id === id);
+        return s ? `${s.id}:${s.title}:${(s.content || '').length}:${getEffectiveSourceRole(s)}` : id;
+      })
+      .join('|');
+
     if (creationMode === 'simple') {
       return JSON.stringify({
         creationMode,
         goal: simpleBrief.goal,
         channel: simpleBrief.channel,
-        workspaceSourcesCount: workspaceLocalSources.length,
-        workspaceSourcesContent: workspaceLocalSources.map(s => s.content).join('|')
+        selectedSourceIds: attachedIds,
+        attachedContentSig
       });
     } else if (creationMode === 'quick') {
       return JSON.stringify({
@@ -2220,8 +2286,8 @@ export default function App() {
         mustAvoid: quickBrief.mustAvoid,
         language: quickBrief.language,
         outputFormat: quickBrief.outputFormat,
-        workspaceSourcesCount: workspaceLocalSources.length,
-        workspaceSourcesContent: workspaceLocalSources.map(s => s.content).join('|')
+        selectedSourceIds: attachedIds,
+        attachedContentSig
       });
     } else {
       return JSON.stringify({
@@ -2237,7 +2303,7 @@ export default function App() {
         directionMode: advancedBrief.directionMode,
         angle: advancedBrief.angle,
         customDirection: advancedBrief.customDirection,
-        selectedSourceIds: advancedBrief.selectedSourceIds,
+        selectedSourceIds: attachedIds,
         mustInclude: advancedBrief.mustInclude,
         mustAvoid: advancedBrief.mustAvoid,
         desiredLength: advancedBrief.desiredLength,
@@ -2246,8 +2312,7 @@ export default function App() {
         language: advancedBrief.language,
         outputFormat: advancedBrief.outputFormat,
         creationIntent: advancedBrief.creationIntent,
-        workspaceSourcesCount: workspaceLocalSources.length,
-        workspaceSourcesContent: workspaceLocalSources.map(s => s.content).join('|')
+        attachedContentSig
       });
     }
   };
@@ -2536,13 +2601,13 @@ export default function App() {
       return true;
     }
 
-    if (creationMode === 'advanced') {
-      const hasInSource = advancedBrief.selectedSourceIds.some(id => {
-        const src = sources.find(s => s.id === id);
-        return src && (src.title.toLowerCase().includes(operaTitle.toLowerCase()) || src.content.toLowerCase().includes(operaTitle.toLowerCase()));
-      });
-      if (hasInSource) return true;
-    }
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+    const allSources = uniqueSourcesById(sources, workspaceLocalSources);
+    const hasInSource = attachedIds.some(id => {
+      const src = allSources.find(s => s.id === id);
+      return src && (src.title.toLowerCase().includes(operaTitle.toLowerCase()) || src.content.toLowerCase().includes(operaTitle.toLowerCase()));
+    });
+    if (hasInSource) return true;
 
     return false;
   };
@@ -2688,7 +2753,7 @@ export default function App() {
       'Storytelling Angles': 'Angles de narration',
       'Promotional Angles': 'Angles promotionnels',
       'Campaign-Series Ideas': 'Idées de séries de campagnes',
-      'Experimental Ideas': 'Idées expérimentales',
+      'Experimental Ideas': 'Idées experimentales',
       'Visceral bypass vs intellectual distance for:': 'Bypass viscéral vs distance intellectuelle pour :',
       'Provocative entry points for:': 'Points d\'entrée provocateurs pour :',
       'Strategic thesis on:': 'Thèse stratégique sur :',
@@ -3035,7 +3100,7 @@ export default function App() {
     interp: ReturnType<typeof interpretCreationIntent>,
     goal: string,
     notes: string,
-    sources: SourceFile[],
+    sourcesList: SourceFile[],
     selectedSourceIds: string[],
     purpose: string,
     toneLevel: number,
@@ -3045,18 +3110,20 @@ export default function App() {
     audience: string = 'General Public',
     directionMode: string = 'none'
   ) => {
-    const sourceMaterial = selectedSourceIds
-      .map(id => sources.find(s => s.id === id))
+    const selectedSources = selectedSourceIds
+      .map(id => sourcesList.find(s => s.id === id))
+      .filter((s): s is SourceFile => Boolean(s));
+
+    const sourceMaterial = selectedSources
+      .map(s => s.content || s.notes || '')
       .filter(Boolean)
-      .map(s => s!.content)
       .join(' ');
 
-    const rawInput = (goal + ' ' + notes).trim();
+    const rawInput = (goal + ' ' + notes + ' ' + sourceMaterial).trim();
     const rawLower = rawInput.toLowerCase();
 
     const isGeneralPillar = pillar === 'General / Custom';
     const isGeneralPublic = audience === 'General Public';
-    const isGeneralOpenPurpose = purpose === 'General / Open';
     const isDirectFraming = directionMode === 'none';
 
     let opening = '';
@@ -3075,9 +3142,16 @@ export default function App() {
         .replace(/origin staging assets/gi, 'original performances');
     };
 
+    // Extract first meaningful sentence from attached sources if available
+    const firstSourceSnippet = selectedSources.length > 0
+      ? selectedSources
+          .map(s => (s.content || '').split(/(?<=[.!?])\s+/).find(sent => sent.trim().length > 25))
+          .find(Boolean)
+      : undefined;
+
     // A. DETERMINE OPENING (Direct Response to Intent)
     if (isDirectFraming) {
-      opening = goal ? goal : (notes ? notes : 'Ecological storytelling through staged music.');
+      opening = goal ? goal : (notes ? notes : (firstSourceSnippet || 'Ecological storytelling through staged music.'));
     } else if (interp.classifiedType === 'Question to answer') {
       if (rawLower.includes('superior')) {
         opening = `Climate opera offers a unique advantage over other climate art: it is multi-sensory, somatic, and creates complete narrative worlds rather than static warnings.`;
@@ -3113,7 +3187,7 @@ export default function App() {
     // B. DEVELOP PROOF POINTS & BODY
     if (isDirectFraming) {
       proofPoints = [
-        notes || 'Drafting copy directly responding to the topic notes provided.',
+        notes || firstSourceSnippet || 'Drafting copy directly responding to the topic notes provided.',
         'Analyzing key details to present them clearly and effectively.'
       ];
     } else if (interp.classifiedType === 'Question to answer' || interp.classifiedType === 'Comparison') {
@@ -3141,6 +3215,10 @@ export default function App() {
         `Opera serves as the origin asset, establishing prestige worlds that scale into filmed media.`,
         `This repertoire-based canon ensures durable cultural IP for institutions and sponsors.`
       ];
+    }
+
+    if (firstSourceSnippet && !proofPoints.includes(firstSourceSnippet)) {
+      proofPoints.unshift(firstSourceSnippet.trim());
     }
 
     // Only introduce COH explicitly if relevant or requested
@@ -3179,18 +3257,6 @@ export default function App() {
       opening = `The conversation around climate is often cold and dry. We need a language that feels human.`;
     } else if (variationStyle === 'More sponsor-facing') {
       cta = `Partner with us to support the Climate Tetralogy.`;
-    }
-
-    // Dev debug log
-    if (window.location.hostname === 'localhost') {
-      console.group('[COH Content Studio] Generation Debug');
-      console.log('Classified Intent Type:', interp.classifiedType);
-      console.log('COH Reference Level:', interp.cohReferenceLevel);
-      console.log('Strategy:', interp.strategy);
-      console.log('Opening:', opening);
-      console.log('Proof Points:', proofPoints);
-      console.log('CTA:', cta);
-      console.groupEnd();
     }
 
     return { opening, body, proofPoints, cta, toneNote: 'Measured and credible.', allContext: rawInput };
@@ -3344,10 +3410,12 @@ export default function App() {
     // Step 1: Interpret the brief
     const interp = interpretBrief(goal, notes, audience, purpose, format, explicitIntent);
 
-    // Step 2: Build content plan
+    // Step 2: Build content plan using attached sources across all creation modes
+    const allSources = uniqueSourcesById(sources, workspaceLocalSources);
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
     const plan = buildContentPlan(
-      interp, goal, notes, sources,
-      creationMode === 'advanced' ? advancedBrief.selectedSourceIds : [],
+      interp, goal, notes, allSources,
+      attachedIds,
       purpose, toneLevel, variationStyle, isAlternative,
       pillar, audience, directionMode
     );
@@ -3360,10 +3428,6 @@ export default function App() {
     // Step 3: Route to channel-specific renderer
     const ch = channel.toLowerCase();
     const fmt = format.toLowerCase();
-
-    if (window.location.hostname === 'localhost') {
-      console.log(`[Renderer] channel="${channel}" format="${format}" commType="${interp.commType}" variation="${variationStyle}" isAlt=${isAlternative}`);
-    }
 
     // Email / Direct Outreach
     if (ch.includes('whatsapp') || fmt === 'whatsapp message') {
@@ -3475,12 +3539,13 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     ];
 
     const contextTexts: string[] = [];
-    const sourceIds = creationMode === 'advanced' ? advancedBrief.selectedSourceIds : [];
-    sourceIds.forEach(id => {
-      const src = sources.find(s => s.id === id);
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+    const allSources = uniqueSourcesById(sources, workspaceLocalSources);
+    attachedIds.forEach(id => {
+      const src = allSources.find(s => s.id === id);
       if (src) {
-        contextTexts.push(src.title.toLowerCase());
-        contextTexts.push(src.content.toLowerCase());
+        contextTexts.push((src.title || '').toLowerCase());
+        contextTexts.push((src.content || '').toLowerCase());
       }
     });
 
@@ -3564,7 +3629,8 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
 
   // --- Output Confidence Helper ---
   const getOutputConfidence = () => {
-    const hasSource = creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0;
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+    const hasSource = attachedIds.length > 0;
     const warnings = getFictionalContentWarnings(activeDraftText);
     
     if (warnings.length > 0) return 'Needs confirmation';
@@ -3572,104 +3638,513 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     return 'Based on brief notes';
   };
 
-  const handleSaveSource = (e: React.FormEvent) => {
+  // --- Unified Source Commit & Duplicate Resolution Helpers ---
+  const commitIngestedSource = (
+    newSrc: SourceFile,
+    saveToLibrary: boolean,
+    attachToBrief: boolean,
+    mode: 'paste' | 'link' | 'upload' | 'library'
+  ) => {
+    const enriched: SourceFile = {
+      ...newSrc,
+      ingestion: {
+        ...(newSrc.ingestion || {
+          method: mode === 'link' ? 'url-fetch' : mode === 'upload' ? 'file-upload' : 'paste',
+          status: 'extracted'
+        }),
+        contentHash: computeSourceFingerprint(newSrc).contentHash,
+        normalizedUrl: newSrc.url ? normalizeSourceUrl(newSrc.url) : undefined,
+        charCount: (newSrc.content || '').trim().length
+      }
+    };
+
+    if (saveToLibrary) {
+      setSources(prev => [enriched, ...prev]);
+    } else {
+      setWorkspaceLocalSources(prev => [enriched, ...prev]);
+    }
+
+    if (attachToBrief && enriched.selectable !== false && enriched.ingestion?.status !== 'reference-only') {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: prev.selectedSourceIds.includes(enriched.id)
+          ? prev.selectedSourceIds
+          : [...prev.selectedSourceIds, enriched.id]
+      }));
+      if (!taskSourceRoleMap[enriched.id]) {
+        setTaskSourceRoleMap(prev => ({
+          ...prev,
+          [enriched.id]: {
+            role: inferDefaultSourceRole(enriched.type),
+            selectedExcerpts: []
+          }
+        }));
+      }
+    }
+
+    const actuallyAttached = Boolean(attachToBrief && enriched.selectable !== false && enriched.ingestion?.status !== 'reference-only');
+    setSourceIngestionState({
+      status: 'success',
+      mode,
+      sourceId: enriched.id,
+      title: enriched.title,
+      capturedChars: (enriched.content || '').trim().length,
+      savedToLibrary: saveToLibrary,
+      attachedToBrief: actuallyAttached,
+      capturedText: enriched.content,
+      message: enriched.ingestion?.status === 'reference-only'
+        ? `Reference saved (${enriched.title}) — Reference only, webpage content was not captured.`
+        : `Source captured successfully`
+    });
+  };
+
+  const handleUseExistingDuplicateSource = () => {
+    const dup = sourceIngestionState.duplicateCandidate;
+    if (!dup) return;
+    const willAttach = Boolean(sourceIngestionState.pendingAttachToBrief !== false && dup.selectable !== false);
+    if (willAttach) {
+      setAdvancedBrief(prev => ({
+        ...prev,
+        selectedSourceIds: prev.selectedSourceIds.includes(dup.id)
+          ? prev.selectedSourceIds
+          : [...prev.selectedSourceIds, dup.id]
+      }));
+    }
+    setSourceIngestionState({
+      status: 'success',
+      mode: sourceIngestionState.mode,
+      sourceId: dup.id,
+      title: dup.title,
+      capturedChars: (dup.content || '').trim().length,
+      savedToLibrary: sources.some(s => s.id === dup.id),
+      attachedToBrief: willAttach,
+      capturedText: dup.content,
+      message: `Attached existing source "${dup.title}" to this brief.`
+    });
+  };
+
+  const handleCreateDuplicateAnyway = () => {
+    const pending = sourceIngestionState.pendingSource;
+    if (!pending) return;
+    commitIngestedSource(
+      pending,
+      Boolean(sourceIngestionState.pendingSaveToLibrary),
+      sourceIngestionState.pendingAttachToBrief !== false,
+      sourceIngestionState.mode || 'paste'
+    );
+  };
+
+  const handleSaveUrlAsReferenceOnly = () => {
+    const url = (sourceIngestionState.failedUrl || inlineLinkData.url || '').trim();
+    const title = (sourceIngestionState.failedTitle || inlineLinkData.title || url || 'Website Reference').trim();
+    if (!url) return;
+
+    const refSource: SourceFile = {
+      id: `ws-ref-${Date.now()}`,
+      title,
+      type: 'Link / URL',
+      status: 'Needs Review',
+      selectable: false,
+      url,
+      createdAt: new Date().toISOString().split('T')[0],
+      notes: 'Reference only - webpage content was not captured.',
+      content: '',
+      ingestion: {
+        method: 'url-reference-only',
+        status: 'reference-only',
+        requestedUrl: url,
+        normalizedUrl: normalizeSourceUrl(url),
+        charCount: 0,
+        fetchedAt: new Date().toISOString()
+      }
+    };
+
+    commitIngestedSource(refSource, inlineLinkData.saveToLibrary || true, false, 'link');
+    setInlineLinkData({ title: '', url: '', summary: '', saveToLibrary: false, showExcerptFallback: false });
+    setLinkWarning('');
+  };
+
+  const handleSaveSource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSource.title.trim()) return;
 
     if (editingSourceId) {
       setSources(sources.map(s => s.id === editingSourceId ? { ...s, ...newSource } : s));
       setEditingSourceId(null);
-    } else {
-      const added: SourceFile = {
-        id: `src-${Date.now()}`,
-        ...newSource,
-        createdAt: new Date().toISOString().split('T')[0]
-      };
-      setSources([added, ...sources]);
+      setNewSource({
+        title: '',
+        type: 'Other',
+        status: 'Active',
+        notes: '',
+        content: '',
+        url: '',
+        selectable: true
+      });
+      return;
     }
+
+    const allExisting = uniqueSourcesById(sources, workspaceLocalSources);
+    const duplicateMatch = findDuplicateSource(
+      { title: newSource.title, url: newSource.url, content: newSource.content },
+      allExisting
+    );
+
+    const added: SourceFile = {
+      id: `src-${Date.now()}`,
+      ...newSource,
+      createdAt: new Date().toISOString().split('T')[0],
+      ingestion: {
+        method: newSource.type === 'Link / URL' ? (newSource.content.trim() ? 'url-excerpt' : 'url-reference-only') : 'paste',
+        status: newSource.content.trim() ? 'extracted' : 'reference-only',
+        requestedUrl: newSource.url,
+        normalizedUrl: newSource.url ? normalizeSourceUrl(newSource.url) : undefined,
+        charCount: (newSource.content || '').trim().length,
+        contentHash: computeDeterministicHash(normalizeSourceText(newSource.content || '')),
+        fetchedAt: new Date().toISOString()
+      }
+    };
+
+    if (duplicateMatch) {
+      setSourceIngestionState({
+        status: 'duplicate',
+        mode: 'library',
+        duplicateCandidate: duplicateMatch.duplicate,
+        pendingSource: added,
+        pendingSaveToLibrary: true,
+        pendingAttachToBrief: false,
+        message: `A matching source already exists: "${duplicateMatch.duplicate.title}".`
+      });
+      return;
+    }
+
+    commitIngestedSource(added, true, false, 'library');
 
     setNewSource({
       title: '',
       type: 'Other',
       status: 'Active',
-      
-      
-      
       notes: '',
-      content: ''
+      content: '',
+      url: '',
+      selectable: true
     });
   };
 
-  const handleAddWorkspaceLink = () => {
-    if (!inlineLinkData.title.trim() || !inlineLinkData.url.trim()) return;
+  const handleFetchUrlForLibraryForm = async () => {
+    const rawUrl = (newSource.url || '').trim();
+    if (!rawUrl) return;
+    setSourceIngestionState({
+      status: 'fetching',
+      mode: 'library',
+      message: 'Retrieving webpage & extracting readable content...'
+    });
+    try {
+      const response = await fetch('/api/sources/extract-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url: rawUrl, title: newSource.title })
+      });
+      const data = await response.json();
+      if (data && data.success && data.content) {
+        setNewSource(prev => ({
+          ...prev,
+          title: prev.title.trim() || data.title || rawUrl,
+          type: 'Link / URL',
+          status: 'Active',
+          selectable: true,
+          url: data.finalUrl || rawUrl,
+          content: data.content,
+          notes: prev.notes.trim() || `Extracted from ${data.finalUrl || rawUrl} (${data.charCount} chars)`
+        }));
+        setSourceIngestionState({
+          status: 'success',
+          mode: 'library',
+          title: data.title || newSource.title || rawUrl,
+          capturedChars: data.charCount || data.content.length,
+          capturedText: data.content,
+          message: `Extracted ${data.charCount || data.content.length} characters from webpage.`
+        });
+      } else {
+        setSourceIngestionState({
+          status: 'error',
+          mode: 'library',
+          failedUrl: rawUrl,
+          failedTitle: newSource.title || rawUrl,
+          message: data?.errorMessage || 'We could not read this webpage. Paste an excerpt into the Content field below.'
+        });
+      }
+    } catch {
+      setSourceIngestionState({
+        status: 'error',
+        mode: 'library',
+        failedUrl: rawUrl,
+        failedTitle: newSource.title || rawUrl,
+        message: 'We could not read this webpage. Paste an excerpt into the Content field below.'
+      });
+    }
+  };
 
-    if (!inlineLinkData.summary.trim()) {
-      setLinkWarning('URL added, but no excerpt or summary was provided. The system may not have enough context to use this source reliably.');
-    } else {
-      setLinkWarning('');
+  const handleAddWorkspaceLink = async () => {
+    const rawUrl = inlineLinkData.url.trim();
+    const rawTitle = inlineLinkData.title.trim();
+    const manualSummary = inlineLinkData.summary.trim();
+
+    if (!rawUrl) {
+      setLinkWarning('Please enter a valid http:// or https:// URL.');
+      return;
     }
 
-    handleAddWorkspaceSource('link');
+    setLinkWarning('');
+    setSourceIngestionState({
+      status: 'validating',
+      mode: 'link',
+      message: 'Validating URL...'
+    });
+
+    if (!/^https?:\/\//i.test(rawUrl)) {
+      setSourceIngestionState({
+        status: 'error',
+        mode: 'link',
+        failedUrl: rawUrl,
+        failedTitle: rawTitle || rawUrl,
+        message: 'Only http:// and https:// URLs are supported.'
+      });
+      return;
+    }
+
+    const allExisting = uniqueSourcesById(sources, workspaceLocalSources);
+
+    // If user manually provided a substantive excerpt/summary, use it directly or combine with URL
+    if (manualSummary.length >= 25) {
+      const candidate: SourceFile = {
+        id: `ws-link-${Date.now()}`,
+        title: rawTitle || rawUrl,
+        type: 'Link / URL',
+        status: 'Active',
+        selectable: true,
+        url: rawUrl,
+        createdAt: new Date().toISOString().split('T')[0],
+        notes: `URL: ${rawUrl}`,
+        content: manualSummary,
+        ingestion: {
+          method: 'url-excerpt',
+          status: 'extracted',
+          requestedUrl: rawUrl,
+          finalUrl: rawUrl,
+          normalizedUrl: normalizeSourceUrl(rawUrl),
+          charCount: manualSummary.length,
+          contentHash: computeDeterministicHash(normalizeSourceText(manualSummary)),
+          fetchedAt: new Date().toISOString()
+        }
+      };
+
+      const duplicateMatch = findDuplicateSource(
+        { title: candidate.title, url: rawUrl, content: manualSummary },
+        allExisting
+      );
+      if (duplicateMatch) {
+        setSourceIngestionState({
+          status: 'duplicate',
+          mode: 'link',
+          duplicateCandidate: duplicateMatch.duplicate,
+          pendingSource: candidate,
+          pendingSaveToLibrary: inlineLinkData.saveToLibrary,
+          pendingAttachToBrief: true,
+          message: `This source is already in your library ("${duplicateMatch.duplicate.title}").`
+        });
+        return;
+      }
+
+      commitIngestedSource(candidate, inlineLinkData.saveToLibrary, true, 'link');
+      setInlineLinkData({ title: '', url: '', summary: '', saveToLibrary: false, showExcerptFallback: false });
+      return;
+    }
+
+    // Otherwise perform real server-side URL extraction
+    setSourceIngestionState({
+      status: 'fetching',
+      mode: 'link',
+      message: 'Retrieving webpage...'
+    });
+
+    try {
+      const response = await fetch('/api/sources/extract-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ url: rawUrl, title: rawTitle })
+      });
+      const data = await response.json();
+
+      if (data && data.success && data.content && !isUrlPlaceholderContent(data.content)) {
+        const resolvedTitle = rawTitle || data.title || rawUrl;
+        const candidate: SourceFile = {
+          id: `ws-link-${Date.now()}`,
+          title: resolvedTitle,
+          type: 'Link / URL',
+          status: 'Active',
+          selectable: true,
+          url: data.finalUrl || rawUrl,
+          createdAt: new Date().toISOString().split('T')[0],
+          notes: `URL: ${data.finalUrl || rawUrl}`,
+          content: data.content,
+          ingestion: {
+            method: 'url-fetch',
+            status: 'extracted',
+            requestedUrl: rawUrl,
+            finalUrl: data.finalUrl || rawUrl,
+            normalizedUrl: normalizeSourceUrl(data.finalUrl || rawUrl),
+            charCount: data.charCount || data.content.length,
+            contentHash: computeDeterministicHash(normalizeSourceText(data.content)),
+            fetchedAt: data.fetchedAt || new Date().toISOString(),
+            contentType: data.contentType,
+            warnings: data.warnings || []
+          }
+        };
+
+        const duplicateMatch = findDuplicateSource(
+          { title: candidate.title, url: candidate.url, content: candidate.content },
+          allExisting
+        );
+        if (duplicateMatch) {
+          setSourceIngestionState({
+            status: 'duplicate',
+            mode: 'link',
+            duplicateCandidate: duplicateMatch.duplicate,
+            pendingSource: candidate,
+            pendingSaveToLibrary: inlineLinkData.saveToLibrary,
+            pendingAttachToBrief: true,
+            message: `This URL is already in your library ("${duplicateMatch.duplicate.title}").`
+          });
+          return;
+        }
+
+        commitIngestedSource(candidate, inlineLinkData.saveToLibrary, true, 'link');
+        setInlineLinkData({ title: '', url: '', summary: '', saveToLibrary: false, showExcerptFallback: false });
+      } else {
+        const errMsg = data?.errorMessage || 'We could not read this webpage (no readable article text found).';
+        setSourceIngestionState({
+          status: 'error',
+          mode: 'link',
+          failedUrl: rawUrl,
+          failedTitle: rawTitle || data?.title || rawUrl,
+          message: errMsg
+        });
+      }
+    } catch {
+      setSourceIngestionState({
+        status: 'error',
+        mode: 'link',
+        failedUrl: rawUrl,
+        failedTitle: rawTitle || rawUrl,
+        message: 'We could not read this webpage. Network or extraction request failed.'
+      });
+    }
   };
 
   // --- Workspace Source Add Handler ---
   const handleAddWorkspaceSource = (mode: 'paste' | 'upload' | 'link') => {
-    let newSrc: SourceFile | null = null;
-    const ts = Date.now();
-
-    if (mode === 'paste') {
-      if (!inlinePasteData.title.trim() || !inlinePasteData.content.trim()) return;
-      newSrc = {
-        id: `ws-paste-${ts}`,
-        title: inlinePasteData.title,
-        type: 'Pasted Notes',
-        status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0],
-        notes: 'Pasted text source added from Content Workspace.',
-        content: inlinePasteData.content
-      };
-      if (inlinePasteData.saveToLibrary) {
-        setSources(prev => [newSrc!, ...prev]);
-      }
-      setInlinePasteData({ title: '', content: '', saveToLibrary: false });
-    } else if (mode === 'upload') {
-      if (!inlineUploadData.title.trim()) return;
-      newSrc = {
-        id: `ws-upload-${ts}`,
-        title: inlineUploadData.title,
-        type: 'Pasted Notes',
-        status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0],
-        notes: 'File uploaded from Content Workspace.',
-        content: inlineUploadData.content || 'File content extracted.'
-      };
-      if (inlineUploadData.saveToLibrary) {
-        setSources(prev => [newSrc!, ...prev]);
-      }
-      setInlineUploadData({ title: '', content: '', saveToLibrary: false });
-    } else if (mode === 'link') {
-      if (!inlineLinkData.title.trim() || !inlineLinkData.url.trim()) return;
-      newSrc = {
-        id: `ws-link-${ts}`,
-        title: inlineLinkData.title,
-        type: 'Pasted Notes',
-        status: 'Active',
-        createdAt: new Date().toISOString().split('T')[0],
-        notes: `URL: ${inlineLinkData.url}`,
-        content: inlineLinkData.summary || `[URL reference: ${inlineLinkData.url}]`
-      };
-      if (inlineLinkData.saveToLibrary) {
-        setSources(prev => [newSrc!, ...prev]);
-      }
-      setInlineLinkData({ title: '', url: '', summary: '', saveToLibrary: false });
+    if (mode === 'link') {
+      void handleAddWorkspaceLink();
+      return;
     }
 
-    if (newSrc) {
-      setWorkspaceLocalSources(prev => [newSrc!, ...prev]);
-      setAdvancedBrief(prev => ({
-        ...prev,
-        selectedSourceIds: [...prev.selectedSourceIds, newSrc!.id]
-      }));
+    const ts = Date.now();
+    const allExisting = uniqueSourcesById(sources, workspaceLocalSources);
+
+    if (mode === 'paste') {
+      const title = inlinePasteData.title.trim();
+      const content = inlinePasteData.content.trim();
+      if (!title || !content) {
+        setSourceIngestionState({
+          status: 'error',
+          mode: 'paste',
+          message: 'Enter both a source title and pasted source text before adding.'
+        });
+        return;
+      }
+
+      const newSrc: SourceFile = {
+        id: `ws-paste-${ts}`,
+        title,
+        type: 'Pasted Notes',
+        status: 'Active',
+        selectable: true,
+        createdAt: new Date().toISOString().split('T')[0],
+        notes: 'Pasted text source added from Content Workspace.',
+        content,
+        ingestion: {
+          method: 'paste',
+          status: 'extracted',
+          charCount: content.length,
+          contentHash: computeDeterministicHash(normalizeSourceText(content)),
+          fetchedAt: new Date().toISOString()
+        }
+      };
+
+      const duplicateMatch = findDuplicateSource({ title, content }, allExisting);
+      if (duplicateMatch) {
+        setSourceIngestionState({
+          status: 'duplicate',
+          mode: 'paste',
+          duplicateCandidate: duplicateMatch.duplicate,
+          pendingSource: newSrc,
+          pendingSaveToLibrary: inlinePasteData.saveToLibrary,
+          pendingAttachToBrief: true,
+          message: `A source with identical content or title already exists ("${duplicateMatch.duplicate.title}").`
+        });
+        return;
+      }
+
+      commitIngestedSource(newSrc, inlinePasteData.saveToLibrary, true, 'paste');
+      setInlinePasteData({ title: '', content: '', saveToLibrary: false });
+    } else if (mode === 'upload') {
+      const title = inlineUploadData.title.trim();
+      const content = inlineUploadData.content.trim();
+      if (!title || !content) {
+        setSourceIngestionState({
+          status: 'error',
+          mode: 'upload',
+          message: 'Select a non-empty text file before adding.'
+        });
+        return;
+      }
+
+      const newSrc: SourceFile = {
+        id: `ws-upload-${ts}`,
+        title,
+        type: 'Other',
+        status: 'Active',
+        selectable: true,
+        createdAt: new Date().toISOString().split('T')[0],
+        notes: 'File uploaded from Content Workspace.',
+        content,
+        ingestion: {
+          method: 'file-upload',
+          status: 'extracted',
+          charCount: content.length,
+          contentHash: computeDeterministicHash(normalizeSourceText(content)),
+          fetchedAt: new Date().toISOString()
+        }
+      };
+
+      const duplicateMatch = findDuplicateSource({ title, content }, allExisting);
+      if (duplicateMatch) {
+        setSourceIngestionState({
+          status: 'duplicate',
+          mode: 'upload',
+          duplicateCandidate: duplicateMatch.duplicate,
+          pendingSource: newSrc,
+          pendingSaveToLibrary: inlineUploadData.saveToLibrary,
+          pendingAttachToBrief: true,
+          message: `This file matches an existing source ("${duplicateMatch.duplicate.title}").`
+        });
+        return;
+      }
+
+      commitIngestedSource(newSrc, inlineUploadData.saveToLibrary, true, 'upload');
+      setInlineUploadData({ title: '', content: '', saveToLibrary: false });
     }
   };
 
@@ -3678,13 +4153,33 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const files = e.target.files;
     if (!files || files.length === 0) return;
     const file = files[0];
+    setSourceIngestionState({
+      status: 'extracting',
+      mode: 'upload',
+      message: `Reading ${file.name}...`
+    });
     const reader = new FileReader();
     reader.onload = (event) => {
-      const text = event.target?.result as string;
+      const text = ((event.target?.result as string) || '').trim();
+      if (!text) {
+        setSourceIngestionState({
+          status: 'error',
+          mode: 'upload',
+          message: `Could not extract readable text from ${file.name}.`
+        });
+        return;
+      }
       setInlineUploadData({
         title: file.name,
-        content: text || 'File content extracted.',
+        content: text,
         saveToLibrary: inlineUploadData.saveToLibrary
+      });
+      setSourceIngestionState({
+        status: 'idle',
+        mode: 'upload',
+        title: file.name,
+        capturedChars: text.length,
+        message: `Ready to attach ${file.name} (${text.length.toLocaleString()} characters).`
       });
     };
     reader.readAsText(file);
@@ -3698,7 +4193,27 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const goal = isSimple ? simpleBrief.goal : (isQuick ? quickBrief.goal : advancedBrief.topic);
     const notes = isSimple ? '' : (isQuick ? quickBrief.notes : '');
     const mustInclude = isSimple ? '' : (isQuick ? quickBrief.mustInclude : advancedBrief.mustInclude);
-    const hasSources = (creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0) || (isSimple && (inlinePasteData.content || inlineLinkData.url || inlineUploadData.title));
+
+    const allSources = uniqueSourcesById(sources, workspaceLocalSources);
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+
+    // Preflight check: block generation if any attached source has no usable text (e.g. [URL reference: ...], failed fetch, reference-only)
+    const preflight = validateAttachedSourcesPreflight(attachedIds, allSources);
+    if (!preflight.valid) {
+      setValidationWarning(preflight.blockingMessage);
+      return;
+    }
+
+    const activeBindings = buildActiveTaskSourceBindings({
+      selectedSourceIds: advancedBrief.selectedSourceIds,
+      workItemSourceIds: activeWorkItem?.sourceIds,
+      sources,
+      workspaceLocalSources,
+      getRole: getEffectiveSourceRole,
+      getExcerpts: getEffectiveSourceExcerpts
+    });
+    const serializedTaskSources = serializeTaskSourcesForPayload(activeBindings);
+    const hasSources = serializedTaskSources.length > 0;
 
     if (!goal.trim() && !notes.trim() && !mustInclude.trim() && !hasSources) {
       setValidationWarning('Add a topic, notes, source excerpt, or selected source before generating.');
@@ -3709,7 +4224,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const scope = isSimple ? 'Single Channel' : (isQuick ? (quickBrief.creationScope || 'Single Channel') : (advancedBrief.creationScope || 'Single Channel'));
     const targets = isSimple ? [simpleBrief.channel] : (isQuick ? (quickBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']) : (advancedBrief.targetChannels || ['LinkedIn', 'Instagram', 'Newsletter', 'Website']));
     const channel = isSimple ? simpleBrief.channel : (isQuick ? quickBrief.channel : advancedBrief.channel);
-    const format = isSimple ? '' : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
+    const format = isSimple ? (CHANNEL_FORMATS[simpleBrief.channel]?.[0] || 'Post') : (isQuick ? quickBrief.outputFormat : advancedBrief.outputFormat);
     const lang = isSimple ? 'English' : (isQuick ? quickBrief.language : advancedBrief.language);
     const dirMode = isSimple ? 'auto' : (isQuick ? 'none' : advancedBrief.directionMode);
     const customDir = isSimple ? '' : (isQuick ? '' : advancedBrief.customDirection);
@@ -3724,15 +4239,21 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const explicitIntent = isSimple ? 'Infer automatically' : (isQuick ? 'Infer automatically' : (advancedBrief.creationIntent || 'Infer automatically'));
     const snap = getCurrentInputsString();
 
+    const contextPkg = buildContentWorkspaceContextPackage();
+    const operatingCoreOnlyInstructions = [
+      contextPkg.sections.protectedKernel,
+      contextPkg.sections.operatingCoreRules
+    ].filter(Boolean).join('\n\n');
+
     // ── AI Generation Path ─────────────────────────────────────────────────────
     if (generationMode === 'ai' && aiStatus === 'connected') {
       setIsGeneratingDrafts(true);
       setAiIsGenerating(true);
       try {
         const canonicalInput = {
-          mode: creationMode === 'quick' ? 'quick_create' : 'advanced_brief',
+          mode: isSimple ? 'simple' : (isQuick ? 'quick_create' : 'advanced_brief'),
           origin: activeWorkItem?.calendarItemId ? 'editorial-calendar' : 'standard',
-          rawInput: goal || notes,
+          rawInput: goal || notes || (serializedTaskSources[0] ? `Create ${channel} ${format || 'content'} grounded in attached source "${serializedTaskSources[0].title}".` : ''),
           creationIntent: explicitIntent,
           creationScope: scope,
           channel,
@@ -3743,18 +4264,16 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           customAudience,
           purpose,
           language: lang,
-          tone: String(creationMode === 'quick' ? 3 : advancedBrief.toneIntensity),
+          tone: String(creationMode === 'advanced' ? advancedBrief.toneIntensity : 3),
           desiredLength: lengthOpt,
           pastedNotes: notes,
           mustInclude,
-          mustAvoid: creationMode === 'advanced' ? advancedBrief.mustAvoid : '',
+          mustAvoid: isSimple ? '' : (isQuick ? quickBrief.mustAvoid : advancedBrief.mustAvoid),
           framingMode: dirMode,
           customFraming: customDir,
-          operatingCoreInstructions: buildContentWorkspaceContextPackage().compiledInstructions,
-          taskSources: (creationMode === 'advanced' ? advancedBrief.selectedSourceIds : []).map(id => {
-            const s = [...workspaceLocalSources, ...sources].find((x: any) => x.id === id);
-            return s ? { title: s.title, type: s.type, content: s.content || s.notes || s.url } : null;
-          }).filter(Boolean)
+          operatingCoreInstructions: operatingCoreOnlyInstructions,
+          inheritedWorkContext: contextPkg.sections.inheritedWorkContext,
+          taskSources: serializedTaskSources
         };
 
         const result = await aiService.generate(canonicalInput);
@@ -3775,8 +4294,13 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           ? result.editorialWarnings.join(' | ')
           : (qcIssues.length > 0 ? `Quality check: ${qcIssues.join(' | ')}` : 'AI Generated. Review before publishing.');
 
-        const labelA = draftA ? `AI - ${draftA.label || 'Option A'} (${draftA.confidence || 'based on brief'})` : 'AI Generated';
-        const labelB = draftB ? `AI - ${draftB.label || 'Option B'} (${draftB.confidence || 'based on brief'})` : 'AI Generated';
+        // Deterministic grounding label derived from real execution state (Defect 9)
+        const deterministicProvenanceBadge = serializedTaskSources.length > 0
+          ? `AI Generated · ${serializedTaskSources.length} Source${serializedTaskSources.length === 1 ? '' : 's'} Sent`
+          : 'AI Generated · Operating Core + Brief Only';
+
+        const labelA = deterministicProvenanceBadge;
+        const labelB = deterministicProvenanceBadge;
 
         setDraftOptions({
           optionA: writingCleanupOn ? cleanWritingArtifacts(rawA) : rawA,
@@ -3788,6 +4312,19 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           labelB,
           contextWarning: qcIssues.length > 0 ? qcIssues.join('\n') : undefined,
           languageNotice: lang !== 'English' ? `LANG_NOTICE::${lang}::Generated fully in ${lang}.` : undefined,
+          sourceTrace: {
+            instruction: goal || notes || '(Derived from attached sources)',
+            sourcesSent: serializedTaskSources.map(s => ({
+              id: s.id,
+              title: s.title,
+              type: s.type,
+              role: s.role,
+              capturedChars: s.capturedChars
+            })),
+            operatingCoreActive: true,
+            generationModeLabel: 'AI Generation',
+            providerModelLabel: `${aiProvider} · ${aiTextModel}`
+          }
         });
 
         setAiGeneratedWith({ provider: aiProvider, model: aiTextModel });
@@ -3848,12 +4385,8 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     // Prototype Structure generation (clearly labeled, not final copy)
     setIsGeneratingDrafts(true);
     const interpForWarning = interpretBrief(goal || notes, notes, audience, purpose, format);
-    const urlAddedWithoutSummary = workspaceLocalSources.some(s => s.notes.includes('URL:') && s.content.startsWith('[URL reference:')) ||
-                                    sources.some(s => s.selected && s.notes.includes('URL:') && s.content.startsWith('[URL reference:'));
     let contextWarning = '';
-    if (urlAddedWithoutSummary) {
-      contextWarning = 'URL added, but no excerpt or summary was provided.';
-    } else if (interpForWarning.missingContextNote) {
+    if (interpForWarning.missingContextNote && serializedTaskSources.length === 0) {
       contextWarning = interpForWarning.missingContextNote;
     }
 
@@ -3920,6 +4453,18 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         labelB: 'Prototype Structure',
         contextWarning: contextWarning || undefined,
         languageNotice: languageNotice || undefined,
+        sourceTrace: {
+          instruction: goal || notes || '(Derived from attached sources)',
+          sourcesSent: serializedTaskSources.map(s => ({
+            id: s.id,
+            title: s.title,
+            type: s.type,
+            role: s.role,
+            capturedChars: s.capturedChars
+          })),
+          operatingCoreActive: true,
+          generationModeLabel: 'Prototype Structure (Local)'
+        }
       });
       setAiGeneratedWith(null);
       setGenerationInputsSnapshot(snap);
@@ -3962,12 +4507,32 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
   };
 
   // --- Apply Content Template ---
+  const isDefaultOrStarterText = (val: string) => {
+    const trimmed = (val || '').trim();
+    if (!trimmed) return true;
+    return CONTENT_TEMPLATES.some(t => t.name === trimmed || t.taskInstruction === trimmed);
+  };
+
   const applyTemplate = (temp: ContentTemplate) => {
     const modeSwitched = creationMode !== 'advanced';
     setCreationMode('advanced');
+    const instruction = temp.taskInstruction || temp.desc || temp.name;
+    setSimpleBrief(prev => ({
+      ...prev,
+      goal: isDefaultOrStarterText(prev.goal) ? instruction : prev.goal,
+      channel: temp.channel
+    }));
+    setQuickBrief(prev => ({
+      ...prev,
+      goal: isDefaultOrStarterText(prev.goal) ? instruction : prev.goal,
+      channel: temp.channel,
+      outputFormat: temp.outputFormat,
+      mustInclude: temp.mustInclude,
+      mustAvoid: temp.mustAvoid
+    }));
     setAdvancedBrief(prev => ({
       ...prev,
-      topic: prev.topic || temp.name,
+      topic: isDefaultOrStarterText(prev.topic) ? instruction : prev.topic,
       channel: temp.channel,
       pillar: temp.pillar,
       audience: temp.audience,
@@ -3990,12 +4555,14 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     const modeSwitched = creationMode !== 'advanced';
     setCreationMode('advanced');
     let starterLabel = chipId;
+    let chipInstruction = '';
     switch (chipId) {
       case 'tetralogy':
         starterLabel = 'Announce Tetralogy';
+        chipInstruction = 'Announce the Climate Tetralogy as a four-part repertoire-based opera canon exploring planetary thresholds.';
         setAdvancedBrief(prev => ({
           ...prev,
-          topic: 'Announce the Climate Tetralogy',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           pillar: 'Climate Tetralogy & Canon',
           mustInclude: 'Four operas. Four worlds. One planet.',
           audience: 'General Public'
@@ -4003,9 +4570,10 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         break;
       case 'cultural-ip':
         starterLabel = 'Cultural IP & Model';
+        chipInstruction = 'Explain the COH Cultural IP and Content Model, showing how live opera serves as an origin asset for filmed content and licensing.';
         setAdvancedBrief(prev => ({
           ...prev,
-          topic: 'Explain the Cultural IP and Content Model',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           pillar: 'Documentary, Media & Cultural IP',
           mustInclude: 'live opera as origin asset, licensing, filmed content',
           audience: 'Sponsors & Patrons'
@@ -4013,9 +4581,10 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         break;
       case 'event-notes':
         starterLabel = 'Nordic Air (Soria Moria)';
+        chipInstruction = 'Introduce Soria Moria as the Nordic Air world in the Climate Tetralogy, highlighting somatic staging and lived condition.';
         setAdvancedBrief(prev => ({
           ...prev,
-          topic: 'Soria Moria: Nordic Air and Somatic Staging',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           pillar: 'Opera Worlds & Artistic Method',
           mustInclude: 'Soria Moria, climate as lived condition',
           audience: 'Cultural Audience'
@@ -4023,9 +4592,10 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         break;
       case 'instagram-img':
         starterLabel = 'Water Dragon Caption';
+        chipInstruction = 'Write a short, atmospheric Instagram caption introducing The Water Dragon opera world.';
         setAdvancedBrief(prev => ({
           ...prev,
-          topic: 'The Water Dragon visual caption',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           channel: 'Instagram',
           outputFormat: 'Caption',
           pillar: 'Opera Worlds & Artistic Method',
@@ -4036,10 +4606,11 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         break;
       case 'sponsor-facing':
         starterLabel = 'Patron Pitch Paragraph';
+        chipInstruction = 'Write a concise patron pitch paragraph explaining why backing COH creates durable cultural IP and institutional value.';
         setAdvancedBrief(prev => ({
           ...prev,
           creationScope: 'Single Channel',
-          topic: 'Patron pitch paragraph for COH',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           channel: 'Email / Direct Outreach',
           outputFormat: 'Sponsor Pitch Paragraph',
           pillar: 'Partnerships, Sponsorship & Institutional Value',
@@ -4050,10 +4621,11 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         break;
       case 'newsletter-update':
         starterLabel = 'Earth Canon Update';
+        chipInstruction = 'Draft a newsletter update on Roar to the Wind within the repertoire-based climate canon.';
         setAdvancedBrief(prev => ({
           ...prev,
           creationScope: 'Single Channel',
-          topic: 'Earth Canon Update: Roar to the Wind',
+          topic: isDefaultOrStarterText(prev.topic) ? chipInstruction : prev.topic,
           channel: 'Newsletter',
           outputFormat: 'Newsletter Section',
           pillar: 'Climate Tetralogy & Canon',
@@ -4061,6 +4633,16 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
           audience: 'Sponsors & Patrons'
         }));
         break;
+    }
+    if (chipInstruction) {
+      setSimpleBrief(prev => ({
+        ...prev,
+        goal: isDefaultOrStarterText(prev.goal) ? chipInstruction : prev.goal
+      }));
+      setQuickBrief(prev => ({
+        ...prev,
+        goal: isDefaultOrStarterText(prev.goal) ? chipInstruction : prev.goal
+      }));
     }
     setStartedFromNote(
       modeSwitched
@@ -4212,9 +4794,10 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         };
         return next;
       });
-      console.log(`Updated existing item in Content Library as:\n${uniqueName}`);
       return;
     }
+
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
 
     const item: SavedContent = {
       id: `saved-${Date.now()}`,
@@ -4230,7 +4813,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
       finalCopy,
       visualDirection: draftOptions?.visualIdeation || undefined,
       status: 'Draft',
-      sourcesUsed: [],
+      sourcesUsed: attachedIds,
       createdAt: new Date().toISOString().split('T')[0],
       lastEdited: new Date().toISOString().split('T')[0],
       text: finalCopy,
@@ -4244,7 +4827,6 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     };
 
     setSavedContent(prev => [item, ...prev]);
-    console.log(`Saved to Content Library as:\n${uniqueName}`);
   };
 
   const handleSaveVersionToLibrary = async (asNew: boolean, approvedStatus?: boolean) => {
@@ -4295,7 +4877,6 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         };
         return next;
       });
-      console.log(`Updated existing item "${title}" in Content Library as:\n${uniqueName}`);
       setIsSavingToLibrary(false);
       return;
     }
@@ -4304,6 +4885,8 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     if (asNew && existingIndex !== -1) {
       finalTitle = `${title} (v${activeDraftVersion})`;
     }
+
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
 
     const item: SavedContent = {
       id: `saved-${Date.now()}`,
@@ -4322,7 +4905,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
       finalCopy: textToSave,
       visualDirection: draftOptions?.visualIdeation || undefined,
       status: approvedStatus ? 'Approved' : 'Draft',
-      sourcesUsed: creationMode === 'advanced' ? advancedBrief.selectedSourceIds : [],
+      sourcesUsed: attachedIds,
       createdAt: new Date().toISOString().split('T')[0],
       lastEdited: new Date().toISOString().split('T')[0],
       text: textToSave,
@@ -4337,7 +4920,6 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
     };
     
     setSavedContent(prev => [item, ...prev]);
-    console.log(`Saved to Content Library as:\n${uniqueName}`);
     setIsSavingToLibrary(false);
   };
 
@@ -4531,26 +5113,15 @@ Revision History:
 
     const inherited = extractWorkContextFromWorkItem(activeWorkItem);
 
-    const activeSourceIds =
-      creationMode === 'advanced' && advancedBrief.selectedSourceIds.length > 0
-        ? advancedBrief.selectedSourceIds
-        : activeWorkItem?.sourceIds || [];
-
-    const sourceBindings: TaskSourceBinding[] = activeSourceIds
-      .map(id => {
-        const s = [...sources, ...workspaceLocalSources].find((x: any) => x.id === id);
-        if (!s) return null;
-        return {
-          sourceId: s.id,
-          title: s.title || 'Untitled Source',
-          type: s.type || 'Other',
-          role: getEffectiveSourceRole(s),
-          selectedExcerpts: getEffectiveSourceExcerpts(s.id),
-          content: s.content || s.notes || s.url || '',
-          summary: s.notes || undefined
-        } as TaskSourceBinding;
-      })
-      .filter((b): b is TaskSourceBinding => Boolean(b));
+    // Unified source bindings across ALL Content Workspace modes (Simple, Quick Create, Advanced Brief)
+    const sourceBindings: TaskSourceBinding[] = buildActiveTaskSourceBindings({
+      selectedSourceIds: advancedBrief.selectedSourceIds,
+      workItemSourceIds: activeWorkItem?.sourceIds,
+      sources,
+      workspaceLocalSources,
+      getRole: getEffectiveSourceRole,
+      getExcerpts: getEffectiveSourceExcerpts
+    });
 
     return compileGovernedContext({
       workflow,
@@ -4603,6 +5174,12 @@ Revision History:
 
     const contextPkg = buildContentWorkspaceContextPackage();
     const sourceContext = contextPkg.sections.sourceEvidenceContext;
+    const operatingCoreOnlyContext = [
+      contextPkg.sections.protectedKernel,
+      contextPkg.sections.operatingCoreRules,
+      contextPkg.sections.explicitTaskInstruction,
+      contextPkg.sections.inheritedWorkContext
+    ].filter(Boolean).join('\n\n');
 
     const audienceNote = getAudienceExplanation(aud);
     const audienceDirective = aud === 'Custom Audience' && custAud
@@ -4619,9 +5196,7 @@ Revision History:
       ? '\n\nLANGUAGE DIRECTIVE (CRITICAL): The final output must be written entirely in ' + lang + '. Do not mix English sentences with ' + lang + '. Do not use translation fragments or partial phrases. Approved proper names that must NOT be translated: Climate Opera Haus, RESONANCE 2027, The Climate Tetralogy, Soria Moria, The Golden Fountain, The Water Dragon, Roar to the Wind. All other text — headlines, body copy, CTAs, captions — must be natural, fluent ' + lang + ' as written by a native speaker. If Email / Letter format is used, write the greeting and sign-off in ' + lang + ' also.'
       : '';
 
-    const operatingCoreContext = buildContentWorkspaceContextPackage().compiledInstructions;
-
-    return `${operatingCoreContext}
+    return `${operatingCoreOnlyContext}
 
 You are the COH Content Marketing Mastermind for Climate Opera Haus.
 
@@ -4641,6 +5216,7 @@ ${creationScope === 'Multi-Channel Pack' ? `- Target Channels: ${targetChannels.
 - Tone Level: ${getToneName(toneLevel)}
 - Desired Length: ${lengthOpt}
 - Direction: ${directionNote}
+- Additional Notes: ${notes || '(None)'}
 - Must Include: ${mustInclude || '(None)'}
 - Must Avoid: ${mustAvoid || '(None)'}
 
@@ -4780,6 +5356,427 @@ WRITING CLEANLINESS RULES (CRITICAL):
       </div>
     );
   }
+
+  const renderWorkspaceSourceManager = () => {
+    const allAvailableSources = uniqueSourcesById(selectableSources, workspaceLocalSources);
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+    const isBusy =
+      sourceIngestionState.status === 'fetching' ||
+      sourceIngestionState.status === 'extracting' ||
+      sourceIngestionState.status === 'validating' ||
+      sourceIngestionState.status === 'saving';
+
+    return (
+      <div data-guide="content-context" className="space-y-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <label className="block text-text-secondary font-semibold text-xs">
+            Selected Sources ({attachedIds.length}){' '}
+            <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
+          </label>
+          {attachedIds.length > 0 && (
+            <span className="text-[10px] font-mono text-brand-gold font-semibold">
+              {attachedIds.length} attached to this brief
+            </span>
+          )}
+        </div>
+
+        <div
+          className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-48 overflow-y-auto space-y-2 text-[11px]"
+          data-testid="workspace-selected-sources-list"
+        >
+          {allAvailableSources.map(src => {
+            const isSel = attachedIds.includes(src.id);
+            const activeRole = getEffectiveSourceRole(src);
+            const activeExcerpts = getEffectiveSourceExcerpts(src.id);
+            const usability = validateSourceUsability(src);
+            const isLocalOnly = !sources.some(s => s.id === src.id);
+            return (
+              <div key={src.id} className="space-y-1">
+                <div className="flex items-center justify-between gap-1.5">
+                  <label className="flex items-center gap-1.5 min-w-0 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isSel}
+                      disabled={!usability.usable && !isSel}
+                      onChange={() => toggleSourceSelection(src.id)}
+                      data-testid={`workspace-source-checkbox-${src.id}`}
+                      className="rounded border-brand-gold/50 text-brand-gold scale-75 shrink-0 disabled:opacity-40"
+                    />
+                    <span className={`truncate font-medium ${!usability.usable ? 'text-text-muted line-through' : ''}`}>
+                      {src.title}
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <span className="text-[8px] font-mono px-1 py-0.5 rounded bg-surface-primary border border-border-standard text-text-secondary">
+                      {src.type}
+                    </span>
+                    {usability.capturedChars > 0 && (
+                      <span className="text-[8px] font-mono text-text-muted">
+                        {usability.capturedChars.toLocaleString()} chars
+                      </span>
+                    )}
+                    {!usability.usable && (
+                      <span className="text-[8px] bg-amber-500/20 text-amber-800 px-1 rounded font-semibold">
+                        Reference only
+                      </span>
+                    )}
+                    {isLocalOnly && (
+                      <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded">
+                        Brief only
+                      </span>
+                    )}
+                  </div>
+                </div>
+                {isSel && (
+                  <div
+                    className="pl-5 flex flex-wrap items-center gap-1.5 text-[10px]"
+                    data-testid={`workspace-source-role-bar-${src.id}`}
+                  >
+                    <span className="text-text-secondary font-semibold">Role:</span>
+                    <select
+                      value={activeRole}
+                      onChange={(e) => handleChangeSourceTaskRole(src.id, e.target.value as SourceTaskRole)}
+                      data-testid={`workspace-source-role-select-${src.id}`}
+                      aria-label={`Workspace role for ${src.title}`}
+                      className="bg-surface-primary border border-border-standard rounded px-1.5 py-0.5 text-[10px] font-semibold text-text-primary"
+                    >
+                      {ALL_SOURCE_TASK_ROLES.map(r => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-mono">
+                      {activeExcerpts.length > 0 ? `${activeExcerpts.length} excerpt(s)` : 'Bounded source'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+          {allAvailableSources.length === 0 && (
+            <span className="text-text-muted block text-center py-2">
+              No user sources selected. You can still draft from your notes, but source-backed content is stronger.
+            </span>
+          )}
+        </div>
+
+        {/* INLINE SOURCE ADD PANEL */}
+        <div className="border border-border-standard p-3 rounded bg-surface-inset space-y-2.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-text-primary">
+              Add Source to Context
+            </span>
+            {sourceIngestionState.status !== 'idle' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSourceIngestionState({ status: 'idle' });
+                  setLinkWarning('');
+                }}
+                className="text-[10px] text-text-secondary hover:text-text-primary underline"
+              >
+                Clear status
+              </button>
+            )}
+          </div>
+
+          <div className="flex gap-1.5 bg-surface-inset p-1 rounded border border-border-standard">
+            {(['paste', 'upload', 'link'] as const).map(mode => (
+              <button
+                key={mode}
+                type="button"
+                data-testid={`inline-source-tab-${mode}`}
+                onClick={() => {
+                  setInlineSourceType(mode);
+                  setLinkWarning('');
+                }}
+                className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
+                  inlineSourceType === mode ? 'bg-slate-900 text-white' : 'text-text-secondary hover:bg-surface-primary'
+                }`}
+              >
+                {mode === 'link' ? 'URL' : mode}
+              </button>
+            ))}
+          </div>
+
+          {inlineSourceType === 'paste' && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Source Title"
+                value={inlinePasteData.title}
+                onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
+                className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
+              />
+              <textarea
+                rows={3}
+                placeholder="Paste source text..."
+                value={inlinePasteData.content}
+                onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
+                className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] font-mono"
+              />
+              <div className="flex justify-between items-center text-[10px]">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={inlinePasteData.saveToLibrary}
+                    onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
+                  />
+                  Save to Source Library
+                </label>
+                <button
+                  type="button"
+                  disabled={isBusy}
+                  onClick={() => handleAddWorkspaceSource('paste')}
+                  className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] disabled:opacity-50"
+                >
+                  {inlinePasteData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {inlineSourceType === 'link' && (
+            <div className="space-y-2">
+              <input
+                type="text"
+                placeholder="Source Name (optional — auto-detected from page title)"
+                value={inlineLinkData.title}
+                onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
+                className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
+              />
+              <input
+                type="text"
+                placeholder="URL (https://...)"
+                value={inlineLinkData.url}
+                onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
+                className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] font-mono"
+              />
+              <p className="text-[9px] text-text-muted">
+                We will fetch and extract readable article text from the URL on the server, or you can paste an excerpt directly below.
+              </p>
+              <textarea
+                rows={2}
+                placeholder="Optional: Paste relevant excerpt or summary..."
+                value={inlineLinkData.summary}
+                onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
+                className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
+              />
+              {linkWarning && (
+                <p className="text-[9px] text-amber-700 bg-amber-500/10 backdrop-blur-md p-1.5 rounded border border-amber-200 leading-normal font-semibold">
+                  {linkWarning}
+                </p>
+              )}
+              <div className="flex justify-between items-center text-[10px]">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={inlineLinkData.saveToLibrary}
+                    onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
+                  />
+                  Save to Source Library
+                </label>
+                <button
+                  type="button"
+                  data-testid="workspace-add-url-btn"
+                  disabled={isBusy}
+                  onClick={handleAddWorkspaceLink}
+                  className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] disabled:opacity-50 action-button interactive-button"
+                >
+                  {sourceIngestionState.status === 'fetching' || sourceIngestionState.status === 'extracting'
+                    ? 'Fetching source...'
+                    : inlineLinkData.saveToLibrary
+                      ? 'Add to Context'
+                      : 'Use as Context'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {inlineSourceType === 'upload' && (
+            <div className="space-y-2">
+              <input
+                type="file"
+                ref={inlineFileInputRef}
+                onChange={handleWorkspaceFileUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => inlineFileInputRef.current?.click()}
+                className="w-full bg-surface-primary border border-border-standard hover:bg-surface-primary-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
+              >
+                Upload File
+              </button>
+              <p className="text-[9px] text-text-muted text-center">Supported: .txt, .md, .csv, .json files.</p>
+              {inlineUploadData.title && (
+                <div className="text-[10px] text-text-secondary italic truncate">
+                  Selected: {inlineUploadData.title} ({inlineUploadData.content.length.toLocaleString()} chars)
+                </div>
+              )}
+              <div className="flex justify-between items-center text-[10px]">
+                <label className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={inlineUploadData.saveToLibrary}
+                    onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
+                  />
+                  Save to Source Library
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleAddWorkspaceSource('upload')}
+                  disabled={!inlineUploadData.title || isBusy}
+                  className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] disabled:opacity-50"
+                >
+                  {inlineUploadData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* UNIFIED INGESTION FEEDBACK STATE */}
+          {sourceIngestionState.status !== 'idle' && (
+            <div
+              data-testid="source-ingestion-feedback"
+              data-ingestion-status={sourceIngestionState.status}
+              className={`p-2.5 rounded border text-[10px] space-y-1.5 ${
+                sourceIngestionState.status === 'success'
+                  ? 'bg-status-success/10 border-status-success/30 text-text-primary'
+                  : sourceIngestionState.status === 'duplicate'
+                    ? 'bg-amber-500/10 border-amber-300 text-text-primary'
+                    : sourceIngestionState.status === 'error'
+                       ? 'bg-status-error/10 border-status-error/30 text-text-primary'
+                      : 'bg-surface-primary border-border-standard text-text-secondary'
+              }`}
+            >
+              {(sourceIngestionState.status === 'fetching' ||
+                sourceIngestionState.status === 'extracting' ||
+                sourceIngestionState.status === 'validating' ||
+                sourceIngestionState.status === 'saving') && (
+                <div className="flex items-center gap-2 font-semibold">
+                  <div className="w-3 h-3 border-2 border-brand-gold border-t-transparent rounded-full animate-spin shrink-0" />
+                  <div>
+                    <div>Fetching source...</div>
+                    <div className="text-[9px] text-text-muted">
+                      {sourceIngestionState.message || 'Retrieving webpage · Extracting readable content'}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {sourceIngestionState.status === 'success' && (
+                <div className="space-y-1">
+                  <div className="font-bold text-status-success flex items-center justify-between">
+                    <span>{sourceIngestionState.message || 'Source captured successfully'}</span>
+                    <span className="text-[9px] font-mono">
+                      {(sourceIngestionState.capturedChars || 0).toLocaleString()} characters captured
+                    </span>
+                  </div>
+                  <div className="font-semibold text-text-primary">{sourceIngestionState.title}</div>
+                  <div className="flex flex-wrap gap-1.5 text-[9px] font-mono">
+                    {sourceIngestionState.attachedToBrief && (
+                      <span className="px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-semibold">
+                        Added to this brief
+                      </span>
+                    )}
+                    {sourceIngestionState.savedToLibrary && (
+                      <span className="px-1.5 py-0.5 rounded bg-surface-primary border border-border-standard text-text-secondary">
+                        Saved to Source Library
+                      </span>
+                    )}
+                  </div>
+                  {sourceIngestionState.capturedText && (
+                    <details className="pt-1">
+                      <summary className="cursor-pointer font-semibold text-brand-gold hover:underline">
+                        View Captured Text
+                      </summary>
+                      <pre className="mt-1.5 p-2 bg-surface-primary border border-border-standard rounded max-h-36 overflow-y-auto whitespace-pre-wrap font-mono text-[9px] text-text-primary">
+                        {sourceIngestionState.capturedText}
+                      </pre>
+                    </details>
+                  )}
+                </div>
+              )}
+
+              {sourceIngestionState.status === 'duplicate' && (
+                <div className="space-y-2" data-testid="source-duplicate-prompt">
+                  <div className="font-bold text-amber-800">
+                    {sourceIngestionState.message || 'This source is already in your library.'}
+                  </div>
+                  {sourceIngestionState.duplicateCandidate && (
+                    <div className="text-[9px] text-text-secondary">
+                      Existing record: <strong>{sourceIngestionState.duplicateCandidate.title}</strong> ({sourceIngestionState.duplicateCandidate.type})
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      data-testid="duplicate-use-existing-btn"
+                      onClick={handleUseExistingDuplicateSource}
+                      className="bg-slate-900 text-white px-2.5 py-1 rounded font-bold text-[10px]"
+                    >
+                      Use Existing Source
+                    </button>
+                    <button
+                      type="button"
+                      data-testid="duplicate-create-anyway-btn"
+                      onClick={handleCreateDuplicateAnyway}
+                      className="bg-surface-primary border border-border-standard text-text-primary px-2.5 py-1 rounded font-semibold text-[10px]"
+                    >
+                      Create Anyway
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {sourceIngestionState.status === 'error' && (
+                <div className="space-y-1.5" data-testid="source-ingestion-error">
+                  <div className="font-bold text-status-error">
+                    {sourceIngestionState.message || 'We could not read this webpage.'}
+                  </div>
+                  {sourceIngestionState.reason && (
+                    <div className="text-[9px] text-text-secondary">
+                      Reason: {sourceIngestionState.reason}
+                    </div>
+                  )}
+                  {sourceIngestionState.mode === 'link' && (
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        type="button"
+                        data-testid="url-error-paste-excerpt-btn"
+                        onClick={() => {
+                          setInlineSourceType('paste');
+                          setInlinePasteData(prev => ({
+                            ...prev,
+                            title: inlineLinkData.title || prev.title,
+                            saveToLibrary: inlineLinkData.saveToLibrary
+                          }));
+                          setSourceIngestionState({ status: 'idle' });
+                        }}
+                        className="bg-slate-900 text-white px-2.5 py-1 rounded font-bold text-[10px]"
+                      >
+                        Paste an excerpt instead
+                      </button>
+                      {inlineLinkData.url.trim() && (
+                        <button
+                          type="button"
+                          data-testid="url-error-save-reference-only-btn"
+                          onClick={handleSaveUrlAsReferenceOnly}
+                          className="bg-surface-primary border border-border-standard text-text-secondary hover:text-text-primary px-2.5 py-1 rounded font-semibold text-[10px]"
+                        >
+                          Save URL as Reference Only
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="app-shell">
@@ -5845,9 +6842,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 format: creationMode === 'quick' ? quickBrief.outputFormat : creationMode === 'advanced' ? advancedBrief.outputFormat : undefined,
                 pillar: creationMode === 'advanced' ? advancedBrief.pillar : undefined,
                 communicationJob: creationMode === 'advanced' ? advancedBrief.purpose : undefined,
-                sourceBindings: advancedBrief.selectedSourceIds
+                sourceBindings: getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds)
                   .map(id => {
-                    const s = [...sources, ...workspaceLocalSources].find(x => x.id === id);
+                    const s = uniqueSourcesById(sources, workspaceLocalSources).find(x => x.id === id);
                     return s
                       ? {
                           sourceId: s.id,
@@ -5914,10 +6911,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       : undefined,
                 explicitLength: creationMode === 'advanced' ? advancedBrief.desiredLength : undefined,
                 explicitDirection: creationMode === 'advanced' ? advancedBrief.customDirection : undefined,
-                selectedSourceIds: advancedBrief.selectedSourceIds,
+                selectedSourceIds: getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds),
                 inheritedWorkContext: extractWorkContextFromWorkItem(activeWorkItem),
                 operatingCore,
-                availableSources: [...selectableSources, ...workspaceLocalSources]
+                availableSources: uniqueSourcesById(selectableSources, workspaceLocalSources)
               })}
               speedMode={generationSpeedMode}
               onChangeSpeedMode={setGenerationSpeedMode}
@@ -5979,13 +6976,46 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             )}
 
-            {/* Honest Prototype Banner */}
-            <div className="bg-surface-inset border border-border-standard px-4 py-3 rounded-xl text-xs text-text-secondary flex justify-between items-center gap-4 flex-wrap">
+            {/* Honest Generation Mode Status Banner */}
+            <div
+              data-testid="generation-mode-status-banner"
+              className="bg-surface-inset border border-border-standard px-4 py-3 rounded-xl text-xs text-text-secondary flex justify-between items-center gap-4 flex-wrap"
+            >
               <div className="flex items-center gap-2">
                 <AlertTriangle size={14} className="text-brand-gold shrink-0" />
-                <span>Needs review: drafts are generated by local logic. For final-quality copy, use Prompt Builder or connect an AI model.</span>
+                {generationMode === 'ai' && aiStatus === 'connected' ? (
+                  <span>
+                    <strong>AI Generation Active:</strong> Drafts are generated via <strong>{aiProvider} · {aiTextModel}</strong> grounded in your attached task sources and Operating Core.
+                  </span>
+                ) : generationMode === 'prompt_builder' ? (
+                  <span>
+                    <strong>Prompt Builder Mode Active:</strong> Compiles a structured prompt package for external AI tools without running direct generation.
+                  </span>
+                ) : (
+                  <span>
+                    <strong>Prototype mode is active</strong> — generates local structural copy without calling the AI model.
+                  </span>
+                )}
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2">
+                {generationMode === 'prototype' && aiStatus === 'connected' && (
+                  <button
+                    type="button"
+                    data-testid="switch-to-ai-generation-btn"
+                    onClick={() => setGenerationMode('ai')}
+                    className="bg-slate-900 text-white hover:bg-brand-gold-hover text-[10px] font-bold px-2.5 py-1 rounded-md transition"
+                  >
+                    Switch to AI Generation
+                  </button>
+                )}
+                {generationMode === 'ai' && aiStatus === 'connected' && (
+                  <span
+                    data-testid="active-ai-model-badge"
+                    className="bg-status-success/15 text-status-success border border-status-success/30 text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold"
+                  >
+                    {aiProvider} · {aiTextModel}
+                  </span>
+                )}
                 <span className="bg-brand-gold/15 text-brand-gold border border-brand-gold/30 text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold">
                   Rules Active
                 </span>
@@ -6204,152 +7234,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </select>
                     </div>
 
-                    <div data-guide="content-context" className="bg-surface-inset border border-border-standard p-3 rounded space-y-3">
-                      <label className="block text-text-primary font-bold mb-1 text-[11px] uppercase tracking-wider">
-                        Add Context (Optional)
-                      </label>
-                      <div className="flex gap-1.5 bg-surface-inset p-1 rounded">
-                        {(['paste', 'upload', 'link'] as const).map(mode => (
-                          <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setInlineSourceType(mode)}
-                            className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                              inlineSourceType === mode ? 'bg-slate-900 text-white' : 'text-text-secondary hover:bg-surface-primary'
-                            }`}
-                          >
-                            {mode === 'link' ? 'URL' : mode}
-                          </button>
-                        ))}
-                      </div>
-
-                      {inlineSourceType === 'paste' && (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Source Title"
-                            value={inlinePasteData.title}
-                            onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
-                            className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                          />
-                          <textarea
-                            rows={3}
-                            placeholder="Paste source text..."
-                            value={inlinePasteData.content}
-                            onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
-                            className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] font-mono"
-                          />
-                          <div className="flex justify-between items-center text-[10px]">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                checked={inlinePasteData.saveToLibrary}
-                                onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
-                              />
-                              Save to Source Library
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => handleAddWorkspaceSource('paste')}
-                              className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px]"
-                            >
-                              {inlinePasteData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {inlineSourceType === 'link' && (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            placeholder="Source Name"
-                            value={inlineLinkData.title}
-                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
-                            className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                          />
-                          <input
-                            type="text"
-                            placeholder="URL (https://...)"
-                            value={inlineLinkData.url}
-                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
-                            className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                          />
-                          <p className="text-[9px] text-text-muted">Paste the relevant excerpt or summary so the system knows what to use. The app may not read the webpage automatically yet.</p>
-                          <textarea
-                            rows={2}
-                            placeholder="Relevant excerpt or summary..."
-                            value={inlineLinkData.summary}
-                            onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
-                            className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                          />
-                          {linkWarning && (
-                            <p className="text-[9px] text-amber-700 bg-amber-500/10 backdrop-blur-md p-1.5 rounded border border-amber-200 leading-normal font-semibold">
-                              {linkWarning}
-                            </p>
-                          )}
-                          <div className="flex justify-between items-center text-[10px]">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                checked={inlineLinkData.saveToLibrary}
-                                onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
-                              />
-                              Save to Source Library
-                            </label>
-                            <button
-                              type="button"
-                              onClick={handleAddWorkspaceLink}
-                              className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] action-button interactive-button"
-                            >
-                              {inlineLinkData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {inlineSourceType === 'upload' && (
-                        <div className="space-y-2">
-                          <input
-                            type="file"
-                            ref={inlineFileInputRef}
-                            onChange={handleWorkspaceFileUpload}
-                            className="hidden"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => inlineFileInputRef.current?.click()}
-                            className="w-full bg-surface-primary border border-border-standard hover:bg-surface-primary-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
-                          >
-                            Upload File
-                          </button>
-                          <p className="text-[9px] text-text-muted text-center">Supported: .txt files only. PDF parsing not currently supported.</p>
-                          {inlineUploadData.title && (
-                            <div className="text-[10px] text-text-secondary italic truncate">
-                              Selected: {inlineUploadData.title}
-                            </div>
-                          )}
-                          <div className="flex justify-between items-center text-[10px]">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                checked={inlineUploadData.saveToLibrary}
-                                onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
-                              />
-                              Save to Source Library
-                            </label>
-                            <button
-                              type="button"
-                              onClick={() => handleAddWorkspaceSource('upload')}
-                              disabled={!inlineUploadData.title}
-                              className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] disabled:opacity-50"
-                            >
-                              {inlineUploadData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    {renderWorkspaceSourceManager()}
                   </div>
                 ) : creationMode === 'quick' ? (
                   <div className="space-y-4">
@@ -6472,16 +7357,18 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
                     </div>
 
-                    <div data-guide="content-context">
+                    <div>
                       <label className="block text-text-secondary font-semibold mb-1">Paste Notes or Source Material</label>
                       <textarea
-                        rows={5}
+                        rows={4}
                         value={quickBrief.notes}
                         onChange={(e) => setQuickBrief({ ...quickBrief, notes: e.target.value })}
                         className="w-full bg-surface-primary border border-border-standard p-2 rounded text-text-primary font-mono text-[11px]"
                         placeholder="Paste notes, facts, article excerpts, image descriptions, or source material."
                       />
                     </div>
+
+                    {renderWorkspaceSourceManager()}
 
                     <div>
                       <label className="block text-text-secondary font-semibold mb-1">
@@ -6815,214 +7702,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     )}
 
                     {/* Add / Select Sources (INTEGRATED IN BRIEF) */}
-                    <div>
-                      <label className="block text-text-secondary font-semibold mb-1">
-                        Selected Sources <Tooltip text="Specific notes, links, files, or summaries used for this draft. Operating Core rules are always active separately." />
-                      </label>
-                      
-                      <div className="border border-border-standard p-2.5 rounded bg-surface-inset max-h-48 overflow-y-auto space-y-2 text-[11px] mb-3" data-testid="workspace-selected-sources-list">
-                        {[...selectableSources, ...workspaceLocalSources].map(src => {
-                          const isSel = advancedBrief.selectedSourceIds.includes(src.id);
-                          const activeRole = getEffectiveSourceRole(src);
-                          const activeExcerpts = getEffectiveSourceExcerpts(src.id);
-                          return (
-                            <div key={src.id} className="space-y-1">
-                              <div className="flex items-center justify-between gap-1.5">
-                                <label className="flex items-center gap-1.5 min-w-0 cursor-pointer">
-                                  <input
-                                    type="checkbox"
-                                    checked={isSel}
-                                    onChange={() => toggleSourceSelection(src.id)}
-                                    data-testid={`workspace-source-checkbox-${src.id}`}
-                                    className="rounded border-brand-gold/50 text-brand-gold scale-75 shrink-0"
-                                  />
-                                  <span className="truncate font-medium">{src.title}</span>
-                                </label>
-                                {workspaceLocalSources.some(w => w.id === src.id) && (
-                                  <span className="text-[8px] bg-violet-600/20 text-text-primary px-1 rounded shrink-0">Local</span>
-                                )}
-                              </div>
-                              {isSel && (
-                                <div
-                                  className="pl-5 flex flex-wrap items-center gap-1.5 text-[10px]"
-                                  data-testid={`workspace-source-role-bar-${src.id}`}
-                                >
-                                  <span className="text-text-secondary font-semibold">Role:</span>
-                                  <select
-                                    value={activeRole}
-                                    onChange={(e) => handleChangeSourceTaskRole(src.id, e.target.value as SourceTaskRole)}
-                                    data-testid={`workspace-source-role-select-${src.id}`}
-                                    aria-label={`Workspace role for ${src.title}`}
-                                    className="bg-surface-primary border border-border-standard rounded px-1.5 py-0.5 text-[10px] font-semibold text-text-primary"
-                                  >
-                                    {ALL_SOURCE_TASK_ROLES.map(r => (
-                                      <option key={r} value={r}>{r}</option>
-                                    ))}
-                                  </select>
-                                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-mono">
-                                    {activeExcerpts.length > 0 ? `${activeExcerpts.length} excerpt(s)` : 'Bounded source'}
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                        {[...selectableSources, ...workspaceLocalSources].length === 0 && (
-                          <span className="text-text-muted block text-center py-2">
-                            No user sources selected. You can still draft from your notes, but source-backed content is stronger.
-                          </span>
-                        )}
-                      </div>
-
-                      {/* INLINE SOURCE ADD PANEL - Add URL */}
-                      <div className="border border-border-standard p-3 rounded bg-surface-inset space-y-2">
-                        <div className="flex gap-1.5 bg-surface-inset p-1 rounded">
-                          {(['paste', 'upload', 'link'] as const).map(mode => (
-                            <button
-                              key={mode}
-                              type="button"
-                              onClick={() => setInlineSourceType(mode)}
-                              className={`flex-1 text-[10px] font-bold py-1 rounded transition uppercase ${
-                                inlineSourceType === mode ? 'bg-slate-900 text-white' : 'text-text-secondary hover:bg-surface-primary'
-                              }`}
-                            >
-                              {mode === 'link' ? 'URL' : mode}
-                            </button>
-                          ))}
-                        </div>
-
-                        {inlineSourceType === 'paste' && (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              placeholder="Source Title"
-                              value={inlinePasteData.title}
-                              onChange={(e) => setInlinePasteData({ ...inlinePasteData, title: e.target.value })}
-                              className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                            />
-                            <textarea
-                              rows={3}
-                              placeholder="Paste source text..."
-                              value={inlinePasteData.content}
-                              onChange={(e) => setInlinePasteData({ ...inlinePasteData, content: e.target.value })}
-                              className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px] font-mono"
-                            />
-                            <div className="flex justify-between items-center text-[10px]">
-                              <label className="flex items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={inlinePasteData.saveToLibrary}
-                                  onChange={(e) => setInlinePasteData({ ...inlinePasteData, saveToLibrary: e.target.checked })}
-                                />
-                                Save to Source Library
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => handleAddWorkspaceSource('paste')}
-                                className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px]"
-                              >
-                                {inlinePasteData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {inlineSourceType === 'link' && (
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              placeholder="Source Name"
-                              value={inlineLinkData.title}
-                              onChange={(e) => setInlineLinkData({ ...inlineLinkData, title: e.target.value })}
-                              className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                            />
-                            <input
-                              type="text"
-                              placeholder="URL (https://...)"
-                              value={inlineLinkData.url}
-                              onChange={(e) => setInlineLinkData({ ...inlineLinkData, url: e.target.value })}
-                              className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                            />
-                            <p className="text-[9px] text-text-muted">Paste the relevant excerpt or summary so the system knows what to use. The app may not read the webpage automatically yet.</p>
-                            
-                            <textarea
-                              rows={2}
-                              placeholder="Relevant excerpt or summary..."
-                              value={inlineLinkData.summary}
-                              onChange={(e) => setInlineLinkData({ ...inlineLinkData, summary: e.target.value })}
-                              className="w-full bg-surface-primary border border-border-standard p-1.5 rounded text-[11px]"
-                            />
-                            
-                            {linkWarning && (
-                              <p className="text-[9px] text-amber-700 bg-amber-500/10 backdrop-blur-md p-1.5 rounded border border-amber-200 leading-normal font-semibold">
-                                {linkWarning}
-                              </p>
-                            )}
-
-                            <div className="flex justify-between items-center text-[10px]">
-                              <label className="flex items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={inlineLinkData.saveToLibrary}
-                                  onChange={(e) => setInlineLinkData({ ...inlineLinkData, saveToLibrary: e.target.checked })}
-                                />
-                                Save to Source Library
-                              </label>
-                              <button
-                                type="button"
-                                onClick={handleAddWorkspaceLink}
-                                className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition-all bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] action-button interactive-button"
-                              >
-                                Add URL
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {inlineSourceType === 'upload' && (
-                          <div className="space-y-2">
-                            <input
-                              type="file"
-                              ref={inlineFileInputRef}
-                              onChange={handleWorkspaceFileUpload}
-                              className="hidden"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => inlineFileInputRef.current?.click()}
-                              className="w-full bg-surface-primary border border-border-standard hover:bg-surface-primary-dark p-2 rounded text-center text-[11px] font-semibold text-text-primary"
-                            >
-                              Upload File
-                            </button>
-                            <p className="text-[9px] text-text-muted text-center">Supported: .txt files only. PDF parsing not currently supported.</p>
-                            {inlineUploadData.title && (
-                              <div className="text-[10px] text-text-secondary italic truncate">
-                                Selected: {inlineUploadData.title}
-                              </div>
-                            )}
-                            <div className="flex justify-between items-center text-[10px]">
-                              <label className="flex items-center gap-1">
-                                <input
-                                  type="checkbox"
-                                  checked={inlineUploadData.saveToLibrary}
-                                  onChange={(e) => setInlineUploadData({ ...inlineUploadData, saveToLibrary: e.target.checked })}
-                                />
-                                Save to Source Library
-                              </label>
-                              <button
-                                type="button"
-                                onClick={() => handleAddWorkspaceSource('upload')}
-                                disabled={!inlineUploadData.title}
-                                className="bg-slate-900 text-white px-2.5 py-1 rounded font-sans font-bold text-[10px] disabled:opacity-50"
-                              >
-                                {inlineUploadData.saveToLibrary ? 'Add to Context' : 'Use as Context'}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                      </div>
-                    </div>
+                    {renderWorkspaceSourceManager()}
 
                     <div>
                       <label className="block text-text-secondary font-semibold mb-1">
@@ -7181,10 +7861,61 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 </div>
 
-                <div data-guide="content-generate" className="pt-2 border-t border-border-standard mt-4">
-                  <Button onClick={handleGenerateDrafts} disabled={isGeneratingDrafts} variant="primary" size="lg" className="w-full">
-                    {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
-                    {isGeneratingDrafts ? 'Generating...' : 'Generate'}
+                <div data-guide="content-generate" className="pt-2 border-t border-border-standard mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-text-secondary font-medium">
+                      Mode:{' '}
+                      <strong className="text-text-primary">
+                        {generationMode === 'ai' && aiStatus === 'connected'
+                          ? 'AI Generation'
+                          : generationMode === 'prompt_builder'
+                            ? 'Prompt Builder'
+                            : 'Prototype Structure'}
+                      </strong>
+                    </span>
+                    {generationMode === 'ai' && aiStatus === 'connected' && (
+                      <span className="font-mono text-[9px] text-brand-gold font-semibold">
+                        {aiProvider} · {aiTextModel}
+                      </span>
+                    )}
+                    {generationMode === 'prototype' && aiStatus === 'connected' && (
+                      <button
+                        type="button"
+                        onClick={() => setGenerationMode('ai')}
+                        className="text-brand-gold hover:underline font-semibold"
+                      >
+                        Switch to AI Generation
+                      </button>
+                    )}
+                  </div>
+                  <Button
+                    data-testid="workspace-primary-generate-btn"
+                    onClick={() => {
+                      if (generationMode === 'prompt_builder') {
+                        handleCopyClipboard(compileStructuredPrompt(), 'prompt');
+                      } else {
+                        handleGenerateDrafts();
+                      }
+                    }}
+                    disabled={isGeneratingDrafts}
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
+                  >
+                    {isGeneratingDrafts ? (
+                      <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Lightbulb size={16} />
+                    )}
+                    {isGeneratingDrafts
+                      ? 'Generating...'
+                      : generationMode === 'ai' && aiStatus === 'connected'
+                        ? 'Generate with AI'
+                        : generationMode === 'prompt_builder'
+                          ? copySuccessMap['prompt']
+                            ? 'AI Prompt Copied!'
+                            : 'Build AI Prompt'
+                          : 'Generate Prototype Structure'}
                   </Button>
                 </div>
               </div>
@@ -7223,6 +7954,56 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         <AlertTriangle size={15} className="text-brand-gold shrink-0" />
                         <span>{draftOptions.contextWarning}</span>
                       </div>
+                    )}
+
+                    {/* Source Grounding & Provenance Trace */}
+                    {draftOptions.sourceTrace && (
+                      <details
+                        data-testid="generation-source-trace"
+                        className="bg-surface-primary border border-border-standard rounded-lg p-3 text-xs"
+                        open
+                      >
+                        <summary className="cursor-pointer font-semibold text-text-primary flex items-center justify-between gap-2 select-none">
+                          <span>Context Used for This Request</span>
+                          <span
+                            data-testid="generation-grounding-badge"
+                            className="text-[10px] font-mono px-2 py-0.5 rounded bg-brand-gold/15 text-brand-gold font-bold"
+                          >
+                            {draftOptions.labelA}
+                          </span>
+                        </summary>
+                        <div className="mt-2.5 pt-2.5 border-t border-border-standard space-y-1.5 text-[11px] text-text-secondary">
+                          <div>
+                            <strong className="text-text-primary">Instruction:</strong>{' '}
+                            <span>{draftOptions.sourceTrace.instruction}</span>
+                          </div>
+                          <div>
+                            <strong className="text-text-primary">Sources sent:</strong>{' '}
+                            {draftOptions.sourceTrace.sourcesSent.length > 0 ? (
+                              <ul className="list-disc list-inside mt-1 space-y-0.5 text-[10.5px]">
+                                {draftOptions.sourceTrace.sourcesSent.map(s => (
+                                  <li key={s.id}>
+                                    <span className="font-semibold text-text-primary">{s.title}</span> — {s.role} (
+                                    {s.capturedChars.toLocaleString()} chars captured)
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <span>None</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-4 pt-1 text-[10px] font-mono">
+                            <span>
+                              <strong className="text-text-primary">Operating Core:</strong>{' '}
+                              {draftOptions.sourceTrace.operatingCoreActive ? 'Active' : 'Inactive'}
+                            </span>
+                            <span>
+                              <strong className="text-text-primary">Generation mode:</strong>{' '}
+                              {draftOptions.sourceTrace.generationModeLabel}
+                            </span>
+                          </div>
+                        </div>
+                      </details>
                     )}
                     
                     {/* 1. Final Drafts */}
@@ -8552,16 +9333,32 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     </div>
                   </div>
 
-                  {newSource.type === 'Link / URL' && (
-                    <div>
+                  {(newSource.type === 'Link / URL' || newSource.type === 'Website Reference') && (
+                    <div className="space-y-2">
                       <label className="block text-text-secondary mb-1 font-semibold">Source URL</label>
-                      <input
-                        type="url"
-                        placeholder="https://..."
-                        value={newSource.url || ''}
-                        onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
-                        className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="url"
+                          placeholder="https://..."
+                          value={newSource.url || ''}
+                          onChange={(e) => setNewSource({ ...newSource, url: e.target.value })}
+                          className="flex-1 bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
+                        />
+                        <button
+                          type="button"
+                          data-testid="library-fetch-url-btn"
+                          onClick={handleFetchUrlForLibraryForm}
+                          disabled={!newSource.url?.trim() || sourceIngestionState.status === 'fetching' || sourceIngestionState.status === 'extracting'}
+                          className="bg-slate-900 text-white hover:bg-brand-gold-hover px-3 py-2 rounded-lg text-[11px] font-bold shrink-0 disabled:opacity-50"
+                        >
+                          {sourceIngestionState.status === 'fetching' || sourceIngestionState.status === 'extracting'
+                            ? 'Fetching...'
+                            : 'Fetch Webpage'}
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-text-muted">
+                        Click Fetch Webpage to extract readable article text automatically, or paste a summary/excerpt below.
+                      </p>
                     </div>
                   )}
 
@@ -8581,12 +9378,84 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     <textarea
                       placeholder="Paste text summary or markdown file copy..."
                       rows={5}
-                      required
                       value={newSource.content}
                       onChange={(e) => setNewSource({ ...newSource, content: e.target.value })}
                       className="w-full bg-surface-inset border border-border-standard p-2.5 rounded-lg text-text-primary font-mono text-[11px]"
                     />
                   </div>
+
+                  {sourceIngestionState.mode === 'library' && sourceIngestionState.status !== 'idle' && (
+                    <div
+                      data-testid="library-ingestion-feedback"
+                      className={`p-3 rounded-lg border text-xs space-y-2 ${
+                        sourceIngestionState.status === 'success'
+                          ? 'bg-status-success/10 border-status-success/30 text-text-primary'
+                          : sourceIngestionState.status === 'duplicate'
+                            ? 'bg-amber-500/10 border-amber-300 text-text-primary'
+                            : sourceIngestionState.status === 'error'
+                              ? 'bg-status-error/10 border-status-error/30 text-text-primary'
+                              : 'bg-surface-inset border-border-standard text-text-secondary'
+                      }`}
+                    >
+                      {(sourceIngestionState.status === 'fetching' ||
+                        sourceIngestionState.status === 'extracting' ||
+                        sourceIngestionState.status === 'validating' ||
+                        sourceIngestionState.status === 'saving') && (
+                        <div className="font-semibold">
+                          Fetching source... ({sourceIngestionState.message || 'Retrieving webpage'})
+                        </div>
+                      )}
+                      {sourceIngestionState.status === 'success' && (
+                        <div className="space-y-1">
+                          <div className="font-bold text-status-success">
+                            {sourceIngestionState.message || 'Source captured successfully'}
+                          </div>
+                          {sourceIngestionState.capturedChars ? (
+                            <div className="text-[11px] font-mono text-text-secondary">
+                              {sourceIngestionState.capturedChars.toLocaleString()} characters captured
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                      {sourceIngestionState.status === 'duplicate' && (
+                        <div className="space-y-2" data-testid="library-duplicate-prompt">
+                          <div className="font-bold text-amber-800">
+                            {sourceIngestionState.message || 'This source is already in your library.'}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              data-testid="library-duplicate-use-existing-btn"
+                              onClick={handleUseExistingDuplicateSource}
+                              className="bg-slate-900 text-white px-3 py-1.5 rounded font-bold text-[11px]"
+                            >
+                              Use Existing Source
+                            </button>
+                            <button
+                              type="button"
+                              data-testid="library-duplicate-create-anyway-btn"
+                              onClick={handleCreateDuplicateAnyway}
+                              className="bg-surface-primary border border-border-standard text-text-primary px-3 py-1.5 rounded font-semibold text-[11px]"
+                            >
+                              Create Anyway
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {sourceIngestionState.status === 'error' && (
+                        <div className="space-y-1">
+                          <div className="font-bold text-status-error">
+                            {sourceIngestionState.message || 'We could not read this webpage.'}
+                          </div>
+                          {sourceIngestionState.reason && (
+                            <div className="text-[11px] text-text-secondary">
+                              Reason: {sourceIngestionState.reason}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-2 pt-1 pb-1">
                     <input
@@ -8647,6 +9516,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {/* User-Added Sources list */}
                 <div className="space-y-3.5">
                   {(() => {
+                    const likelyDuplicateIds = findLikelyDuplicateIds(selectableSources);
                     let filtered = selectableSources;
                     if (sourceLibraryFilter === 'Approved Examples') {
                       filtered = selectableSources.filter(s => s.type === 'Approved Example');
@@ -8666,6 +9536,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     return filtered.map(src => {
                       const isSelected = advancedBrief.selectedSourceIds.includes(src.id);
+                      const usability = validateSourceUsability(src);
+                      const isLikelyDuplicate = likelyDuplicateIds.has(src.id);
                       return (
                         <div key={src.id} className={`card-level-1 p-5 flex gap-4 transition ${
                           isSelected ? 'border-brand-gold ring-1 ring-brand-gold/25' : 'border-border-standard'
@@ -8674,9 +9546,10 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <input
                               type="checkbox"
                               checked={isSelected}
+                              disabled={!usability.usable && !isSelected}
                               onChange={() => toggleSourceSelection(src.id)}
-                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer"
-                              title="Select for generation"
+                              className="rounded border-brand-gold/50 text-brand-gold focus:ring-brand-gold w-4 h-4 cursor-pointer disabled:opacity-40"
+                              title={usability.usable ? 'Select for generation' : usability.reason || 'Reference only'}
                             />
                           </div>
 
@@ -8692,9 +9565,25 @@ WRITING CLEANLINESS RULES (CRITICAL):
                               }`}>
                                 {src.status}
                               </span>
-                              {src.selectable === false && (
-                                <span className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase border border-status-error/30 text-status-error bg-status-error/10">
-                                  Non-Selectable
+                              {usability.capturedChars > 0 && (
+                                <span className="text-[10px] px-2 py-0.5 rounded-md font-mono text-text-secondary bg-surface-inset border border-border-standard">
+                                  {usability.capturedChars.toLocaleString()} chars
+                                </span>
+                              )}
+                              {!usability.usable && (
+                                <span
+                                  data-testid={`source-reference-only-badge-${src.id}`}
+                                  className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase border border-status-error/30 text-status-error bg-status-error/10"
+                                >
+                                  Reference only - webpage content was not captured
+                                </span>
+                              )}
+                              {isLikelyDuplicate && (
+                                <span
+                                  data-testid={`source-likely-duplicate-badge-${src.id}`}
+                                  className="text-[10px] px-2 py-0.5 rounded-md font-mono font-semibold uppercase border border-amber-400/50 text-amber-800 bg-amber-500/15"
+                                >
+                                  Likely Duplicate
                                 </span>
                               )}
                             </div>
@@ -8705,7 +9594,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                             <details className="text-[11px] text-text-secondary cursor-pointer pt-1">
                               <summary className="interactive-link transition font-semibold">Show Raw Source Text</summary>
                               <pre className="mt-2 p-3 bg-surface-inset rounded-lg border border-border-standard overflow-x-auto whitespace-pre-wrap font-mono text-[11px] text-text-primary max-h-48">
-                                {src.content}
+                                {src.content || '(No captured article text — URL reference only)'}
                               </pre>
                               {src.url && (
                                 <div className="mt-2 text-brand-gold">

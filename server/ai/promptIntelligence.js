@@ -79,6 +79,7 @@ Return the complete corrected schema, not a patch or commentary.
 }
 
 export function buildTaskContract(input = {}) {
+  const creativeNotes = clean(input.pastedNotes);
   return `=== TASK CONTRACT ===
 - Studio Mode: ${clean(input.mode, 'creation')}
 - Raw User Intent / Topic: ${clean(input.rawInput, clean(input.rawIntent, 'Not supplied'))}
@@ -91,14 +92,31 @@ export function buildTaskContract(input = {}) {
 - Tone / Narrative Perspective: ${clean(input.tone, clean(input.narrativePerspective, 'COH institutional-cultural voice'))}
 - Desired Length: ${clean(input.desiredLength, 'Appropriate to the target format')}
 - Must Include: ${list(input.mustInclude)}
-- Must Avoid: ${list(input.mustAvoid)}
+- Must Avoid: ${list(input.mustAvoid)}${creativeNotes ? `\n- Additional Creative Direction / Notes: ${creativeNotes}` : ''}
 ${buildQualityRepairContext(input)}`;
 }
 
+export function hasUsableTaskSources(input = {}) {
+  const taskSources = Array.isArray(input.taskSources) ? input.taskSources : [];
+  const validTaskSources = taskSources.filter((src) => {
+    const content = clean(src?.content);
+    if (!content) return false;
+    if (/^\[URL reference:\s*https?:\/\/[^\]]+\]$/i.test(content)) return false;
+    if (/^\[Reference URL only\s*[—-]/i.test(content)) return false;
+    return true;
+  });
+  if (validTaskSources.length > 0) return true;
+  const directSource = clean(input.sourceContent);
+  if (directSource && !/^\[URL reference:\s*https?:\/\/[^\]]+\]$/i.test(directSource)) {
+    return true;
+  }
+  return false;
+}
+
 export function buildEvidenceContract(input = {}) {
-  const sourceMaterial = clean(input.pastedNotes, clean(input.sourceContent));
+  const hasSourceMaterial = hasUsableTaskSources(input);
   return `=== EVIDENCE & CLAIMS CONTRACT ===
-- Selected task-source material present: ${sourceMaterial ? 'Yes' : 'No'}
+- Selected task-source material present: ${hasSourceMaterial ? 'Yes' : 'No'}
 - If source material is present, use only claims actually supported by it or by explicit protected COH facts supplied in the task context.
 - If stronger evidence is missing, write safely at the level the evidence supports and place any important gap in warnings or evidenceStillRequired rather than fabricating it.
 - Approved examples guide style and structure only unless separately identified as factual evidence.

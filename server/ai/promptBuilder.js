@@ -7,15 +7,50 @@ import {
   buildSilentAudit,
 } from './promptIntelligence.js';
 
-const coreBlock = (input) => input.operatingCoreInstructions
-  ? `\n=== AUTHORITATIVE COH OPERATING CORE ===\n${input.operatingCoreInstructions}\n`
-  : '';
+const coreBlock = (input) => {
+  const core = input.operatingCoreInstructions
+    ? `\n=== AUTHORITATIVE COH OPERATING CORE ===\n${input.operatingCoreInstructions}\n`
+    : '';
+  const inherited = input.inheritedWorkContext
+    ? `\n=== INHERITED WORK CONTEXT ===\n${input.inheritedWorkContext}\n`
+    : '';
+  return `${core}${inherited}`;
+};
 
 const sourceBlock = (input) => {
-  const source = String(input.pastedNotes || input.sourceContent || '').trim();
-  return source
-    ? `\n=== TASK SOURCE MATERIAL ===\n"""\n${source}\n"""\n`
-    : '\n=== TASK SOURCE MATERIAL ===\nNo task-specific source material supplied. Do not invent source-backed claims.\n';
+  const rawTaskSources = Array.isArray(input.taskSources) ? input.taskSources : [];
+  const validTaskSources = rawTaskSources.filter((src) => {
+    const content = String(src?.content || '').trim();
+    if (!content) return false;
+    if (/^\[URL reference:\s*https?:\/\/[^\]]+\]$/i.test(content)) return false;
+    if (/^\[Reference URL only\s*[—-]/i.test(content)) return false;
+    return true;
+  });
+
+  if (validTaskSources.length > 0) {
+    const blocks = validTaskSources.map((src, idx) => {
+      const title = String(src.title || 'Untitled Source').trim();
+      const type = String(src.type || 'Other').trim();
+      const role = String(src.role || 'Evidence').trim();
+      const content = String(src.content || '').trim();
+      return `[SOURCE ${idx + 1}]
+Title: ${title}
+Type: ${type}
+Role: ${role}
+Content:
+"""
+${content}
+"""`;
+    });
+    return `\n=== TASK SOURCES ===\n${blocks.join('\n\n')}\n`;
+  }
+
+  const directSource = String(input.sourceContent || '').trim();
+  if (directSource && !/^\[URL reference:\s*https?:\/\/[^\]]+\]$/i.test(directSource)) {
+    return `\n=== TASK SOURCES ===\n[SOURCE 1]\nTitle: Direct Task Source\nType: Source Material\nRole: Evidence\nContent:\n"""\n${directSource}\n"""\n`;
+  }
+
+  return '\n=== TASK SOURCES ===\nNo task-specific source material supplied. Do not invent source-backed claims.\n';
 };
 
 /**

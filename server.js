@@ -5,6 +5,7 @@ import cors from 'cors';
 import * as providerManager from './server/ai/providerManager.js';
 import { buildGenerationPrompt } from './server/ai/promptBuilder.js';
 import { compileVisualStudioPrompt } from './src/lib/visualPromptCompiler.js';
+import { extractUrlSource } from './server/sourceExtractor.js';
 
 import crypto from 'crypto';
 
@@ -585,6 +586,44 @@ app.post('/api/ai/reframe', requireAuth, async (req, res) => {
       errorType: 'SERVER_ERROR',
       userMessage: friendlyServerError(err),
       debug: { message: err.message }
+    });
+  }
+});
+
+// ─── URL Source Extraction (Protected SSRF-Safe Endpoint) ─────────────────────
+app.post('/api/sources/extract-url', requireAuth, async (req, res) => {
+  try {
+    const requestedUrl = String(req.body?.url || '').trim();
+    if (!requestedUrl) {
+      return res.status(400).json({
+        success: false,
+        status: 'failed',
+        requestedUrl: '',
+        finalUrl: '',
+        title: '',
+        content: '',
+        charCount: 0,
+        fetchedAt: new Date().toISOString(),
+        warnings: ['Please provide a URL to extract.'],
+        error: 'Please provide a URL to extract.'
+      });
+    }
+
+    const result = await extractUrlSource(requestedUrl);
+    return res.json(result);
+  } catch (err) {
+    console.error('[/api/sources/extract-url]', err?.message);
+    return res.status(500).json({
+      success: false,
+      status: 'failed',
+      requestedUrl: String(req.body?.url || ''),
+      finalUrl: String(req.body?.url || ''),
+      title: '',
+      content: '',
+      charCount: 0,
+      fetchedAt: new Date().toISOString(),
+      warnings: [err?.message || 'URL extraction failed.'],
+      error: err?.message || 'URL extraction failed.'
     });
   }
 });
