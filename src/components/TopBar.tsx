@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Search, Command } from 'lucide-react';
+import { Sun, Moon, Search, Command, HelpCircle } from 'lucide-react';
 import { CommandPaletteModal } from './CommandPaletteModal';
 import type { SavedContent, SavedIdea, SourceFile } from '../App';
 
@@ -87,7 +87,20 @@ export function TopBar({
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Workspace Guide Trigger */}
+          <button
+            type="button"
+            data-testid="workspace-guide-trigger"
+            onClick={() => window.dispatchEvent(new CustomEvent('coh:open-guide', { detail: { mode: 'workspace' } }))}
+            className="flex items-center gap-1.5 px-2.5 py-1 bg-surface-inset border border-border-standard rounded-lg hover:border-brand-gold/60 text-text-secondary hover:text-text-primary transition-all cursor-pointer text-xs font-semibold"
+            title="Open contextual guide for this workspace"
+            aria-label="Workspace Guide"
+          >
+            <HelpCircle size={13} className="text-brand-gold" />
+            <span>Guide</span>
+          </button>
+
           {/* AI Status */}
           <button 
             className="hidden sm:flex items-center gap-2 px-3 py-1 bg-surface-inset border border-border-standard rounded-full hover:border-brand-gold/60 transition-all cursor-pointer"

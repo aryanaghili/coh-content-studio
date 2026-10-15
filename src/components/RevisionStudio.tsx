@@ -339,7 +339,7 @@ export function RevisionStudio({
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px] gap-6 items-start">
         <div className="min-w-0 space-y-4">
-          <section className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
+          <section data-guide="revision-draft-editor" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
             <div className="px-4 py-3 border-b border-border-standard flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] font-semibold text-brand-gold">1. Draft</span>
@@ -387,7 +387,7 @@ export function RevisionStudio({
           )}
 
           {(state.originalDraft || state.versionHistory.length > 1) && (
-            <details data-testid="revision-version-history" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
+            <details data-guide="revision-version-history" data-testid="revision-version-history" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 overflow-hidden">
               <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-2 text-[11.5px] font-semibold text-text-primary">
                 <span>Original Draft &amp; Version History ({state.versionHistory.length} {state.versionHistory.length === 1 ? 'version' : 'versions'})</span>
                 <ChevronDown size={13} className="text-text-muted" />
@@ -436,7 +436,7 @@ export function RevisionStudio({
         </div>
 
         <div className="min-w-0 space-y-4">
-          <section className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-4 space-y-3" data-testid="revision-recipe-panel">
+          <section data-guide="revision-recipe-panel" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-4 space-y-3" data-testid="revision-recipe-panel">
             <div>
               <span className="text-[11px] font-semibold text-brand-gold">2. What should change?</span>
               <p className="text-[11px] text-text-secondary mt-1">Choose one suggestion, combine a few changes, or simply describe what you want.</p>
@@ -480,7 +480,7 @@ export function RevisionStudio({
             </button>
           </section>
 
-          <details className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1">
+          <details data-guide="revision-controls" className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1">
             <summary className="cursor-pointer list-none px-4 py-3 flex items-center justify-between gap-2 text-[11.5px] font-semibold text-text-primary"><span className="inline-flex items-center gap-1.5"><SlidersHorizontal size={13} className="text-brand-gold" /> Advanced revision controls</span><ChevronDown size={13} className="text-text-muted" /></summary>
             <div className="border-t border-border-standard p-4 space-y-4">
               <div className="grid grid-cols-2 gap-2">

@@ -1,6 +1,11 @@
 import { Menu, X, RefreshCw } from "lucide-react";
 import { useLocation, useNavigate } from 'react-router-dom';
 import { buildAdvancedBriefFromCalendarItem } from './utils/calendarHandoffUtils';
+import {
+  parseVisualDirectionInput,
+  serializeVisualBriefForStorage,
+  compileVisualStudioPrompt
+} from './lib/visualPromptCompiler';
 
 import { LANGUAGES, getLanguageDirection } from './lib/languages';
 import { RevisionStudio } from './components/RevisionStudio';
@@ -1115,99 +1120,30 @@ export default function App() {
 
   // --- Visual Studio Logic ---
   const handleSendToVisualStudio = (item: any, rawDirection: any, type: 'Idea' | 'Content' | 'Library') => {
-    // Preserve existing item state
     setVsSourceItem({ id: item.id, title: item.title || item.originalInput || 'Untitled', type });
     setVsRawImportedDirection(typeof rawDirection === 'string' ? rawDirection : JSON.stringify(rawDirection));
-    
-    // Check if it's already a canonical object vs raw string
-    let parsedFields: any = {};
-    if (typeof rawDirection === 'object' && rawDirection !== null) {
-       parsedFields = rawDirection; // Assume it's already structured
-    } else {
-       // Legacy String Parser
-       let text = (rawDirection || '').replace(/\r\n/g, '\n');
-       
-       const fields: any = {
-          visualConcept: '', formatRecommendation: '', moodAtmosphere: '', composition: '',
-          colorMaterialDirection: '', typographyLayout: '', keyVisualElements: '', whatToAvoid: '',
-          aiImagePrompt: '', negativePrompt: '', designerNotes: ''
-       };
-       
-       const headingPatterns = [
-          { key: 'visualConcept', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Visual Concept\b[*:_]*$/i },
-          { key: 'formatRecommendation', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:Format Recommendation|Format(?:s)?\b)[*:_]*$/i },
-          { key: 'moodAtmosphere', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Mood(?:\s*(?:[\/&]|and)\s*Atmosphere)?\b[*:_]*$/i },
-          { key: 'composition', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Composition\b[*:_]*$/i },
-          { key: 'colorMaterialDirection', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Color(?:\s*(?:[\/&]|and)\s*Material\b.*?)?[*:_]*$/i },
-          { key: 'typographyLayout', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Typography(?:\s*(?:[\/&]|and)\s*Layout)?\b[*:_]*$/i },
-          { key: 'keyVisualElements', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:Key )?Visual Elements\b[*:_]*$/i },
-          { key: 'whatToAvoid', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(?:What to )?Avoid\b[*:_]*$/i },
-          { key: 'aiImagePrompt', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?AI Image Prompt\b[*:_]*$/i },
-          { key: 'negativePrompt', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Negative Prompt\b[*:_]*$/i },
-          { key: 'designerNotes', pattern: /^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?Designer Notes\b[*:_]*$/i }
-       ];
-       
-       const lines = text.split('\n');
-       let currentField = null;
-       
-       for (let line of lines) {
-          const trimmed = line.trim();
-          if (!trimmed) continue;
-          
-          let isHeadingLine = false;
-          
-          for (const { key, pattern } of headingPatterns) {
-             if (pattern.test(trimmed)) {
-                currentField = key;
-                isHeadingLine = true;
-                break;
-             }
-             
-             // Regex for inline value like "**Visual Concept**: value"
-             const inlineMatch = trimmed.match(/^(?:#+\s*|\*?\*\s*|-?\s*\*\*)?(Visual Concept|Format Recommendation|Format|Mood(?:\s*(?:[\/&]|and)\s*Atmosphere)?|Composition|Color(?:\s*(?:[\/&]|and)\s*Material.*?)?|Typography(?:\s*(?:[\/&]|and)\s*Layout)?|(?:Key )?Visual Elements|(?:What to )?Avoid|AI Image Prompt|Negative Prompt|Designer Notes)[*:_]+\s*(.*)$/i);
-             
-             if (inlineMatch && inlineMatch[1]) {
-                for (const hp of headingPatterns) {
-                   if (hp.pattern.test(inlineMatch[1])) {
-                      currentField = hp.key;
-                      const val = inlineMatch[2].trim();
-                      if (val) {
-                         fields[currentField] += (fields[currentField] ? '\n' : '') + val.replace(/^["'\-\*\s]+/, '').replace(/["'\-\*\s]+$/, '');
-                      }
-                      isHeadingLine = true;
-                      break;
-                   }
-                }
-                if (isHeadingLine) break;
-             }
-          }
-          
-          if (!isHeadingLine && currentField) {
-             const cleaned = trimmed.replace(/^[\*\-\s]+/, ''); // Strip leading bullets
-             if (cleaned) {
-                fields[currentField] += (fields[currentField] ? '\n' : '') + cleaned;
-             }
-          }
-       }
-       parsedFields = fields;
-    }
-    
-    // Determine Validation State
+
+    const parsedFields = parseVisualDirectionInput(rawDirection);
+
+    // Determine Validation State across the 11 canonical fields
     const requiredFields = ['visualConcept', 'moodAtmosphere', 'composition', 'colorMaterialDirection', 'keyVisualElements'];
     const optionalFields = ['formatRecommendation', 'typographyLayout', 'whatToAvoid', 'aiImagePrompt', 'negativePrompt', 'designerNotes'];
-    
+
     const allExpected = [...requiredFields, ...optionalFields];
     let recognized = 0;
     const missing: string[] = [];
-    
+
     for (const f of allExpected) {
-      if (parsedFields[f] && parsedFields[f].trim().length > 0) recognized++;
-      else missing.push(f);
+      if ((parsedFields as Record<string, string>)[f] && (parsedFields as Record<string, string>)[f].trim().length > 0) {
+        recognized++;
+      } else {
+        missing.push(f);
+      }
     }
-    
+
     // Map parsed structured fields safely to React State
     setVsConcept(parsedFields.visualConcept || '');
-    setVsFormat(parsedFields.formatRecommendation || parsedFields.format || '');
+    setVsFormat(parsedFields.formatRecommendation || '');
     setVsMood(parsedFields.moodAtmosphere || '');
     setVsComposition(parsedFields.composition || '');
     setVsPalette(parsedFields.colorMaterialDirection || '');
@@ -1217,12 +1153,12 @@ export default function App() {
     setVsAIPrompt(parsedFields.aiImagePrompt || '');
     setVsNegativePrompt(parsedFields.negativePrompt || '');
     setVsNotes(parsedFields.designerNotes || '');
-    
+
     setVsTextContent(parsedFields.textContent || '');
     setVsAttribution(parsedFields.attribution || '');
-    
+
     setVsImportValidation({ total: allExpected.length, recognized, missing });
-    
+
     setVsInputMode('Imported');
     setVsPromptMode('Full + AI');
     setActiveTab('visual-studio');
@@ -2452,26 +2388,27 @@ export default function App() {
     visualDir: Record<string, string> | any,
     channel: string,
     format: string,
-    text: string
+    _text: string
   ): string => {
-    const mainSubject = visualDir.visualConcept || 'Climate Opera Haus staged performance';
-    const sceneEnvironment = visualDir.composition || 'minimalist, sober staged setting with high-prestige executive aesthetic';
-    const compositionStyle = visualDir.composition || 'symmetrical composition, balanced spacing';
-    const moodSetting = visualDir.mood || 'sober, focused, prestige backlighting';
-    const colorPalette = visualDir.colorMaterial || 'dark blue, muted gold, off-white';
-    const keyElements = visualDir.keyElements || 'stage lighting reflections, elegant geometric patterns representing environmental indices';
-    const whatToAvoid = visualDir.whatToAvoid || 'protest signs, green leaves, disaster scenes';
-    
-    let usageContext = 'LinkedIn card or editorial graphic';
-    if (channel.toLowerCase().includes('insta')) {
-      usageContext = 'Instagram carousel or visual post';
-    } else if (channel.toLowerCase().includes('news') || format.toLowerCase().includes('news')) {
-      usageContext = 'newsletter header or blog visual';
-    } else if (format.toLowerCase().includes('deck') || format.toLowerCase().includes('pitch') || format.toLowerCase().includes('partner')) {
-      usageContext = 'institutional sponsor deck presentation visual';
+    const ch = (channel || '').toLowerCase();
+    const fmt = (format || '').toLowerCase();
+    let presetId = 'social-li-sq';
+    if (ch.includes('insta') && (fmt.includes('story') || fmt.includes('reel'))) {
+      presetId = 'social-ig-story';
+    } else if (ch.includes('insta')) {
+      presetId = 'social-ig-port';
+    } else if (ch.includes('news') || fmt.includes('news')) {
+      presetId = 'web-newsletter';
+    } else if (ch.includes('web') || fmt.includes('hero') || fmt.includes('article') || fmt.includes('blog')) {
+      presetId = 'web-hero';
     }
 
-    return `Create a refined editorial visual for ${channel} ${format}. Show ${mainSubject} in ${sceneEnvironment}. Use ${compositionStyle}. The mood should feel ${moodSetting}. Use a restrained palette of ${colorPalette}. Include ${keyElements}. The image should feel editorial, clean, high-contrast, prestigious, and minimalist. Avoid ${whatToAvoid}. No cliché climate imagery, no protest signs, no disaster scenes, no generic green leaves, no overdramatic apocalypse imagery. Suitable for ${usageContext}.`;
+    const compiled = compileVisualStudioPrompt({
+      brief: visualDir,
+      visualStyle: 'Cinematic Realism',
+      formatPresetId: presetId
+    });
+    return compiled.prompt;
   };
 
   const formatVisualDirectionForDisplay = (
@@ -2482,77 +2419,36 @@ export default function App() {
   ): string => {
     if (!visualDirStr) return 'No visual direction saved.';
 
-    let data: Record<string, string> = {};
-
-    try {
-      if (visualDirStr.trim().startsWith('{')) {
-        data = JSON.parse(visualDirStr);
-      }
-    } catch (e) {
-      // Not JSON
-    }
-
-    if (Object.keys(data).length === 0) {
-      const lines = visualDirStr.split('\n');
-      lines.forEach(line => {
-        const match = line.match(/^(?:-\s+)?(?:\*\*)?([a-zA-Z\s/]+)(?:\*\*)?:\s*(.*)$/);
-        if (match) {
-          const rawKey = match[1].trim();
-          const val = match[2].trim();
-          let canonicalKey = rawKey;
-          if (rawKey.toLowerCase().includes('concept')) canonicalKey = 'visualConcept';
-          else if (rawKey.toLowerCase().includes('recommendation')) canonicalKey = 'formatRecommendation';
-          else if (rawKey.toLowerCase().includes('mood')) canonicalKey = 'mood';
-          else if (rawKey.toLowerCase().includes('composition')) canonicalKey = 'composition';
-          else if (rawKey.toLowerCase().includes('color')) canonicalKey = 'colorMaterial';
-          else if (rawKey.toLowerCase().includes('typography') || rawKey.toLowerCase().includes('layout')) canonicalKey = 'typographyLayout';
-          else if (rawKey.toLowerCase().includes('element')) canonicalKey = 'keyElements';
-          else if (rawKey.toLowerCase().includes('avoid')) canonicalKey = 'whatToAvoid';
-          else if (rawKey.toLowerCase().includes('prompt') && !rawKey.toLowerCase().includes('negative')) canonicalKey = 'aiImagePrompt';
-          else if (rawKey.toLowerCase().includes('negative')) canonicalKey = 'negativePrompt';
-          else if (rawKey.toLowerCase().includes('note')) canonicalKey = 'designerNotes';
-
-          if (val) {
-            data[canonicalKey] = val;
-          }
-        }
-      });
-    }
-
-    if (Object.keys(data).length === 0) {
+    const parsed = parseVisualDirectionInput(visualDirStr);
+    const hasAnyField = Object.values(parsed).some((v) => Boolean(v && v.trim()));
+    if (!hasAnyField) {
       return visualDirStr;
     }
 
     const fields = [
       { key: 'visualConcept', label: 'Visual Concept' },
       { key: 'formatRecommendation', label: 'Format Recommendation' },
-      { key: 'mood', label: 'Mood / Atmosphere' },
+      { key: 'moodAtmosphere', label: 'Mood / Atmosphere' },
       { key: 'composition', label: 'Composition' },
-      { key: 'colorMaterial', label: 'Color / Material Direction' },
+      { key: 'colorMaterialDirection', label: 'Color / Material Direction' },
       { key: 'typographyLayout', label: 'Typography / Layout' },
-      { key: 'keyElements', label: 'Key Visual Elements' },
+      { key: 'keyVisualElements', label: 'Key Visual Elements' },
       { key: 'whatToAvoid', label: 'What to Avoid' },
       { key: 'aiImagePrompt', label: 'AI Image Prompt' },
       { key: 'negativePrompt', label: 'Negative Prompt' },
       { key: 'designerNotes', label: 'Designer Notes' }
-    ];
+    ] as const;
 
     const resultLines: string[] = [];
-    fields.forEach(field => {
-      let val = data[field.key];
-      
-      if (field.key === 'aiImagePrompt') {
-        const rawPrompt = val || data['prompt'] || '';
-        val = buildElaboratedImagePrompt(
-          { ...data, aiImagePrompt: rawPrompt },
-          channel || '',
-          format || '',
-          text || ''
-        );
+    fields.forEach((field) => {
+      let val = parsed[field.key];
+
+      if (field.key === 'aiImagePrompt' && !val) {
+        val = buildElaboratedImagePrompt(parsed, channel || '', format || '', text || '');
       }
 
-      if (field.key === 'negativePrompt' && !val) {
-        val = 'No disaster imagery, no protest signs, no generic green leaves, no melting earth cliché, no stock-photo corporate handshake, no dystopian city, no exaggerated apocalypse imagery, no decorative climate icons, no unreadable text inside the image';
+      if (field.key === 'negativePrompt' && !val && parsed.whatToAvoid) {
+        val = parsed.whatToAvoid;
       }
 
       if (val && val.trim()) {
@@ -2570,44 +2466,8 @@ export default function App() {
     text?: string
   ): string => {
     if (!visualDirStr) return '';
-    let data: Record<string, string> = {};
-    try {
-      if (visualDirStr.trim().startsWith('{')) {
-        data = JSON.parse(visualDirStr);
-      }
-    } catch (e) {}
-
-    if (Object.keys(data).length === 0) {
-      const lines = visualDirStr.split('\n');
-      lines.forEach(line => {
-        const match = line.match(/^(?:-\s+)?(?:\*\*)?([a-zA-Z\s/]+)(?:\*\*)?:\s*(.*)$/);
-        if (match) {
-          const rawKey = match[1].trim();
-          const val = match[2].trim();
-          if (rawKey.toLowerCase().includes('prompt') && !rawKey.toLowerCase().includes('negative')) {
-            data['aiImagePrompt'] = val;
-          } else {
-            // Also grab other key fields if they exist in unstructured text to help build the prompt
-            let canonicalKey = '';
-            if (rawKey.toLowerCase().includes('concept')) canonicalKey = 'visualConcept';
-            else if (rawKey.toLowerCase().includes('composition')) canonicalKey = 'composition';
-            else if (rawKey.toLowerCase().includes('mood')) canonicalKey = 'mood';
-            else if (rawKey.toLowerCase().includes('color')) canonicalKey = 'colorMaterial';
-            else if (rawKey.toLowerCase().includes('element')) canonicalKey = 'keyElements';
-            else if (rawKey.toLowerCase().includes('avoid')) canonicalKey = 'whatToAvoid';
-            if (canonicalKey) data[canonicalKey] = val;
-          }
-        }
-      });
-    }
-
-    const rawPrompt = data['aiImagePrompt'] || '';
-    return buildElaboratedImagePrompt(
-      { ...data, aiImagePrompt: rawPrompt },
-      channel || '',
-      format || 'Post',
-      text || ''
-    );
+    const parsed = parseVisualDirectionInput(visualDirStr);
+    return buildElaboratedImagePrompt(parsed, channel || '', format || 'Post', text || '');
   };
 
   // --- Tone Display Map ---
@@ -3906,7 +3766,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         const shorter = result.shorterVersion || rawA.split('. ').slice(0, 2).join('. ') + '.';
 
         const visualBrief = result.visualDesignBrief
-          ? Object.entries(result.visualDesignBrief).map(([k, v]) => `${k}: ${v}`).join('\n')
+          ? serializeVisualBriefForStorage(result.visualDesignBrief)
           : generateVisualDesignBrief(channel, format, goal || notes, rawA);
 
         const qcIssues = result.qualityCheck?.issues || [];
@@ -4102,10 +3962,11 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
 
   // --- Apply Content Template ---
   const applyTemplate = (temp: ContentTemplate) => {
+    const modeSwitched = creationMode !== 'advanced';
     setCreationMode('advanced');
     setAdvancedBrief(prev => ({
       ...prev,
-      topic: '',
+      topic: prev.topic || temp.name,
       channel: temp.channel,
       pillar: temp.pillar,
       audience: temp.audience,
@@ -4116,14 +3977,21 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
       desiredLength: temp.desiredLength,
       outputFormat: temp.outputFormat
     }));
-    setStartedFromNote(`Template: ${temp.name}`);
+    setStartedFromNote(
+      modeSwitched
+        ? `Starter applied: ${temp.name} — switched to Advanced Brief so all starter fields are editable.`
+        : `Starter applied: ${temp.name}`
+    );
   };
 
   // --- Apply Example Chip Pre-fills ---
   const applyExampleChip = (chipId: string) => {
+    const modeSwitched = creationMode !== 'advanced';
     setCreationMode('advanced');
+    let starterLabel = chipId;
     switch (chipId) {
       case 'tetralogy':
+        starterLabel = 'Announce Tetralogy';
         setAdvancedBrief(prev => ({
           ...prev,
           topic: 'Announce the Climate Tetralogy',
@@ -4133,6 +4001,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
       case 'cultural-ip':
+        starterLabel = 'Cultural IP & Model';
         setAdvancedBrief(prev => ({
           ...prev,
           topic: 'Explain the Cultural IP and Content Model',
@@ -4142,6 +4011,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
       case 'event-notes':
+        starterLabel = 'Nordic Air (Soria Moria)';
         setAdvancedBrief(prev => ({
           ...prev,
           topic: 'Soria Moria: Nordic Air and Somatic Staging',
@@ -4151,6 +4021,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
       case 'instagram-img':
+        starterLabel = 'Water Dragon Caption';
         setAdvancedBrief(prev => ({
           ...prev,
           topic: 'The Water Dragon visual caption',
@@ -4163,6 +4034,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
       case 'sponsor-facing':
+        starterLabel = 'Patron Pitch Paragraph';
         setAdvancedBrief(prev => ({
           ...prev,
           creationScope: 'Single Channel',
@@ -4176,6 +4048,7 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
       case 'newsletter-update':
+        starterLabel = 'Earth Canon Update';
         setAdvancedBrief(prev => ({
           ...prev,
           creationScope: 'Single Channel',
@@ -4188,7 +4061,11 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         }));
         break;
     }
-    setStartedFromNote(`Pre-fill: ${chipId}`);
+    setStartedFromNote(
+      modeSwitched
+        ? `Starter applied: ${starterLabel} — switched to Advanced Brief so all starter fields are editable.`
+        : `Starter applied: ${starterLabel}`
+    );
   };
 
   const [formatAdjustedNote, setFormatAdjustedNote] = useState<string>('');
@@ -5217,7 +5094,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </CardHeader>
                   <CardContent className="pt-5 flex flex-col gap-5">
                     
-                    <div className="flex flex-col gap-2">
+                    <div data-guide="ideation-seed-input" className="flex flex-col gap-2">
                       <label className="font-sans text-[13px] font-semibold text-text-primary">What situation, question, or source angle do you want to explore?</label>
                       <p className="font-sans text-[11px] text-text-secondary">
                         Enter a keyword, phrase, question, paragraph, theme, campaign direction, audience need, or content problem.
@@ -5232,6 +5109,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
                     {/* Source-Grounded Ideation Panel */}
                     <div
+                      data-guide="ideation-sources"
                       data-testid="ideation-attached-sources-panel"
                       className="flex flex-col gap-2.5 p-3 rounded-xl bg-surface-inset border border-border-standard"
                     >
@@ -5345,7 +5223,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       )}
                     </div>
 
-                    <div className="flex flex-col gap-4 pt-2">
+                    <div data-guide="ideation-filters" className="flex flex-col gap-4 pt-2">
                       <h4 className="font-sans text-[13px] font-bold text-text-primary border-b border-border-standard pb-1">Filters (Optional)</h4>
 
                       <div className="grid grid-cols-2 gap-3">
@@ -5386,21 +5264,23 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
                     </div>
 
-                    <Button
-                      data-testid="generate-ideas-btn"
-                      onClick={handleGenerateIdeas}
-                      disabled={isIdeating}
-                      className="w-full h-11 mt-2 flex items-center justify-center gap-2 font-bold"
-                    >
-                      {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
-                      {isIdeating ? 'Generating Opportunities...' : 'Generate Ideas'}
-                    </Button>
+                    <div data-guide="ideation-generate">
+                      <Button
+                        data-testid="generate-ideas-btn"
+                        onClick={handleGenerateIdeas}
+                        disabled={isIdeating}
+                        className="w-full h-11 mt-2 flex items-center justify-center gap-2 font-bold"
+                      >
+                        {isIdeating ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
+                        {isIdeating ? 'Generating Opportunities...' : 'Generate Ideas'}
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
               {/* Ideas Display (Right) */}
-              <div className="min-w-0 flex flex-col gap-6">
+              <div data-guide="ideation-results" className="min-w-0 flex flex-col gap-6">
                 {generatedIdeas.length > 0 ? (
                   <div className="flex flex-col gap-6">
                     {/* Strategic Diversity & Evidence Summary Strip */}
@@ -5502,8 +5382,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
           </div>
         </ErrorBoundary>)}
         {activeTab === 'idea-library' && (<ErrorBoundary fallbackTitle="Idea Library Error">
-          <div className="page-shell">
-            <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1">
+          <div className="page-shell" data-guide="idea-library-shell">
+            <div data-guide="idea-library-header" className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1">
               <h2 className="page-title">Idea Library</h2>
               <p className="page-subtitle">
                 Manage saved content angles, hooks, and campaign outlines. Keep track of what is ready to be written.
@@ -5512,7 +5392,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
 
             {/* List of saved ideas */}
             {savedIdeas.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
+              <div data-guide="idea-library-grid" className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-5">
                 {savedIdeas.map(idea => (
                   <div key={idea.id} className="bg-surface-primary border border-border-standard p-5 rounded-xl shadow-level-1 flex flex-col justify-between gap-4">
                     <div className="space-y-3">
@@ -5587,7 +5467,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 ))}
               </div>
             ) : (
-              <div className="empty-state">
+              <div data-guide="idea-library-grid" className="empty-state">
                 <div className="empty-state-icon">💡</div>
                 <h3 className="empty-state-title">No Saved Ideas</h3>
                 <p className="empty-state-text">Your generated ideas will appear here once you save them.</p>
@@ -5600,7 +5480,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 {activeTab === 'command-center' && (<ErrorBoundary fallbackTitle="Command Center Error">
           <div className="page-shell">
             {/* Hero Area / Quick Prompt */}
-            <div className="bg-surface-primary border border-border-standard p-6 md:p-7 rounded-xl shadow-level-1 flex flex-col gap-4">
+            <div data-guide="command-hero" className="bg-surface-primary border border-border-standard p-6 md:p-7 rounded-xl shadow-level-1 flex flex-col gap-4">
               <div>
                 <span className="text-[10px] font-semibold uppercase tracking-widest text-brand-gold block mb-1">Editorial Command</span>
                 <h2 className="font-sans text-xl md:text-2xl font-semibold text-text-primary tracking-tight">What are you working on today?</h2>
@@ -5651,7 +5531,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="min-w-0 space-y-6">
                 
                 {/* Active Work / Needs Attention */}
-                <div className="flex flex-col gap-4">
+                <div data-guide="command-active-work" className="flex flex-col gap-4">
                   <h3 className="font-sans text-[17px] font-bold text-text-primary flex items-center gap-2">
                     <Bookmark size={18} className="text-brand-gold" /> Active Workspace
                   </h3>
@@ -5697,7 +5577,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Quick Actions Grid */}
-                <div className="flex flex-col gap-4">
+                <div data-guide="command-quick-start" className="flex flex-col gap-4">
                   <h3 className="font-sans text-[17px] font-bold text-text-primary">Quick Start</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                     {[
@@ -5731,7 +5611,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column (1/3 width) - Studio Status & Needs Attention */}
-              <div className="space-y-6">
+              <div data-guide="command-status-rail" className="space-y-6">
                 
                 {/* Needs Attention / Alerts */}
                 <div className="card-level-1 border border-border-standard overflow-hidden">
@@ -5936,40 +5816,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                   <p className="page-subtitle">Draft, edit, and optimize individual content assets with core guidance.</p>
                 </div>
-                
-                {/* Mode Toggle Button Group */}
-                <div className="flex flex-wrap bg-surface-inset p-1 rounded-lg border border-border-standard shrink-0">
-                  <button
-                    onClick={() => setCreationMode('simple')}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      creationMode === 'simple'
-                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
-                        : 'text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    Simple Mode
-                  </button>
-                  <button
-                    onClick={() => setCreationMode('quick')}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      creationMode === 'quick'
-                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
-                        : 'text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    Quick Create
-                  </button>
-                  <button
-                    onClick={() => setCreationMode('advanced')}
-                    className={`px-3.5 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      creationMode === 'advanced'
-                        ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
-                        : 'text-text-secondary hover:text-text-primary'
-                    }`}
-                  >
-                    Advanced Brief
-                  </button>
-                </div>
               </div>
             )}
 
@@ -6134,90 +5980,186 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
             </div>
 
-            {/* Content Starters container */}
-            <div className="card-level-1 p-4 border border-border-standard space-y-3">
-              <div className="flex justify-between items-center cursor-pointer select-none interactive-card" onClick={() => setShowContentStarters(!showContentStarters)}>
-                <span className="font-semibold text-text-primary text-xs uppercase tracking-wider">Content Starters</span>
-                <span className="text-xs text-brand-gold font-semibold bg-surface-inset border border-border-standard px-2.5 py-1 rounded-md">
-                  {showContentStarters ? 'Hide Content Starters' : 'Show Content Starters'}
-                </span>
-              </div>
-              
-              {showContentStarters && (
-                <div className="space-y-3.5 pt-2.5 border-t border-border-standard">
-                  <div className="space-y-1.5">
-                    <span className="font-medium block text-text-secondary text-xs">Templates:</span>
-                    <div className="flex gap-1.5 flex-wrap">
-                      {CONTENT_TEMPLATES.map(temp => (
-                        <button
-                          key={temp.name}
-                          onClick={() => applyTemplate(temp)}
-                          className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1.5 px-3 rounded-md text-[11px] transition font-medium"
-                          title={temp.desc}
-                        >
-                          {temp.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <span className="font-medium block text-text-secondary text-xs">Example Briefs:</span>
-                    <div className="flex gap-1.5 flex-wrap">
-                      <button
-                        onClick={() => applyExampleChip('tetralogy')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Announce Tetralogy
-                      </button>
-                      <button
-                        onClick={() => applyExampleChip('cultural-ip')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Cultural IP & Model
-                      </button>
-                      <button
-                        onClick={() => applyExampleChip('event-notes')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Nordic Air (Soria Moria)
-                      </button>
-                      <button
-                        onClick={() => applyExampleChip('instagram-img')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Water Dragon Caption
-                      </button>
-                      <button
-                        onClick={() => applyExampleChip('sponsor-facing')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Patron Pitch Paragraph
-                      </button>
-                      <button
-                        onClick={() => applyExampleChip('newsletter-update')}
-                        className="bg-surface-inset hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
-                      >
-                        Earth Canon Update
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Three Panel Layout */}
+            {/* Two-Column Creation & Output Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-[380px_minmax(0,1fr)] xl:grid-cols-[440px_minmax(0,1fr)] gap-6 xl:gap-8 items-start">
               
-              {/* PANEL 1: BRIEF */}
-              <div className="min-w-0 card-level-1 p-5 border border-border-standard space-y-4 text-xs">
+              {/* PANEL 1: CREATE CONTENT (Unified Mode + Starters + Brief + Generation) */}
+              <div data-guide="content-creation-card" className="min-w-0 card-level-1 p-5 border border-border-standard space-y-4 text-xs">
+                <div className="border-b border-border-standard pb-3 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-sans text-base font-bold text-text-primary">
+                      Create Content
+                    </h3>
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-brand-gold font-semibold">
+                      {creationMode === 'simple' ? 'Simple' : creationMode === 'quick' ? 'Quick Create' : 'Advanced Brief'}
+                    </span>
+                  </div>
+
+                  {/* Unified Creation Mode Segmented Selector */}
+                  <div
+                    data-guide="content-mode-selector"
+                    data-testid="content-mode-selector"
+                    role="tablist"
+                    aria-label="Content creation mode"
+                    className="grid grid-cols-3 bg-surface-inset p-1 rounded-lg border border-border-standard gap-1"
+                  >
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={creationMode === 'simple'}
+                      onClick={() => setCreationMode('simple')}
+                      className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
+                        creationMode === 'simple'
+                          ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
+                          : 'text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      Simple
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={creationMode === 'quick'}
+                      onClick={() => setCreationMode('quick')}
+                      className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
+                        creationMode === 'quick'
+                          ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
+                          : 'text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      Quick Create
+                    </button>
+                    <button
+                      type="button"
+                      role="tab"
+                      aria-selected={creationMode === 'advanced'}
+                      onClick={() => setCreationMode('advanced')}
+                      className={`min-h-[44px] sm:min-h-[36px] px-2.5 py-1.5 text-xs font-semibold rounded-md transition-all text-center ${
+                        creationMode === 'advanced'
+                          ? 'bg-surface-primary text-brand-gold shadow-xs border border-border-standard'
+                          : 'text-text-secondary hover:text-text-primary'
+                      }`}
+                    >
+                      Advanced Brief
+                    </button>
+                  </div>
+
+                  {/* Contextual Mode Explanation */}
+                  <p data-testid="content-mode-helper" className="text-[11px] text-text-secondary leading-relaxed">
+                    {creationMode === 'simple'
+                      ? 'Tell us what you need and choose a channel. The Studio will infer the rest.'
+                      : creationMode === 'quick'
+                        ? 'Add a little more direction without building a complete brief.'
+                        : 'Control audience, intent, format, language, tone, evidence, and production details.'}
+                  </p>
+                </div>
+
+                {/* Integrated Content Starters (Optional Pre-fill Access) */}
+                <div data-guide="content-starters" className="bg-surface-inset/70 border border-border-standard rounded-lg p-3 space-y-2.5">
+                  <div
+                    className="flex justify-between items-center cursor-pointer select-none"
+                    onClick={() => setShowContentStarters(!showContentStarters)}
+                  >
+                    <div>
+                      <span className="font-semibold text-text-primary text-xs block">Content Starters</span>
+                      <span className="text-[10px] text-text-secondary">Optional templates &amp; example briefs that pre-fill editable fields below.</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="text-[11px] text-brand-gold font-semibold bg-surface-primary border border-border-standard px-2.5 py-1 rounded-md shrink-0"
+                    >
+                      {showContentStarters ? 'Hide Starters' : 'Show Starters'}
+                    </button>
+                  </div>
+
+                  {startedFromNote && startedFromNote.startsWith('Starter applied:') && (
+                    <div
+                      data-testid="content-starter-feedback"
+                      className="bg-brand-gold/10 border border-brand-gold/30 rounded-md px-2.5 py-2 flex items-center justify-between gap-2 text-[11px] text-text-primary"
+                    >
+                      <span className="font-medium">{startedFromNote}</span>
+                      <button
+                        type="button"
+                        onClick={() => setStartedFromNote('')}
+                        className="text-[10px] text-text-secondary hover:text-text-primary underline shrink-0"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  )}
+
+                  {showContentStarters && (
+                    <div className="space-y-3 pt-2 border-t border-border-standard">
+                      <div className="space-y-1.5">
+                        <span className="font-medium block text-text-secondary text-[11px]">Templates:</span>
+                        <div className="flex gap-1.5 flex-wrap">
+                          {CONTENT_TEMPLATES.map(temp => (
+                            <button
+                              key={temp.name}
+                              type="button"
+                              onClick={() => applyTemplate(temp)}
+                              className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1.5 px-2.5 rounded-md text-[11px] transition font-medium"
+                              title={temp.desc}
+                            >
+                              {temp.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="font-medium block text-text-secondary text-[11px]">Example Briefs:</span>
+                        <div className="flex gap-1.5 flex-wrap">
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('tetralogy')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Announce Tetralogy
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('cultural-ip')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Cultural IP &amp; Model
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('event-notes')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Nordic Air (Soria Moria)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('instagram-img')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Water Dragon Caption
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('sponsor-facing')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Patron Pitch Paragraph
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => applyExampleChip('newsletter-update')}
+                            className="bg-surface-primary hover:border-brand-gold hover:text-text-primary text-text-secondary border border-border-standard py-1 px-2.5 rounded-md text-[10.5px] transition font-medium"
+                          >
+                            Earth Canon Update
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
                 {creationMode === 'simple' ? (
                   <div className="space-y-4">
-                    <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">
-                      Simple Mode
-                    </h3>
-
                     <div>
                       <label className="block text-text-secondary font-semibold mb-0.5">What do you want to create?</label>
                       <p className="text-[10px] text-text-secondary mb-1.5">Describe the message, topic, idea, announcement, question, or content you want to create.</p>
@@ -6245,7 +6187,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </select>
                     </div>
 
-                    <div className="bg-surface-inset border border-border-standard p-3 rounded space-y-3">
+                    <div data-guide="content-context" className="bg-surface-inset border border-border-standard p-3 rounded space-y-3">
                       <label className="block text-text-primary font-bold mb-1 text-[11px] uppercase tracking-wider">
                         Add Context (Optional)
                       </label>
@@ -6391,19 +6333,9 @@ WRITING CLEANLINESS RULES (CRITICAL):
                         </div>
                       )}
                     </div>
-
-                    <div className="bg-surface-inset border border-border-standard p-3 rounded">
-                      <p className="text-[10px] text-text-secondary italic text-center">
-                        The system will infer format, audience, tone, and purpose from your request.
-                      </p>
-                    </div>
                   </div>
                 ) : creationMode === 'quick' ? (
                   <div className="space-y-4">
-                    <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">
-                      Start With Notes Brief
-                    </h3>
-
                     <div>
                       <label className="block text-text-secondary font-semibold mb-0.5">What do you want to create or explore?</label>
                       <p className="text-[10px] text-text-secondary mb-1.5">Enter a question, idea, topic, phrase, paragraph, campaign angle, message, or rough thought.</p>
@@ -6523,7 +6455,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       </div>
                     </div>
 
-                    <div>
+                    <div data-guide="content-context">
                       <label className="block text-text-secondary font-semibold mb-1">Paste Notes or Source Material</label>
                       <textarea
                         rows={5}
@@ -6562,10 +6494,6 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <h3 className="font-sans text-base font-bold text-text-primary border-b border-border-standard pb-2">
-                      Advanced Brief Fields
-                    </h3>
-
                     {activeWorkItem?.calendarItemId && (
                       <div className="bg-violet-600/10 border border-border-strong p-3 rounded flex flex-col gap-1 text-xs">
                         <div className="font-bold text-text-primary">📅 Created from Editorial Calendar</div>
@@ -7236,7 +7164,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-border-standard mt-4">
+                <div data-guide="content-generate" className="pt-2 border-t border-border-standard mt-4">
                   <Button onClick={handleGenerateDrafts} disabled={isGeneratingDrafts} variant="primary" size="lg" className="w-full">
                     {isGeneratingDrafts ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" /> : <Lightbulb size={16} />}
                     {isGeneratingDrafts ? 'Generating...' : 'Generate'}
@@ -7245,7 +7173,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* PANEL 2: GENERATION RESULTS */}
-              <div className="min-w-0 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
+              <div data-guide="content-results" className="min-w-0 bg-surface-inset border border-border-standard p-6 rounded shadow-sm space-y-6">
                 
                 <div className="border-b border-border-standard pb-2 flex justify-between items-center">
                   <h3 className="font-sans text-lg font-semibold text-text-primary">
@@ -7640,9 +7568,30 @@ WRITING CLEANLINESS RULES (CRITICAL):
         
 </ErrorBoundary>)}
 
-        {/* --- TAB 3: REVISION STUDIO --- */}
+        {/* --- TAB 3: VISUAL STUDIO --- */}
         {activeTab === 'visual-studio' && (() => {
           const isTextLed = /(quote card|text-led|text-heavy|typographic|nameplate|headline card)/i.test(vsConcept + ' ' + vsFormat + ' ' + vsComposition);
+          const liveCompiledResult = compileVisualStudioPrompt({
+            brief: {
+              visualConcept: vsInputMode === 'Manual' && !vsConcept.trim() ? vsManualPrompt : vsConcept,
+              formatRecommendation: vsFormat,
+              moodAtmosphere: vsMood,
+              composition: vsComposition,
+              colorMaterialDirection: vsPalette,
+              typographyLayout: vsTypography,
+              keyVisualElements: vsElements,
+              whatToAvoid: vsAvoid,
+              aiImagePrompt: vsAIPrompt,
+              negativePrompt: vsNegativePrompt,
+              designerNotes: vsNotes,
+              textContent: vsTextContent,
+              attribution: vsAttribution
+            },
+            visualStyle: vsVisualStyle,
+            formatPresetId: vsAspectRatio,
+            width: vsCustomWidth,
+            height: vsCustomHeight
+          });
           return (
           <ErrorBoundary fallbackTitle="Visual Studio Error">
           <div className="page-shell">
@@ -7688,7 +7637,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
               <div className="min-w-0 space-y-5">
                 
                 {/* Input Mode Selector */}
-                <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
+                <div data-guide="visual-input-mode" className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
                   <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Input Mode</h3>
                   
                   <div className="flex bg-surface-inset p-1 rounded-lg border border-border-standard">
@@ -7734,7 +7683,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
                 {/* Generation Controls */}
-                <div className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
+                <div data-guide="visual-settings" className="card-level-1 p-5 border border-border-standard space-y-4 text-xs">
                   <h3 className="font-sans text-sm font-bold text-text-primary border-b border-border-standard pb-2">Generation Settings</h3>
                   
                   <div>
@@ -7798,9 +7747,11 @@ WRITING CLEANLINESS RULES (CRITICAL):
                     >
                       <option value="Editorial Photomontage">Editorial Photomontage</option>
                       <option value="Cinematic Realism">Cinematic Realism</option>
+                      <option value="Editorial Photography">Editorial Photography</option>
                       <option value="Premium Illustration">Premium Illustration</option>
                       <option value="Minimal Graphic">Minimal Graphic</option>
                       <option value="Social Poster">Social Poster</option>
+                      <option value="Fine Art / Conceptual">Fine Art / Conceptual</option>
                     </select>
                   </div>
 
@@ -7818,7 +7769,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
                 </div>
 
               {/* Structured Visual Brief Editor */}
-              <div className="card-level-1 p-5 border border-border-standard space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
+              <div data-guide="visual-brief-fields" className="card-level-1 p-5 border border-border-standard space-y-4 max-h-[80vh] overflow-y-auto text-xs flex flex-col">
                 <div className="flex justify-between items-center mb-1 border-b border-border-standard pb-2">
                   <h3 className="font-sans text-sm font-bold text-text-primary">Structured Visual Brief</h3>
                   {vsInputMode === 'Manual' && (
@@ -7910,8 +7861,8 @@ WRITING CLEANLINESS RULES (CRITICAL):
               </div>
 
               {/* Right Column: Results Grid */}
-              <div className="min-w-0 card-level-1 p-6 space-y-5">
-                <div className="border-b border-border-standard pb-3 flex justify-between items-center">
+              <div data-guide="visual-canvas" className="min-w-0 card-level-1 p-6 space-y-5">
+                <div className="border-b border-border-standard pb-3 flex flex-wrap justify-between items-center gap-2">
                   <div>
                     <h3 className="font-sans text-base font-bold text-text-primary">
                       Results &amp; Visual Canvas
@@ -7920,7 +7871,29 @@ WRITING CLEANLINESS RULES (CRITICAL):
                       High-resolution image outputs and compiled prompt provenance.
                     </p>
                   </div>
+                  <div className="flex items-center gap-2 text-[10px] font-mono">
+                    <span className="px-2 py-0.5 rounded bg-surface-inset border border-border-standard text-text-secondary">
+                      Type: {liveCompiledResult.visualType.replace(/_/g, ' ')}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-brand-gold/10 border border-brand-gold/25 text-brand-gold font-semibold">
+                      Ratio: {liveCompiledResult.aspectRatio}
+                    </span>
+                  </div>
                 </div>
+
+                {/* Live Compiled Prompt Preview */}
+                <details className="border border-border-standard rounded-lg overflow-hidden bg-surface-inset/50" open={Boolean(vsConcept || vsManualPrompt)}>
+                  <summary className="bg-surface-primary px-3.5 py-2 text-[11px] font-semibold text-text-primary cursor-pointer select-none flex items-center justify-between">
+                    <span>Compiled Image Prompt Preview</span>
+                    <span className="text-[10px] font-mono text-text-secondary">{vsVisualStyle} · {vsPromptMode}</span>
+                  </summary>
+                  <div
+                    data-testid="visual-compiled-prompt-preview"
+                    className="p-3.5 text-xs text-text-secondary leading-relaxed font-sans border-t border-border-standard"
+                  >
+                    {liveCompiledResult.prompt}
+                  </div>
+                </details>
                 
                 {isGeneratingImage ? (
                   <div className="bg-surface-inset p-12 rounded-xl text-center border border-dashed border-border-strong flex flex-col items-center justify-center space-y-3">
@@ -9263,7 +9236,7 @@ WRITING CLEANLINESS RULES (CRITICAL):
       )}
 
       <div className="fixed bottom-2 right-2 text-[10px] text-text-muted pointer-events-none z-50">v1.1.0-stable</div>
-      <GuidedTour />
+      <GuidedTour activeRoute={activeTab} onNavigateRoute={setActiveTab} />
     </div>
     </div>
   );

@@ -78,7 +78,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
 
   return (
     <div className="page-shell">
-      <div className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shrink-0 flex justify-between items-center shadow-level-1">
+      <div data-guide="calendar-library-header" className="bg-surface-primary border border-border-standard rounded-xl p-5 md:p-6 shrink-0 flex justify-between items-center shadow-level-1">
         <div>
           <h2 className="page-title">
             Calendar Library
@@ -86,7 +86,7 @@ export const CalendarLibrary: React.FC<Props> = ({ onOpenCalendar }) => {
           <p className="page-subtitle">Manage and load saved editorial calendars across different versions.</p>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div data-guide="calendar-library-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {calendars.length === 0 ? (
           <div className="col-span-full flex flex-col items-center justify-center p-12 bg-surface-primary border border-dashed border-violet-300 rounded-xl">
             <Calendar size={48} className="text-brand-gold/30 mb-4" />

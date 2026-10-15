@@ -1092,7 +1092,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
         <div className="flex flex-col gap-5 h-full pb-12">
           
           {/* Horizontal Controls Panel */}
-          <div className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 shrink-0">
+          <div data-guide="calendar-parameters" className="bg-surface-primary border border-border-standard p-5 md:p-6 rounded-xl shadow-level-1 shrink-0">
             <div className="flex justify-between items-center mb-5 border-b border-border-standard pb-3.5">
               <h3 className="font-sans text-base font-semibold text-text-primary">Monthly Planning Parameters</h3>
               <button onClick={() => setShowAdvancedSettings(!showAdvancedSettings)} className="text-xs font-medium text-text-secondary hover:text-text-primary flex items-center gap-1.5 transition-colors">
@@ -1205,7 +1205,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               </div>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-border-standard">
+            <div data-guide="calendar-generate" className="flex flex-wrap items-center justify-between gap-4 mt-5 pt-4 border-t border-border-standard">
               <div className="flex flex-wrap items-center gap-3">
                 <Button onClick={() => { setCycle(prev => ({...prev, version: prev.version + 1})); handleGenerate('Generate New Version'); }} variant="primary" icon={<RefreshCw size={14} />}>
                   {items.length > 0 ? "Regenerate Calendar" : "Generate Monthly Calendar"}
@@ -1302,7 +1302,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
               )}
 
               {/* Calendar Canvas */}
-              <div className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded-xl shadow-level-1 min-h-[400px] overflow-hidden">
+              <div data-guide="calendar-canvas" className="flex flex-col flex-1 bg-surface-primary border border-border-standard rounded-xl shadow-level-1 min-h-[400px] overflow-hidden">
                 <div className="border-b border-border-standard px-5 py-3.5 bg-surface-inset/70 flex justify-between items-center shrink-0">
                   <h3 className="font-sans text-base font-semibold text-text-primary">Calendar Canvas</h3>
                   <div className="flex gap-1 bg-surface-primary border border-border-standard rounded-lg p-0.5">
@@ -1356,7 +1356,7 @@ export const EditorialCalendarStudio: React.FC<Props> = ({ onHandoff, onOpenLibr
             </div>
 
             {/* Review Panel */}
-            <div className="min-w-0 space-y-5 lg:overflow-y-auto pb-6 lg:max-h-full">
+            <div data-guide="calendar-review" className="min-w-0 space-y-5 lg:overflow-y-auto pb-6 lg:max-h-full">
               <div className="bg-surface-primary border border-border-standard rounded-xl shadow-level-1 p-5 sticky top-0">
                 <h3 className="font-sans text-base font-semibold text-text-primary mb-4 flex items-center gap-2">
                   <CheckCircle2 size={17} className="text-brand-gold" /> Calendar Review

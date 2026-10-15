@@ -4,6 +4,7 @@ import operatingCoreRouter from './server/operatingCore.js';
 import cors from 'cors';
 import * as providerManager from './server/ai/providerManager.js';
 import { buildGenerationPrompt } from './server/ai/promptBuilder.js';
+import { compileVisualStudioPrompt } from './src/lib/visualPromptCompiler.js';
 
 import crypto from 'crypto';
 
@@ -373,112 +374,57 @@ app.post('/api/ai/generate', requireAuth, async (req, res) => {
 
 app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
   try {
-    const { prompt, promptBuildMode, aspectRatio, presetId, width, height, visualStyle, visualBrief, inputMode, provider, model } = req.body;
-    
-    // Compile prompt on the backend
-    let compiledPrompt = '';
-    
-    // 1. Base components
-    let baseConcept = '';
-    let baseFormat = '';
-    let baseMood = '';
-    let baseComposition = '';
-    let basePalette = '';
-    let baseTypography = '';
-    let baseElements = '';
-    let baseAvoid = '';
-    let baseNotes = '';
-    let baseAiPrompt = '';
-    let textContentInstructions = '';
-    let explicitNegativePrompt = '';
+    const { prompt, promptBuildMode, aspectRatio, presetId, width, height, visualStyle, visualBrief, inputMode, provider, model, brandConsistency } = req.body;
 
-    if (promptBuildMode === 'Full' || promptBuildMode === 'Full + AI') {
-      if (visualBrief?.concept) baseConcept = `Visual Concept: ${visualBrief.concept}\n`;
-      if (visualBrief?.format) baseFormat = `Format/Context: ${visualBrief.format} (Translate this into composition guidance rather than creating a literal text-heavy poster design.)\n`;
-      if (visualBrief?.mood) baseMood = `Mood/Atmosphere: ${visualBrief.mood}\n`;
-      if (visualBrief?.composition) baseComposition = `Composition: ${visualBrief.composition}\n`;
-      if (visualBrief?.palette) basePalette = `Color / Material Direction: ${visualBrief.palette}\n`;
-      
-      // Handle Typography and Text Content strictly
-      if (visualBrief?.textContent && visualBrief.textContent.trim()) {
-        textContentInstructions = `CRITICAL REQUIREMENT - You MUST generate an image containing this exact text:\n"${visualBrief.textContent}"\n`;
-        if (visualBrief.attribution && visualBrief.attribution.trim()) {
-          textContentInstructions += `Also include this attribution/nameplate text:\n"${visualBrief.attribution}"\n`;
-        }
-        textContentInstructions += `Ensure the text is highly legible, prominent, and perfectly spelled. Treat this as a typographic or quote card design.\n`;
-        
-        if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography}\n`;
-      } else {
-        if (visualBrief?.typography) baseTypography = `Typography Notes: ${visualBrief.typography} (Note: Typography and layout notes are for downstream graphic design. Do NOT generate large readable text, headlines, captions, or slogans inside the image unless specifically requested below.)\n`;
-      }
-      
-      if (visualBrief?.elements) baseElements = `Key Visual Elements: ${visualBrief.elements}\n`;
-      if (visualBrief?.avoid) baseAvoid = `Negative Prompt (Avoid these completely): ${visualBrief.avoid}\n`;
-      if (visualBrief?.notes) baseNotes = `Designer Notes: ${visualBrief.notes}\n`;
-    }
-    
-    if (promptBuildMode === 'AI Only' || promptBuildMode === 'Full + AI') {
-      if (visualBrief?.aiPrompt) baseAiPrompt = `\nSpecific AI Prompt Instructions: ${visualBrief.aiPrompt}\n`;
-      if (visualBrief?.negativePrompt) explicitNegativePrompt = `\nExplicit Negative Prompt (DO NOT INCLUDE): ${visualBrief.negativePrompt}\n`;
-    }
+    // Normalize brief payload (supports both short keys from Visual Studio UI and canonical keys)
+    const normalizedBrief = {
+      visualConcept: visualBrief?.visualConcept || visualBrief?.concept || (inputMode === 'Manual' ? prompt : '') || '',
+      formatRecommendation: visualBrief?.formatRecommendation || visualBrief?.format || '',
+      moodAtmosphere: visualBrief?.moodAtmosphere || visualBrief?.mood || '',
+      composition: visualBrief?.composition || '',
+      colorMaterialDirection: visualBrief?.colorMaterialDirection || visualBrief?.palette || '',
+      typographyLayout: visualBrief?.typographyLayout || visualBrief?.typography || '',
+      keyVisualElements: visualBrief?.keyVisualElements || visualBrief?.elements || '',
+      whatToAvoid: visualBrief?.whatToAvoid || visualBrief?.avoid || '',
+      aiImagePrompt: visualBrief?.aiImagePrompt || visualBrief?.aiPrompt || '',
+      negativePrompt: visualBrief?.negativePrompt || '',
+      designerNotes: visualBrief?.designerNotes || visualBrief?.notes || '',
+      textContent: visualBrief?.textContent || '',
+      attribution: visualBrief?.attribution || ''
+    };
 
-    let corePrompt = textContentInstructions + baseConcept + baseFormat + baseMood + baseComposition + basePalette + baseTypography + baseElements + baseAvoid + baseNotes + baseAiPrompt + explicitNegativePrompt;
+    let finalCompiledPrompt = '';
 
-    // 2. Handle Manual Prompts vs Structured Prompts
-    if (inputMode === 'Manual' && prompt) {
-      if (promptBuildMode === 'Manual Only' || !promptBuildMode) {
-        compiledPrompt = `Raw Visual Direction:\n${prompt}`;
-      } else {
-        compiledPrompt = `Raw Visual Direction:\n${prompt}\n\nStructured Brief:\n${corePrompt}`;
-      }
+    if (inputMode === 'Manual' && promptBuildMode === 'Manual Only' && prompt && prompt.trim()) {
+      finalCompiledPrompt = prompt.trim();
+    } else if (promptBuildMode === 'AI Only' && normalizedBrief.aiImagePrompt) {
+      const compiledAiOnly = compileVisualStudioPrompt({
+        brief: {
+          visualConcept: normalizedBrief.aiImagePrompt,
+          whatToAvoid: normalizedBrief.whatToAvoid,
+          negativePrompt: normalizedBrief.negativePrompt
+        },
+        visualStyle: visualStyle || 'Cinematic Realism',
+        formatPresetId: presetId || 'social-li-sq',
+        aspectRatio: aspectRatio || '',
+        width,
+        height,
+        brandConsistency: brandConsistency !== false
+      });
+      finalCompiledPrompt = compiledAiOnly.prompt;
     } else {
-      compiledPrompt = corePrompt;
-    }
-    
-    // 3. Inject Visual Style Rules
-    let styleRules = '';
-    const style = visualStyle || 'Editorial Photomontage';
-    
-    if (style === 'Editorial Photomontage') {
-      styleRules = 'Create a refined, premium editorial image with cinematic realism and subtle mixed-media layering. The image should feel like a high-end cultural publication, not a social media poster, infographic, cartoon, or flat illustration. Avoid generic "eco-symbols" (like literal green leaves or recycling icons). NO cartoon characters. NO large text inside the image.';
-    } else if (style === 'Cinematic Realism') {
-      styleRules = 'Prioritize stunning photographic cinematic realism. High-end lighting, atmospheric depth, realistic textures. NO illustrations, NO vectors, NO cartoons, NO text.';
-    } else if (style === 'Premium Illustration') {
-      styleRules = 'Create a premium, sophisticated illustration. Avoid childish vector graphics, flat corporate art, or cheap stock vectors. Aim for mature, refined, detailed, artistic rendering. NO large typography.';
-    } else if (style === 'Minimal Graphic') {
-      styleRules = 'Use restrained, highly minimal graphic design. Clean lines, negative space, bold but sparse forms. Avoid clutter, realistic photography, or cartoonish graphics.';
-    } else if (style === 'Social Poster') {
-      styleRules = 'Create a stylized social poster format. Text is allowed if requested. Keep graphics bold, eye-catching, and vibrant.';
-    } else {
-      styleRules = 'Create a refined, premium editorial image with cinematic realism.';
+      const compiled = compileVisualStudioPrompt({
+        brief: normalizedBrief,
+        visualStyle: visualStyle || 'Cinematic Realism',
+        formatPresetId: presetId || 'social-li-sq',
+        aspectRatio: aspectRatio || '',
+        width,
+        height,
+        brandConsistency: brandConsistency !== false
+      });
+      finalCompiledPrompt = compiled.prompt || (prompt ? prompt.trim() : '');
     }
 
-    let systemInstructions = `SYSTEM INSTRUCTION: ${styleRules}\n\nCRITICAL QUALITY RULES:\n- Respect the System Instruction style above.\n- Typography and layout notes are for external composition context; DO NOT place unrequested big text inside the image.\n- Negative Prompt rules MUST be strictly followed.`;
-
-    let finalCompiledPrompt = compiledPrompt;
-    
-    // 4. Use LLM 2-step pipeline to rewrite the prompt
-    const isGPTImage = (model || providerManager.getMaskedConfig()?.imageModel || '').startsWith('gpt-image');
-    if (compiledPrompt && promptBuildMode !== 'Manual Only' && !isGPTImage) {
-      try {
-        const textPrompt = `You are an expert Midjourney and DALL-E prompt engineer. Rewrite the following visual direction into a single, cohesive, highly detailed image generation prompt optimized for DALL-E 3. Do not include markdown or conversational text. Return only the raw prompt string.\n\n${compiledPrompt}`;
-        
-        const optimizedPrompt = await providerManager.compileImagePrompt(systemInstructions, textPrompt);
-        
-        if (optimizedPrompt && optimizedPrompt.trim()) {
-          finalCompiledPrompt = optimizedPrompt;
-        } else {
-          // Fallback if LLM fails
-          finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
-        }
-      } catch (err) {
-        console.warn('Failed to compile image prompt with LLM, falling back to raw compiler:', err.message);
-        finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
-      }
-    } else if (compiledPrompt) {
-      finalCompiledPrompt = `${systemInstructions}\n\n---\n\n${compiledPrompt}`;
-    }
-    
     if (!finalCompiledPrompt.trim()) {
       return res.status(400).json({ success: false, error: 'Prompt is empty. Please provide visual directions or a manual prompt.' });
     }
@@ -486,13 +432,15 @@ app.post('/api/ai/generate-image', requireAuth, async (req, res) => {
     // Call the provider manager with the compiled prompt
     const generateInput = {
       ...req.body,
-      presetId, width, height,
+      presetId,
+      width,
+      height,
       prompt: finalCompiledPrompt,
       quality: req.body.quality || 'high'
     };
-    
-    console.log("=== Visual Studio Prompt Compilation ===");
-    console.log("Raw Visual Brief:", visualBrief || "None");
+
+    console.log('=== Visual Studio Prompt Compilation ===');
+    console.log('Raw Visual Brief:', visualBrief || 'None');
     console.log("Compiled Prompt Length:", finalCompiledPrompt.length);
     console.log("First 800 chars:", finalCompiledPrompt.substring(0, 800));
     console.log("Included AI Image Prompt?", !!visualBrief?.aiPrompt);
