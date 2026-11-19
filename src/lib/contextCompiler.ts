@@ -11,6 +11,9 @@ import {
   compileSourceGroundingContext,
   type SourceIntelligenceAnalysis
 } from './sourceIntelligence.ts';
+import {
+  compileCulturalEditorialIntelligenceBlock
+} from './culturalMarketingIntelligence.ts';
 
 export type ContextProvenance = 'EXPLICIT' | 'INHERITED' | 'RESOLVED' | 'UNRESOLVED';
 
@@ -517,6 +520,22 @@ export function compileGovernedContext(input: ContextCompilerInput): CompiledCon
       );
       if (audienceField.provenance === 'EXPLICIT' || audienceField.provenance === 'INHERITED') {
         resolvedInputs.push(`Audience Profile (${matchedAudience.name})`);
+      }
+    }
+
+    // Cultural Audience & Editorial Positioning Intelligence (BMS-COH-01)
+    if (isTextGenerationWorkflow && !isRevisionWorkflow) {
+      const bmsCulturalBlock = compileCulturalEditorialIntelligenceBlock({
+        workflow: input.workflow,
+        audience: audienceField.value || input.audience,
+        channel: channelField.value || input.channel,
+        format: formatField.value || input.format,
+        topicOrInstruction: input.userInstruction || input.communicationJob,
+        operatingCore: core
+      });
+      if (bmsCulturalBlock) {
+        coreRuleParts.push(bmsCulturalBlock);
+        activeGuidanceSummary.push('Cultural Audience & Editorial Intelligence (BMS-COH-01)');
       }
     }
 

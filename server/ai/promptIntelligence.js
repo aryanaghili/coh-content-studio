@@ -122,6 +122,8 @@ export function buildEvidenceContract(input = {}) {
 - Approved examples guide style and structure only unless separately identified as factual evidence.
 - Visual references guide visual language only unless separately identified as factual evidence.
 - Do not turn ambition, intention, positioning, possibility, or future pathway into a confirmed present-tense fact.
+- FACTUAL & REPUTATIONAL ACCURACY GATE (BMS-COH-01): Never invent artist credentials, awards or institutional affiliations, cast or production credits, performance dates and venues, artistic partnerships, sponsorship commitments, climate impact or environmental outcomes, audience figures or commercial results, or permissions, licensing, or usage rights.
+- SPONSOR & ARTISTIC AUTONOMY BOUNDARY: Sponsor-oriented materials must preserve the strict distinction between commercial recognition and COH artistic control.
 `;
 }
 
@@ -129,9 +131,10 @@ export function buildAudienceAndArtifactContract(input = {}) {
   return `=== AUDIENCE & ARTIFACT EXECUTION CONTRACT ===
 - Make the audience adaptation visible through what is prioritized, explained, assumed, substantiated, and invited next.
 - Make the output format visible through structure and reading rhythm, not through labels inside the copy.
-- Opening: earn attention with a proposition, tension, image, consequence, precise observation, or meaningful question that belongs to this specific brief.
-- Body: move deliberately from opening to substance to consequence. Avoid repetitive restatement.
-- CTA / ending: use only if the communication job benefits from one. The ending may instead resolve an argument, deepen a question, or leave a cultural afterimage.
+- Opening: earn attention with a proposition, tension, image, consequence, precise observation, or meaningful question that belongs to this specific brief. Never open with banned social-slop formulas ("Unpopular opinion:", "Hot take:", "Let's dive in", "Excited to announce", "It's not X, it's Y").
+- Body: move deliberately from opening to substance to consequence. Avoid repetitive restatement, rule-of-three AI padding, and generic climate activism slogans.
+- Search & AI-Search Discoverability (for articles, website copy, and long-form pieces): open with a self-contained 40-80 word answer-first lead paragraph that clearly names the work and its relationship to Climate Opera Haus and The Climate Tetralogy. Maintain consistent entity naming without keyword stuffing.
+- CTA / ending: use only if the communication job benefits from one. Never use engagement-bait CTAs ("Comment X and I'll DM you", "Tag someone", "Save this. Share it."). The ending may instead resolve an argument, deepen a question, or leave a cultural afterimage.
 - Never add hashtags, emojis, headings, bullets, or a promotional CTA unless they fit the selected channel and format.
 `;
 }

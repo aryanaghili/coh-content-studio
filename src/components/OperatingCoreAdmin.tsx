@@ -7,6 +7,11 @@ import type {
   OperatingCore, AudienceProfile, ChannelRule, RevisionStandard, 
   RuleCard, ClaimCard, EnforcementLevel, AppliesTo, ClaimType, CompileContext
 } from '../lib/operatingCore';
+import {
+  synthesizeEditorialAndCampaignLearnings,
+  appendToOperatingCoreLearningInbox,
+  type CampaignPerformanceInputRow
+} from '../lib/culturalMarketingIntelligence';
 import { Save, RefreshCw, Plus, Trash2, Eye, EyeOff, Lock, Unlock, KeyRound } from 'lucide-react';
 
 
@@ -132,6 +137,13 @@ export default function OperatingCoreAdmin({
     format: 'Post',
     action: ''
   });
+
+  // BMS-COH-01: Editorial & Campaign Learning Inbox State (reuses draftCore.learningInbox)
+  const [showLearningPanel, setShowLearningPanel] = useState(false);
+  const [learningObservationInput, setLearningObservationInput] = useState('');
+  const [learningChannelInput, setLearningChannelInput] = useState('LinkedIn');
+  const [learningAngleInput, setLearningAngleInput] = useState('Dramaturgical & Artistic Method');
+  const [learningEngagementInput, setLearningEngagementInput] = useState('');
 
   
   // --- Superuser Access Gate ---
@@ -1094,6 +1106,116 @@ export default function OperatingCoreAdmin({
             <pre className="bg-[#1e1e1e] text-[#d4d4d4] p-4 rounded text-xs font-mono overflow-auto max-h-64 border border-gray-800 whitespace-pre-wrap">
               {compileOperatingCoreContext(draftCore, previewCtx)}
             </pre>
+          </div>
+        )}
+      </div>
+
+      {/* BMS-COH-01: EDITORIAL & CAMPAIGN LEARNING INBOX (reuses OperatingCore.learningInbox) */}
+      <div className="mt-4 border border-border-standard bg-surface-primary rounded p-4">
+        <button
+          onClick={() => setShowLearningPanel(!showLearningPanel)}
+          className="flex items-center justify-between gap-2 font-sans font-bold text-text-primary w-full text-left focus:outline-none"
+        >
+          <span>Editorial &amp; Campaign Learning Inbox ({draftCore.learningInbox?.length || 0})</span>
+          <span className="text-xs font-mono text-text-secondary">
+            {showLearningPanel ? 'Hide' : 'Expand'}
+          </span>
+        </button>
+
+        {showLearningPanel && (
+          <div className="mt-4 pt-4 border-t border-border-standard space-y-4">
+            <p className="text-xs text-text-secondary">
+              Record bounded editorial observations or measured campaign outcomes into the Operating Core Learning Inbox. Observations without external telemetry are explicitly tagged with directional limitations.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Channel</label>
+                <input
+                  value={learningChannelInput}
+                  onChange={e => setLearningChannelInput(e.target.value)}
+                  className="w-full text-xs p-2 border border-border-strong rounded bg-surface-primary"
+                  placeholder="e.g. LinkedIn, Newsletter"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Editorial Angle</label>
+                <input
+                  value={learningAngleInput}
+                  onChange={e => setLearningAngleInput(e.target.value)}
+                  className="w-full text-xs p-2 border border-border-strong rounded bg-surface-primary"
+                  placeholder="e.g. Dramaturgical & Artistic Method"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Measured Engagement Rate % (Optional)</label>
+                <input
+                  value={learningEngagementInput}
+                  onChange={e => setLearningEngagementInput(e.target.value)}
+                  className="w-full text-xs p-2 border border-border-strong rounded bg-surface-primary"
+                  placeholder="Leave blank if qualitative only"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] uppercase font-bold text-text-secondary mb-1">Editorial / Campaign Observation</label>
+              <textarea
+                value={learningObservationInput}
+                onChange={e => setLearningObservationInput(e.target.value)}
+                className="w-full text-xs p-2 border border-border-strong rounded bg-surface-primary h-16"
+                placeholder="Describe what resonated, what required editorial revision, or what a specific cultural audience responded to..."
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  const obs = learningObservationInput.trim();
+                  if (!obs) return;
+                  const numericEng = parseFloat(learningEngagementInput);
+                  const performanceRows: CampaignPerformanceInputRow[] = !Number.isNaN(numericEng)
+                    ? [
+                        {
+                          entityTitle: learningAngleInput || 'Editorial Angle',
+                          channel: learningChannelInput || 'LinkedIn',
+                          repliesOrInquiries: numericEng,
+                          qualitativeResponse: obs
+                        }
+                      ]
+                    : [];
+                  const synthesis = synthesizeEditorialAndCampaignLearnings({
+                    performanceRows,
+                    editorialObservationNotes: Number.isNaN(numericEng) ? obs : undefined
+                  });
+                  const updatedCore = appendToOperatingCoreLearningInbox(
+                    draftCore,
+                    synthesis.entries
+                  );
+                  setDraftCore(updatedCore);
+                  setLearningObservationInput('');
+                  setLearningEngagementInput('');
+                  showToast('Learning recorded in Operating Core Learning Inbox.', 'success');
+                }}
+                className="text-xs bg-brand-gold text-text-inverse px-3 py-1.5 rounded font-semibold hover:bg-brand-gold-hover transition"
+              >
+                Synthesize &amp; Add to Learning Inbox
+              </button>
+            </div>
+
+            {draftCore.learningInbox && draftCore.learningInbox.length > 0 && (
+              <div className="space-y-2 mt-3">
+                {draftCore.learningInbox.map((entry: any) => (
+                  <div key={entry.id || entry.formattedBmsEntry} className="p-2.5 text-xs bg-surface-inset border border-border-standard rounded flex justify-between items-start gap-2">
+                    <div>
+                      <span className="font-mono text-[10px] uppercase px-1.5 py-0.5 rounded bg-surface-primary border border-border-standard mr-2">
+                        {entry.targetSection || entry.studioOrSkill || 'performance-review'}
+                      </span>
+                      <span className="text-text-primary">{entry.note || entry.formattedBmsEntry || entry.finding}</span>
+                    </div>
+                    <span className="text-[10px] font-mono text-text-muted shrink-0">{entry.status || entry.evidenceLevel || 'Recorded'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

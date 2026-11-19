@@ -17,6 +17,10 @@ import {
   type OperatingCore
 } from './operatingCore.ts';
 import type { SourceIntelligenceAnalysis } from './sourceIntelligence.ts';
+import {
+  planCulturalContentAtomization,
+  resolveCulturalAudiencePerspective
+} from './culturalMarketingIntelligence.ts';
 
 export function getReframingAudienceOptions(
   operatingCore?: OperatingCore | null,
@@ -849,6 +853,7 @@ export function buildDeterministicReframe(params: {
         : `Positioned for ${plan.targetAudience} with a focus on ${plan.contentPillarEmphasis}:`;
 
   let openingFrame = '';
+  const culturalResolved = resolveCulturalAudiencePerspective(plan.targetAudience);
   if (/institution|venue|opera house|festival/i.test(plan.targetAudience)) {
     openingFrame = `Institutional Programming Perspective (${plan.strategicFrame} - ${plan.targetAudience}): Contemporary cultural venues need repertoire that unites artistic excellence with urgent civic relevance.`;
   } else if (plan.communicationPurpose === 'Build climate literacy') {
@@ -857,15 +862,40 @@ export function buildDeterministicReframe(params: {
     openingFrame = `Public Cultural Meaning (${plan.strategicFrame}): Beyond institutional frameworks, live operatic performance creates a shared civic space where planetary reality is felt.`;
   } else if (/press|journalist|media/i.test(plan.targetAudience)) {
     openingFrame = `Editorial Narrative (${plan.strategicFrame}):`;
+  } else if (culturalResolved?.perspective) {
+    openingFrame = `${plan.strategicFrame} (${plan.targetAudience}): ${culturalResolved.perspective.whatMakesProductionMeaningful}`;
   } else {
     openingFrame = `${plan.strategicFrame} (${plan.targetAudience}):`;
   }
+
+  // BMS-COH-01: Platform-native atomization check ("something to save", anti-slop discipline, sponsor boundary)
+  const atomizationDecisions = planCulturalContentAtomization({
+    sourceTitle: plan.rawIntent || 'COH Cultural Asset',
+    sourceText: cleanSource,
+    primaryAudience: plan.targetAudience
+  });
+  const atomizationPlan =
+    atomizationDecisions.find(d => d.platform.toLowerCase() === plan.targetChannel.toLowerCase()) ||
+    atomizationDecisions[0];
 
   const bodyParagraphs: string[] = [
     openingFrame,
     familiarityIntro,
     `${coreSentence}${secondarySentence ? ' ' + secondarySentence : ''}`
   ];
+
+  // Ensure remaining verified sentences with proper names/dates are preserved when protection is requested
+  if (
+    sentences.length > 2 &&
+    (plan.protectedElements.includes('Names & proper titles') ||
+      plan.protectedElements.includes('Dates & timelines') ||
+      plan.protectedElements.includes('Confirmed facts & numbers'))
+  ) {
+    const extraFactualSentences = sentences.slice(2, 5).join(' ');
+    if (extraFactualSentences) {
+      bodyParagraphs.push(extraFactualSentences);
+    }
+  }
 
   if (attachedFactLine) {
     bodyParagraphs.push(attachedFactLine);
@@ -881,7 +911,12 @@ export function buildDeterministicReframe(params: {
   }
 
   // Closing tailored to desiredAudienceResponse and targetFormat
-  const closingLine = `Next Perspective for ${plan.targetAudience} (${plan.targetChannel} - ${plan.targetFormat}): ${plan.desiredAudienceResponse}`;
+  const sponsorAutonomyNote =
+    /sponsor|patron/i.test(plan.targetAudience) || plan.communicationPurpose === 'Create sponsor relevance'
+      ? ' Partnerships provide high-credibility cultural recognition while artistic direction and dramaturgy remain wholly independent.'
+      : '';
+
+  const closingLine = `Next Perspective for ${plan.targetAudience} (${plan.targetChannel} - ${plan.targetFormat}): ${plan.desiredAudienceResponse}${sponsorAutonomyNote}`;
   bodyParagraphs.push(closingLine);
 
   if (plan.unresolvedItems.length > 0) {
@@ -896,7 +931,14 @@ export function buildDeterministicReframe(params: {
     sourceContent: cleanSource,
     rawReframedCopy,
     plan,
-    sourceBindings
+    sourceBindings,
+    aiChanged: atomizationPlan
+      ? [
+          `Audience Framing: Shifted target framing toward ${plan.targetAudience} (${plan.audienceFamiliarity}).`,
+          `Communication Purpose & Strategic Frame: Rebuilt opening and argument around "${plan.communicationPurpose}" (${plan.strategicFrame}).`,
+          `Channel & Format Architecture (${atomizationPlan.treatment}): Structured for ${plan.targetChannel} (${plan.targetFormat}) with Save Anchor: ${atomizationPlan.somethingToSave}`
+        ]
+      : undefined
   });
 }
 

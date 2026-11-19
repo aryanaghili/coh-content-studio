@@ -21,6 +21,10 @@ import {
   findGroundableSourceAnchor,
   type SourceIntelligenceAnalysis
 } from './sourceIntelligence.ts';
+import {
+  buildCulturalEditorialAnglesFromSource,
+  resolveCulturalAudiencePerspective
+} from './culturalMarketingIntelligence.ts';
 
 export const COH_COMMUNICATION_JOBS = [
   'Establish institutional credibility',
@@ -829,4 +833,104 @@ export function enrichAndDiversifyOpportunities(params: {
 
   return enforceOpportunityDiversity(enriched, defaultAudience, operatingCore);
 }
+
+/**
+ * BMS-COH-01: Generates distinct, source-grounded cultural editorial proposals
+ * directly from attached source bindings (e.g. a Soria Moria production dossier)
+ * across COH's cultural audience perspectives (opera/cultural audiences, institutional presenters,
+ * cultural critics/journalists, and potential supporters/sponsors) while enforcing the
+ * positioning-angles Claim Gate ("Ship only what's true" vs "To make this true").
+ */
+export function buildCulturalIdeationProposalsFromSource(params: {
+  rawInput: string;
+  sourceBindings: TaskSourceBinding[];
+  derivedSourceAnalyses?: Record<string, SourceIntelligenceAnalysis>;
+  defaultAudience?: string;
+  defaultChannel?: string;
+  defaultLanguage?: string;
+  savedIdeas?: LibraryIdeaCandidate[];
+  savedContents?: LibraryContentCandidate[];
+  operatingCore?: OperatingCore | null;
+}): IdeationOpportunityProposal[] {
+  const {
+    rawInput,
+    sourceBindings,
+    derivedSourceAnalyses,
+    defaultAudience = 'Cultural Audience',
+    defaultChannel = 'LinkedIn',
+    defaultLanguage = 'English',
+    savedIdeas = [],
+    savedContents = [],
+    operatingCore = null
+  } = params;
+
+  const primarySource = sourceBindings.find(
+    b => b.role !== 'Approved Example' && b.role !== 'Visual Reference'
+  );
+  const sourceTitle = primarySource?.title || rawInput || 'Climate Opera Haus Production';
+  const sourceText =
+    sourceBindings
+      .filter(b => b.role !== 'Approved Example' && b.role !== 'Visual Reference')
+      .map(b => b.content || b.summary || '')
+      .filter(Boolean)
+      .join('\n\n') || rawInput;
+
+  const culturalAngles = buildCulturalEditorialAnglesFromSource({
+    source: {
+      id: primarySource?.sourceId || 'src-ideation',
+      title: sourceTitle,
+      type: primarySource?.type || 'Treatment',
+      content: sourceText,
+      notes: primarySource?.summary
+    },
+    analysis: primarySource ? derivedSourceAnalyses?.[primarySource.sourceId] : null,
+    operatingCore
+  });
+
+  const rawProposals: Array<Partial<IdeationOpportunityProposal>> = culturalAngles.map((angle, idx) => {
+    const resolved = resolveCulturalAudiencePerspective(angle.targetPerspective, operatingCore);
+    return {
+      id: `idea-bms-${idx}-${Date.now()}`,
+      title: angle.angleTitle,
+      originalInput: rawInput || sourceTitle,
+      category: angle.communicationJob,
+      explanation: `${angle.centralProposition} (${angle.landscapePosition.whiteSpaceClaimed})`,
+      communicationJob: angle.communicationJob,
+      whyItWorks: `Built for ${resolved.perspective.perspectiveName}: ${resolved.perspective.whatMakesProductionMeaningful}`,
+      coreTension: angle.landscapePosition.contestedToSharpen,
+      desiredAudienceResponse: resolved.perspective.needsToUnderstand,
+      availableEvidence: angle.verifiedFactsUsed,
+      evidenceStillRequired: angle.toMakeThisTrue,
+      suggestedAudience: angle.targetOperatingCoreAudience,
+      suggestedChannel: angle.suggestedChannel || defaultChannel,
+      suggestedFormat: angle.suggestedFormat,
+      suggestedPillar: angle.suggestedPillar,
+      suggestedTone: 'Measured / Credible',
+      strategicAngle: `${angle.communicationJob} - ${angle.targetPerspective}`,
+      narrativePerspective: angle.targetPerspective,
+      possibleHook: angle.openingHook,
+      possibleFirstPost: angle.openingHook,
+      riskToAvoid: angle.sponsorIndependenceNote
+        ? `Avoid: ${angle.landscapePosition.saturatedToAvoid}. ${angle.sponsorIndependenceNote}`
+        : `Avoid: ${angle.landscapePosition.saturatedToAvoid}`,
+      possibleNextStep: 'Promote to Content Workspace with verified facts and Claim Gate advisory attached.',
+      language: defaultLanguage,
+      status: 'New'
+    };
+  });
+
+  return enrichAndDiversifyOpportunities({
+    rawProposals,
+    rawInput: rawInput || sourceTitle,
+    defaultAudience,
+    defaultChannel,
+    defaultLanguage,
+    sourceBindings,
+    derivedSourceAnalyses,
+    savedIdeas,
+    savedContents,
+    operatingCore
+  });
+}
+
 
