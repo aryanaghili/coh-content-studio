@@ -9,7 +9,9 @@
 - **Upstream Version Tag**: `v4.1.1` (`2026-11-17T22:53:58Z`)
 - **Upstream Author & License**: James Dickerson (`@boringmarketer`) — **MIT License**
 - **Active Repository**: `/Users/aryanaghili/Documents/coh-content-studio`
-- **Integration Branch**: `bms-coh-01-cultural-marketing-intelligence` (branched from `main` @ `965f906`)
+- **Integration Branch**: `bms-coh-01-cultural-marketing-intelligence`
+- **Base Commit (`main` / `origin/main`)**: `965f9068076d009831d64753893c4010de1ca523` (`965f906`)
+- **Integration Commit**: `606e257104f6ba35a6b088c0372addd9f22cbc54` (`606e257`)
 - **Final Release Classification**: **`READY_FOR_PR`**
 
 ---
