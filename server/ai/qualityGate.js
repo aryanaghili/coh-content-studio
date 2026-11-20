@@ -355,13 +355,28 @@ export function runQualityGate(output, input = {}) {
       'at the intersection',
       "it's important to note",
       'dive into',
+      "let's dive in",
       'rapidly evolving landscape',
       'paradigm shift',
+      'without further ado',
+      'unpopular opinion:',
+      'hot take:',
+      'excited to announce',
+      'thrilled to share',
+      'save the planet',
     ];
     for (const cliche of cliches) {
       if (copy.toLowerCase().includes(cliche)) {
-        issues.push(`${draft.label}: Contains AI-style phrase: "${cliche}".`);
+        issues.push(`${draft.label}: Contains prohibited AI-tell or slop phrase: "${cliche}".`);
       }
+    }
+
+    if (
+      /(?:sponsor[s]?|patron[s]?)\s+(?:has\s+|have\s+|will\s+)?(?:co-write|co-wrote|co-direct|co-directed|direct|directed|shape[ds]?\s+the\s+(?:story|storyline|libretto)|control[s]?\s+the\s+libretto|approve[ds]?\s+the\s+script)/i.test(
+        copy
+      )
+    ) {
+      issues.push(`${draft.label}: Violates COH artistic autonomy boundary between commercial sponsorship recognition and artistic control.`);
     }
 
     if (copy.includes('Option A:') || copy.includes('Option B:') || copy.includes('[DRAFT]')) {

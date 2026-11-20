@@ -87,12 +87,18 @@ import {
 import { SourceIntelligenceCardAddon } from './components/SourceIntelligencePanel';
 import {
   enrichAndDiversifyOpportunities,
+  buildCulturalIdeationProposalsFromSource,
   buildIdeationToContentHandoff,
   evaluateOpportunityDiversity,
   COH_COMMUNICATION_JOBS,
   type ReuseOpportunity,
   type IdeationOpportunityProposal
 } from './lib/ideationIntelligence';
+import {
+  auditCohVoiceAndGovernance,
+  buildCulturalDiscoverabilityPlan,
+  resolveCulturalAudiencePerspective
+} from './lib/culturalMarketingIntelligence';
 import { IdeationOpportunityCard } from './components/IdeationOpportunityCard';
 import { ReframingStudio } from './components/ReframingStudio';
 import type { ReframeOriginType } from './lib/reframingEngine';
@@ -1671,8 +1677,30 @@ export default function App() {
         status: 'New'
       }));
 
+      // BMS-COH-01: When factual source material is attached (or input is a production dossier),
+      // blend source-grounded cultural audience angles (Opera/Cultural Audiences, Institutional Presenters,
+      // Cultural Critics, Sponsors/Patrons) with the requested ideation templates.
+      let combinedRawProposals = rawProposals;
+      const hasFactualSource = ideationSourceBindings.some(
+        b => b.role !== 'Approved Example' && b.role !== 'Visual Reference'
+      );
+      if (hasFactualSource && ideationFilterLanguage === 'English') {
+        const culturalProposals = buildCulturalIdeationProposalsFromSource({
+          rawInput: inputVal,
+          sourceBindings: ideationSourceBindings,
+          derivedSourceAnalyses: sourceIntelligenceMap,
+          defaultAudience: ideationFilterAudience,
+          defaultChannel: ideationFilterChannel,
+          defaultLanguage: ideationFilterLanguage,
+          savedIdeas,
+          savedContents: savedContent,
+          operatingCore
+        });
+        combinedRawProposals = [...culturalProposals, ...rawProposals.slice(0, 2)];
+      }
+
       const enrichedList = enrichAndDiversifyOpportunities({
-        rawProposals,
+        rawProposals: combinedRawProposals,
         rawInput: inputVal,
         defaultAudience: ideationFilterAudience,
         defaultChannel: ideationFilterChannel,
@@ -2903,19 +2931,35 @@ export default function App() {
     const isWebsite = channel === 'Website' || format.includes('Article');
     const isSponsorOrPartner = format.includes('Sponsor') || format.includes('Partner') || channel === 'Email / Direct Outreach';
 
+    const combinedText = `${goal || ''} ${text || ''}`.toLowerCase();
+    const isSoriaMoria = combinedText.includes('soria moria') || checkOperaRelevance('Soria Moria');
+    const isWaterDragon = combinedText.includes('water dragon') || checkOperaRelevance('The Water Dragon');
+    const isGoldenFountain = combinedText.includes('golden fountain') || checkOperaRelevance('The Golden Fountain');
+    const isRoarToWind = combinedText.includes('roar to the wind') || checkOperaRelevance('Roar to the Wind');
+
+    const productionWorldAnchor = isSoriaMoria
+      ? 'Soria Moria (Nordic Air world in The Climate Tetralogy): translucent suspended silk, high-altitude atmospheric light, acoustic timber, and Nordic stage architecture'
+      : isWaterDragon
+        ? 'The Water Dragon (Water world in The Climate Tetralogy): dark reflective stage water planes, tidal resonance, and brushed brass highlights'
+        : isGoldenFountain
+          ? 'The Golden Fountain (Fire world in The Climate Tetralogy): ember chiaroscuro, burnished bronze, and raw volcanic stone stage geometry'
+          : isRoarToWind
+            ? 'Roar to the Wind (Earth world in The Climate Tetralogy): monolithic mineral surfaces, acoustic resonance, and tectonic stage geometry'
+            : 'Climate Opera Haus (The Climate Tetralogy): architectural stage lighting, deep midnight navy, brushed theatrical brass, and natural elemental materials';
+
     let brief = '';
 
     if (isCarousel) {
       brief = `### Visual Design Brief: Instagram Carousel
-- **Visual Concept**: A step-by-step modular narrative with dark blue base colors and gold line frames.
+- **Visual Concept**: A step-by-step modular narrative anchored in ${productionWorldAnchor} with dark blue base colors and gold line frames.
 - **Format Recommendation**: 1080x1080px square slides (6-slide sequence).
 - **Mood / Atmosphere**: Somatic stage lighting, quiet and premium.
 - **Composition**: Centered bold text with minimal abstract lines representing environmental indicators.
-- **Color / Material**: Deep ocean blue (#0C1B2A), warm brushed gold (#D4AF37).
+- **Color / Material**: Deep ocean blue (#0C1B2A), warm brushed gold (#D4AF37), translucent stage silk and acoustic timber.
 - **Typography / Layout**: Large serif headers (e.g., Playfair or Outfit), light sans-serif captions.
-- **Key Visual Elements**: Symmetrical line frame, COH logo watermark.
-- **What to Avoid**: Overly busy graphics, bright green leaf cliparts, or generic stock images.
-- **AI Image Prompt**: "Minimalist operatic stage setup, deep navy backlighting, thin gold geometric circles, luxury photography, highly detailed, 8k --ar 1:1"
+- **Key Visual Elements**: Symmetrical line frame, COH logo watermark, ${isSoriaMoria ? 'Nordic Air atmospheric light planes' : 'operatic stage materiality'}.
+- **What to Avoid**: Overly busy graphics, bright green leaf cliparts, burning globes, polar bears, or generic stock images.
+- **AI Image Prompt**: "Minimalist operatic stage setup for ${isSoriaMoria ? 'Soria Moria Nordic Air opera world' : 'Climate Opera Haus'}, deep navy backlighting, thin gold geometric circles, luxury stage photography, highly detailed"
 - **Designer Notes**: Ensure copy has enough breathing room.
 
 **Slide-by-Slide Visual Guidance:**
@@ -2927,51 +2971,51 @@ export default function App() {
 6. **Slide 6**: Call to Action. Visual: Elegant plain slide with the website URL centered.`;
     } else if (isLinkedIn) {
       brief = `### Visual Design Brief: LinkedIn Post
-- **Visual Concept**: Clean quote card or editorial executive layout.
+- **Visual Concept**: Clean quote card or editorial executive layout anchored in ${productionWorldAnchor}.
 - **Format Recommendation**: Text post with single high-resolution quote card graphic (1200x1200px).
-- **Mood / Atmosphere**: Professional, sober, institutional.
+- **Mood / Atmosphere**: Professional, sober, institutional, and culturally authoritative.
 - **Composition**: Text-heavy quote box layout with wide borders and clean padding.
-- **Color / Material**: Light warm cream background (#FAF9F6) with navy blue serif text (#0C1B2A).
+- **Color / Material**: Light warm cream background (#FAF9F6) with navy blue serif text (#0C1B2A) and brushed brass accents.
 - **Typography / Layout**: Serif display quote text, small sans-serif nameplate.
-- **Key Visual Elements**: Symmetrical line frame, COH logo watermark.
-- **What to Avoid**: Generic business handshakes, cartoon icons, or decorative green elements.
-- **AI Image Prompt**: "Professional corporate editorial portrait, soft office natural lighting, moody stage style, neutral colors --ar 1:1"
+- **Key Visual Elements**: Symmetrical line frame, COH logo watermark, ${isSoriaMoria ? 'Soria Moria Nordic Air architectural stage motif' : 'Climate Tetralogy identity'}.
+- **What to Avoid**: Generic business handshakes, cartoon icons, burning globes, or decorative green activist elements.
+- **AI Image Prompt**: "Editorial cultural institution stage photography for ${isSoriaMoria ? 'Soria Moria (Nordic Air world)' : 'Climate Opera Haus'}, dramatic chiaroscuro stage lighting, acoustic timber and brushed brass, neutral palette"
 - **Designer Notes**: The post performs best as a text-only card or with an authentic production image.`;
     } else if (isWebsite) {
       brief = `### Visual Design Brief: Website / News Article
-- **Visual Concept**: Hero image and editorial grid layout.
+- **Visual Concept**: Hero image and editorial grid layout reflecting ${productionWorldAnchor}.
 - **Format Recommendation**: Wide banner (1920x1080px) for hero, vertical column layout for text.
 - **Mood / Atmosphere**: Serious, artistic, authoritative.
-- **Composition**: Rule of thirds, wide panoramic landscape containing abstract environmental indices.
-- **Color / Material**: Rich cobalt blue, raw stone grey, and gold accents.
+- **Composition**: Rule of thirds, wide panoramic landscape containing abstract environmental indices and stage architecture.
+- **Color / Material**: Rich cobalt blue, raw stone grey, acoustic timber, and gold accents.
 - **Typography / Layout**: Large editorial serif H1, regular readable serif body text.
-- **Key Visual Elements**: High-contrast stage design photography.
-- **What to Avoid**: Stock photos of wind turbines or generic solar panels.
-- **AI Image Prompt**: "Artistic stage scenery, abstract metal sculpture, dark moody theater environment, cinematic smoke, gold highlight --ar 16:9"
+- **Key Visual Elements**: High-contrast stage design photography (${isSoriaMoria ? 'Soria Moria Nordic Air staging' : 'Climate Tetralogy worldbuilding'}).
+- **What to Avoid**: Stock photos of wind turbines, burning globes, or generic solar panels.
+- **AI Image Prompt**: "Artistic opera stage scenery for ${isSoriaMoria ? 'Soria Moria Nordic Air world' : 'Climate Opera Haus'}, abstract architectural sculpture, dark moody theater environment, volumetric light, gold highlight"
 - **Designer Notes**: The hero header should match the sober color palette of the main web index.`;
     } else if (isSponsorOrPartner) {
       brief = `### Visual Design Brief: Sponsor & Partner Communications
-- **Visual Concept**: Sober deck-style visual or letterhead layout.
+- **Visual Concept**: Sober deck-style visual or letterhead layout grounded in ${productionWorldAnchor}.
 - **Format Recommendation**: Restrained, corporate-standard presentation slide format (16:9).
 - **Mood / Atmosphere**: High-prestige, institutional, highly credible.
 - **Composition**: Asymmetric grid with 60% text copy and 40% clean whitespace.
-- **Color / Material**: Royal navy blue background with crisp gold font.
+- **Color / Material**: Royal navy blue background with crisp gold font and mineral stone texture.
 - **Typography / Layout**: Formal serif typography, clear column hierarchy.
-- **Key Visual Elements**: Minimalist logos and project indicators.
+- **Key Visual Elements**: Minimalist logos and project indicators (${isSoriaMoria ? 'Soria Moria production identity' : 'Climate Tetralogy canon'}).
 - **What to Avoid**: Decorative climate campaigns, green handprints, or emotional NGO messaging.
-- **AI Image Prompt**: "Luxury corporate deck design background, dark navy blue, clean gold line accents, professional, architectural render style --ar 16:9"
-- **Designer Notes**: Focus purely on corporate credibility. Avoid decorative climate imagery unless directly supported by scientific facts.`;
+- **AI Image Prompt**: "Luxury cultural institution deck background for ${isSoriaMoria ? 'Soria Moria at Climate Opera Haus' : 'Climate Opera Haus'}, dark navy blue, clean gold line accents, architectural stage render style"
+- **Designer Notes**: Focus purely on cultural prestige and institutional credibility. Preserve distinction between commercial recognition and artistic independence.`;
     } else {
       brief = `### Visual Design Brief: General / Custom
-- **Visual Concept**: Multi-channel social graphic matching "${goal || 'COH'}" topic.
+- **Visual Concept**: Multi-channel cultural graphic matching "${goal || 'COH'}" and ${productionWorldAnchor}.
 - **Format Recommendation**: Standard square post format (1080x1080px).
 - **Mood / Atmosphere**: Prestige backlighting, navy stage contrast.
 - **Composition**: Balanced central focus with ample whitespace.
-- **Color / Material**: Navy blue background, gold serif typeface.
+- **Color / Material**: Navy blue background, gold serif typeface, natural mineral and stage textures.
 - **Typography / Layout**: Serif display heading, sans-serif body.
-- **Key Visual Elements**: Minimalist geometric shapes representing wind or water.
-- **What to Avoid**: Complex illustrations or busy infographics.
-- **AI Image Prompt**: "Prestige theater backdrop, dark navy blue and gold accents, minimalist stage design, warm theatrical light --ar 1:1"
+- **Key Visual Elements**: Minimalist geometric shapes representing ${isSoriaMoria ? 'Soria Moria Nordic Air currents' : 'wind or water'}.
+- **What to Avoid**: Complex illustrations, busy infographics, or generic green eco-clipart.
+- **AI Image Prompt**: "Prestige opera theater backdrop for ${isSoriaMoria ? 'Soria Moria Nordic Air world' : 'Climate Opera Haus'}, dark navy blue and gold accents, minimalist stage design, warm theatrical light"
 - **Designer Notes**: Tailor text hierarchy to preserve readability.`;
     }
 
@@ -3142,12 +3186,16 @@ export default function App() {
         .replace(/origin staging assets/gi, 'original performances');
     };
 
-    // Extract first meaningful sentence from attached sources if available
-    const firstSourceSnippet = selectedSources.length > 0
-      ? selectedSources
-          .map(s => (s.content || '').split(/(?<=[.!?])\s+/).find(sent => sent.trim().length > 25))
-          .find(Boolean)
-      : undefined;
+    // Extract meaningful factual sentences from attached sources if available (BMS-COH-01 source grounding)
+    const sourceSentences = selectedSources.flatMap(s =>
+      (s.content || '')
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map(sent => sent.trim())
+        .filter(sent => sent.length > 25)
+    );
+    const firstSourceSnippet = sourceSentences[0];
+    const secondSourceSnippet = sourceSentences[1];
+    const thirdSourceSnippet = sourceSentences[2];
 
     // A. DETERMINE OPENING (Direct Response to Intent)
     if (isDirectFraming) {
@@ -3217,8 +3265,29 @@ export default function App() {
       ];
     }
 
+    if (thirdSourceSnippet && !proofPoints.includes(thirdSourceSnippet)) {
+      proofPoints.unshift(thirdSourceSnippet.trim());
+    }
+    if (secondSourceSnippet && !proofPoints.includes(secondSourceSnippet)) {
+      proofPoints.unshift(secondSourceSnippet.trim());
+    }
     if (firstSourceSnippet && !proofPoints.includes(firstSourceSnippet)) {
       proofPoints.unshift(firstSourceSnippet.trim());
+    }
+
+    // BMS-COH-01: Sponsor & Partner Artistic Independence Boundary
+    const isSponsorContext =
+      interp.isSponsor ||
+      purpose === 'Sponsor Interest' ||
+      purpose === 'Funding Support' ||
+      /sponsor|patron/i.test(audience);
+    if (
+      isSponsorContext &&
+      !proofPoints.some(p => /artistic direction|artistic independence|editorial control/i.test(p))
+    ) {
+      proofPoints.push(
+        'Strategic sponsorship provides high-credibility cultural recognition while Climate Opera Haus retains full artistic and dramaturgical independence.'
+      );
     }
 
     // Only introduce COH explicitly if relevant or requested
@@ -3584,6 +3653,24 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
 
   // --- Editorial Check Audits ---
   const runEditorialAudits = (text: string) => {
+    const attachedIds = getAttachedSourceIds(advancedBrief.selectedSourceIds, activeWorkItem?.sourceIds);
+    const allSources = uniqueSourcesById(sources, workspaceLocalSources);
+    const attachedSourceText = attachedIds
+      .map(id => {
+        const src = allSources.find(s => s.id === id);
+        return src ? `${src.title || ''}\n${src.content || ''}` : '';
+      })
+      .filter(Boolean)
+      .join('\n\n');
+
+    const bmsAudit = auditCohVoiceAndGovernance({
+      text,
+      sourceTexts: attachedSourceText ? [attachedSourceText] : [],
+      isSponsorFacing:
+        /sponsor|patron/i.test(advancedBrief.audience) ||
+        advancedBrief.outputFormat === 'Sponsor Pitch Paragraph'
+    });
+
     const checks = [
       {
         name: 'COH Specificity Check',
@@ -3610,10 +3697,34 @@ Constraints: No subject line, no formal greetings like "Dear", no hashtags, no c
         suggestedFix: 'Swap "sustainability" for "cultural durability" or "ecological transition".'
       },
       {
+        name: 'BMS-COH-01 Voice & Anti-Slop Audit',
+        desc: 'Scans for 2026 AI word/phrase tells, slop hooks, engagement-bait CTAs, and sponsor artistic-control violations.',
+        pass:
+          bmsAudit.aiWordTellsFound.length === 0 &&
+          bmsAudit.aiPhraseTellsFound.length === 0 &&
+          bmsAudit.slopHooksFound.length === 0 &&
+          bmsAudit.engagementBaitFound.length === 0 &&
+          !bmsAudit.unverifiedSponsorControlBlur &&
+          !bmsAudit.longDashesFound,
+        feedback:
+          bmsAudit.recommendations.length > 0
+            ? bmsAudit.recommendations.join(' | ')
+            : 'Clean COH cultural editorial voice.',
+        whyItMatters:
+          'Preserves COH architectural prose against generic marketing tropes, AI slop openers, and commercial overreach.',
+        suggestedFix:
+          'Run Clean Punctuation & Format or Revision Studio to strip AI tells and restore direct editorial cadence.'
+      },
+      {
         name: 'Factual Grounding Check',
         desc: 'Identifies unverified entities or dates.',
-        pass: getFictionalContentWarnings(text).length === 0,
-        feedback: `Source check needed: ${getFictionalContentWarnings(text).join(', ')}`,
+        pass:
+          getFictionalContentWarnings(text).length === 0 &&
+          bmsAudit.unanchoredClaimsWarnings.length === 0,
+        feedback: `Source check needed: ${[
+          ...getFictionalContentWarnings(text),
+          ...bmsAudit.unanchoredClaimsWarnings
+        ].join(', ')}`,
         whyItMatters: 'Ensures strict alignment with the approved factual boundaries.',
         suggestedFix: 'Remove unverified entities or ensure they match uploaded text sources.'
       }
